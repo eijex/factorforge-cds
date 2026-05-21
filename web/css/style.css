@@ -1,0 +1,408 @@
+/* CodonForge-nb Premium Dashboard Styles */
+
+:root {
+    --primary: #10B981;
+    --secondary: #3B82F6;
+    --accent: #6366F1;
+    --bg-slate: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+}
+
+.dark {
+    --primary: #34d399;
+    --secondary: #60a5fa;
+    --bg-slate: #0f172a;
+    --card-bg: #1e293b;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+}
+
+/* Base Smoothness */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark body {
+    background-color: var(--bg-slate);
+    color: var(--text-main);
+}
+
+/* Dark Mode Overrides for Tailwind Components */
+.dark .bg-white {
+    background-color: var(--card-bg) !important;
+}
+
+.dark .bg-slate-50 {
+    background-color: #0f172a !important;
+}
+
+.dark .bg-slate-100 {
+    background-color: #1e293b !important;
+}
+
+/* Accessibility: boost muted text for WCAG AA (4.5:1) on white backgrounds */
+/* slate-400 natural (#94a3b8) only achieves 3.5:1 - insufficient for small text */
+.text-slate-400 {
+    color: #6b7a8d !important;
+    /* Boosted to ~5.0:1 contrast ratio, maintains hierarchy below slate-500 (#64748b) */
+}
+
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700 {
+    color: #f1f5f9 !important;
+}
+
+.dark .text-slate-600,
+.dark .text-slate-500 {
+    color: #cbd5e1 !important;
+}
+
+.dark .text-slate-400 {
+    color: #94a3b8 !important;
+}
+
+.dark .border-slate-200 {
+    border-color: var(--border-color) !important;
+}
+
+.dark .border-slate-100 {
+    border-color: #334155 !important;
+}
+
+.dark footer {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+}
+
+#jsonDetails::selection {
+    background: rgba(16, 185, 129, 0.3);
+    color: #10B981;
+}
+
+.dark .bg-indigo-50 {
+    background-color: rgba(99, 102, 241, 0.2) !important;
+}
+
+.dark .bg-emerald-50 {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+.dark .bg-blue-50 {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Selection Background in Dark Mode Fix - Only for Cards, not Toggles */
+.dark input[name="profile"]:checked+div,
+.dark #useTemplate:checked+div {
+    background-color: rgba(16, 185, 129, 0.25) !important;
+    border-color: #34d399 !important;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+    transform: scale(1.025);
+}
+
+.dark input[name="profile"]:checked+div span:first-child,
+.dark input[name="profile"]:checked+div span:nth-child(2),
+.dark #useTemplate:checked+div span:first-child,
+.dark #useTemplate:checked+div span:nth-child(2) {
+    color: var(--primary) !important;
+}
+
+.dark input[name="profile"]:checked+div div:last-child {
+    color: var(--primary) !important;
+}
+
+
+/* Custom Scrollbar - Premium Aesthetics */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+    border: 2px solid transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.bg-slate-900.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #334155;
+}
+
+.bg-slate-900.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* Animations */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pulse-emerald {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+}
+
+.pulse-primary {
+    animation: pulse-emerald 2s infinite;
+}
+
+/* Toast Animations */
+@keyframes toastIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes toastOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.toast-enter {
+    animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast-exit {
+    animation: toastOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Form Elements - Specific for Profile Radios and Top-level Checkboxes */
+input[name="profile"]:checked+div,
+#useTemplate:checked+div {
+    border-color: #059669 !important;
+    /* Richer Emerald 600 */
+    border-width: 2.5px !important;
+    background-color: #d1fae5 !important;
+    /* Stronger Emerald 100 */
+    transform: scale(1.03);
+    box-shadow: 0 12px 20px -3px rgba(16, 185, 129, 0.25), 0 6px 10px -2px rgba(16, 185, 129, 0.15) !important;
+}
+
+input[name="profile"]:checked+div span:first-child,
+#useTemplate:checked+div span:first-child {
+    color: #064e3b !important;
+    /* Darker green for header */
+}
+
+input[name="profile"]:checked+div span:nth-child(2),
+#useTemplate:checked+div span:nth-child(2) {
+    color: #065f46 !important;
+    /* Darker green for description */
+    font-weight: 600;
+}
+
+input[name="profile"]:checked+div div:last-child {
+    color: #064e3b !important;
+    /* Darker green for checkmark */
+    font-weight: 900;
+}
+
+/* Base card state for high visibility */
+.profile-card {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+}
+
+.dark .profile-card {
+    background-color: rgba(30, 41, 59, 1) !important;
+    border-color: rgba(51, 65, 85, 1) !important;
+}
+
+.profile-card:hover {
+    border-color: #10B981 !important;
+    background-color: #f8fafc !important;
+}
+
+.dark .profile-card:hover {
+    background-color: rgba(45, 55, 72, 1) !important;
+    border-color: #10B981 !important;
+}
+
+/* Toggle Switch Overrides - Clean up transition */
+input[type="checkbox"]:not(#useTemplate)+div {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sequence Typography */
+#optimizedSequence {
+    line-height: 1.8;
+    letter-spacing: 0.05em;
+    tab-size: 4;
+}
+
+/* Card Hover micro-interactions */
+section>div:hover {
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+/* Text Selection */
+::selection {
+    background: #10B981;
+    color: white;
+}
+
+/* Glassmorphism utility */
+.glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Button Gradients */
+#optimizeBtn {
+    background-size: 200% auto;
+    transition: 0.5s;
+}
+
+#optimizeBtn:hover {
+    background-position: right center;
+}
+
+/* Sequence Content Formatting - Line breaks every 60 chars via JS but styled here */
+.seq-line {
+    display: block;
+    margin-bottom: 2px;
+}
+
+/* Tooltip Styles */
+.tooltip-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    background-color: #475569;
+    /* Solid darker slate */
+    color: white;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: bold;
+    margin-left: 6px;
+    cursor: help;
+    transition: all 0.2s ease;
+    opacity: 1;
+    /* Fully opaque */
+}
+
+.info-icon:hover {
+    opacity: 1;
+    background-color: var(--primary);
+    transform: scale(1.1);
+}
+
+.tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: #1e293b;
+    color: #fff;
+    text-align: left;
+    border-radius: 8px;
+    padding: 10px;
+    position: absolute;
+    z-index: 100;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 11px;
+    line-height: 1.4;
+    font-weight: normal;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    pointer-events: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #1e293b transparent transparent transparent;
+}
+
+.info-icon:hover+.tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Dark mode tooltip adjustment */
+.dark .tooltip-text {
+    background-color: #0f172a;
+    border-color: #334155;
+}
+
+.dark .tooltip-text::after {
+    border-color: #0f172a transparent transparent transparent;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    header h1 {
+        font-size: 1.25rem;
+    }
+
+    main {
+        padding-top: 1rem;
+    }
+}

@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FactorForge | N. benthamiana Codon Optimization</title>
+    <meta name="description"
+        content="Production-ready codon optimization platform for Nicotiana benthamiana expression systems.">
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <!-- Chart.js for GC Graph -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        primary: {
+                            DEFAULT: '#10B981',
+                            dark: '#059669',
+                        },
+                        secondary: {
+                            DEFAULT: '#3B82F6',
+                            dark: '#2563EB',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-slate-50 text-slate-900 min-h-screen font-sans flex flex-col">
+
+    <!-- Premium Header -->
+    <header
+        class="bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 shadow-xl border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div id="logoIcon"
+                        class="bg-white/20 p-2 rounded-xl backdrop-blur-md border border-white/30 transform hover:rotate-12 transition-transform cursor-pointer">
+                        <span class="text-3xl">🧬</span>
+                    </div>
+                    <div>
+                        <h1 id="logoTitle" class="text-2xl font-extrabold text-white tracking-tight cursor-pointer">FactorForge</h1>
+                        <p class="text-emerald-50 text-xs font-medium opacity-90">N. benthamiana Optimization Platform
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="hidden sm:flex items-center space-x-2">
+                        <button id="changelogBtn"
+                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
+                            ✨ v2.5.3 What's New?
+                        </button>
+                    </div>
+                    <!-- Theme Toggle -->
+                    <button id="themeToggle"
+                        class="p-2 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white transition-all flex items-center justify-center w-10 h-10">
+                        <span id="themeIcon" class="text-lg">🌙</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Panel 1: Input -->
+            <section class="flex flex-col space-y-6">
+                <div
+                    class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-extrabold flex items-center text-slate-900">
+                            <span class="bg-slate-100 p-2 rounded-lg mr-3">📥</span>
+                            Sequence Input
+                        </h2>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="relative group">
+                        <input type="file" id="fileUpload" accept=".fasta,.fa,.txt" class="hidden">
+                        <label for="fileUpload"
+                            class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 hover:bg-emerald-50 hover:border-emerald-400 transition-all group">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <span class="text-3xl mb-2 group-hover:scale-110 transition-transform">📄</span>
+                                <p class="text-sm text-slate-600 font-medium">Click to upload FASTA</p>
+                                <p class="text-xs text-slate-400 mt-1">.fasta, .fa, .txt accepted</p>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="relative flex py-4 items-center">
+                        <div class="flex-grow border-t border-slate-200"></div>
+                        <span
+                            class="flex-shrink mx-4 text-slate-400 text-xs font-bold uppercase tracking-widest">or</span>
+                        <div class="flex-grow border-t border-slate-200"></div>
+                    </div>
+
+                    <!-- Direct Paste -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between mb-1 ml-1">
+                            <p
+                                class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest flex items-center">
+                                Sequence Input Area
+                                <span id="inputTypeBadge"
+                                    class="ml-2 px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 hidden text-[9px]">DNA</span>
+                            </p>
+                            <div class="flex space-x-2">
+                                <span id="inputLenBadge"
+                                    class="px-2 py-0.5 bg-slate-800 text-[10px] text-white rounded-md font-bold transition-all border border-slate-700 shadow-sm opacity-30">0
+                                    bp</span>
+                                <span id="inputGCBadge"
+                                    class="px-2 py-0.5 bg-emerald-600 text-[10px] text-white rounded-md font-bold transition-all border border-emerald-500 shadow-sm opacity-30">GC:
+                                    0%</span>
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <textarea id="sequenceInput" rows="10"
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all font-mono text-xs placeholder:text-slate-400 resize-none"
+                                placeholder="Paste your DNA sequence here..."></textarea>
+                        </div>
+
+                        <!-- Validation Alert -->
+                        <div id="validationWarning"
+                            class="hidden p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-xs flex items-center">
+                            <span class="mr-2">⚠️</span> Only ACGT characters allowed. Other characters will be removed.
+                        </div>
+
+                        <!-- DNA Input Warning -->
+                        <div id="dnaInputWarning"
+                            class="hidden p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-xs">
+                            <span class="font-bold">ℹ️ DNA sequence detected.</span>
+                            FactorForge optimizes <strong>protein sequences</strong> (amino acids, e.g. MAST...).
+                            DNA input will be returned <strong>unchanged</strong> — no codon substitution applied.
+                            For optimization, please enter an amino acid sequence.
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div id="previewContainer" class="hidden animate-in fade-in slide-in-from-top-2 duration-300">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                                Preview: first 150 bp (read-only)</p>
+                            <div id="sequencePreview"
+                                class="p-3 bg-slate-900 text-emerald-400 rounded-lg font-mono text-xs break-all border border-slate-800 shadow-inner">
+                            </div>
+                        </div>
+
+                        <button id="clearBtn"
+                            class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all flex items-center justify-center space-x-2">
+                            <span>🗑️</span>
+                            <span>Clear Input</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- History Panel -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 transition-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-bold flex items-center text-slate-800 dark:text-slate-200">
+                            <span class="bg-amber-50 p-1.5 rounded-lg mr-2 text-amber-600">🕒</span>
+                            Recent History
+                        </h3>
+                        <button id="clearHistory"
+                            class="text-[10px] font-bold text-rose-500 uppercase hover:underline">Clear</button>
+                    </div>
+                    <div id="historyList" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
+                        <p class="text-xs font-bold text-slate-700 dark:text-slate-300 text-center py-4">No recent
+                            history</p>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">🛡️
+                            All history is stored locally in your browser.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Panel 2: Settings -->
+            <section class="flex flex-col space-y-6">
+                <div
+                    class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
+                    <h2 class="text-lg font-extrabold mb-6 flex items-center text-slate-900">
+                        <span class="bg-indigo-50 p-2 rounded-lg mr-3 text-indigo-600">⚙️</span>
+                        Optimization Settings
+                    </h2>
+
+                    <!-- radio button group -->
+                    <div class="space-y-3 mb-8">
+                        <p class="text-xs font-extrabold text-slate-600 uppercase tracking-widest mb-4">Optimization
+                            Profile
+                        </p>
+
+                        <label class="block relative group">
+                            <input type="radio" name="profile" value="balanced" checked class="peer sr-only">
+                            <div
+                                class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
+                                <span class="flex items-center text-sm font-bold text-slate-800">
+                                    Balanced
+                                    <span class="tooltip-container">
+                                        <span class="info-icon">i</span>
+                                        <span class="tooltip-text">Default. CAI priority with GC balance (~0.75 CAI, 42.5% GC). Recommended for most experiments.</span>
+                                    </span>
+                                </span>
+                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Optimal CAI + GC
+                                    content balance</span>
+                                <div
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
+                                    ✓</div>
+                            </div>
+                        </label>
+
+                        <label class="block relative group">
+                            <input type="radio" name="profile" value="high_cai" class="peer sr-only">
+                            <div
+                                class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
+                                <span class="flex items-center text-sm font-bold text-slate-800">
+                                    High CAI
+                                    <span class="tooltip-container">
+                                        <span class="info-icon">i</span>
+                                        <span class="tooltip-text">Maximum CAI score (>0.85). Uses only the most frequently used codons in N. benthamiana.</span>
+                                    </span>
+                                </span>
+                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Maximize CAI score (codon adaptation index)</span>
+                                <div
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
+                                    ✓</div>
+                            </div>
+                        </label>
+
+                        <label class="block relative group">
+                            <input type="radio" name="profile" value="gc_target" class="peer sr-only">
+                            <div
+                                class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
+                                <span class="flex items-center text-sm font-bold text-slate-800">
+                                    GC Target
+                                    <span class="tooltip-container">
+                                        <span class="info-icon">i</span>
+                                        <span class="tooltip-text">Strict GC control (42.5% ± 2%). Ensures sequence
+                                            stability in N. benthamiana systems.</span>
+                                    </span>
+                                </span>
+                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Maintains GC content
+                                    at 42.5% ±
+                                    2%</span>
+                                <div
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
+                                    ✓</div>
+                            </div>
+                        </label>
+
+                        <label class="block relative group">
+                            <input type="radio" name="profile" value="assembly_friendly" class="peer sr-only">
+                            <div
+                                class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
+                                <span class="flex items-center text-sm font-bold text-slate-800">
+                                    Assembly Friendly
+                                    <span class="tooltip-container">
+                                        <span class="info-icon">i</span>
+                                        <span class="tooltip-text">Domesticator: Automatically removes BsaI, BpiI, and
+                                            BsmBI sites via synonymous substitution.</span>
+                                    </span>
+                                </span>
+                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Golden Gate friendly (BsaI/BsmBI/BpII removed)</span>
+                                <div
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
+                                    ✓</div>
+                            </div>
+                        </label>
+
+                        <label class="block relative group">
+                            <input type="radio" name="profile" value="ramp" class="peer sr-only">
+                            <div
+                                class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
+                                <span class="flex items-center text-sm font-bold text-slate-800">
+                                    Ramp
+                                    <span class="tooltip-container">
+                                        <span class="info-icon">i</span>
+                                        <span class="tooltip-text">Uses rare codons at positions 1–50 to slow ribosome speed and promote efficient co-translational folding.</span>
+                                    </span>
+                                </span>
+                                <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">Optimized N-terminal
+                                    translation
+                                    ramp</span>
+                                <div
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
+                                    ✓</div>
+                            </div>
+                        </label>
+
+                        <label class="block relative group">
+                            <input type="radio" name="profile" value="viral_delivery" class="peer sr-only">
+                            <div
+                                class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
+                                <span class="flex items-center text-sm font-bold text-slate-800">
+                                    Viral Delivery
+                                    <span class="tooltip-container">
+                                        <span class="info-icon">i</span>
+                                        <span class="tooltip-text">TRV-based virus delivery optimization for transient
+                                            expression in N. benthamiana (Li et al. 2026).</span>
+                                    </span>
+                                </span>
+                                <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">TRV viral vector
+                                    delivery optimized</span>
+                                <div
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
+                                    ✓</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Advanced Settings -->
+                    <div class="mb-8 border-t border-slate-100 pt-6">
+                        <p class="text-[10px] font-extrabold text-slate-600 uppercase tracking-widest mb-4">Advanced
+                            Settings
+                        </p>
+                        <div class="space-y-4">
+                            <label class="flex items-center justify-between group cursor-pointer py-1">
+                                <span class="text-[13px] font-bold text-slate-900 dark:text-slate-100">
+                                    Kozak Optimization
+                                    <span class="tooltip-container">
+                                        <span class="info-icon">i</span>
+                                        <span class="tooltip-text">Targets positions 4-6 to match plant consensus
+                                            (AACAATG**GC**).</span>
+                                    </span>
+                                </span>
+                                <div class="relative inline-flex items-center">
+                                    <input type="checkbox" id="toggleKozak" class="sr-only peer">
+                                    <div
+                                        class="w-10 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 dark:after:border-slate-400 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 peer-checked:shadow-[0_0_10px_rgba(16,185,129,0.5)] group-hover:ring-2 group-hover:ring-slate-100 dark:group-hover:ring-slate-800 transition-all">
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="flex items-center justify-between group cursor-pointer py-1">
+                                <span class="text-[13px] font-bold text-slate-900 dark:text-slate-100">
+                                    Dinucleotide Scrutiny
+                                    <span class="tooltip-container">
+                                        <span class="info-icon">i</span>
+                                        <span class="tooltip-text">Strict avoidance of CpG and TpA hotspots to prevent
+                                            silencing and instability.</span>
+                                    </span>
+                                </span>
+                                <div class="relative inline-flex items-center">
+                                    <input type="checkbox" id="toggleDinuc" class="sr-only peer">
+                                    <div
+                                        class="w-10 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 dark:after:border-slate-400 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500 peer-checked:shadow-[0_0_10px_rgba(99,102,241,0.5)] group-hover:ring-2 group-hover:ring-slate-100 dark:group-hover:ring-slate-800 transition-all">
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Checkbox Options -->
+                    <div class="mb-8">
+                        <label
+                            class="flex items-center space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="checkbox" id="useTemplate"
+                                class="w-5 h-5 text-emerald-600 rounded-md border-slate-300 focus:ring-emerald-500 transition-all">
+                            <div>
+                                <span class="flex items-center text-sm font-bold text-slate-800">
+                                    Standard Expression
+                                    <span class="tooltip-container">
+                                        <span class="info-icon">i</span>
+                                        <span class="tooltip-text">Construct Builder: Enforces MoClo L0 overhangs (5':
+                                            AATG, 3': GCTT) and compatible terminators.</span>
+                                    </span>
+                                </span>
+                                <span
+                                    class="block text-[11px] text-slate-700 dark:text-slate-400 uppercase font-bold tracking-wider">MoClo
+                                    Compatible</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Action Button -->
+                    <button id="optimizeBtn"
+                        class="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-blue-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-emerald-200 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
+                        <span id="btnText">🚀 Optimize Sequence</span>
+                    </button>
+
+                    <!-- Loading Indicator -->
+                    <div id="loadingIndicator"
+                        class="hidden mt-6 flex flex-col items-center space-y-4 animate-in fade-in duration-300">
+                        <div class="relative">
+                            <div
+                                class="w-12 h-12 border-4 border-slate-100 border-t-emerald-500 rounded-full animate-spin">
+                            </div>
+                            <div class="absolute inset-0 flex items-center justify-center text-xs">🧬</div>
+                        </div>
+                        <p
+                            class="text-sm font-medium text-slate-600 animate-pulse font-mono uppercase tracking-tighter">
+                            Optimizing sequence...</p>
+                    </div>
+
+                    <!-- Validation Status -->
+                    <div id="validationStatus"
+                        class="hidden mt-8 space-y-3 p-5 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Live Validation
+                            Status</p>
+                        <div class="flex items-center space-x-3 text-xs text-slate-300">
+                            <span id="valPolyA" class="text-emerald-400">✅</span>
+                            <span class="font-medium">PolyA Scanner</span>
+                        </div>
+                        <div class="flex items-center space-x-3 text-xs text-slate-300">
+                            <span id="valMoClo" class="text-emerald-400">✅</span>
+                            <span class="font-medium">MoClo Overhang Check</span>
+                        </div>
+                        <div class="flex items-center space-x-3 text-xs text-slate-300">
+                            <span id="valGC" class="text-emerald-400">✅</span>
+                            <span class="font-medium">GC Content Check</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Panel 3: Results -->
+            <section class="flex flex-col space-y-6">
+                <div
+                    class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 min-h-[600px] flex flex-col hover:shadow-md transition-shadow">
+                    <h2 class="text-lg font-extrabold mb-6 flex items-center text-slate-900">
+                        <span class="bg-emerald-50 p-2 rounded-lg mr-3 text-emerald-600">📊</span>
+                        Optimization Results
+                    </h2>
+
+                    <!-- Empty State -->
+                    <div id="emptyState"
+                        class="flex-grow flex flex-col items-center justify-center text-center p-8 space-y-6">
+                        <div
+                            class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-5xl animate-bounce duration-1000 grayscale opacity-40">
+                            🧬</div>
+                        <div class="max-w-xs">
+                            <p class="text-slate-900 font-extrabold text-lg">Ready to sequence.</p>
+                            <p class="text-slate-500 text-sm mt-2">Optimization will unlock:</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 w-full max-w-sm">
+                            <div class="p-3 bg-white border border-slate-100 rounded-xl shadow-sm text-left">
+                                <p class="text-[10px] font-bold text-emerald-500 uppercase">📊 Visualization</p>
+                                <p class="text-[9px] text-slate-500 font-medium">Interactive GC Distribution Chart</p>
+                            </div>
+                            <div class="p-3 bg-white border border-slate-100 rounded-xl shadow-sm text-left">
+                                <p class="text-[10px] font-bold text-blue-500 uppercase">📈 Comparison</p>
+                                <p class="text-[9px] text-slate-500 font-medium">Pre vs Post Optimization Metrics</p>
+                            </div>
+                            <div class="p-3 bg-white border border-slate-100 rounded-xl shadow-sm text-left">
+                                <p class="text-[10px] font-bold text-indigo-500 uppercase">🕒 Tracking</p>
+                                <p class="text-[9px] text-slate-500 font-medium">Local History & Session Sync</p>
+                            </div>
+                            <div class="p-3 bg-white border border-slate-100 rounded-xl shadow-sm text-left">
+                                <p class="text-[10px] font-bold text-amber-500 uppercase">🧬 Validation</p>
+                                <p class="text-[9px] text-slate-500 font-medium">Live DNA Sequence Scrutiny</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Success State -->
+                    <div id="resultsContainer"
+                        class="hidden flex-grow flex flex-col animate-in fade-in zoom-in-95 duration-500">
+                        <div
+                            class="mb-6 flex items-center p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800/50 rounded-2xl">
+                            <span class="text-2xl mr-4 flex-shrink-0">🚀</span>
+                            <div>
+                                <p
+                                    class="text-emerald-900 dark:text-emerald-300 font-extrabold text-sm uppercase tracking-tight">
+                                    Optimization
+                                    Complete!</p>
+                                <p class="text-emerald-700 dark:text-emerald-400 text-xs mt-0.5 font-medium">N.
+                                    benthamiana specific logic applied.</p>
+                            </div>
+                        </div>
+
+                        <!-- Metrics Comparison -->
+                        <div class="mb-8 overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead class="bg-slate-50 dark:bg-slate-800/50">
+                                    <tr>
+                                        <th
+                                            class="px-4 py-3 font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-tight w-1/3">
+                                            Metric</th>
+                                        <th
+                                            class="px-4 py-3 font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-tight">
+                                            Original</th>
+                                        <th
+                                            class="px-4 py-3 font-extrabold text-emerald-600 dark:text-emerald-500 uppercase tracking-tight">
+                                            Optimized</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                    <tr>
+                                        <td class="px-4 py-3 font-semibold text-slate-600">Sequence Length</td>
+                                        <td id="origLen" class="px-4 py-3 text-slate-700">-</td>
+                                        <td id="optLen" class="px-4 py-3 font-bold text-slate-900">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 font-semibold text-slate-600">GC Content</td>
+                                        <td id="origGC" class="px-4 py-3 text-slate-700">-</td>
+                                        <td id="optGCComp" class="px-4 py-3 font-bold text-emerald-600">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 font-semibold text-slate-600">CAI Score</td>
+                                        <td id="origCAI" class="px-4 py-3 text-slate-700">-</td>
+                                        <td id="optCAIComp" class="px-4 py-3 font-bold text-blue-600">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 font-semibold text-slate-600">Codon Changes</td>
+                                        <td class="px-4 py-3 font-bold text-slate-500">N/A</td>
+                                        <td id="mutationRate" class="px-4 py-3 font-bold text-amber-600">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-3 font-semibold text-slate-600">AA Preserved</td>
+                                        <td class="px-4 py-3 font-bold text-slate-500">—</td>
+                                        <td id="aaIdentity" class="px-4 py-3 font-bold text-emerald-600">✅ 100%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Graphical Analysis -->
+                        <div
+                            class="mb-8 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                            <p
+                                class="text-[10px] font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-4">
+                                GC Distribution (50bp Window) — <span class="text-emerald-500">■</span> Target Zone 40–55%</p>
+                            <div class="h-40 w-full">
+                                <canvas id="gcChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Metrics Grid -->
+                        <div class="grid grid-cols-2 gap-4 mb-8">
+                            <div
+                                class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-2xl hover:scale-[1.02] transition-transform cursor-help shadow-sm">
+                                <p
+                                    class="text-[10px] font-extrabold text-blue-500 dark:text-blue-300 uppercase tracking-widest mb-1">
+                                    CAI Score
+                                </p>
+                                <p id="caiValue"
+                                    class="text-2xl font-black text-blue-900 dark:text-blue-400 leading-none">-</p>
+                            </div>
+                            <div
+                                class="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-2xl hover:scale-[1.02] transition-transform cursor-help shadow-sm">
+                                <p
+                                    class="text-[10px] font-extrabold text-emerald-500 dark:text-emerald-300 uppercase tracking-widest mb-1">
+                                    GC %
+                                    Content</p>
+                                <p id="gcValue"
+                                    class="text-2xl font-black text-emerald-900 dark:text-emerald-400 leading-none">-
+                                </p>
+                            </div>
+                            <div
+                                class="col-span-2 p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl hover:scale-[1.01] transition-transform cursor-help shadow-sm flex items-center justify-between">
+                                <div>
+                                    <p
+                                        class="text-[10px] font-extrabold text-indigo-500 dark:text-indigo-300 uppercase tracking-widest mb-1">
+                                        PolyA Signals Found</p>
+                                    <p id="polyaValue"
+                                        class="text-xl font-black text-indigo-900 dark:text-indigo-400 leading-none">-
+                                    </p>
+                                </div>
+                                <span class="text-2xl opacity-50 dark:opacity-80">✨</span>
+                            </div>
+                        </div>
+
+                        <!-- Optimized Sequence -->
+                        <div class="mb-8 flex-grow">
+                            <label
+                                class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">Optimized
+                                Sequence (DNA)</label>
+                            <div class="relative group">
+                                <div id="optimizedSequence"
+                                    class="w-full h-48 p-4 bg-slate-900 text-emerald-400 font-mono text-xs rounded-2xl overflow-y-auto custom-scrollbar border border-slate-800 shadow-inner break-all whitespace-pre-wrap">
+                                </div>
+                                <div class="absolute top-2 right-2 flex space-x-2">
+                                    <div class="w-2 h-2 rounded-full bg-slate-700"></div>
+                                    <div class="w-2 h-2 rounded-full bg-slate-700"></div>
+                                    <div class="w-2 h-2 rounded-full bg-slate-700"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Downloads -->
+                        <div class="grid grid-cols-1 gap-3">
+                            <button id="downloadFasta"
+                                class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95">
+                                <span>💾</span>
+                                <span>Download FASTA</span>
+                            </button>
+                            <button id="downloadGenbank"
+                                class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95">
+                                <span>💾</span>
+                                <span>Download GenBank</span>
+                            </button>
+                            <button id="copyBtn"
+                                class="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl flex items-center justify-center space-x-2 transition-all active:scale-95">
+                                <span>📋</span>
+                                <span>Copy to Clipboard</span>
+                            </button>
+                        </div>
+
+                        <!-- Details Section -->
+                        <div class="mt-8 border-t border-slate-100 pt-6">
+                            <button id="toggleDetails"
+                                class="w-full flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors py-2 group">
+                                <span>Technical Analysis (JSON)</span>
+                                <span id="toggleArrow"
+                                    class="transform transition-transform text-lg group-hover:translate-x-1">→</span>
+                            </button>
+                            <div id="detailsContent"
+                                class="hidden mt-4 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xl bg-slate-900">
+                                <!-- Terminal Header -->
+                                <div
+                                    class="bg-slate-800 px-4 py-2 flex items-center space-x-2 border-b border-slate-700">
+                                    <div class="flex space-x-1.5">
+                                        <div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                                        <div class="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
+                                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                                    </div>
+                                    <span
+                                        class="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-2 font-mono">analysis.json</span>
+                                </div>
+                                <pre id="jsonDetails"
+                                    class="p-4 text-[10px] font-mono text-emerald-400 overflow-x-auto custom-scrollbar bg-slate-900"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Global Toasts -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 flex flex-col space-y-3 z-[100]"></div>
+
+    <!-- Changelog Modal -->
+    <div id="changelogModal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" id="modalOverlay"></div>
+        <div
+            class="relative bg-white dark:bg-slate-900 w-full max-w-2xl max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300 flex flex-col border border-slate-200 dark:border-slate-800">
+            <div
+                class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
+                <div>
+                    <h2 class="text-xl font-bold">What's New in FactorForge</h2>
+                    <p class="text-emerald-50 text-xs opacity-90">N. benthamiana Codon Optimization Platform</p>
+                </div>
+                <button id="closeModal"
+                    class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
+            </div>
+            <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
+                <!-- Version 2.5.2 -->
+                <div class="relative pl-8 border-l-2 border-emerald-500">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v2.5.3 - Profile Accuracy Fix</h3>
+                        <span class="text-slate-400 text-[10px]">2026-04-05</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>High CAI Fix:</b> Fixed codon selection to use Golden Set weights — CAI improved from 0.757 to 1.000 (011-fix).</li>
+                        <li><b>GC Target Fix:</b> Corrected default GC target from 50% to 42.5% ±2% matching N. benthamiana spec (012-fix).</li>
+                        <li><b>Viral Delivery UI:</b> Added viral_delivery profile card and DNA input warning banner (009-fix, 010-fix).</li>
+                    </ul>
+                </div>
+
+                <!-- Version 2.5.2 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-800">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v2.5.2 - Engine Throughput Optimization</h3>
+                        <span class="text-slate-400 text-[10px]">2026-02-14</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Pipeline Scan Reduction:</b> Limited expensive full rescans by applying bounded windows after local sequence edits.</li>
+                        <li><b>Scanner Speedup:</b> Improved PolyA/GC traversal path to cut redundant operations on long CDS inputs.</li>
+                        <li><b>Candidate Fast Path:</b> Reduced mutation proposal overhead in synonymous candidate filtering.</li>
+                    </ul>
+                </div>
+
+                <!-- Version 2.5.1 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-800">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v2.5.1 - Engine Reliability Fix</h3>
+                        <span class="text-slate-400 text-[10px]">2026-02-12</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>GC Pipeline Fix:</b> Corrected key mismatch and added client-side calculation failover.</li>
+                        <li><b>Enhanced Validation:</b> New distinct states for "N/A" vs "Out of Range" GC content.</li>
+                        <li><b>UX Refinement:</b> Expanded real-time preview to 150bp for better terminal scrutiny.</li>
+                    </ul>
+                </div>
+
+                <!-- Version 2.5.0 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-800">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v2.5.0 - Production Dashboard</h3>
+                        <span class="text-slate-400 text-[10px]">2026-02-11</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Advanced UI:</b> Full premium dashboard with glassmorphism and dark mode.</li>
+                        <li><b>Real-time Stats:</b> Live sequence length and GC% tracking.</li>
+                        <li><b>Graphical Analysis:</b> Dynamic GC distribution chart integration.</li>
+                        <li><b>Privacy-First:</b> Local session history stored securely in browser.</li>
+                    </ul>
+                </div>
+
+                <!-- Version 2.3.0 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-800">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v2.3.0 - Scientific Precision II</h3>
+                        <span class="text-slate-400 text-[10px]">2026-02-09</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Kozak Optimization:</b> 5' translation initiation context scrutiny (AACAATG**GC**).</li>
+                        <li><b>Dinucleotide Scrutiny:</b> CpG and TpA density scanning to avoid silencing.</li>
+                    </ul>
+                </div>
+
+                <!-- Version 2.2.0 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-800">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v2.2.0 - Scientific Precision I</h3>
+                        <span class="text-slate-400 text-[10px]">2026-02-05</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Golden Set Table:</b> Scientific baseline from high-expression gene data.</li>
+                        <li><b>RAMP Optimization:</b> N-terminal deoptimization for folding.</li>
+                        <li><b>MoClo Check:</b> Level 0 overhang validation and collision detection.</li>
+                    </ul>
+                </div>
+
+                <!-- Version 2.1.1 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-800">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v2.1.1 - Stability & Logging</h3>
+                        <span class="text-slate-400 text-[10px]">2026-02-04</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Centralized Data:</b> Improved path management for codon tables and weights.</li>
+                        <li><b>Robust Logging:</b> Standardized logging framework across all v2 modules.</li>
+                        <li><b>Hardened Security:</b> Path traversal protection for template loading.</li>
+                    </ul>
+                </div>
+
+                <!-- Version 2.1.0 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-800">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v2.1.0 - Workflow Optimization</h3>
+                        <span class="text-slate-400 text-[10px]">2026-01-30</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Construct Builder:</b> Automated sequence assembly logic.</li>
+                        <li><b>GenBank Export:</b> Full support for annotated feature files.</li>
+                    </ul>
+                </div>
+
+                <!-- Version 2.0.0 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-800">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v2.0.0 - Rule-based Revolution</h3>
+                        <span class="text-slate-400 text-[10px]">2026-01-22</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>RuleEngine:</b> 7 new scanners (PolyA, ARE, Splice-sites, etc.).</li>
+                        <li><b>Domesticator:</b> Automated Golden Gate restriction site removal.</li>
+                        <li><b>Validation:</b> Auto-detect protein/DNA/FASTA inputs.</li>
+                    </ul>
+                </div>
+
+                <!-- Version 1.2.0 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-800">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v1.2.0 - Inference Harness</h3>
+                        <span class="text-slate-400 text-[10px]">2026-01-28</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Inference Optimization:</b> Baseline deployment for BPE model testing.</li>
+                    </ul>
+                </div>
+
+                <!-- Version 1.1.0 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-800">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v1.1.0 - Workflow Automation</h3>
+                        <span class="text-slate-400 text-[10px]">2026-01-24</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>BPE Training:</b> Initial research pipeline with subword tokenization.</li>
+                    </ul>
+                </div>
+
+                <!-- Version 1.0.0 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-800">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v1.0.0 - Foundation</h3>
+                        <span class="text-slate-400 text-[10px]">2026-01-21</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>BPE Tokenization:</b> Initial AI-driven codon optimization approach.</li>
+                        <li><b>Initial Release:</b> Foundation of N. benthamiana optimization.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-100 dark:bg-slate-800/50 text-center">
+                <p class="text-[10px] text-slate-500 font-medium italic">Building the future of plant molecular farming.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <div
+                class="flex items-center justify-center space-x-4 mb-4 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all">
+                <span class="text-xs font-bold text-slate-400">FactorForge — Open Source</span>
+                <span class="w-1.5 h-1.5 bg-slate-300 rounded-full"></span>
+                <span class="text-xs font-bold text-slate-400">Apache 2.0 License</span>
+            </div>
+            <p class="text-xs text-slate-400 font-medium">© 2026 Eijex. All rights reserved. Professional use
+                only.</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+
+</html>

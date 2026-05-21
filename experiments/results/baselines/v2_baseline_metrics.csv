@@ -1,0 +1,6 @@
+name,engine,profile,protein_length,dna_length,cai,gc,amino_acid_identity,internal_stop_count,invalid_codon_count,validator_passed
+short_synthetic,v2,high_cai,9,27,0.8252356648601007,33.33333333333333,1.0,0,0,True
+reporter_like,v2,high_cai,79,237,0.7222809821412758,35.44303797468354,1.0,0,0,True
+antibody_like_heavy_style,v2,high_cai,99,297,0.7285373653872786,37.03703703703704,1.0,0,0,True
+low_complexity,v2,high_cai,33,99,0.7766800661394382,37.37373737373738,1.0,0,0,True
+cysteine_rich,v2,high_cai,27,81,0.8038207556016826,37.03703703703704,1.0,0,0,True

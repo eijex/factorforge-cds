@@ -1,0 +1,34 @@
+{
+  "name": "High Expression",
+  "description": "High strength promoter with optimized UTR",
+  "components": [
+    {
+      "type": "promoter",
+      "name": "Super35S",
+      "sequence": "GGTCTCAGGATCGGATCCGATGACGATGACCTCGATCGGATCCGAT"
+    },
+    {
+      "type": "5utr",
+      "name": "enhanced_omega",
+      "sequence": "GCTAGGATCCGATGACGATCGATGCTAGGATCCGATGACG"
+    },
+    {
+      "type": "cds",
+      "name": "GENE",
+      "sequence": "USER_INPUT"
+    },
+    {
+      "type": "terminator",
+      "name": "strong_terminator",
+      "sequence": "GCTAGGATCCGATGACGATCGATGCTAGGATCCGATGAC"
+    }
+  ],
+  "overhangs": {
+    "promoter_5": "AATG",
+    "promoter_3": "AATG",
+    "cds_5": "AATG",
+    "cds_3": "GCTT",
+    "terminator_5": "GCTT",
+    "terminator_3": "CGCT"
+  }
+}

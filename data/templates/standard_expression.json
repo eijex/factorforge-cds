@@ -1,0 +1,34 @@
+{
+  "name": "Standard Expression",
+  "description": "General purpose plant expression",
+  "components": [
+    {
+      "type": "promoter",
+      "name": "35S",
+      "sequence": "GGTCTCAAGGCCGATGTCAGTGAAGGATCCGATGCTAGCTAGGATCC"
+    },
+    {
+      "type": "5utr",
+      "name": "omega",
+      "sequence": "GCTAGCTAGCGGATCCGATGACCTCTAGAGGATCCGATG"
+    },
+    {
+      "type": "cds",
+      "name": "GENE",
+      "sequence": "USER_INPUT"
+    },
+    {
+      "type": "terminator",
+      "name": "nos",
+      "sequence": "GCTAGGATCCGATGACCTCGATGCTAGGATCCGATGAC"
+    }
+  ],
+  "overhangs": {
+    "promoter_5": "AATG",
+    "promoter_3": "AATG",
+    "cds_5": "AATG",
+    "cds_3": "GCTT",
+    "terminator_5": "GCTT",
+    "terminator_3": "CGCT"
+  }
+}

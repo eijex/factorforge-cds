@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Training data and model checkpoints (large files → Google Drive / HuggingFace)
+data/raw/
+data/embeddings/
+data/training/
+data/models/
+data/checkpoints/
+models/
+
+# Test cache
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code (internal workflow — not for public repo)
+CLAUDE.md
+.claude/
+
+# Notebooks (Kaggle/Colab specific — not for public use)
+notebooks/
+
+# Smoke test artifacts and leftover directories
+experiments/results/run4_smoke/
+experiments/results/run4b_full/
+
+# Tool caches
+.ruff_cache/
+
+# Training configs (internal — all versions)
+configs/finetune_all.yaml
+configs/pretrain_all.yaml
+configs/v3_training_config*.yml
+
+# Internal dev scripts
+scripts/dev/
+
+# Internal development docs
+docs/design/run4_experiment_plan.md
+docs/reports/run4_recovery_plan.md
+docs/superpowers/

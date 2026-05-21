@@ -1,0 +1,699 @@
+/**
+ * FactorForge Application Logic
+ * Production-ready vanilla JS for codon optimization platform
+ */
+
+const API_ENDPOINT = '/api/optimize';
+
+// State Management
+const state = {
+    sequence: '',
+    profile: 'balanced',
+    useTemplate: false,
+    kozak: false,
+    dinuc: false,
+    results: null,
+    isOptimizing: false,
+    history: JSON.parse(localStorage.getItem('codonforge_history') || '[]')
+};
+
+// DOM Elements
+const elements = {
+    fileUpload: document.getElementById('fileUpload'),
+    sequenceInput: document.getElementById('sequenceInput'),
+    sequencePreview: document.getElementById('sequencePreview'),
+    previewContainer: document.getElementById('previewContainer'),
+    validationWarning: document.getElementById('validationWarning'),
+    clearBtn: document.getElementById('clearBtn'),
+    optimizeBtn: document.getElementById('optimizeBtn'),
+    btnText: document.getElementById('btnText'),
+    loadingIndicator: document.getElementById('loadingIndicator'),
+    validationStatus: document.getElementById('validationStatus'),
+    emptyState: document.getElementById('emptyState'),
+    resultsContainer: document.getElementById('resultsContainer'),
+    caiValue: document.getElementById('caiValue'),
+    gcValue: document.getElementById('gcValue'),
+    polyaValue: document.getElementById('polyaValue'),
+    optimizedSequence: document.getElementById('optimizedSequence'),
+    jsonDetails: document.getElementById('jsonDetails'),
+    downloadFasta: document.getElementById('downloadFasta'),
+    downloadGenbank: document.getElementById('downloadGenbank'),
+    copyBtn: document.getElementById('copyBtn'),
+    toggleDetails: document.getElementById('toggleDetails'),
+    detailsContent: document.getElementById('detailsContent'),
+    toggleArrow: document.getElementById('toggleArrow'),
+    themeToggle: document.getElementById('themeToggle'),
+    themeIcon: document.getElementById('themeIcon'),
+    profileRadios: document.getElementsByName('profile'),
+    useTemplateCheck: document.getElementById('useTemplate'),
+    kozakToggle: document.getElementById('toggleKozak'),
+    dinucToggle: document.getElementById('toggleDinuc'),
+    inputLenBadge: document.getElementById('inputLenBadge'),
+    inputGCBadge: document.getElementById('inputGCBadge'),
+    origLen: document.getElementById('origLen'),
+    optLen: document.getElementById('optLen'),
+    origGC: document.getElementById('origGC'),
+    optGCComp: document.getElementById('optGCComp'),
+    origCAI: document.getElementById('origCAI'),
+    optCAIComp: document.getElementById('optCAIComp'),
+    mutationRate: document.getElementById('mutationRate'),
+    gcChart: document.getElementById('gcChart'),
+    historyList: document.getElementById('historyList'),
+    clearHistory: document.getElementById('clearHistory'),
+    changelogBtn: document.getElementById('changelogBtn'),
+    changelogModal: document.getElementById('changelogModal'),
+    closeModal: document.getElementById('closeModal'),
+    modalOverlay: document.getElementById('modalOverlay'),
+    inputTypeBadge: document.getElementById('inputTypeBadge'),
+    logoIcon: document.getElementById('logoIcon'),
+    logoTitle: document.getElementById('logoTitle')
+};
+
+let chartInstance = null;
+
+// Initialization
+document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    initEventListeners();
+    renderHistory();
+    console.log('FactorForge V2.5.3 Engaged');
+});
+
+function initEventListeners() {
+    // Input Handling
+    elements.fileUpload.addEventListener('change', handleFileUpload);
+    elements.sequenceInput.addEventListener('input', debounce(handleSequenceChange, 300));
+    elements.clearBtn.addEventListener('click', clearAll);
+
+    // Profile Change
+    elements.profileRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            state.profile = e.target.value;
+        });
+    });
+
+    elements.useTemplateCheck.addEventListener('change', (e) => {
+        state.useTemplate = e.target.checked;
+    });
+
+    elements.kozakToggle.addEventListener('change', (e) => state.kozak = e.target.checked);
+    elements.dinucToggle.addEventListener('change', (e) => state.dinuc = e.target.checked);
+    elements.clearHistory.addEventListener('click', clearHistory);
+
+    // Action
+    elements.optimizeBtn.addEventListener('click', runOptimization);
+
+    // Results Actions
+    elements.downloadFasta.addEventListener('click', () => downloadFile('fasta'));
+    elements.downloadGenbank.addEventListener('click', () => downloadFile('genbank'));
+    elements.copyBtn.addEventListener('click', copyToClipboard);
+    elements.toggleDetails.addEventListener('click', toggleDetailsPanel);
+    elements.themeToggle.addEventListener('click', toggleTheme);
+    elements.changelogBtn.addEventListener('click', toggleChangelog);
+    elements.closeModal.addEventListener('click', toggleChangelog);
+    elements.modalOverlay.addEventListener('click', toggleChangelog);
+    elements.logoIcon.addEventListener('click', reloadPage);
+    elements.logoTitle.addEventListener('click', reloadPage);
+}
+
+function reloadPage() {
+    window.location.reload();
+}
+
+// Theme Handling
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        elements.themeIcon.textContent = '☀️';
+    }
+}
+
+function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    elements.themeIcon.textContent = isDark ? '☀️' : '🌙';
+    showToast(`${isDark ? 'Dark' : 'Light'} mode enabled`, 'info');
+
+    // Re-render chart if it exists to update colors
+    if (state.results) renderGCGraph(state.results.optimized_sequence);
+}
+
+// Handler Functions
+function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const content = event.target.result;
+        elements.sequenceInput.value = content;
+        handleSequenceChange({ target: { value: content } });
+        showToast('File uploaded successfully', 'success');
+    };
+    reader.onerror = () => showToast('Error reading file', 'error');
+    reader.readAsText(file);
+}
+
+function handleSequenceChange(e) {
+    let rawValue = e.target.value;
+
+    // Clean sequence (remove FASTA headers, whitespace)
+    const lines = rawValue.split('\n');
+    let sequenceOnly = lines[0].startsWith('>') ? lines.slice(1).join('') : rawValue;
+    sequenceOnly = sequenceOnly.replace(/[^A-Za-z*]/g, ''); // Include * for stop codons
+
+    // Detection Regex
+    const dnaRegex = /^[ACGTacgt]+$/;
+    const proteinRegex = /^[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*]+$/;
+
+    const isDNA = dnaRegex.test(sequenceOnly);
+    const isProtein = proteinRegex.test(sequenceOnly);
+
+    // Update Badge & Warning
+    const dnaInputWarning = document.getElementById('dnaInputWarning');
+    if (sequenceOnly.length > 0) {
+        elements.inputTypeBadge.classList.remove('hidden');
+        if (isDNA) {
+            elements.inputTypeBadge.textContent = 'DNA';
+            elements.inputTypeBadge.className = 'ml-2 px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold text-[9px] uppercase';
+            elements.validationWarning.classList.add('hidden');
+            if (dnaInputWarning) dnaInputWarning.classList.remove('hidden');
+        } else if (isProtein) {
+            elements.inputTypeBadge.textContent = 'Protein';
+            elements.inputTypeBadge.className = 'ml-2 px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold text-[9px] uppercase';
+            elements.validationWarning.classList.add('hidden');
+            if (dnaInputWarning) dnaInputWarning.classList.add('hidden');
+        } else {
+            elements.inputTypeBadge.textContent = 'Mixed/Invalid';
+            elements.inputTypeBadge.className = 'ml-2 px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 font-bold text-[9px] uppercase';
+            elements.validationWarning.classList.remove('hidden');
+            elements.validationWarning.innerHTML = '<span class="mr-2">⚠️</span> Contains characters not valid for DNA or Protein.';
+            if (dnaInputWarning) dnaInputWarning.classList.add('hidden');
+        }
+    } else {
+        elements.inputTypeBadge.classList.add('hidden');
+        elements.validationWarning.classList.add('hidden');
+        if (dnaInputWarning) dnaInputWarning.classList.add('hidden');
+    }
+
+    state.sequence = sequenceOnly.toUpperCase();
+
+    // Update Stats (only treat as protein if it's NOT also valid DNA)
+    updateInputStats(state.sequence, isProtein && !isDNA);
+
+    // Update Preview
+    if (state.sequence.length > 0) {
+        elements.previewContainer.classList.remove('hidden');
+        elements.sequencePreview.textContent = state.sequence.substring(0, 150) + (state.sequence.length > 150 ? '...' : '');
+    } else {
+        elements.previewContainer.classList.add('hidden');
+    }
+}
+
+function updateInputStats(seq, isProtein = false) {
+    const len = seq.length;
+    if (len > 0) {
+        elements.inputLenBadge.textContent = `${len} ${isProtein ? 'aa' : 'bp'}`;
+        elements.inputLenBadge.style.opacity = "1";
+
+        if (isProtein) {
+            elements.inputGCBadge.textContent = "GC: N/A";
+            elements.inputGCBadge.style.opacity = "0.5";
+            elements.inputGCBadge.title = "Not applicable for protein sequences";
+        } else {
+            const gc = calculateGC(seq);
+            elements.inputGCBadge.textContent = `GC: ${gc}%`;
+            elements.inputGCBadge.style.opacity = "1";
+            elements.inputGCBadge.removeAttribute("title");
+        }
+    } else {
+        elements.inputLenBadge.textContent = "0 bp";
+        elements.inputLenBadge.style.opacity = "0.3";
+        elements.inputGCBadge.textContent = "GC: 0%";
+        elements.inputGCBadge.style.opacity = "0.3";
+    }
+}
+
+async function runOptimization() {
+    if (!state.sequence || state.sequence.length < 3) {
+        showToast('Please enter a valid DNA sequence', 'error');
+        return;
+    }
+
+    setLoading(true);
+
+    try {
+        // Prepare Request
+        const payload = {
+            sequence: state.sequence,
+            profile: state.profile,
+            use_template: state.useTemplate,
+            kozak: state.kozak,
+            dinuc: state.dinuc
+        };
+
+        let response;
+        try {
+            response = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch (f) {
+            console.warn('Network error or CORS issue, failing over to mock data');
+            throw new Error('NETWORK_FAILURE');
+        }
+
+        let data;
+        if (response.ok) {
+            data = await response.json();
+        } else {
+            throw new Error('API_FAILURE');
+        }
+
+        state.results = data;
+        addToHistory(state.sequence, data);
+        renderResults();
+        showToast('Optimization complete!', 'success');
+
+    } catch (error) {
+        console.error('Optimization Failed:', error);
+
+        // Mock fallback for development/demo
+        showToast('Running mock optimization for demonstration...', 'info');
+        await new Promise(r => setTimeout(r, 1500)); // Simulate delay
+        state.results = getMockResult();
+        renderResults();
+        showToast('Showing simulated results', 'success');
+    } finally {
+        setLoading(false);
+    }
+}
+
+// UI Updating Functions
+function setLoading(loading) {
+    state.isOptimizing = loading;
+    elements.optimizeBtn.disabled = loading;
+
+    if (loading) {
+        elements.btnText.classList.add('opacity-0');
+        elements.loadingIndicator.classList.remove('hidden');
+        elements.emptyState.classList.add('hidden');
+        elements.resultsContainer.classList.add('hidden');
+    } else {
+        elements.btnText.classList.remove('opacity-0');
+        elements.loadingIndicator.classList.add('hidden');
+        elements.validationStatus.classList.remove('hidden');
+    }
+}
+
+function renderResults() {
+    const res = state.results;
+    if (!res) return;
+
+    elements.emptyState.classList.add('hidden');
+    elements.resultsContainer.classList.remove('hidden');
+
+    // Metrics
+    elements.caiValue.textContent = res.metrics.cai.toFixed(3);
+    // GC Value updated below via manual calculation
+    elements.polyaValue.textContent = res.metrics.polya_signals === 0 ? '0 (Clean)' : res.metrics.polya_signals;
+
+    // Metrics Comparison Table
+    elements.origLen.textContent = `${res.original_length || state.sequence.length} bp`;
+    elements.optLen.textContent = `${res.metrics.length || res.optimized_sequence.length} bp`;
+
+    // Variables for calculations
+    const origSeq = state.sequence;
+    const optSeq = res.optimized_sequence;
+    const calculatedGC = calculateGC(optSeq);
+    const oGC = calculateGC(origSeq);
+
+    elements.origGC.textContent = `${oGC}%`;
+    elements.optGCComp.textContent = `${calculatedGC.toFixed(1)}%`;
+    elements.gcValue.textContent = `${calculatedGC.toFixed(1)}%`;
+    elements.origCAI.textContent = 'N/A';
+    elements.optCAIComp.textContent = res.metrics.cai.toFixed(3);
+
+    // Calculate Mutation Rate
+    let diffCount = 0;
+    const compareLen = Math.min(origSeq.length, optSeq.length);
+    for (let i = 0; i < compareLen; i++) {
+        if (origSeq[i] !== optSeq[i]) diffCount++;
+    }
+    // Add length difference if any
+    diffCount += Math.abs(origSeq.length - optSeq.length);
+    const mRate = origSeq.length > 0 ? ((diffCount / Math.max(origSeq.length, 1)) * 100).toFixed(1) : 0;
+    elements.mutationRate.textContent = `${mRate}% (${diffCount} bp)`;
+
+    // Sequence
+    elements.optimizedSequence.textContent = formatSequence(res.optimized_sequence);
+
+    // Render GC Graph
+    renderGCGraph(res.optimized_sequence);
+
+    // PolyA color coding
+    const polyaCount = res.metrics.polya_signals;
+    if (polyaCount === 0) {
+        elements.polyaValue.textContent = '0 (Clean)';
+        elements.polyaValue.className = 'text-xl font-black text-emerald-600 dark:text-emerald-400 leading-none';
+    } else {
+        elements.polyaValue.textContent = `${polyaCount} ⚠️`;
+        elements.polyaValue.className = 'text-xl font-black text-amber-600 dark:text-amber-400 leading-none';
+    }
+
+    // Validation Badges
+    elements.validationStatus.classList.remove('hidden');
+    const v = res.validation || { polya: 'PASS', moclo: 'PASS', gc: 'PASS' };
+    updateValidationIcon('valPolyA', v.polya === 'PASS');
+    updateValidationIcon('valMoClo', v.moclo === 'PASS');
+
+    // Improved GC Status (Logic separation: N/A vs Out of Range)
+    const valGC = document.getElementById('valGC');
+    if (!optSeq || optSeq.length === 0 || calculatedGC === 0) {
+        valGC.textContent = '⚠️';
+        valGC.className = 'text-amber-500';
+        valGC.nextElementSibling.textContent = 'GC Content: N/A';
+        valGC.nextElementSibling.title = 'GC calculation failed or sequence not available';
+    } else if (v.gc !== 'PASS' || (calculatedGC < 40.5 || calculatedGC > 44.5)) {
+        valGC.textContent = '❌';
+        valGC.className = 'text-rose-500';
+        valGC.nextElementSibling.textContent = `❌ Out of target GC range (${calculatedGC.toFixed(1)}%)`;
+        valGC.nextElementSibling.title = `Target: 42.5% ± 2% | Calculated: ${calculatedGC.toFixed(1)}%`;
+    } else {
+        valGC.textContent = '✅';
+        valGC.className = 'text-emerald-400';
+        valGC.nextElementSibling.textContent = 'GC Content Check (42.5% ± 2%)';
+    }
+
+    // JSON Details
+    elements.jsonDetails.textContent = JSON.stringify(res, null, 2);
+}
+
+
+function updateValidationIcon(id, pass) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.textContent = pass ? '✅' : '❌';
+        el.className = pass ? 'text-emerald-400' : 'text-rose-500';
+    }
+}
+
+function formatSequence(seq) {
+    if (!seq) return '';
+    return seq.match(/.{1,60}/g).join('\n');
+}
+
+function renderGCGraph(seq) {
+    const windowSize = 50;
+    const data = [];
+    const labels = [];
+
+    for (let i = 0; i < seq.length - windowSize; i += 10) {
+        const window = seq.substring(i, i + windowSize);
+        const gcCount = (window.match(/[GC]/gi) || []).length;
+        data.push((gcCount / windowSize) * 100);
+        labels.push(i);
+    }
+
+    if (chartInstance) chartInstance.destroy();
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#94a3b8' : '#475569';
+    const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
+    const n = labels.length;
+
+    const ctx = elements.gcChart.getContext('2d');
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Target Max (55%)',
+                    data: Array(n).fill(55),
+                    borderColor: 'rgba(16, 185, 129, 0.35)',
+                    borderWidth: 1,
+                    borderDash: [4, 4],
+                    pointRadius: 0,
+                    fill: false,
+                    tension: 0
+                },
+                {
+                    label: 'Target Min (40%)',
+                    data: Array(n).fill(40),
+                    borderColor: 'rgba(16, 185, 129, 0.35)',
+                    borderWidth: 1,
+                    borderDash: [4, 4],
+                    pointRadius: 0,
+                    fill: '-1',
+                    backgroundColor: 'rgba(16, 185, 129, 0.06)',
+                    tension: 0
+                },
+                {
+                    label: 'GC Content %',
+                    data: data,
+                    borderColor: '#10B981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: false,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    filter: item => item.datasetIndex === 2
+                }
+            },
+            scales: {
+                y: {
+                    min: 20,
+                    max: 80,
+                    grid: { color: gridColor },
+                    ticks: { color: textColor, font: { size: 10 } }
+                },
+                x: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+function addToHistory(input, result) {
+    const item = {
+        id: Date.now(),
+        timestamp: new Date().toLocaleString(),
+        inputLen: input.length,
+        profile: state.profile,
+        cai: result.metrics.cai,
+        gc: calculateGC(result.optimized_sequence),
+        sequence: result.optimized_sequence,
+        inputSequence: input
+    };
+
+    state.history.unshift(item);
+    if (state.history.length > 10) state.history.pop();
+    localStorage.setItem('codonforge_history', JSON.stringify(state.history));
+    renderHistory();
+}
+
+function renderHistory() {
+    if (!elements.historyList) return;
+
+    if (state.history.length === 0) {
+        elements.historyList.innerHTML = '<p class="text-[10px] text-slate-400 text-center py-4">No recent history</p>';
+        return;
+    }
+
+    elements.historyList.innerHTML = state.history.map(item => `
+        <div class="p-2 border border-slate-100 rounded-lg hover:bg-slate-50 cursor-pointer transition-all mb-2 flex justify-between items-center group" onclick="loadHistoryItem(${item.id})">
+            <div>
+                <p class="text-[10px] font-bold text-slate-700">${item.inputLen}bp → ${item.profile}</p>
+                <p class="text-[9px] text-slate-400">${item.timestamp}</p>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] font-bold text-emerald-600">CAI: ${item.cai.toFixed(3)}</p>
+                <p class="text-[9px] text-slate-400">GC: ${item.gc}%</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+window.loadHistoryItem = (id) => {
+    const item = state.history.find(h => h.id === id);
+    if (!item) return;
+
+    elements.sequenceInput.value = item.inputSequence;
+    handleSequenceChange({ target: { value: item.inputSequence } });
+    state.results = {
+        optimized_sequence: item.sequence,
+        metrics: { cai: item.cai, gc_percent: item.gc, polya_signals: 0, length: item.sequence.length },
+        profile: item.profile
+    };
+    renderResults();
+    showToast('History item loaded', 'success');
+};
+
+function clearHistory() {
+    state.history = [];
+    localStorage.removeItem('codonforge_history');
+    renderHistory();
+    showToast('History cleared', 'info');
+}
+
+function clearAll() {
+    elements.sequenceInput.value = '';
+    elements.fileUpload.value = '';
+    state.sequence = '';
+    state.results = null;
+    elements.previewContainer.classList.add('hidden');
+    elements.resultsContainer.classList.add('hidden');
+    elements.emptyState.classList.remove('hidden');
+    elements.validationStatus.classList.add('hidden');
+    showToast('Input cleared', 'info');
+}
+
+function toggleDetailsPanel() {
+    const isHidden = elements.detailsContent.classList.contains('hidden');
+    if (isHidden) {
+        elements.detailsContent.classList.remove('hidden');
+        elements.toggleArrow.style.transform = 'rotate(90deg)';
+    } else {
+        elements.detailsContent.classList.add('hidden');
+        elements.toggleArrow.style.transform = 'rotate(0deg)';
+    }
+}
+
+function toggleChangelog() {
+    elements.changelogModal.classList.toggle('hidden');
+}
+
+// Utilities
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast-enter p-4 rounded-2xl shadow-2xl border flex items-center space-x-3 transition-all ${type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+        type === 'error' ? 'bg-rose-50 border-rose-200 text-rose-800' :
+            'bg-blue-50 border-blue-200 text-blue-800'
+        }`;
+
+    const icon = type === 'success' ? '✅' : type === 'error' ? '🚫' : 'ℹ️';
+
+    toast.innerHTML = `
+        <span class="text-xl">${icon}</span>
+        <span class="text-xs font-bold uppercase tracking-tight">${message}</span>
+    `;
+
+    elements.toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.replace('toast-enter', 'toast-exit');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+async function copyToClipboard() {
+    if (!state.results) return;
+    try {
+        await navigator.clipboard.writeText(state.results.optimized_sequence);
+        const originalText = elements.copyBtn.innerHTML;
+        elements.copyBtn.innerHTML = '<span>🎉</span> <span>Copied!</span>';
+        elements.copyBtn.classList.add('bg-emerald-100');
+        setTimeout(() => {
+            elements.copyBtn.innerHTML = originalText;
+            elements.copyBtn.classList.remove('bg-emerald-100');
+        }, 2000);
+        showToast('Sequence copied to clipboard', 'success');
+    } catch (err) {
+        showToast('Failed to copy', 'error');
+    }
+}
+
+function downloadFile(format) {
+    if (!state.results) return;
+
+    let content = '';
+    let fileName = '';
+    const seq = state.results.optimized_sequence;
+
+    if (format === 'fasta') {
+        content = `>FactorForge_Optimized | Profile: ${state.profile} | CAI: ${state.results.metrics.cai}\n${seq}`;
+        fileName = `optimized_sequence_${Date.now()}.fasta`;
+    } else {
+        // Basic GenBank template
+        content = `LOCUS       Exported                ${seq.length} bp    DNA     linear   \n`;
+        content += `DEFINITION  FactorForge Optimized Sequence for N. benthamiana\n`;
+        content += `FEATURES             Location/Qualifiers\n`;
+        content += `     CDS             1..${seq.length}\n`;
+        content += `                     /label="Optimized_CDS"\n`;
+        content += `                     /note="Profile: ${state.profile}"\n`;
+        content += `ORIGIN      \n`;
+
+        const lines = seq.toLowerCase().match(/.{1,60}/g);
+        lines.forEach((line, i) => {
+            const start = (i * 60) + 1;
+            const groups = line.match(/.{1,10}/g).join(' ');
+            content += `${start.toString().padStart(9, ' ')} ${groups}\n`;
+        });
+        content += `//`;
+        fileName = `optimized_sequence_${Date.now()}.gb`;
+    }
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    showToast(`File ${fileName} ready`, 'success');
+}
+
+// Static Data
+function getMockResult() {
+    const mockSeq = "ATGGTGAGCAAGGGCGAGGAGCTGTTCACCGGGGTGGTGCCCATCCTGGTCGAGCTGGACGGCGACGTAAACGGCCACAAGTTCAGCGTGTCCGGCGAGGGCGAGGGCGATGCCACCTACGGCAAGCTGACCCTGAAGTTCATCTGCACCACCGGCAAGCTGCCCGTGCCCTGGCCCACCCTCGTGACCACCTTCAGCTACGGCGTGCAGTGCTTCAGCCGCTACCCCGACCACATGAAGCAGCACGACTTCTTCAAGTCCGCCATGCCCGAAGGCTACGTCCAGGAGCGCACCATCTTCTTCAAGGACGACGGCAACTACAAGACCCGCGCCGAGGTGAAGTTCGAGGGCGACACCCTGGTGAACCGCATCGAGCTGAAGGGCATCGACTTCAAGGAGGACGGCAACATCCTGGGGCACAAGCTGGAGTACAACTACAACAGCCACAACGTCTATATCATGGCCGACAAGCAGAAGAACGGCATCAAGGTGAACTTCAAGATCCGCCACAACATCGAGGACGGCAGCGTGCAGCTCGCCGACCACTACCAGCAGAACACCCCCATCGGCGACGGCCCCGTGCTGCTGCCCGACAACCACTACCTGAGCACCCAGTCCGCCCTGAGCAAAGACCCCAACGAGAAGCGCGATCACATGGTCCTGCTGGAGTTCGTGACCGCCGCCGGGATCACTCACGGCATGGACGAGCTGTACAAG";
+    return {
+        optimized_sequence: mockSeq,
+        original_length: state.sequence.length,
+        optimized_length: mockSeq.length,
+        metrics: {
+            cai: 0.884,
+            gc_percent: 42.6,
+            polya_signals: 0,
+            length: mockSeq.length
+        },
+        profile: state.profile,
+        validation: {
+            polya: 'PASS',
+            moclo: 'PASS',
+            gc: 'PASS'
+        }
+    };
+}
+function calculateGC(seq) {
+    if (!seq) return 0;
+    const gCount = (seq.match(/G/g) || []).length;
+    const cCount = (seq.match(/C/g) || []).length;
+    return parseFloat(((gCount + cCount) / seq.length * 100).toFixed(1));
+}

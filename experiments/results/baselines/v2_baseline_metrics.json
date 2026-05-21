@@ -1,0 +1,531 @@
+[
+  {
+    "name": "short_synthetic",
+    "engine": "v2",
+    "protein_sequence": "MSTNPKPQR",
+    "dna_sequence": "ATGTCTACTAATCCTAAACCTCAAAGA",
+    "metrics": {
+      "cai": 0.8252356648601007,
+      "gc": 33.33333333333333,
+      "gc_content": 33.33333333333333,
+      "score": 0.98
+    },
+    "validator": {
+      "passed": true,
+      "amino_acid_identity": 1.0,
+      "gc": 33.33333333333333,
+      "gc_window_min": 33.33333333333333,
+      "gc_window_max": 33.33333333333333,
+      "gc_window_outlier_count": 0,
+      "first_30nt_gc": 33.33333333333333,
+      "first_60nt_gc": 33.33333333333333,
+      "first_90nt_gc": 33.33333333333333,
+      "internal_stop_count": 0,
+      "invalid_codon_count": 0,
+      "forbidden_motif_count": 0,
+      "homopolymer_count": 0,
+      "repeat_count": 0,
+      "warnings": [],
+      "errors": []
+    },
+    "warnings": [],
+    "errors": [],
+    "metadata": {
+      "profile": "high_cai",
+      "scan_mode": "fast",
+      "scan_results": {
+        "polya": [],
+        "are": [],
+        "at_runs": [],
+        "homopolymers": [],
+        "gc_extremes": [],
+        "splice_sites": []
+      }
+    }
+  },
+  {
+    "name": "reporter_like",
+    "engine": "v2",
+    "protein_sequence": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTFSYGVQCFSRYPDHMK",
+    "dna_sequence": "ATGTCTAAAGGTGAAGAACTTTTCACTGGTGTTGTTCCTATTCTTGTTGAACTTGATGGTGATGTTAATGGTCATAAATTCTCTGTTTCTGGTGAAGGTGAAGGTGATGCTACTTATGGTAAACTTACTCTTAAATTCATTTGTACTACTGGTAAACTTCCTGTTCCTTGGCCTACTCTTGTTACTACTTTCTCTTATGGTGTTCAATGTTTCTCTAGATATCCTGATCATATGAAA",
+    "metrics": {
+      "cai": 0.7222809821412758,
+      "gc": 35.44303797468354,
+      "gc_content": 35.44303797468354,
+      "score": 0.984
+    },
+    "validator": {
+      "passed": true,
+      "amino_acid_identity": 1.0,
+      "gc": 35.44303797468354,
+      "gc_window_min": 31.666666666666664,
+      "gc_window_max": 40.0,
+      "gc_window_outlier_count": 0,
+      "first_30nt_gc": 36.666666666666664,
+      "first_60nt_gc": 36.666666666666664,
+      "first_90nt_gc": 34.44444444444444,
+      "internal_stop_count": 0,
+      "invalid_codon_count": 0,
+      "forbidden_motif_count": 0,
+      "homopolymer_count": 0,
+      "repeat_count": 0,
+      "warnings": [],
+      "errors": []
+    },
+    "warnings": [
+      "v2 rule scan reported 2 violation(s)"
+    ],
+    "errors": [],
+    "metadata": {
+      "profile": "high_cai",
+      "scan_mode": "fast",
+      "scan_results": {
+        "polya": [],
+        "are": [],
+        "at_runs": [
+          {
+            "type": "at_run",
+            "position": 73,
+            "length": 7,
+            "sequence": "ATAAATT",
+            "context": "TGGTCATAAATTCTCTG",
+            "severity": "medium"
+          },
+          {
+            "type": "at_run",
+            "position": 130,
+            "length": 7,
+            "sequence": "TTAAATT",
+            "context": "TACTCTTAAATTCATTT",
+            "severity": "medium"
+          }
+        ],
+        "homopolymers": [],
+        "gc_extremes": [],
+        "splice_sites": []
+      }
+    }
+  },
+  {
+    "name": "antibody_like_heavy_style",
+    "engine": "v2",
+    "protein_sequence": "MEVQLVESGGGLVQPGGSLRLSCAASGFTFSSYAMSWVRQAPGKGLEWVSAISGSGGSTYYADSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCAR",
+    "dna_sequence": "ATGGAAGTTCAACTTGTTGAATCTGGTGGTGGTCTTGTTCAACCTGGTGGTTCTCTTAGACTTTCTTGTGCTGCTTCTGGTTTCACTTTCTCTTCTTATGCTATGTCTTGGGTTAGACAAGCTCCTGGTAAAGGTCTTGAATGGGTTTCTGCTATTTCTGGTTCTGGTGGTTCTACTTATTATGCTGATTCTGTTAAAGGTAGATTCACTATTTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAATGAATTCTCTTAGAGCTGAAGATACTGCTGTTTATTATTGTGCTAGA",
+    "metrics": {
+      "cai": 0.7285373653872786,
+      "gc": 37.03703703703704,
+      "gc_content": 37.03703703703704,
+      "score": 0.988
+    },
+    "validator": {
+      "passed": true,
+      "amino_acid_identity": 1.0,
+      "gc": 37.03703703703704,
+      "gc_window_min": 25.0,
+      "gc_window_max": 45.0,
+      "gc_window_outlier_count": 2,
+      "first_30nt_gc": 40.0,
+      "first_60nt_gc": 43.333333333333336,
+      "first_90nt_gc": 43.333333333333336,
+      "internal_stop_count": 0,
+      "invalid_codon_count": 0,
+      "forbidden_motif_count": 0,
+      "homopolymer_count": 0,
+      "repeat_count": 1,
+      "warnings": [
+        "local GC window outliers detected",
+        "simple repeats detected"
+      ],
+      "errors": []
+    },
+    "warnings": [
+      "local GC window outliers detected",
+      "simple repeats detected",
+      "v2 rule scan reported 31 violation(s)"
+    ],
+    "errors": [],
+    "metadata": {
+      "profile": "high_cai",
+      "scan_mode": "fast",
+      "scan_results": {
+        "polya": [
+          {
+            "type": "polya_signal",
+            "pattern": "AATGAA",
+            "pattern_type": "variant_5",
+            "position": 248,
+            "context": "TTTATCTTCAAATGAATTCTCTTAGA"
+          }
+        ],
+        "are": [],
+        "at_runs": [
+          {
+            "type": "at_run",
+            "position": 176,
+            "length": 7,
+            "sequence": "TTATTAT",
+            "context": "TCTACTTATTATGCTGA",
+            "severity": "medium"
+          },
+          {
+            "type": "at_run",
+            "position": 220,
+            "length": 6,
+            "sequence": "ATAATT",
+            "context": "TAGAGATAATTCTAAA",
+            "severity": "medium"
+          },
+          {
+            "type": "at_run",
+            "position": 227,
+            "length": 8,
+            "sequence": "TAAAAATA",
+            "context": "AATTCTAAAAATACTCTT",
+            "severity": "high"
+          },
+          {
+            "type": "at_run",
+            "position": 280,
+            "length": 9,
+            "sequence": "TTTATTATT",
+            "context": "TGCTGTTTATTATTGTGCT",
+            "severity": "high"
+          }
+        ],
+        "homopolymers": [],
+        "gc_extremes": [
+          {
+            "type": "gc_extreme",
+            "position": 185,
+            "window_size": 50,
+            "gc": 24.0,
+            "context": "TGATTCTGTTAAAGGTAGATTCACTATTTCTAGAGATAATTCTAAAAATA",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 187,
+            "window_size": 50,
+            "gc": 24.0,
+            "context": "ATTCTGTTAAAGGTAGATTCACTATTTCTAGAGATAATTCTAAAAATACT",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 191,
+            "window_size": 50,
+            "gc": 24.0,
+            "context": "TGTTAAAGGTAGATTCACTATTTCTAGAGATAATTCTAAAAATACTCTTT",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 192,
+            "window_size": 50,
+            "gc": 24.0,
+            "context": "GTTAAAGGTAGATTCACTATTTCTAGAGATAATTCTAAAAATACTCTTTA",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 193,
+            "window_size": 50,
+            "gc": 22.0,
+            "context": "TTAAAGGTAGATTCACTATTTCTAGAGATAATTCTAAAAATACTCTTTAT",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 194,
+            "window_size": 50,
+            "gc": 24.0,
+            "context": "TAAAGGTAGATTCACTATTTCTAGAGATAATTCTAAAAATACTCTTTATC",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 195,
+            "window_size": 50,
+            "gc": 24.0,
+            "context": "AAAGGTAGATTCACTATTTCTAGAGATAATTCTAAAAATACTCTTTATCT",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 196,
+            "window_size": 50,
+            "gc": 24.0,
+            "context": "AAGGTAGATTCACTATTTCTAGAGATAATTCTAAAAATACTCTTTATCTT",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 199,
+            "window_size": 50,
+            "gc": 24.0,
+            "context": "GTAGATTCACTATTTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAA",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 200,
+            "window_size": 50,
+            "gc": 22.0,
+            "context": "TAGATTCACTATTTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAA",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 201,
+            "window_size": 50,
+            "gc": 22.0,
+            "context": "AGATTCACTATTTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAAT",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 202,
+            "window_size": 50,
+            "gc": 24.0,
+            "context": "GATTCACTATTTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAATG",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 203,
+            "window_size": 50,
+            "gc": 22.0,
+            "context": "ATTCACTATTTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAATGA",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 204,
+            "window_size": 50,
+            "gc": 22.0,
+            "context": "TTCACTATTTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAATGAA",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 205,
+            "window_size": 50,
+            "gc": 22.0,
+            "context": "TCACTATTTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAATGAAT",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 206,
+            "window_size": 50,
+            "gc": 22.0,
+            "context": "CACTATTTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAATGAATT",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 207,
+            "window_size": 50,
+            "gc": 22.0,
+            "context": "ACTATTTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAATGAATTC",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 208,
+            "window_size": 50,
+            "gc": 22.0,
+            "context": "CTATTTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAATGAATTCT",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 209,
+            "window_size": 50,
+            "gc": 22.0,
+            "context": "TATTTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAATGAATTCTC",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 210,
+            "window_size": 50,
+            "gc": 22.0,
+            "context": "ATTTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAATGAATTCTCT",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 211,
+            "window_size": 50,
+            "gc": 22.0,
+            "context": "TTTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAATGAATTCTCTT",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 212,
+            "window_size": 50,
+            "gc": 22.0,
+            "context": "TTCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAATGAATTCTCTTA",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 213,
+            "window_size": 50,
+            "gc": 24.0,
+            "context": "TCTAGAGATAATTCTAAAAATACTCTTTATCTTCAAATGAATTCTCTTAG",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 214,
+            "window_size": 50,
+            "gc": 24.0,
+            "context": "CTAGAGATAATTCTAAAAATACTCTTTATCTTCAAATGAATTCTCTTAGA",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 215,
+            "window_size": 50,
+            "gc": 24.0,
+            "context": "TAGAGATAATTCTAAAAATACTCTTTATCTTCAAATGAATTCTCTTAGAG",
+            "severity": "medium"
+          },
+          {
+            "type": "gc_extreme",
+            "position": 220,
+            "window_size": 50,
+            "gc": 24.0,
+            "context": "ATAATTCTAAAAATACTCTTTATCTTCAAATGAATTCTCTTAGAGCTGAA",
+            "severity": "medium"
+          }
+        ],
+        "splice_sites": []
+      }
+    }
+  },
+  {
+    "name": "low_complexity",
+    "engine": "v2",
+    "protein_sequence": "MSSSSGGGGSSSSGGGGPPPPQQQQNNNNKKKK",
+    "dna_sequence": "ATGTCTTCTTCTTCTGGTGGTGGTGGTTCTTCTTCTTCTGGTGGTGGTGGTCCTCCTCCTCCTCAACAACAACAAAATAATAATAATAAAAAAAAAAAA",
+    "metrics": {
+      "cai": 0.7766800661394382,
+      "gc": 37.37373737373738,
+      "gc_content": 37.37373737373738,
+      "score": 0.989
+    },
+    "validator": {
+      "passed": true,
+      "amino_acid_identity": 1.0,
+      "gc": 37.37373737373738,
+      "gc_window_min": 33.33333333333333,
+      "gc_window_max": 51.66666666666667,
+      "gc_window_outlier_count": 0,
+      "first_30nt_gc": 46.666666666666664,
+      "first_60nt_gc": 51.66666666666667,
+      "first_90nt_gc": 41.11111111111111,
+      "internal_stop_count": 0,
+      "invalid_codon_count": 0,
+      "forbidden_motif_count": 0,
+      "homopolymer_count": 1,
+      "repeat_count": 8,
+      "warnings": [
+        "homopolymers detected",
+        "simple repeats detected"
+      ],
+      "errors": []
+    },
+    "warnings": [
+      "homopolymers detected",
+      "simple repeats detected",
+      "v2 rule scan reported 3 violation(s)"
+    ],
+    "errors": [],
+    "metadata": {
+      "profile": "high_cai",
+      "scan_mode": "fast",
+      "scan_results": {
+        "polya": [
+          {
+            "type": "polya_signal",
+            "pattern": "AATAAA",
+            "pattern_type": "canonical",
+            "position": 84,
+            "context": "AAATAATAATAATAAAAAAAAAAAA"
+          }
+        ],
+        "are": [],
+        "at_runs": [
+          {
+            "type": "at_run",
+            "position": 73,
+            "length": 26,
+            "sequence": "AAAATAATAATAATAAAAAAAAAAAA",
+            "context": "ACAACAAAATAATAATAATAAAAAAAAAAAA",
+            "severity": "high"
+          }
+        ],
+        "homopolymers": [
+          {
+            "type": "homopolymer",
+            "base": "A",
+            "position": 87,
+            "length": 12,
+            "sequence": "AAAAAAAAAAAA",
+            "severity": "high"
+          }
+        ],
+        "gc_extremes": [],
+        "splice_sites": []
+      }
+    }
+  },
+  {
+    "name": "cysteine_rich",
+    "engine": "v2",
+    "protein_sequence": "MCCGCCGCCNPNCCTGCKCCTGCCGCC",
+    "dna_sequence": "ATGTGTTGTGGTTGTTGTGGTTGTTGTAATCCTAATTGTTGTACTGGTTGTAAATGTTGTACTGGTTGTTGTGGTTGTTGT",
+    "metrics": {
+      "cai": 0.8038207556016826,
+      "gc": 37.03703703703704,
+      "gc_content": 37.03703703703704,
+      "score": 0.988
+    },
+    "validator": {
+      "passed": true,
+      "amino_acid_identity": 1.0,
+      "gc": 37.03703703703704,
+      "gc_window_min": 35.0,
+      "gc_window_max": 35.0,
+      "gc_window_outlier_count": 0,
+      "first_30nt_gc": 36.666666666666664,
+      "first_60nt_gc": 35.0,
+      "first_90nt_gc": 37.03703703703704,
+      "internal_stop_count": 0,
+      "invalid_codon_count": 0,
+      "forbidden_motif_count": 0,
+      "homopolymer_count": 0,
+      "repeat_count": 0,
+      "warnings": [],
+      "errors": []
+    },
+    "warnings": [],
+    "errors": [],
+    "metadata": {
+      "profile": "high_cai",
+      "scan_mode": "fast",
+      "scan_results": {
+        "polya": [],
+        "are": [],
+        "at_runs": [],
+        "homopolymers": [],
+        "gc_extremes": [],
+        "splice_sites": []
+      }
+    }
+  }
+]
