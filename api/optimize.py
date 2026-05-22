@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Version: 2.5.3 (Production)
+Version: 3.0.0-beta
 Engine: FactorForge v2 (rule-based)
 """
 
@@ -18,13 +18,13 @@ logger = logging.getLogger(__name__)
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-# Try to import CodonForge
+# Try to import FactorForge
 try:
     from factorforge.engines.registry import EngineRegistry
-    CODONFORGE_AVAILABLE = True
+    FACTORFORGE_AVAILABLE = True
     logger.info("FactorForge v2 engine loaded successfully")
 except ImportError as e:
-    CODONFORGE_AVAILABLE = False
+    FACTORFORGE_AVAILABLE = False
     logger.warning(f"FactorForge not available: {e}")
 
 # Constants
@@ -66,9 +66,9 @@ class handler(BaseHTTPRequestHandler):
             # Clean sequence
             sequence = self.clean_sequence(sequence)
 
-            # Check if CodonForge is available
-            if not CODONFORGE_AVAILABLE:
-                logger.info("Using mock optimization (CodonForge not available)")
+            # Check if FactorForge is available
+            if not FACTORFORGE_AVAILABLE:
+                logger.info("Using mock optimization (FactorForge not available)")
                 result = self.generate_mock_result(sequence, profile, kozak, dinuc)
             else:
                 logger.info(f"Running real optimization: profile={profile}, template={use_template}, kozak={kozak}, dinuc={dinuc}")
@@ -91,9 +91,9 @@ class handler(BaseHTTPRequestHandler):
         """Handle GET requests (health check)"""
         health_info = {
             'status': 'healthy',
-            'service': 'CodonForge API',
-            'version': '2.5.2',
-            'codonforge_available': CODONFORGE_AVAILABLE,
+            'service': 'FactorForge API',
+            'version': '3.0.0-beta',
+            'codonforge_available': FACTORFORGE_AVAILABLE,
             'endpoints': {
                 'POST /api/optimize': 'Run codon optimization',
                 'GET /api/optimize': 'Health check'
@@ -101,7 +101,7 @@ class handler(BaseHTTPRequestHandler):
             'supported_profiles': VALID_PROFILES
         }
 
-        if CODONFORGE_AVAILABLE:
+        if FACTORFORGE_AVAILABLE:
             try:
                 optimizer = EngineRegistry.get('v2')
                 health_info['engine'] = {
@@ -160,11 +160,11 @@ class handler(BaseHTTPRequestHandler):
         return cleaned.upper()
 
     def optimize_sequence(self, sequence, profile, use_template, kozak, dinuc):
-        """Run actual CodonForge v2 optimization"""
+        """Run actual FactorForge v2 optimization"""
         try:
             # Get v2 optimizer
             optimizer = EngineRegistry.get('v2')
-            logger.info(f"Using CodonForge v2 engine: {optimizer.name} {optimizer.version}")
+            logger.info(f"Using FactorForge v2 engine: {optimizer.name} {optimizer.version}")
 
             # Run optimization
             result = optimizer.optimize(
@@ -178,7 +178,7 @@ class handler(BaseHTTPRequestHandler):
             if use_template:
                 logger.info("Building construct with standard_expression template")
                 try:
-                    from codonforge.engines.v2 import ConstructBuilder
+                    from factorforge.engines.v2 import ConstructBuilder
                     builder = ConstructBuilder(template='standard_expression')
                     construct = builder.build(result.sequence)
                     optimized_sequence = str(construct.seq)
@@ -230,7 +230,7 @@ class handler(BaseHTTPRequestHandler):
             raise ValueError(f"Optimization error: {str(e)}")
 
     def generate_mock_result(self, sequence, profile, kozak, dinuc):
-        """Generate mock result for testing (when CodonForge is not available)"""
+        """Generate mock result for testing (when FactorForge is not available)"""
         logger.warning("Generating mock result - CodonForge engine not available")
 
         # Determine if input is DNA or Protein
@@ -289,7 +289,7 @@ class handler(BaseHTTPRequestHandler):
                 'name': 'Mock Engine',
                 'version': '0.0.0'
             },
-            'note': '⚠️ Mock data - CodonForge engine not available. Deploy with CodonForge for real optimization.'
+            'note': '⚠️ Mock data - FactorForge engine not available. Deploy with FactorForge for real optimization.'
         }
 
     def send_json_response(self, status_code, data):

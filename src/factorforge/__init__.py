@@ -1,12 +1,13 @@
 """
 FactorForge - Codon Optimization Platform
 
-v2: Rule-based (Production)
-v1: BPE Tokenizer (Archived)
+v1_archived: Rule-based v1 (Archived)
+v2: Rule-based (Production) — engine version 2.5.2
+v3: ML engine / v3-alpha (ESM2 + BART, in development)
 """
 
-__version__ = "2.5.2"
-__author__ = "Mun-Kyu Kim"
+__version__ = "3.0.0-beta"
+__author__ = "Eijex"
 
 # Auto-register engines (safe when running from source tree)
 try:
