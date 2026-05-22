@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Version: 3.0.0-beta
+Version: 2.5.3
 Engine: FactorForge v2 (rule-based)
 """
 
@@ -92,7 +92,7 @@ class handler(BaseHTTPRequestHandler):
         health_info = {
             'status': 'healthy',
             'service': 'FactorForge API',
-            'version': '3.0.0-beta',
+            'version': '2.5.3',
             'codonforge_available': FACTORFORGE_AVAILABLE,
             'endpoints': {
                 'POST /api/optimize': 'Run codon optimization',
