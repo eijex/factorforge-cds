@@ -10,6 +10,7 @@ import sys
 import os
 import re
 import logging
+from typing import Any
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -20,7 +21,21 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 # Try to import FactorForge
 try:
-    from factorforge.engines.registry import EngineRegistry
+    from factorforge.engines import EngineRegistry
+    from factorforge.engines.v3.metrics import load_codon_usage_table
+    from factorforge.ml.feasibility import analyze_feasibility
+    from factorforge.ml.metrics import (
+        calculate_cai,
+        calculate_first_region_gc,
+        calculate_gc,
+        calculate_gc_windows,
+        count_internal_stops,
+        detect_forbidden_motifs,
+        detect_homopolymers,
+        detect_invalid_codons,
+        detect_repeats,
+    )
+
     FACTORFORGE_AVAILABLE = True
     logger.info("FactorForge v2 engine loaded successfully")
 except ImportError as e:
@@ -31,6 +46,16 @@ except ImportError as e:
 MIN_SEQUENCE_LENGTH = 3
 MAX_SEQUENCE_LENGTH = 50000  # 50kb max
 VALID_PROFILES = ['balanced', 'high_cai', 'gc_target', 'assembly_friendly', 'ramp', 'viral_delivery']
+VALID_OBJECTIVES = ['feasibility_best']
+DEFAULT_OBJECTIVE = 'feasibility_best'
+DEFAULT_HOST_PROFILE = 'nbenthamiana'
+DEFAULT_GC_MIN = 40.0
+DEFAULT_GC_MAX = 55.0
+ENGINE_VERSIONS = {
+    'product': '1.0.0',
+    'rule_engine': '2.5.3',
+    'dp_engine': '1.0.0',
+}
 # Valid characters: ACGT (DNA) or standard 20 Amino Acids (Protein) + * (Stop)
 VALID_AA = 'ACDEFGHIKLMNPQRSTVWY'
 VALID_CHARS_PATTERN = re.compile(r'^[ACDEFGHIKLMNPQRSTVWY*]+$', re.IGNORECASE)
@@ -52,12 +77,19 @@ class handler(BaseHTTPRequestHandler):
             # Extract parameters
             sequence = data.get('sequence', '')
             profile = data.get('profile', 'balanced')
+            objective = data.get('objective')
+            legacy_profile_request = 'profile' in data and 'objective' not in data
+            if objective is None and not legacy_profile_request:
+                objective = DEFAULT_OBJECTIVE
+            host_profile = data.get('host_profile', DEFAULT_HOST_PROFILE)
+            return_candidates = bool(data.get('return_candidates', True))
+            constraints = self.parse_constraints(data.get('constraints', {}))
             use_template = data.get('use_template', False)
             kozak = data.get('kozak', False)
             dinuc = data.get('dinuc', False)
 
             # Validate input
-            validation_error = self.validate_input(sequence, profile)
+            validation_error = self.validate_input(sequence, profile, objective, host_profile, constraints)
             if validation_error:
                 logger.warning(f"Validation error: {validation_error}")
                 self.send_error_response(400, validation_error)
@@ -69,10 +101,26 @@ class handler(BaseHTTPRequestHandler):
             # Check if FactorForge is available
             if not FACTORFORGE_AVAILABLE:
                 logger.info("Using mock optimization (FactorForge not available)")
-                result = self.generate_mock_result(sequence, profile, kozak, dinuc)
+                result = self.generate_mock_result(
+                    sequence, profile, kozak, dinuc, constraints, return_candidates
+                )
             else:
-                logger.info(f"Running real optimization: profile={profile}, template={use_template}, kozak={kozak}, dinuc={dinuc}")
-                result = self.optimize_sequence(sequence, profile, use_template, kozak, dinuc)
+                logger.info(
+                    "Running real optimization: "
+                    f"profile={profile}, objective={objective}, template={use_template}, "
+                    f"kozak={kozak}, dinuc={dinuc}"
+                )
+                result = self.optimize_sequence(
+                    sequence,
+                    profile,
+                    use_template,
+                    kozak,
+                    dinuc,
+                    objective=objective,
+                    host_profile=host_profile,
+                    return_candidates=return_candidates,
+                    constraints=constraints,
+                )
 
             logger.info("Optimization completed successfully")
             self.send_json_response(200, result)
@@ -92,13 +140,15 @@ class handler(BaseHTTPRequestHandler):
         health_info = {
             'status': 'healthy',
             'service': 'FactorForge API',
-            'version': '2.5.3',
+            'version': ENGINE_VERSIONS['product'],
             'codonforge_available': FACTORFORGE_AVAILABLE,
             'endpoints': {
                 'POST /api/optimize': 'Run codon optimization',
                 'GET /api/optimize': 'Health check'
             },
-            'supported_profiles': VALID_PROFILES
+            'supported_profiles': VALID_PROFILES,
+            'supported_objectives': VALID_OBJECTIVES,
+            'engine_versions': ENGINE_VERSIONS,
         }
 
         if FACTORFORGE_AVAILABLE:
@@ -120,7 +170,17 @@ class handler(BaseHTTPRequestHandler):
         self.send_cors_headers()
         self.end_headers()
 
-    def validate_input(self, sequence, profile):
+    def parse_constraints(self, constraints):
+        """Parse v1 constraints with defaults."""
+        constraints = constraints or {}
+        try:
+            gc_min = float(constraints.get('gc_min', DEFAULT_GC_MIN))
+            gc_max = float(constraints.get('gc_max', DEFAULT_GC_MAX))
+        except (TypeError, ValueError):
+            raise ValueError('constraints.gc_min and constraints.gc_max must be numeric')
+        return {'gc_min': gc_min, 'gc_max': gc_max}
+
+    def validate_input(self, sequence, profile, objective=None, host_profile=DEFAULT_HOST_PROFILE, constraints=None):
         """Validate input parameters"""
         # Check sequence exists
         if not sequence or not sequence.strip():
@@ -144,6 +204,16 @@ class handler(BaseHTTPRequestHandler):
         if profile not in VALID_PROFILES:
             return f'Invalid profile. Must be one of: {", ".join(VALID_PROFILES)}'
 
+        if objective is not None and objective not in VALID_OBJECTIVES:
+            return f'Invalid objective. Must be one of: {", ".join(VALID_OBJECTIVES)}'
+
+        if host_profile != DEFAULT_HOST_PROFILE:
+            return f'Unsupported host_profile. Must be: {DEFAULT_HOST_PROFILE}'
+
+        constraints = constraints or {'gc_min': DEFAULT_GC_MIN, 'gc_max': DEFAULT_GC_MAX}
+        if constraints['gc_min'] > constraints['gc_max']:
+            return 'constraints.gc_min must be <= constraints.gc_max'
+
         return None
 
     def clean_sequence(self, sequence):
@@ -159,9 +229,32 @@ class handler(BaseHTTPRequestHandler):
         # Convert to uppercase
         return cleaned.upper()
 
-    def optimize_sequence(self, sequence, profile, use_template, kozak, dinuc):
+    def optimize_sequence(
+        self,
+        sequence,
+        profile,
+        use_template,
+        kozak,
+        dinuc,
+        objective=None,
+        host_profile=DEFAULT_HOST_PROFILE,
+        return_candidates=False,
+        constraints=None,
+    ):
         """Run actual FactorForge v2 optimization"""
         try:
+            constraints = constraints or {'gc_min': DEFAULT_GC_MIN, 'gc_max': DEFAULT_GC_MAX}
+            if objective == DEFAULT_OBJECTIVE:
+                return self.optimize_feasibility_best(
+                    sequence=sequence,
+                    profile=profile,
+                    host_profile=host_profile,
+                    constraints=constraints,
+                    kozak=kozak,
+                    dinuc=dinuc,
+                    return_candidates=return_candidates,
+                )
+
             # Get v2 optimizer
             optimizer = EngineRegistry.get('v2')
             logger.info(f"Using FactorForge v2 engine: {optimizer.name} {optimizer.version}")
@@ -195,13 +288,13 @@ class handler(BaseHTTPRequestHandler):
 
             # Validation checks
             polya_check = 'PASS' if polya_warnings == 0 else 'WARNING'
-            gc_check = 'PASS' if 40.5 <= gc_percent <= 44.5 else 'WARNING'
+            gc_check = self.gc_check(gc_percent, constraints)
             moclo_check = 'PASS'  # From v2 domesticator
 
             logger.info(f"Optimization metrics: CAI={cai:.3f}, GC={gc_percent:.1f}%, PolyA={polya_warnings}")
 
             # Format response
-            return {
+            response = {
                 'success': True,
                 'optimized_sequence': optimized_sequence,
                 'original_length': len(sequence),
@@ -224,14 +317,149 @@ class handler(BaseHTTPRequestHandler):
                     'version': optimizer.version
                 }
             }
+            if return_candidates:
+                table = load_codon_usage_table()
+                response['recommended_candidate'] = self.build_candidate(
+                    candidate_id=profile,
+                    label=self.candidate_label(profile),
+                    dna_sequence=result.sequence,
+                    codon_weights=table.codon_weights,
+                    recommendation_reason=f'Backward-compatible v2 {profile} profile result',
+                )
+                response['candidates'] = [response['recommended_candidate']]
+                response['engine_versions'] = ENGINE_VERSIONS
+            return response
 
         except Exception as e:
             logger.error(f"Optimization failed: {e}", exc_info=True)
             raise ValueError(f"Optimization error: {str(e)}")
 
-    def generate_mock_result(self, sequence, profile, kozak, dinuc):
+    def optimize_feasibility_best(
+        self,
+        sequence,
+        profile,
+        host_profile,
+        constraints,
+        kozak,
+        dinuc,
+        return_candidates=True,
+    ):
+        """Run v1 feasibility_best contract and add v2 comparison candidates."""
+        table = load_codon_usage_table()
+        aa_seq = self.clean_sequence(sequence).rstrip('*')
+        optimizer = EngineRegistry.get('v2')
+
+        feasibility = analyze_feasibility(
+            protein_sequence=aa_seq,
+            codon_weights=table.codon_weights,
+            target_gc_low=constraints['gc_min'],
+            target_gc_high=constraints['gc_max'],
+        )
+        best = feasibility['target']['best_candidate'] or feasibility['best_candidate_without_gc']
+        if not best:
+            raise ValueError('No feasibility_best candidate generated')
+
+        candidates = [
+            self.build_candidate(
+                candidate_id='feasibility_best',
+                label='Feasibility Best',
+                dna_sequence=best['dna_sequence'],
+                codon_weights=table.codon_weights,
+                recommendation_reason=(
+                    f"Maximum CAI under GC {constraints['gc_min']:g}-{constraints['gc_max']:g}%"
+                    if feasibility['target']['best_candidate']
+                    else 'Maximum CAI without GC constraint; requested GC range was infeasible'
+                ),
+            )
+        ]
+
+        for candidate_profile in ('gc_target', 'high_cai'):
+            result = optimizer.optimize(
+                sequence=aa_seq,
+                profile=candidate_profile,
+                kozak=kozak,
+                dinuc=dinuc,
+            )
+            candidates.append(
+                self.build_candidate(
+                    candidate_id=candidate_profile,
+                    label=self.candidate_label(candidate_profile),
+                    dna_sequence=result.sequence,
+                    codon_weights=table.codon_weights,
+                    recommendation_reason=f'v2 {candidate_profile} comparison candidate',
+                )
+            )
+
+        response = {
+            'success': True,
+            'recommended_candidate': candidates[0],
+            'candidates': candidates if return_candidates else [],
+            'validation': {
+                'input_type': 'protein',
+                'sequence_length': len(aa_seq),
+                'host_profile': host_profile,
+            },
+            'engine_versions': ENGINE_VERSIONS,
+        }
+
+        return response
+
+    def build_candidate(
+        self,
+        candidate_id: str,
+        label: str,
+        dna_sequence: str,
+        codon_weights: dict[str, float],
+        recommendation_reason: str,
+    ) -> dict[str, Any]:
+        """Build a v1 candidate payload with evidence metrics."""
+        windows = calculate_gc_windows(dna_sequence)
+        window_values = [float(window['gc']) for window in windows]
+        first_region = calculate_first_region_gc(dna_sequence, region_sizes=[30])
+        internal_stop_count = count_internal_stops(dna_sequence)
+        invalid_codon_count = len(detect_invalid_codons(dna_sequence))
+
+        return {
+            'id': candidate_id,
+            'label': label,
+            'dna_sequence': dna_sequence,
+            'cai': round(calculate_cai(dna_sequence, codon_weights), 3),
+            'gc_percent': round(calculate_gc(dna_sequence), 1),
+            'gc_window_min': round(min(window_values), 1) if window_values else 0.0,
+            'gc_window_max': round(max(window_values), 1) if window_values else 0.0,
+            'first_region_gc': round(float(first_region['first_30nt_gc']), 1),
+            'internal_stop_count': internal_stop_count,
+            'invalid_codon_count': invalid_codon_count,
+            'repeat_count': len(detect_repeats(dna_sequence)),
+            'homopolymer_count': len(detect_homopolymers(dna_sequence)),
+            'forbidden_motif_count': len(detect_forbidden_motifs(dna_sequence, [])),
+            'validator_status': (
+                'pass' if internal_stop_count == 0 and invalid_codon_count == 0 else 'fail'
+            ),
+            'recommendation_reason': recommendation_reason,
+        }
+
+    def candidate_label(self, candidate_id):
+        """Return human-readable candidate label."""
+        labels = {
+            'feasibility_best': 'Feasibility Best',
+            'gc_target': 'GC Target',
+            'high_cai': 'High CAI',
+            'balanced': 'Balanced',
+            'assembly_friendly': 'Assembly Friendly',
+            'ramp': 'Ramp',
+            'viral_delivery': 'Viral Delivery',
+        }
+        return labels.get(candidate_id, candidate_id.replace('_', ' ').title())
+
+    def gc_check(self, gc_percent, constraints):
+        """Return PASS/WARNING for configured global GC constraints."""
+        return 'PASS' if constraints['gc_min'] <= gc_percent <= constraints['gc_max'] else 'WARNING'
+
+    def generate_mock_result(self, sequence, profile, kozak, dinuc, constraints=None, return_candidates=False):
         """Generate mock result for testing (when FactorForge is not available)"""
         logger.warning("Generating mock result - CodonForge engine not available")
+        constraints = constraints or {'gc_min': DEFAULT_GC_MIN, 'gc_max': DEFAULT_GC_MAX}
 
         # Determine if input is DNA or Protein
         is_protein = not re.match(r'^[ACGT]+$', sequence)
@@ -265,7 +493,7 @@ class handler(BaseHTTPRequestHandler):
         }
         mock_cai = mock_cai_values.get(profile, 0.850)
 
-        return {
+        response = {
             'success': True,
             'optimized_sequence': optimized,
             'original_length': len(sequence),
@@ -282,7 +510,7 @@ class handler(BaseHTTPRequestHandler):
             'dinuc': dinuc,
             'validation': {
                 'polya': 'PASS',
-                'gc': 'PASS' if 40.5 <= gc_percent <= 44.5 else 'WARNING',
+                'gc': self.gc_check(gc_percent, constraints),
                 'moclo': 'PASS'
             },
             'engine': {
@@ -291,6 +519,9 @@ class handler(BaseHTTPRequestHandler):
             },
             'note': '⚠️ Mock data - FactorForge engine not available. Deploy with FactorForge for real optimization.'
         }
+        if return_candidates:
+            response['engine_versions'] = ENGINE_VERSIONS
+        return response
 
     def send_json_response(self, status_code, data):
         """Send JSON response with CORS headers"""
