@@ -709,9 +709,6 @@ def run_evaluation(
 
 
 def _default_comparison_path() -> Path:
-    run4b_path = ROOT / "experiments" / "results" / "run4b_full" / "run4_comparison.csv"
-    if run4b_path.exists():
-        return run4b_path
     return ROOT / "experiments" / "results" / "alpha_run2" / "alpha_run2_comparison.csv"
 
 
@@ -733,8 +730,8 @@ def main() -> int:
         default=ROOT
         / "experiments"
         / "results"
-        / "run4b_full"
-        / "run4_comparison_extended.csv",
+        / "alpha_run2"
+        / "alpha_run2_comparison_extended.csv",
     )
     parser.add_argument(
         "--report",
@@ -742,7 +739,7 @@ def main() -> int:
         default=ROOT
         / "experiments"
         / "results"
-        / "run4b_full"
+        / "alpha_run2"
         / "v3alpha_evidence_report.md",
     )
     parser.add_argument("--limit", type=int, default=None)
