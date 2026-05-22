@@ -41,6 +41,44 @@ def _wrap_sequence(sequence, width=80):
     return "\n".join(sequence[i : i + width] for i in range(0, len(sequence), width))
 
 
+def _build_dp_result(sequence: str, objective: str, gc_min: float, gc_max: float):
+    """Run the constraint-based DP feasibility engine for a single protein sequence."""
+    if objective != "feasibility_best":
+        raise ValueError("DP engine currently supports --objective feasibility_best.")
+    if gc_min > gc_max:
+        raise ValueError("--gc-min must be <= --gc-max.")
+
+    from factorforge.engines.v3.metrics import load_codon_usage_table
+    from factorforge.ml.feasibility import analyze_feasibility
+
+    table = load_codon_usage_table()
+    result = analyze_feasibility(
+        sequence,
+        table.codon_weights,
+        target_gc_low=gc_min,
+        target_gc_high=gc_max,
+    )
+    best = result["target"]["best_candidate"]
+    feasible = best is not None
+    if best is None:
+        best = result["best_candidate_without_gc"]
+    if best is None:
+        raise ValueError("No DP candidate generated.")
+
+    reason = (
+        f"Maximum CAI under GC {gc_min:g}-{gc_max:g}%"
+        if feasible
+        else "Maximum CAI without GC constraint; requested GC range was infeasible"
+    )
+    return best, result, reason
+
+
+def _format_dp_fasta(sequence_id: str, dna_sequence: str, cai: float, gc: float) -> str:
+    """Format a DP result as FASTA."""
+    header = f">{sequence_id}|engine=dp|objective=feasibility_best|cai={cai:.3f}|gc={gc:.2f}"
+    return f"{header}\n{_wrap_sequence(dna_sequence)}\n"
+
+
 @click.group()
 @click.version_option(version=__version__)
 def cli():
@@ -64,11 +102,19 @@ def list_engines():
 @click.option(
     "--engine",
     "-e",
-    default="v2",
-    type=click.Choice(["v2"], case_sensitive=False),
-    help="Engine (v2)",
+    default="dp",
+    type=click.Choice(["dp", "v2"], case_sensitive=False),
+    help="Engine (dp, v2)",
 )
 @click.option("--profile", "-p", default="balanced", help="Optimization profile")
+@click.option(
+    "--objective",
+    default="feasibility_best",
+    type=click.Choice(["feasibility_best", "gc_target", "high_cai"], case_sensitive=False),
+    help="DP objective",
+)
+@click.option("--gc-min", type=float, default=40.0, help="Minimum target GC percentage")
+@click.option("--gc-max", type=float, default=55.0, help="Maximum target GC percentage")
 @click.option("--template", "construct_template", help="Construct template name")
 @click.option("--output", "-o", help="Output file")
 @click.option("--format", "output_format", default="fasta", help="Output format (fasta, genbank)")
@@ -84,6 +130,9 @@ def optimize(
     input_file,
     engine,
     profile,
+    objective,
+    gc_min,
+    gc_max,
     construct_template,
     output,
     output_format,
@@ -108,6 +157,8 @@ def optimize(
                 sequence = fasta_records[0][1]
 
         if fasta_records is not None and len(fasta_records) > 1:
+            if engine == "dp":
+                raise ValueError("Multi-FASTA input requires --engine v2.")
             if construct_template:
                 raise ValueError("Multi-FASTA input does not support --template mode.")
             if output_format.lower() != "fasta":
@@ -155,6 +206,41 @@ def optimize(
             else:
                 click.echo(f"\n{out_content}")
             click.echo(f"Batch optimized: {len(results)} sequences")
+            return
+
+        if engine == "dp":
+            if construct_template:
+                raise ValueError("DP engine does not support --template mode.")
+            if output_format.lower() != "fasta":
+                raise ValueError("DP engine only supports FASTA output.")
+
+            best, feasibility, recommendation_reason = _build_dp_result(
+                sequence,
+                objective=objective,
+                gc_min=gc_min,
+                gc_max=gc_max,
+            )
+            dna_sequence = best["dna_sequence"]
+            cai = float(best["cai"])
+            gc = float(best["gc"])
+            sequence_id = Path(input_file).stem or "factorforge_dp"
+            fasta = _format_dp_fasta(sequence_id, dna_sequence, cai, gc)
+
+            click.echo("Optimizing with DP feasibility engine...")
+            if output:
+                with open(output, "w", encoding="utf-8") as f:
+                    f.write(fasta)
+                click.echo(f"Saved to: {output}")
+            else:
+                click.echo(f"\n{fasta}")
+
+            click.echo("Metrics:")
+            click.echo(f"  - cai: {cai:.3f}")
+            click.echo(f"  - gc_percent: {gc:.2f}")
+            click.echo(f"  - target_gc_min: {float(feasibility['target']['gc_low']):.2f}")
+            click.echo(f"  - target_gc_max: {float(feasibility['target']['gc_high']):.2f}")
+            click.echo(f"  - target_feasible: {bool(feasibility['target']['best_candidate'])}")
+            click.echo(f"  - recommendation_reason: {recommendation_reason}")
             return
 
         if engine == "v2" and construct_template:

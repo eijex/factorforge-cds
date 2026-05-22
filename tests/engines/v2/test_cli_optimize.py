@@ -64,3 +64,38 @@ def test_cli_multifasta_template_rejected(tmp_path: Path) -> None:
 
     assert result.exit_code != 0
     assert "Multi-FASTA input does not support --template mode." in result.output
+
+
+def test_cli_optimize_defaults_to_dp_engine(tmp_path: Path) -> None:
+    runner = CliRunner()
+    input_file = tmp_path / "input.fasta"
+    input_file.write_text(">test\nMSKGEELFTGVVPILVELD\n", encoding="utf-8")
+
+    result = runner.invoke(cli, ["optimize", str(input_file)])
+
+    assert result.exit_code == 0, result.output
+    assert "Optimizing with DP feasibility engine" in result.output
+    assert ">input|engine=dp|objective=feasibility_best|" in result.output
+    assert "recommendation_reason" in result.output
+
+
+def test_cli_optimize_v2_profile_still_works(tmp_path: Path) -> None:
+    runner = CliRunner()
+    input_file = tmp_path / "input.fasta"
+    input_file.write_text(">test\nMSKGEELFTGVVPILVELD\n", encoding="utf-8")
+
+    result = runner.invoke(
+        cli,
+        [
+            "optimize",
+            str(input_file),
+            "--engine",
+            "v2",
+            "--profile",
+            "gc_target",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "Optimizing with Rule-based v2.5.3" in result.output
+    assert "Metrics:" in result.output
