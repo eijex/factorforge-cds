@@ -101,7 +101,7 @@ body {
 }
 
 /* Selection Background in Dark Mode Fix - Only for Cards, not Toggles */
-.dark input[name="profile"]:checked+div,
+.dark input[name="objective"]:checked+div,
 .dark #useTemplate:checked+div {
     background-color: rgba(16, 185, 129, 0.25) !important;
     border-color: #34d399 !important;
@@ -109,14 +109,14 @@ body {
     transform: scale(1.025);
 }
 
-.dark input[name="profile"]:checked+div span:first-child,
-.dark input[name="profile"]:checked+div span:nth-child(2),
+.dark input[name="objective"]:checked+div span:first-child,
+.dark input[name="objective"]:checked+div span:nth-child(2),
 .dark #useTemplate:checked+div span:first-child,
 .dark #useTemplate:checked+div span:nth-child(2) {
     color: var(--primary) !important;
 }
 
-.dark input[name="profile"]:checked+div div:last-child {
+.dark input[name="objective"]:checked+div div:last-child {
     color: var(--primary) !important;
 }
 
@@ -216,7 +216,7 @@ body {
 }
 
 /* Form Elements - Specific for Profile Radios and Top-level Checkboxes */
-input[name="profile"]:checked+div,
+input[name="objective"]:checked+div,
 #useTemplate:checked+div {
     border-color: #059669 !important;
     /* Richer Emerald 600 */
@@ -227,20 +227,20 @@ input[name="profile"]:checked+div,
     box-shadow: 0 12px 20px -3px rgba(16, 185, 129, 0.25), 0 6px 10px -2px rgba(16, 185, 129, 0.15) !important;
 }
 
-input[name="profile"]:checked+div span:first-child,
+input[name="objective"]:checked+div span:first-child,
 #useTemplate:checked+div span:first-child {
     color: #064e3b !important;
     /* Darker green for header */
 }
 
-input[name="profile"]:checked+div span:nth-child(2),
+input[name="objective"]:checked+div span:nth-child(2),
 #useTemplate:checked+div span:nth-child(2) {
     color: #065f46 !important;
     /* Darker green for description */
     font-weight: 600;
 }
 
-input[name="profile"]:checked+div div:last-child {
+input[name="objective"]:checked+div div:last-child {
     color: #064e3b !important;
     /* Darker green for checkmark */
     font-weight: 900;

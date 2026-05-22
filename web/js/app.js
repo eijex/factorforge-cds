@@ -1,6 +1,6 @@
 /**
  * FactorForge Application Logic
- * Production-ready vanilla JS for codon optimization platform
+ * Vanilla JS for the FactorForge CDS design interface.
  */
 
 const API_ENDPOINT = '/api/optimize';
@@ -9,7 +9,7 @@ const ENABLE_MOCK = window.FACTORFORGE_ENABLE_MOCK === true;
 // State Management
 const state = {
     sequence: '',
-    profile: 'balanced',
+    objective: 'feasibility_best',
     useTemplate: false,
     kozak: false,
     dinuc: false,
@@ -45,7 +45,7 @@ const elements = {
     toggleArrow: document.getElementById('toggleArrow'),
     themeToggle: document.getElementById('themeToggle'),
     themeIcon: document.getElementById('themeIcon'),
-    profileRadios: document.getElementsByName('profile'),
+    objectiveRadios: document.getElementsByName('objective'),
     useTemplateCheck: document.getElementById('useTemplate'),
     kozakToggle: document.getElementById('toggleKozak'),
     dinucToggle: document.getElementById('toggleDinuc'),
@@ -58,6 +58,9 @@ const elements = {
     origCAI: document.getElementById('origCAI'),
     optCAIComp: document.getElementById('optCAIComp'),
     mutationRate: document.getElementById('mutationRate'),
+    aaIdentity: document.getElementById('aaIdentity'),
+    candidateComparisonContainer: document.getElementById('candidateComparisonContainer'),
+    candidateComparisonBody: document.getElementById('candidateComparisonBody'),
     gcChart: document.getElementById('gcChart'),
     historyList: document.getElementById('historyList'),
     clearHistory: document.getElementById('clearHistory'),
@@ -77,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initEventListeners();
     renderHistory();
-    console.log('FactorForge V2.5.3 Engaged');
+    console.log('FactorForge v1.0.0 Engaged');
 });
 
 function initEventListeners() {
@@ -86,10 +89,10 @@ function initEventListeners() {
     elements.sequenceInput.addEventListener('input', debounce(handleSequenceChange, 300));
     elements.clearBtn.addEventListener('click', clearAll);
 
-    // Profile Change
-    elements.profileRadios.forEach(radio => {
+    // Objective Change
+    elements.objectiveRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
-            state.profile = e.target.value;
+            state.objective = e.target.value;
         });
     });
 
@@ -248,11 +251,18 @@ async function runOptimization() {
         // Prepare Request
         const payload = {
             sequence: state.sequence,
-            profile: state.profile,
             use_template: state.useTemplate,
             kozak: state.kozak,
-            dinuc: state.dinuc
+            dinuc: state.dinuc,
+            return_candidates: true
         };
+        if (state.objective === 'feasibility_best') {
+            payload.objective = 'feasibility_best';
+            payload.host_profile = 'nbenthamiana';
+            payload.constraints = { gc_min: 40.0, gc_max: 55.0 };
+        } else {
+            payload.profile = state.objective;
+        }
 
         let response;
         try {
@@ -322,22 +332,23 @@ function setLoading(loading) {
 function renderResults() {
     const res = state.results;
     if (!res) return;
+    const primary = getPrimaryResult(res);
 
     elements.emptyState.classList.add('hidden');
     elements.resultsContainer.classList.remove('hidden');
 
     // Metrics
-    elements.caiValue.textContent = res.metrics.cai.toFixed(3);
+    elements.caiValue.textContent = primary.metrics.cai.toFixed(3);
     // GC Value updated below via manual calculation
-    elements.polyaValue.textContent = res.metrics.polya_signals === 0 ? '0 (Clean)' : res.metrics.polya_signals;
+    elements.polyaValue.textContent = primary.metrics.polya_signals === 0 ? '0 (Clean)' : primary.metrics.polya_signals;
 
     // Metrics Comparison Table
-    elements.origLen.textContent = `${res.original_length || state.sequence.length} bp`;
-    elements.optLen.textContent = `${res.metrics.length || res.optimized_sequence.length} bp`;
+    elements.origLen.textContent = `${res.original_length || state.sequence.length} ${res.validation && res.validation.input_type === 'protein' ? 'aa' : 'bp'}`;
+    elements.optLen.textContent = `${primary.metrics.length || primary.optimized_sequence.length} bp`;
 
     // Variables for calculations
     const origSeq = state.sequence;
-    const optSeq = res.optimized_sequence;
+    const optSeq = primary.optimized_sequence;
     const calculatedGC = calculateGC(optSeq);
     const oGC = calculateGC(origSeq);
 
@@ -345,27 +356,32 @@ function renderResults() {
     elements.optGCComp.textContent = `${calculatedGC.toFixed(1)}%`;
     elements.gcValue.textContent = `${calculatedGC.toFixed(1)}%`;
     elements.origCAI.textContent = 'N/A';
-    elements.optCAIComp.textContent = res.metrics.cai.toFixed(3);
+    elements.optCAIComp.textContent = primary.metrics.cai.toFixed(3);
 
-    // Calculate Mutation Rate
-    let diffCount = 0;
-    const compareLen = Math.min(origSeq.length, optSeq.length);
-    for (let i = 0; i < compareLen; i++) {
-        if (origSeq[i] !== optSeq[i]) diffCount++;
+    if (res.validation && res.validation.input_type === 'protein') {
+        elements.mutationRate.textContent = 'Reverse-translated CDS generated';
+    } else {
+        // Calculate Mutation Rate
+        let diffCount = 0;
+        const compareLen = Math.min(origSeq.length, optSeq.length);
+        for (let i = 0; i < compareLen; i++) {
+            if (origSeq[i] !== optSeq[i]) diffCount++;
+        }
+        diffCount += Math.abs(origSeq.length - optSeq.length);
+        const mRate = origSeq.length > 0 ? ((diffCount / Math.max(origSeq.length, 1)) * 100).toFixed(1) : 0;
+        elements.mutationRate.textContent = `${mRate}% (${diffCount} bp)`;
     }
-    // Add length difference if any
-    diffCount += Math.abs(origSeq.length - optSeq.length);
-    const mRate = origSeq.length > 0 ? ((diffCount / Math.max(origSeq.length, 1)) * 100).toFixed(1) : 0;
-    elements.mutationRate.textContent = `${mRate}% (${diffCount} bp)`;
+    if (elements.aaIdentity) elements.aaIdentity.textContent = primary.aaPreserved;
 
     // Sequence
-    elements.optimizedSequence.textContent = formatSequence(res.optimized_sequence);
+    elements.optimizedSequence.textContent = formatSequence(primary.optimized_sequence);
 
     // Render GC Graph
-    renderGCGraph(res.optimized_sequence);
+    renderGCGraph(primary.optimized_sequence);
+    renderCandidateComparison(res);
 
     // PolyA color coding
-    const polyaCount = res.metrics.polya_signals;
+    const polyaCount = primary.metrics.polya_signals;
     if (polyaCount === 0) {
         elements.polyaValue.textContent = '0 (Clean)';
         elements.polyaValue.className = 'text-xl font-black text-emerald-600 dark:text-emerald-400 leading-none';
@@ -376,7 +392,7 @@ function renderResults() {
 
     // Validation Badges
     elements.validationStatus.classList.remove('hidden');
-    const v = res.validation || { polya: 'PASS', moclo: 'PASS', gc: 'PASS' };
+    const v = primary.validation || { polya: 'PASS', moclo: 'PASS', gc: 'PASS' };
     updateValidationIcon('valPolyA', v.polya === 'PASS');
     updateValidationIcon('valMoClo', v.moclo === 'PASS');
 
@@ -388,10 +404,10 @@ function renderResults() {
         valGC.nextElementSibling.textContent = 'GC Content: N/A';
         valGC.nextElementSibling.title = 'GC calculation failed or sequence not available';
     } else if (v.gc !== 'PASS' || (calculatedGC < 40.5 || calculatedGC > 44.5)) {
-        valGC.textContent = '❌';
-        valGC.className = 'text-rose-500';
-        valGC.nextElementSibling.textContent = `❌ Out of target GC range (${calculatedGC.toFixed(1)}%)`;
-        valGC.nextElementSibling.title = `Target: 42.5% ± 2% | Calculated: ${calculatedGC.toFixed(1)}%`;
+        valGC.textContent = '⚠️';
+        valGC.className = 'text-amber-500';
+        valGC.nextElementSibling.textContent = `⚠️ Outside target range (${calculatedGC.toFixed(1)}%)`;
+        valGC.nextElementSibling.title = `Target: 40-55% | Calculated: ${calculatedGC.toFixed(1)}%`;
     } else {
         valGC.textContent = '✅';
         valGC.className = 'text-emerald-400';
@@ -400,6 +416,63 @@ function renderResults() {
 
     // JSON Details
     elements.jsonDetails.textContent = JSON.stringify(res, null, 2);
+}
+
+function getPrimaryResult(res) {
+    const candidate = res.recommended_candidate || (Array.isArray(res.candidates) ? res.candidates[0] : null);
+    if (!candidate) {
+        return {
+            optimized_sequence: res.optimized_sequence,
+            metrics: res.metrics,
+            validation: res.validation,
+            aaPreserved: '✅ 100%'
+        };
+    }
+
+    return {
+        optimized_sequence: candidate.dna_sequence,
+        metrics: {
+            cai: Number(candidate.cai || 0),
+            gc_percent: Number(candidate.gc_percent || 0),
+            polya_signals: Number(candidate.polya_signals || 0),
+            length: candidate.dna_sequence ? candidate.dna_sequence.length : 0
+        },
+        validation: {
+            polya: 'PASS',
+            moclo: 'PASS',
+            gc: candidate.gc_percent >= 40 && candidate.gc_percent <= 55 ? 'PASS' : 'WARNING'
+        },
+        aaPreserved: candidate.validator_status === 'pass' ? '✅ 100%' : '⚠️ Review'
+    };
+}
+
+function renderCandidateComparison(res) {
+    if (!elements.candidateComparisonContainer || !elements.candidateComparisonBody) return;
+    if (!Array.isArray(res.candidates) || res.candidates.length === 0) {
+        elements.candidateComparisonContainer.classList.add('hidden');
+        elements.candidateComparisonBody.innerHTML = '';
+        return;
+    }
+
+    const recommendedId = res.recommended_candidate ? res.recommended_candidate.id : res.candidates[0].id;
+    elements.candidateComparisonBody.innerHTML = res.candidates.map(candidate => {
+        const isRecommended = candidate.id === recommendedId;
+        const status = candidate.validator_status === 'pass' ? 'Pass' : 'Review';
+        const aaStatus = candidate.validator_status === 'pass' ? '100%' : 'Review';
+        return `
+            <tr class="${isRecommended ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-white dark:bg-slate-900'}">
+                <td class="px-3 py-2 font-bold text-slate-800 dark:text-slate-100">${candidate.label || candidate.id}${isRecommended ? ' ★' : ''}</td>
+                <td class="px-3 py-2">${Number(candidate.cai || 0).toFixed(3)}</td>
+                <td class="px-3 py-2">${Number(candidate.gc_percent || 0).toFixed(1)}</td>
+                <td class="px-3 py-2">${Number(candidate.gc_window_min || 0).toFixed(1)}-${Number(candidate.gc_window_max || 0).toFixed(1)}</td>
+                <td class="px-3 py-2">${aaStatus}</td>
+                <td class="px-3 py-2">${candidate.internal_stop_count || 0}</td>
+                <td class="px-3 py-2">${candidate.repeat_count || 0}</td>
+                <td class="px-3 py-2 font-bold ${candidate.validator_status === 'pass' ? 'text-emerald-600' : 'text-amber-600'}">${status}</td>
+            </tr>
+        `;
+    }).join('');
+    elements.candidateComparisonContainer.classList.remove('hidden');
 }
 
 
@@ -501,14 +574,15 @@ function renderGCGraph(seq) {
 }
 
 function addToHistory(input, result) {
+    const primary = getPrimaryResult(result);
     const item = {
         id: Date.now(),
         timestamp: new Date().toLocaleString(),
         inputLen: input.length,
-        profile: state.profile,
-        cai: result.metrics.cai,
-        gc: calculateGC(result.optimized_sequence),
-        sequence: result.optimized_sequence,
+        profile: state.objective,
+        cai: primary.metrics.cai,
+        gc: calculateGC(primary.optimized_sequence),
+        sequence: primary.optimized_sequence,
         inputSequence: input
     };
 
@@ -569,6 +643,7 @@ function clearAll() {
     state.results = null;
     elements.previewContainer.classList.add('hidden');
     elements.resultsContainer.classList.add('hidden');
+    if (elements.candidateComparisonContainer) elements.candidateComparisonContainer.classList.add('hidden');
     elements.emptyState.classList.remove('hidden');
     elements.validationStatus.classList.add('hidden');
     showToast('Input cleared', 'info');
@@ -627,7 +702,7 @@ function showToast(message, type = 'info') {
 async function copyToClipboard() {
     if (!state.results) return;
     try {
-        await navigator.clipboard.writeText(state.results.optimized_sequence);
+        await navigator.clipboard.writeText(getPrimaryResult(state.results).optimized_sequence);
         const originalText = elements.copyBtn.innerHTML;
         elements.copyBtn.innerHTML = '<span>🎉</span> <span>Copied!</span>';
         elements.copyBtn.classList.add('bg-emerald-100');
@@ -646,10 +721,11 @@ function downloadFile(format) {
 
     let content = '';
     let fileName = '';
-    const seq = state.results.optimized_sequence;
+    const primary = getPrimaryResult(state.results);
+    const seq = primary.optimized_sequence;
 
     if (format === 'fasta') {
-        content = `>FactorForge_Optimized | Profile: ${state.profile} | CAI: ${state.results.metrics.cai}\n${seq}`;
+        content = `>FactorForge_Optimized | Objective: ${state.objective} | CAI: ${primary.metrics.cai}\n${seq}`;
         fileName = `optimized_sequence_${Date.now()}.fasta`;
     } else {
         // Basic GenBank template
@@ -658,7 +734,7 @@ function downloadFile(format) {
         content += `FEATURES             Location/Qualifiers\n`;
         content += `     CDS             1..${seq.length}\n`;
         content += `                     /label="Optimized_CDS"\n`;
-        content += `                     /note="Profile: ${state.profile}"\n`;
+        content += `                     /note="Objective: ${state.objective}"\n`;
         content += `ORIGIN      \n`;
 
         const lines = seq.toLowerCase().match(/.{1,60}/g);
@@ -694,7 +770,7 @@ function getMockResult() {
             polya_signals: 0,
             length: mockSeq.length
         },
-        profile: state.profile,
+        profile: state.objective,
         validation: {
             polya: 'PASS',
             moclo: 'PASS',

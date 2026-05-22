@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FactorForge | N. benthamiana Codon Optimization</title>
+    <title>FactorForge | Transparent CDS Design for N. benthamiana</title>
     <meta name="description"
-        content="Production-ready codon optimization platform for Nicotiana benthamiana expression systems.">
+        content="Open-source constraint-based CDS design engine for N. benthamiana expression workflows.">
     <!-- Google Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,8 +58,8 @@
                         <span class="text-3xl">🧬</span>
                     </div>
                     <div>
-                        <h1 id="logoTitle" class="text-2xl font-extrabold text-white tracking-tight cursor-pointer">FactorForge</h1>
-                        <p class="text-emerald-50 text-xs font-medium opacity-90">N. benthamiana Optimization Platform
+                        <h1 id="logoTitle" class="text-2xl font-extrabold text-white tracking-tight cursor-pointer">Transparent CDS Design Engine</h1>
+                        <p class="text-emerald-50 text-xs font-medium opacity-90">FactorForge for N. benthamiana workflows
                         </p>
                     </div>
                 </div>
@@ -67,7 +67,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            ✨ v2.5.3 What's New?
+                            v1.0.0 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -203,23 +203,22 @@
 
                     <!-- radio button group -->
                     <div class="space-y-3 mb-8">
-                        <p class="text-xs font-extrabold text-slate-600 uppercase tracking-widest mb-4">Optimization
-                            Profile
+                        <p class="text-xs font-extrabold text-slate-600 uppercase tracking-widest mb-4">Design
+                            Objective
                         </p>
 
                         <label class="block relative group">
-                            <input type="radio" name="profile" value="balanced" checked class="peer sr-only">
+                            <input type="radio" name="objective" value="feasibility_best" checked class="peer sr-only">
                             <div
                                 class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
                                 <span class="flex items-center text-sm font-bold text-slate-800">
-                                    Balanced
+                                    Feasibility Best (Recommended)
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Default. CAI priority with GC balance (~0.75 CAI, 42.5% GC). Recommended for most experiments.</span>
+                                        <span class="tooltip-text">Dynamic-programming candidate with maximum CAI inside the requested GC range when feasible.</span>
                                     </span>
                                 </span>
-                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Optimal CAI + GC
-                                    content balance</span>
+                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Constraint-based CDS design with v2 comparison candidates</span>
                                 <div
                                     class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
                                     ✓</div>
@@ -227,38 +226,17 @@
                         </label>
 
                         <label class="block relative group">
-                            <input type="radio" name="profile" value="high_cai" class="peer sr-only">
-                            <div
-                                class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
-                                <span class="flex items-center text-sm font-bold text-slate-800">
-                                    High CAI
-                                    <span class="tooltip-container">
-                                        <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Maximum CAI score (>0.85). Uses only the most frequently used codons in N. benthamiana.</span>
-                                    </span>
-                                </span>
-                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Maximize CAI score (codon adaptation index)</span>
-                                <div
-                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
-                                    ✓</div>
-                            </div>
-                        </label>
-
-                        <label class="block relative group">
-                            <input type="radio" name="profile" value="gc_target" class="peer sr-only">
+                            <input type="radio" name="objective" value="gc_target" class="peer sr-only">
                             <div
                                 class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
                                 <span class="flex items-center text-sm font-bold text-slate-800">
                                     GC Target
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Strict GC control (42.5% ± 2%). Ensures sequence
-                                            stability in N. benthamiana systems.</span>
+                                        <span class="tooltip-text">v2 comparison profile that prioritizes global GC proximity for N. benthamiana.</span>
                                     </span>
                                 </span>
-                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Maintains GC content
-                                    at 42.5% ±
-                                    2%</span>
+                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Compare against GC-focused rule-based output</span>
                                 <div
                                     class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
                                     ✓</div>
@@ -266,7 +244,25 @@
                         </label>
 
                         <label class="block relative group">
-                            <input type="radio" name="profile" value="assembly_friendly" class="peer sr-only">
+                            <input type="radio" name="objective" value="high_cai" class="peer sr-only">
+                            <div
+                                class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
+                                <span class="flex items-center text-sm font-bold text-slate-800">
+                                    High CAI
+                                    <span class="tooltip-container">
+                                        <span class="info-icon">i</span>
+                                        <span class="tooltip-text">v2 comparison profile that favors high codon adaptation index.</span>
+                                    </span>
+                                </span>
+                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Compare against CAI-focused rule-based output</span>
+                                <div
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
+                                    ✓</div>
+                            </div>
+                        </label>
+
+                        <label class="block relative group">
+                            <input type="radio" name="objective" value="assembly_friendly" class="peer sr-only">
                             <div
                                 class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
                                 <span class="flex items-center text-sm font-bold text-slate-800">
@@ -285,11 +281,11 @@
                         </label>
 
                         <label class="block relative group">
-                            <input type="radio" name="profile" value="ramp" class="peer sr-only">
+                            <input type="radio" name="objective" value="ramp" class="peer sr-only">
                             <div
                                 class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
                                 <span class="flex items-center text-sm font-bold text-slate-800">
-                                    Ramp
+                                    5' Ramp
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
                                         <span class="tooltip-text">Uses rare codons at positions 1–50 to slow ribosome speed and promote efficient co-translational folding.</span>
@@ -305,7 +301,7 @@
                         </label>
 
                         <label class="block relative group">
-                            <input type="radio" name="profile" value="viral_delivery" class="peer sr-only">
+                            <input type="radio" name="objective" value="viral_delivery" class="peer sr-only">
                             <div
                                 class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
                                 <span class="flex items-center text-sm font-bold text-slate-800">
@@ -541,6 +537,27 @@
                             </div>
                         </div>
 
+                        <div id="candidateComparisonContainer" class="mb-8 hidden">
+                            <h3 class="text-lg font-semibold mb-3">Candidate Comparison</h3>
+                            <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+                                <table id="candidateComparisonTable" class="w-full text-sm">
+                                    <thead class="bg-slate-50 dark:bg-slate-800/50">
+                                        <tr>
+                                            <th class="px-3 py-2 text-left">Candidate</th>
+                                            <th class="px-3 py-2 text-left">CAI</th>
+                                            <th class="px-3 py-2 text-left">GC%</th>
+                                            <th class="px-3 py-2 text-left">GC Window</th>
+                                            <th class="px-3 py-2 text-left">AA</th>
+                                            <th class="px-3 py-2 text-left">Stops</th>
+                                            <th class="px-3 py-2 text-left">Repeats</th>
+                                            <th class="px-3 py-2 text-left">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="candidateComparisonBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
                         <!-- Metrics Grid -->
                         <div class="grid grid-cols-2 gap-4 mb-8">
                             <div
@@ -645,6 +662,14 @@
 
     <!-- Global Toasts -->
     <div id="toastContainer" class="fixed bottom-6 right-6 flex flex-col space-y-3 z-[100]"></div>
+
+    <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mt-6 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+            FactorForge provides in-silico CDS design support only. It does not guarantee
+            protein expression, yield, solubility, or purification performance.
+            Wet-lab validation is required.
+        </div>
+    </div>
 
     <!-- Changelog Modal -->
     <div id="changelogModal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4">
@@ -816,7 +841,7 @@
                         <span class="text-slate-400 text-[10px]">2026-01-28</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
-                        <li><b>Inference Optimization:</b> Baseline deployment for BPE model testing.</li>
+                        <li><b>Inference Harness:</b> Baseline deployment path for sequence-design experiments.</li>
                     </ul>
                 </div>
 
@@ -830,7 +855,7 @@
                         <span class="text-slate-400 text-[10px]">2026-01-24</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
-                        <li><b>BPE Training:</b> Initial research pipeline with subword tokenization.</li>
+                        <li><b>Research Pipeline:</b> Initial sequence-design workflow automation.</li>
                     </ul>
                 </div>
 
@@ -844,7 +869,7 @@
                         <span class="text-slate-400 text-[10px]">2026-01-21</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
-                        <li><b>BPE Tokenization:</b> Initial AI-driven codon optimization approach.</li>
+                        <li><b>Initial CDS Design:</b> Rule-oriented codon optimization foundation.</li>
                         <li><b>Initial Release:</b> Foundation of N. benthamiana optimization.</li>
                     </ul>
                 </div>
@@ -866,8 +891,7 @@
                 <span class="w-1.5 h-1.5 bg-slate-300 rounded-full"></span>
                 <span class="text-xs font-bold text-slate-400">Apache 2.0 License</span>
             </div>
-            <p class="text-xs text-slate-400 font-medium">© 2026 Eijex. All rights reserved. Professional use
-                only.</p>
+            <p class="text-xs text-slate-400 font-medium">© 2026 Eijex. Licensed under the Apache License 2.0.</p>
         </div>
     </footer>
 
