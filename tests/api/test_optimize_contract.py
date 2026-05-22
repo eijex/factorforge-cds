@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import api.optimize as optimize_api
 from api.optimize import DEFAULT_GC_MAX, DEFAULT_GC_MIN, handler
 
 
@@ -82,3 +83,38 @@ def test_legacy_gc_validation_uses_request_constraints() -> None:
     )
 
     assert result["validation"]["gc"] == "WARNING"
+
+
+def test_engine_unavailable_returns_503_when_mock_disabled(monkeypatch) -> None:
+    h = _handler()
+    monkeypatch.setattr(optimize_api, "ENABLE_MOCK", False)
+
+    status_code, result = h.handle_unavailable_engine(
+        "MSK",
+        "balanced",
+        False,
+        False,
+        {"gc_min": 40.0, "gc_max": 55.0},
+        False,
+    )
+
+    assert status_code == 503
+    assert result == {"success": False, "error": "Engine unavailable. Contact support."}
+
+
+def test_engine_unavailable_returns_mock_when_enabled(monkeypatch) -> None:
+    h = _handler()
+    monkeypatch.setattr(optimize_api, "ENABLE_MOCK", True)
+
+    status_code, result = h.handle_unavailable_engine(
+        "MSK",
+        "balanced",
+        False,
+        False,
+        {"gc_min": 40.0, "gc_max": 55.0},
+        False,
+    )
+
+    assert status_code == 200
+    assert result["success"] is True
+    assert result["engine"]["name"] == "Mock Engine"

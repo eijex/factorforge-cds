@@ -51,6 +51,7 @@ DEFAULT_OBJECTIVE = 'feasibility_best'
 DEFAULT_HOST_PROFILE = 'nbenthamiana'
 DEFAULT_GC_MIN = 40.0
 DEFAULT_GC_MAX = 55.0
+ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
     'product': '1.0.0',
     'rule_engine': '2.5.3',
@@ -100,10 +101,11 @@ class handler(BaseHTTPRequestHandler):
 
             # Check if FactorForge is available
             if not FACTORFORGE_AVAILABLE:
-                logger.info("Using mock optimization (FactorForge not available)")
-                result = self.generate_mock_result(
+                status_code, result = self.handle_unavailable_engine(
                     sequence, profile, kozak, dinuc, constraints, return_candidates
                 )
+                self.send_json_response(status_code, result)
+                return
             else:
                 logger.info(
                     "Running real optimization: "
@@ -148,6 +150,7 @@ class handler(BaseHTTPRequestHandler):
             },
             'supported_profiles': VALID_PROFILES,
             'supported_objectives': VALID_OBJECTIVES,
+            'mock_enabled': ENABLE_MOCK,
             'engine_versions': ENGINE_VERSIONS,
         }
 
@@ -455,6 +458,28 @@ class handler(BaseHTTPRequestHandler):
     def gc_check(self, gc_percent, constraints):
         """Return PASS/WARNING for configured global GC constraints."""
         return 'PASS' if constraints['gc_min'] <= gc_percent <= constraints['gc_max'] else 'WARNING'
+
+    def handle_unavailable_engine(
+        self,
+        sequence,
+        profile,
+        kozak,
+        dinuc,
+        constraints,
+        return_candidates,
+    ):
+        """Return mock only when explicitly enabled; otherwise fail closed."""
+        if ENABLE_MOCK:
+            logger.info("Using mock optimization (FactorForge not available)")
+            return 200, self.generate_mock_result(
+                sequence, profile, kozak, dinuc, constraints, return_candidates
+            )
+
+        logger.error("FactorForge engine unavailable and mock fallback disabled")
+        return 503, {
+            'success': False,
+            'error': 'Engine unavailable. Contact support.',
+        }
 
     def generate_mock_result(self, sequence, profile, kozak, dinuc, constraints=None, return_candidates=False):
         """Generate mock result for testing (when FactorForge is not available)"""

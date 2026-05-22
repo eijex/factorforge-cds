@@ -4,6 +4,7 @@
  */
 
 const API_ENDPOINT = '/api/optimize';
+const ENABLE_MOCK = window.FACTORFORGE_ENABLE_MOCK === true;
 
 // State Management
 const state = {
@@ -261,15 +262,22 @@ async function runOptimization() {
                 body: JSON.stringify(payload)
             });
         } catch (f) {
-            console.warn('Network error or CORS issue, failing over to mock data');
-            throw new Error('NETWORK_FAILURE');
+            console.warn('Network error or CORS issue', f);
+            throw new Error('Network request failed');
         }
 
         let data;
         if (response.ok) {
             data = await response.json();
         } else {
-            throw new Error('API_FAILURE');
+            let message = `API request failed (${response.status})`;
+            try {
+                const errorBody = await response.json();
+                if (errorBody && errorBody.error) message = errorBody.error;
+            } catch (parseError) {
+                console.warn('Unable to parse API error response', parseError);
+            }
+            throw new Error(message);
         }
 
         state.results = data;
@@ -280,12 +288,15 @@ async function runOptimization() {
     } catch (error) {
         console.error('Optimization Failed:', error);
 
-        // Mock fallback for development/demo
-        showToast('Running mock optimization for demonstration...', 'info');
-        await new Promise(r => setTimeout(r, 1500)); // Simulate delay
-        state.results = getMockResult();
-        renderResults();
-        showToast('Showing simulated results', 'success');
+        if (ENABLE_MOCK) {
+            showToast('Running mock optimization for demonstration...', 'info');
+            await new Promise(r => setTimeout(r, 1500));
+            state.results = getMockResult();
+            renderResults();
+            showToast('Showing simulated results', 'success');
+        } else {
+            showToast(`Optimization failed: ${error.message}`, 'error');
+        }
     } finally {
         setLoading(false);
     }

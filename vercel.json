@@ -3,7 +3,8 @@
   "buildCommand": null,
   "outputDirectory": "web",
   "env": {
-    "PYTHONPATH": "src"
+    "PYTHONPATH": "src",
+    "FACTORFORGE_ENABLE_MOCK": "false"
   },
   "functions": {
     "api/*.py": {
