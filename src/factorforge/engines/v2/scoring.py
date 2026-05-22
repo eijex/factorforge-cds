@@ -57,7 +57,7 @@ class ScoringConfig:
 PROFILE_SCORING_CONFIGS: dict[str, ScoringConfig] = {
     "balanced": ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.2, gc_opt=GC_OPT_MID),
     "high_cai": ScoringConfig(w_cai=0.8, w_gc=0.1, w_mfe=0.1, gc_opt=GC_OPT_MID),
-    "gc_target": ScoringConfig(w_cai=0.1, w_gc=0.7, w_mfe=0.2, gc_opt=50.0),
+    "gc_target": ScoringConfig(w_cai=0.1, w_gc=0.7, w_mfe=0.2, gc_opt=GC_OPT_MID),
     "assembly_friendly": ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.2, gc_opt=GC_OPT_MID),
     "ramp": ScoringConfig(w_cai=0.4, w_gc=0.3, w_mfe=0.3, gc_opt=GC_OPT_MID),
     # TRV viral-delivery profile — Li et al. (2026): prioritize MFE and viral-context GC target.
