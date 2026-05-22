@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Version: 2.5.3
+Version: 3.0.0
 Engine: FactorForge v2 (rule-based)
 """
 
@@ -53,9 +53,9 @@ DEFAULT_GC_MIN = 40.0
 DEFAULT_GC_MAX = 55.0
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    'product': '1.0.0',
+    'product': '3.0.0',
     'rule_engine': '2.5.3',
-    'dp_engine': '1.0.0',
+    'dp_engine': '3.0.0',
 }
 # Valid characters: ACGT (DNA) or standard 20 Amino Acids (Protein) + * (Stop)
 VALID_AA = 'ACDEFGHIKLMNPQRSTVWY'

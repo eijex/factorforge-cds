@@ -79,7 +79,7 @@ def download(count: int, output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
 
     session = requests.Session()
-    session.headers.update({"User-Agent": "FactorForge/2.5.2 (eijex; research)"})
+    session.headers.update({"User-Agent": "FactorForge/3.0.0 (eijex; research)"})
 
     collected: list[str] = []
     cursor: str | None = None

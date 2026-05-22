@@ -14,10 +14,8 @@ web/
 ├── index.html          # Main page (3-panel layout)
 ├── css/
 │   └── style.css       # Custom styles
-├── js/
-│   ├── app.js          # Main application logic
-│   └── gemini.js       # Gemini AI chatbot (optional)
-└── assets/             # Images, logos
+└── js/
+    └── app.js          # Main application logic
 ```
 
 ## 🚀 Quick Start
@@ -57,28 +55,13 @@ Edit `js/app.js` line 3:
 const API_ENDPOINT = 'https://your-vercel-app.vercel.app/api/optimize';
 ```
 
-### Gemini API Key
-
-Edit `js/gemini.js` line 3:
-
-```javascript
-const GEMINI_API_KEY = 'your-gemini-api-key';
-```
-
-Get your free API key: https://aistudio.google.com/app/apikey
-
-## 📖 Full Documentation
-
-See [DEPLOY_GUIDE.md](../DEPLOY_GUIDE.md) for complete deployment instructions.
-
 ## 🎨 Features
 
 - ✅ File upload (FASTA)
 - ✅ Text input (paste sequence)
-- ✅ 5 optimization profiles
+- ✅ 4 optimization profiles
 - ✅ Real-time results
 - ✅ Download (FASTA, GenBank)
-- ✅ Gemini AI chatbot (optional)
 - ✅ Responsive design
 - ✅ No login required
 
@@ -86,8 +69,7 @@ See [DEPLOY_GUIDE.md](../DEPLOY_GUIDE.md) for complete deployment instructions.
 
 - **Frontend**: HTML5 + Tailwind CSS + Vanilla JS
 - **Backend**: Vercel Serverless Functions (Python)
-- **AI**: Google Gemini 2.0 Flash
-- **Hosting**: GitHub Pages (frontend) + Vercel (backend)
+- **Hosting**: Vercel
 
 ## 📊 Browser Support
 
