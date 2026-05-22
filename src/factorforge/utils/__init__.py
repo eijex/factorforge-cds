@@ -10,6 +10,7 @@ from .exceptions import (
 )
 from .sequence_validator import (
     detect_sequence_type,
+    validate_cds_output,
     validate_and_normalize,
     validate_dna_sequence,
     validate_protein_sequence,
@@ -23,6 +24,7 @@ __all__ = [
     "FileFormatError",
     "CodonTableError",
     "detect_sequence_type",
+    "validate_cds_output",
     "validate_and_normalize",
     "validate_dna_sequence",
     "validate_protein_sequence",

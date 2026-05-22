@@ -2,6 +2,8 @@
 
 from typing import Literal, Tuple
 
+from factorforge.ml.metrics import detect_invalid_codons, translate_dna
+
 from .exceptions import SequenceValidationError
 
 DNA_CHARS = set("ATGCN")
@@ -154,3 +156,34 @@ def validate_protein_sequence(seq: str) -> str:
         )
 
     return seq_clean
+
+
+def validate_cds_output(input_protein: str, dna_sequence: str) -> dict[str, object]:
+    """Strictly validate generated CDS output against the input protein.
+
+    This validator is intentionally narrow: it returns only hard-fail errors
+    for generated CDS outputs that should not be recommended.
+    """
+    expected = _clean_sequence(input_protein).rstrip("*")
+    seq = _clean_sequence(dna_sequence).replace("U", "T")
+    errors: list[str] = []
+
+    if len(seq) % 3 != 0:
+        errors.append("length_not_divisible_by_3")
+
+    invalid = detect_invalid_codons(seq)
+    if invalid:
+        errors.append(f"invalid_codons: {invalid[:3]}")
+
+    translated = translate_dna(seq)
+    if "*" in translated[:-1]:
+        errors.append("internal_stop_codon")
+
+    observed = translated.rstrip("*")
+    if expected != observed:
+        errors.append(f"aa_mismatch: expected_len={len(expected)} observed_len={len(observed)}")
+
+    return {
+        "passed": not errors,
+        "errors": errors,
+    }

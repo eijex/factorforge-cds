@@ -1,17 +1,11 @@
 """Tests for sequence validation utilities."""
 
-import sys
-from pathlib import Path
-
 import pytest
-
-SRC_ROOT = Path(__file__).resolve().parents[1] / "src"
-if str(SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(SRC_ROOT))
 
 from factorforge.utils.exceptions import SequenceValidationError
 from factorforge.utils.sequence_validator import (
     detect_sequence_type,
+    validate_cds_output,
     validate_and_normalize,
     validate_dna_sequence,
     validate_protein_sequence,
@@ -67,3 +61,30 @@ def test_validate_protein_sequence():
 
     with pytest.raises(SequenceValidationError):
         validate_protein_sequence("123ABC")
+
+
+def test_validate_cds_output_passes_normal_cds():
+    result = validate_cds_output("MAF", "ATGGCTTTC")
+
+    assert result == {"passed": True, "errors": []}
+
+
+def test_validate_cds_output_fails_internal_stop():
+    result = validate_cds_output("MAF", "ATGTAATTC")
+
+    assert result["passed"] is False
+    assert "internal_stop_codon" in result["errors"]
+
+
+def test_validate_cds_output_fails_aa_mismatch():
+    result = validate_cds_output("MAF", "ATGGCTTAC")
+
+    assert result["passed"] is False
+    assert any(error.startswith("aa_mismatch") for error in result["errors"])
+
+
+def test_validate_cds_output_fails_length_error():
+    result = validate_cds_output("MA", "ATGG")
+
+    assert result["passed"] is False
+    assert "length_not_divisible_by_3" in result["errors"]
