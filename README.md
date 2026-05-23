@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Version](https://img.shields.io/badge/version-3.0.0-green.svg)](https://github.com/eijex/factorforge-cds/releases)
-[![Web App](https://img.shields.io/badge/web-factorforge.vercel.app-brightgreen.svg)](https://factorforge.vercel.app)
+[![Web App](https://img.shields.io/badge/web-factorforge-cds.vercel.app-brightgreen.svg)](https://factorforge-cds.vercel.app)
 
 FactorForge optimizes protein sequences into *N. benthamiana*-compatible CDS by maximizing CAI, controlling GC content, eliminating PolyA signals, and producing MoClo/Golden Gate-ready constructs.
 
@@ -35,7 +35,7 @@ print(result.metadata)   # CAI, GC%, scan results, domestication edits
 
 | Method | Description | Link |
 |--------|-------------|------|
-| **Web App** | No installation, demo & light use | [factorforge.vercel.app](https://factorforge.vercel.app) |
+| **Web App** | No installation, demo & light use | [factorforge-cds.vercel.app](https://factorforge-cds.vercel.app) |
 | **CLI / Python** | Local use, batch processing, data privacy | `pip install factorforge` |
 | **Notebooks** | Training & experimentation on Colab / Kaggle | See [notebooks/](notebooks/) |
 
@@ -241,4 +241,4 @@ own discretion.
 
 - **GitHub Issues** — bug reports, feature requests, wet-lab results: [github.com/eijex/factorforge-cds/issues](https://github.com/eijex/factorforge-cds/issues)
 - **Email** — collaborations, feedback, questions: eijex.lab@gmail.com
-- **Web** — [factorforge.vercel.app](https://factorforge.vercel.app)
+- **Web** — [factorforge-cds.vercel.app](https://factorforge-cds.vercel.app)
