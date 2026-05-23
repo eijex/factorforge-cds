@@ -675,7 +675,7 @@
 
     <!-- Changelog Modal -->
     <div id="changelogModal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" id="modalOverlay"></div>
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" id="modalOverlay"></div>
         <div
             class="relative bg-white dark:bg-slate-900 w-full max-w-2xl max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300 flex flex-col border border-slate-200 dark:border-slate-800">
             <div
@@ -717,9 +717,9 @@
                         <span class="text-slate-400 text-[10px]">2026-04-05</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
-                        <li><b>High CAI Fix:</b> Fixed codon selection to use Golden Set weights — CAI improved from 0.757 to 1.000 (011-fix).</li>
-                        <li><b>GC Target Fix:</b> Corrected default GC target from 50% to 42.5% ±2% matching N. benthamiana spec (012-fix).</li>
-                        <li><b>Viral Delivery UI:</b> Added viral_delivery profile card and DNA input warning banner (009-fix, 010-fix).</li>
+                        <li><b>High CAI Fix:</b> Fixed codon selection to use Golden Set weights — CAI improved from 0.757 to 1.000.</li>
+                        <li><b>GC Target Fix:</b> Corrected default GC target from 50% to 42.5% ±2% matching N. benthamiana spec.</li>
+                        <li><b>Viral Delivery UI:</b> Added viral_delivery profile card and DNA input warning banner.</li>
                     </ul>
                 </div>
 
@@ -848,6 +848,11 @@
                         <li><b>Domesticator:</b> Automated Golden Gate restriction site removal.</li>
                         <li><b>Validation:</b> Auto-detect protein/DNA/FASTA inputs.</li>
                     </ul>
+                </div>
+
+                <!-- v1.x label -->
+                <div class="pl-8 mb-2">
+                    <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">v1.x — ML Research Track (parallel development)</span>
                 </div>
 
                 <!-- Version 1.2.0 -->

@@ -661,7 +661,11 @@ function toggleDetailsPanel() {
 }
 
 function toggleChangelog() {
-    elements.changelogModal.classList.toggle('hidden');
+    const isHidden = elements.changelogModal.classList.toggle('hidden');
+    if (!isHidden) {
+        const scrollArea = elements.changelogModal.querySelector('.overflow-y-auto');
+        if (scrollArea) scrollArea.scrollTop = 0;
+    }
 }
 
 // Utilities

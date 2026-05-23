@@ -1,9 +1,8 @@
 """
 FactorForge - Codon Optimization Platform
 
-v1_archived: Rule-based v1 (Archived)
-v2: Rule-based (Production) — engine version 3.0.0
-v3: ML engine / v3-alpha (ESM2 + BART, in development)
+v2: Rule-based engine (Production)
+v3: ML engine (ESM2 + BART)
 """
 
 __version__ = "3.0.0"
