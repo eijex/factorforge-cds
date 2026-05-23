@@ -7,6 +7,7 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
 yaml = pytest.importorskip("yaml", reason="pyyaml not installed — skipping ML tests")
 
 ROOT = Path(__file__).resolve().parents[3]
