@@ -100,3 +100,67 @@ class TestDinucleotideFix:
         result = engine.fix_dinucleotides("ACG" * 10, max_rounds=3)
 
         assert result["rounds"] <= 3
+
+
+class TestDinucleotideModes:
+    """Tests for fix_dinucleotides() mode parameter."""
+
+    def test_aggressive_matches_default_call_for_cpg_sequence(self, engine):
+        """Aggressive mode matches the default call for a simple reducible sequence."""
+        seq = "ACG" * 10
+        default_result = engine.fix_dinucleotides(seq)
+        aggressive_result = engine.fix_dinucleotides(seq, mode="aggressive")
+
+        assert aggressive_result["mode"] == "aggressive"
+        assert aggressive_result["initial_count"] == default_result["initial_count"]
+        assert aggressive_result["final_count"] == default_result["final_count"]
+
+    def test_aggressive_returns_cai_fields(self, engine):
+        """Aggressive mode reports CAI before and after fixing."""
+        result = engine.fix_dinucleotides("ACG" * 10, mode="aggressive")
+
+        assert result["cai_before"] > 0.0
+        assert result["cai_after"] >= 0.0
+        assert result["mode"] == "aggressive"
+
+    def test_balanced_respects_low_cai_floor(self, engine):
+        """Balanced mode reports CAI above a permissive floor."""
+        result = engine.fix_dinucleotides("ACG" * 20, mode="balanced", cai_floor=0.5)
+
+        assert result["cai_after"] >= 0.5
+        assert result["mode"] == "balanced"
+
+    def test_balanced_high_cai_floor_limits_reduction(self, engine):
+        """An unreachable high floor rolls back or keeps CAI above the floor."""
+        result = engine.fix_dinucleotides("ACG" * 20, mode="balanced", cai_floor=0.999)
+
+        assert (
+            result["final_count"] >= result["initial_count"] * 0.5 or result["cai_after"] >= 0.999
+        )
+        assert result["mode"] == "balanced"
+
+    def test_cai_preserving_limits_cai_drop(self, engine):
+        """CAI-preserving mode keeps CAI loss within the requested budget."""
+        result = engine.fix_dinucleotides(
+            "ACG" * 20,
+            mode="cai_preserving",
+            max_cai_drop=0.001,
+        )
+
+        assert result["cai_before"] - result["cai_after"] <= 0.002
+        assert result["mode"] == "cai_preserving"
+
+    def test_mode_field_returned_for_non_triplet_sequence(self, engine):
+        """Mode is reported even when the input sequence cannot be fixed."""
+        result = engine.fix_dinucleotides("ACGA", mode="cai_preserving")
+
+        assert result["success"] is False
+        assert result["mode"] == "cai_preserving"
+
+    def test_pipeline_uses_balanced_mode_without_error(self):
+        """Pipeline default dinucleotide handling completes with balanced mode."""
+        pipeline = OptimizationPipeline(profile="balanced")
+        result = pipeline.run("ACG" * 10)
+
+        assert result.sequence
+        assert "scan_results" in result.metadata

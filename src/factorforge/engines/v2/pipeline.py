@@ -201,12 +201,14 @@ class OptimizationPipeline:
 
         # Dinucleotide reduction pass (CpG/TpA greedy synonymous fix)
         if self.rule_engine.scan_dinucleotides(optimized_dna):
-            dinu_fix = self.rule_engine.fix_dinucleotides(optimized_dna)
+            dinu_fix = self.rule_engine.fix_dinucleotides(optimized_dna, mode="balanced")
             if dinu_fix["success"]:
                 optimized_dna = dinu_fix["modified_seq"]
                 logger.info(
-                    f"Dinucleotide reduction: {dinu_fix['initial_count']} -> "
+                    f"Dinucleotide reduction [{dinu_fix['mode']}]: "
+                    f"{dinu_fix['initial_count']} -> "
                     f"{dinu_fix['final_count']} ({dinu_fix['reduction_pct']}% reduction, "
+                    f"CAI {dinu_fix['cai_before']} -> {dinu_fix['cai_after']}, "
                     f"{dinu_fix['rounds']} round(s))"
                 )
 

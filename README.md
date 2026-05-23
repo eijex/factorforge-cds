@@ -66,6 +66,7 @@ Protein sequence (FASTA or plain text)
    BsaI / BsmBI recognition sites via silent edits
    Optional custom restriction sites can be removed
    by synonymous substitution when feasible
+   CpG/TpA reduction uses a CAI-budgeted balanced mode
         │
         ▼
 4. Output

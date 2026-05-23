@@ -6,6 +6,7 @@ Plant-aware rule engine - scanning + auto-fix (P0-3)
 from __future__ import annotations
 
 import logging
+import math
 import re
 from typing import Any
 
@@ -652,31 +653,53 @@ class RuleEngine:
 
         return violations
 
+    def _calc_cai(self, seq: str) -> float:
+        """Calculate CAI from cached ref weights (geometric mean of w values)."""
+        _stop = {"TAA", "TAG", "TGA"}
+        ws = [
+            self._rare_codon_weights.get(seq[i : i + 3], 0.001)
+            for i in range(0, len(seq) - 2, 3)
+            if seq[i : i + 3] not in _stop
+        ]
+        if not ws:
+            return 0.0
+        return math.exp(sum(math.log(w) for w in ws) / len(ws))
+
     def fix_dinucleotides(
         self,
         seq: str,
         max_rounds: int = 5,
         target_dinucleotides: tuple[str, ...] = ("CG", "TA"),
+        mode: str = "balanced",
+        cai_floor: float = 0.75,
+        max_cai_drop: float | None = None,
     ) -> dict[str, Any]:
         """
         Reduce CpG and TpA dinucleotide density via greedy synonymous substitution.
 
-        For each codon, tries synonymous alternatives and accepts the first swap that
-        reduces the count of target dinucleotides in the 4 positions directly adjacent
-        to the codon (one pair spanning the left boundary, two within the codon, one
-        spanning the right boundary). Repeats for up to max_rounds full-sequence passes.
+        Modes:
+            aggressive: dinucleotide reduction only; no CAI check (Job 044 behaviour).
+            balanced: dinucleotide reduction first; rollback each pass if final CAI
+                      drops below cai_floor.
+            cai_preserving: rollback each pass if CAI drops more than max_cai_drop
+                            below initial CAI.
 
         Args:
             seq: DNA coding sequence (must be divisible by 3).
             max_rounds: Maximum number of full-sequence passes.
             target_dinucleotides: Dinucleotides to reduce.
+            mode: "aggressive" | "balanced" | "cai_preserving".
+            cai_floor: Minimum allowed final CAI (balanced mode).
+            max_cai_drop: Maximum allowed CAI decrease from initial
+                (cai_preserving mode).
 
         Returns:
-            Dict with modified sequence, success flag, round count, initial/final
-            dinucleotide counts, and reduction percentage.
+            Dict with modified_seq, success, rounds, initial/final counts,
+            reduction_pct, mode, cai_before, cai_after.
         """
         seq_upper = seq.upper()
         initial_count = sum(count_dinucleotides(seq_upper, di) for di in target_dinucleotides)
+        initial_cai = self._calc_cai(seq_upper)
 
         if len(seq) % 3 != 0 or len(seq) == 0:
             return {
@@ -686,14 +709,24 @@ class RuleEngine:
                 "initial_count": initial_count,
                 "final_count": initial_count,
                 "reduction_pct": 0.0,
+                "mode": mode,
+                "cai_before": round(initial_cai, 4),
+                "cai_after": round(initial_cai, 4),
             }
+
+        if mode == "aggressive":
+            effective_floor = 0.0
+        elif mode == "cai_preserving":
+            drop = max_cai_drop if max_cai_drop is not None else 0.003
+            effective_floor = initial_cai - drop
+        else:
+            effective_floor = cai_floor
 
         targets_set = set(target_dinucleotides)
         current_seq = seq_upper
         round_num = 0
 
         def _local_count(s: str, codon_start: int) -> int:
-            """Count target dinucleotides in the 4 positions adjacent to codon."""
             n = len(s) - 1
             total = 0
             for di in range(max(0, codon_start - 1), min(n, codon_start + 3)):
@@ -703,6 +736,7 @@ class RuleEngine:
 
         for round_num in range(1, max_rounds + 1):
             improved = False
+            pass_start_seq = current_seq
 
             for codon_idx in range(len(current_seq) // 3):
                 codon_start = codon_idx * 3
@@ -730,6 +764,11 @@ class RuleEngine:
                         improved = True
                         break
 
+            if mode != "aggressive" and improved:
+                if self._calc_cai(current_seq) < effective_floor:
+                    current_seq = pass_start_seq
+                    break
+
             if not improved:
                 break
 
@@ -744,6 +783,9 @@ class RuleEngine:
             "initial_count": initial_count,
             "final_count": final_count,
             "reduction_pct": reduction_pct,
+            "mode": mode,
+            "cai_before": round(initial_cai, 4),
+            "cai_after": round(self._calc_cai(current_seq), 4),
         }
 
     def scan_rare_codon_runs(
