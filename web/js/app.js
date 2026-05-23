@@ -15,7 +15,7 @@ const state = {
     dinuc: false,
     results: null,
     isOptimizing: false,
-    history: JSON.parse(localStorage.getItem('codonforge_history') || '[]')
+    history: JSON.parse(localStorage.getItem('factorforge_history') || '[]')
 };
 
 // DOM Elements
@@ -588,7 +588,7 @@ function addToHistory(input, result) {
 
     state.history.unshift(item);
     if (state.history.length > 10) state.history.pop();
-    localStorage.setItem('codonforge_history', JSON.stringify(state.history));
+    localStorage.setItem('factorforge_history', JSON.stringify(state.history));
     renderHistory();
 }
 
@@ -631,7 +631,7 @@ window.loadHistoryItem = (id) => {
 
 function clearHistory() {
     state.history = [];
-    localStorage.removeItem('codonforge_history');
+    localStorage.removeItem('factorforge_history');
     renderHistory();
     showToast('History cleared', 'info');
 }
