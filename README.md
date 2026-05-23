@@ -14,7 +14,7 @@ FactorForge optimizes protein sequences into *N. benthamiana*-compatible CDS by 
 ## Quick Start
 
 ```bash
-pip install factorforge
+pip install factorforge-cds
 factorforge optimize my_protein.fasta -o output.fasta
 ```
 
@@ -109,13 +109,13 @@ Benchmarked on *N. benthamiana* codon usage table (v2 engine, 3,876 sequences):
 **Requirements:** Python 3.10+
 
 ```bash
-pip install factorforge
+pip install factorforge-cds
 ```
 
 For ML features (ESM2 + BART decoder, experimental):
 
 ```bash
-pip install "factorforge[ml]"
+pip install "factorforge-cds[ml]"
 ```
 
 For development:

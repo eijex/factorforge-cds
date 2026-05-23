@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "factorforge"
+name = "factorforge-cds"
 version = "3.0.0"
 description = "FactorForge — open-source constraint-based CDS design engine by Eijex."
 readme = "README.md"
