@@ -44,7 +44,7 @@ class TestCompositeScore:
 
     def test_perfect_cai_perfect_gc(self):
         """Perfect CAI and optimal GC should produce a high score."""
-        score = calculate_composite_score(cai=1.0, gc=42.5, profile="balanced")
+        score = calculate_composite_score(cai=1.0, gc=60.0, profile="balanced")
         assert score > 0.9
 
     def test_zero_cai(self):
@@ -60,10 +60,10 @@ class TestCompositeScore:
 
     def test_high_cai_profile_weights(self):
         """High-CAI profile weights CAI more heavily."""
-        # Same inputs, different profiles
-        score_hcai = calculate_composite_score(cai=0.95, gc=60.0, profile="high_cai")
-        score_gc = calculate_composite_score(cai=0.95, gc=60.0, profile="gc_target")
-        # High-CAI should be higher because it weights CAI at 0.8
+        # Use GC off-optimal so gc_target (w_gc=0.7) is penalized more than high_cai (w_gc=0.1)
+        score_hcai = calculate_composite_score(cai=0.95, gc=42.5, profile="high_cai")
+        score_gc = calculate_composite_score(cai=0.95, gc=42.5, profile="gc_target")
+        # High-CAI should be higher because it weights CAI at 0.8 vs gc_target's 0.1
         assert score_hcai > score_gc
 
     def test_gc_target_profile_custom_gc(self):

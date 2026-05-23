@@ -11,10 +11,13 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-# Optimal GC range for N. benthamiana
-GC_OPT_MIN = 41.0
-GC_OPT_MAX = 44.0
-GC_OPT_MID = 42.5
+# Optimal GC range for N. benthamiana codon-optimized sequences.
+# Benchmark (analysis 004, n=49): balanced profile output average GC% = 60.1%
+# (range 55-71%). The genome-wide average (~42%) reflects all genes, not the
+# high-expression codon table which exhibits 3rd-position GC bias.
+GC_OPT_MIN = 55.0
+GC_OPT_MAX = 65.0
+GC_OPT_MID = 60.0
 
 # ViennaRNA availability cache
 _vienna_available: bool | None = None

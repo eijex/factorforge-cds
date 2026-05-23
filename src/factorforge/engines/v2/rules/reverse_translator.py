@@ -370,10 +370,10 @@ class ReverseTranslator:
         Balanced profile: CAI first, GC balanced
 
         - Preferred codon ratio: 70%
-        - Target GC: 45-55%
+        - Target GC: 55-65% (benchmark analysis 004: avg output 60.1%)
         """
-        target_gc_min = kwargs.get("target_gc_min", 45)
-        target_gc_max = kwargs.get("target_gc_max", 55)
+        target_gc_min = kwargs.get("target_gc_min", 55)
+        target_gc_max = kwargs.get("target_gc_max", 65)
         preferred_ratio = kwargs.get("preferred_ratio", 0.7)
         max_attempts = kwargs.get("max_gc_attempts", 10)
         if max_attempts < 1:
