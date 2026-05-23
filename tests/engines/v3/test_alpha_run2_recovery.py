@@ -73,6 +73,10 @@ def test_gc_target_teacher_has_higher_gc_than_high_cai_when_feasible() -> None:
     assert gc_target_gc > high_cai_gc
 
 
+@pytest.mark.skipif(
+    not all(p.exists() for p in RUN4B_SMOKE_CONFIGS),
+    reason="Training config files are gitignored — skipping in CI",
+)
 def test_run4b_smoke_configs_are_bounded_smoke_configs() -> None:
     for path in RUN4B_SMOKE_CONFIGS:
         cfg = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -82,6 +86,10 @@ def test_run4b_smoke_configs_are_bounded_smoke_configs() -> None:
         assert cfg["loss"]["expected_log_cai_weight"] in {0.05, 0.10}
 
 
+@pytest.mark.skipif(
+    not RUN4B_FULL_CONFIG_B.exists(),
+    reason="Training config file is gitignored — skipping in CI",
+)
 def test_run4b_full_config_b_contract() -> None:
     cfg = yaml.safe_load(RUN4B_FULL_CONFIG_B.read_text(encoding="utf-8"))
 
