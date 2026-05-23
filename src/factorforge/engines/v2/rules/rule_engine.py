@@ -5,18 +5,19 @@ Plant-aware rule engine - scanning + auto-fix (P0-3)
 
 from __future__ import annotations
 
-import json
 import logging
 import re
 from typing import Any
 
-logger = logging.getLogger(__name__)
-
+from factorforge.engines.v2.rules.reverse_translator import ReverseTranslator
 from factorforge.engines.v2.utils import (
     build_aa_to_codons_map,
     count_dinucleotides,
     get_data_path,
+    load_codon_table,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class RuleEngine:
@@ -56,13 +57,13 @@ class RuleEngine:
         """
         if codon_table is None:
             # Use centralized data path management
-            data_dir = get_data_path()
-            codon_table_path = data_dir / "nbenthamiana_codons.json"
-            with open(codon_table_path, "r", encoding="utf-8") as f:
-                codon_table = json.load(f)
+            codon_table = load_codon_table("nbenthamiana", get_data_path())
 
         self.codon_table: dict[str, Any] = codon_table
         self.aa_to_codons: dict[str, list[str]] = self._build_aa_to_codons_map()
+        self._rare_codon_weights: dict[str, float] = ReverseTranslator._build_ref_weights(
+            self.codon_table
+        )
 
     def _build_aa_to_codons_map(self) -> dict[str, list[str]]:
         """Build amino-acid-to-codons map"""
@@ -527,9 +528,7 @@ class RuleEngine:
                 }
 
         # Max rounds exhausted
-        remaining = [
-            v for v in self.scan_polya(current_seq) if v["type"] == "polya_signal"
-        ]
+        remaining = [v for v in self.scan_polya(current_seq) if v["type"] == "polya_signal"]
         return {
             "success": len(remaining) == 0,
             "modified_seq": current_seq,
@@ -580,26 +579,30 @@ class RuleEngine:
             tpa_count = count_dinucleotides(seq_upper, "TA")
             cpg_density = cpg_count / seq_len
             if cpg_density > cpg_threshold:
-                violations.append({
-                    "type": "dinucleotide_hotspot",
-                    "dinucleotide": "CpG",
-                    "position": 0,
-                    "window_size": seq_len,
-                    "count": cpg_count,
-                    "density": round(cpg_density, 4),
-                    "severity": "high" if cpg_density > cpg_threshold * 2 else "medium",
-                })
+                violations.append(
+                    {
+                        "type": "dinucleotide_hotspot",
+                        "dinucleotide": "CpG",
+                        "position": 0,
+                        "window_size": seq_len,
+                        "count": cpg_count,
+                        "density": round(cpg_density, 4),
+                        "severity": "high" if cpg_density > cpg_threshold * 2 else "medium",
+                    }
+                )
             tpa_density = tpa_count / seq_len
             if tpa_density > tpa_threshold:
-                violations.append({
-                    "type": "dinucleotide_hotspot",
-                    "dinucleotide": "TpA",
-                    "position": 0,
-                    "window_size": seq_len,
-                    "count": tpa_count,
-                    "density": round(tpa_density, 4),
-                    "severity": "high" if tpa_density > tpa_threshold * 2 else "medium",
-                })
+                violations.append(
+                    {
+                        "type": "dinucleotide_hotspot",
+                        "dinucleotide": "TpA",
+                        "position": 0,
+                        "window_size": seq_len,
+                        "count": tpa_count,
+                        "density": round(tpa_density, 4),
+                        "severity": "high" if tpa_density > tpa_threshold * 2 else "medium",
+                    }
+                )
             return violations
 
         # Rolling dinucleotide counts:
@@ -621,28 +624,96 @@ class RuleEngine:
 
             cpg_density = cpg_count / window
             if cpg_density > cpg_threshold:
-                violations.append({
-                    "type": "dinucleotide_hotspot",
-                    "dinucleotide": "CpG",
-                    "position": i,
-                    "window_size": window,
-                    "count": cpg_count,
-                    "density": round(cpg_density, 4),
-                    "severity": "high" if cpg_density > cpg_threshold * 2 else "medium",
-                })
+                violations.append(
+                    {
+                        "type": "dinucleotide_hotspot",
+                        "dinucleotide": "CpG",
+                        "position": i,
+                        "window_size": window,
+                        "count": cpg_count,
+                        "density": round(cpg_density, 4),
+                        "severity": "high" if cpg_density > cpg_threshold * 2 else "medium",
+                    }
+                )
 
             tpa_density = tpa_count / window
             if tpa_density > tpa_threshold:
-                violations.append({
-                    "type": "dinucleotide_hotspot",
-                    "dinucleotide": "TpA",
-                    "position": i,
-                    "window_size": window,
-                    "count": tpa_count,
-                    "density": round(tpa_density, 4),
-                    "severity": "high" if tpa_density > tpa_threshold * 2 else "medium",
-                })
+                violations.append(
+                    {
+                        "type": "dinucleotide_hotspot",
+                        "dinucleotide": "TpA",
+                        "position": i,
+                        "window_size": window,
+                        "count": tpa_count,
+                        "density": round(tpa_density, 4),
+                        "severity": "high" if tpa_density > tpa_threshold * 2 else "medium",
+                    }
+                )
 
+        return violations
+
+    def scan_rare_codon_runs(
+        self,
+        seq: str,
+        min_run: int = 3,
+        rarity_threshold: float = 0.3,
+    ) -> list[dict[str, Any]]:
+        """
+        Detect runs of consecutive rare codons (ribosome stalling risk).
+
+        Rare codon: relative adaptiveness w < rarity_threshold.
+        A run of >= min_run consecutive rare codons is flagged.
+        Reference: Tuller et al. (2010) PMC2565806; Dana & Tuller (2014) PMC4363877.
+
+        Args:
+            seq: DNA coding sequence (must be divisible by 3).
+            min_run: Minimum consecutive rare codons to flag.
+            rarity_threshold: CAI relative adaptiveness w below which a codon is rare.
+
+        Returns:
+            List of violation dicts with type, position, codon_index, run_length,
+            codons, and severity.
+        """
+        if len(seq) % 3 != 0 or min_run < 1:
+            return []
+
+        violations: list[dict[str, Any]] = []
+        seq_upper = seq.upper()
+        stop_codons = {"TAA", "TAG", "TGA"}
+        current_run_start: int | None = None
+        current_run_codons: list[str] = []
+
+        def flush_run() -> None:
+            if current_run_start is None or len(current_run_codons) < min_run:
+                return
+            violations.append(
+                {
+                    "type": "rare_codon_run",
+                    "position": current_run_start * 3,
+                    "codon_index": current_run_start,
+                    "run_length": len(current_run_codons),
+                    "codons": current_run_codons.copy(),
+                    "severity": "high" if len(current_run_codons) >= 5 else "medium",
+                }
+            )
+
+        for codon_index in range(0, len(seq_upper), 3):
+            codon = seq_upper[codon_index : codon_index + 3]
+            is_rare = codon not in stop_codons and (
+                self._rare_codon_weights.get(codon, 0.0) < rarity_threshold
+            )
+
+            if is_rare:
+                if current_run_start is None:
+                    current_run_start = codon_index // 3
+                current_run_codons.append(codon)
+                continue
+
+            flush_run()
+            current_run_start = None
+            current_run_codons = []
+
+        flush_run()
         return violations
 
     def scan_all(
@@ -670,7 +741,8 @@ class RuleEngine:
                 "repeats": [...],
                 "gc_extremes": [...],
                 "splice_sites": [...],
-                "dinucleotides": [...]
+                "dinucleotides": [...],
+                "rare_codon_runs": [...]
             }
 
         Raises:
@@ -691,6 +763,7 @@ class RuleEngine:
             "gc_extremes": self.scan_gc_extremes,
             "splice_sites": self.scan_splice_sites,
             "dinucleotides": self.scan_dinucleotides,
+            "rare_codon_runs": self.scan_rare_codon_runs,
         }
 
         mode_name = mode.lower().strip()
