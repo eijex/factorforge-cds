@@ -61,6 +61,7 @@ const API_ENDPOINT = 'https://your-vercel-app.vercel.app/api/optimize';
 - ✅ Text input (paste sequence)
 - ✅ 4 optimization profiles
 - ✅ Real-time results
+- ✅ Custom restriction site input and removal report
 - ✅ Download (FASTA, GenBank)
 - ✅ Responsive design
 - ✅ No login required

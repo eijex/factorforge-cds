@@ -9,6 +9,10 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Custom restriction site detection and synonymous CDS cleanup for API and web UI requests.
+
 ---
 
 ## [3.0.0] — 2026-05-23

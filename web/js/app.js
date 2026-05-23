@@ -13,6 +13,7 @@ const state = {
     useTemplate: false,
     kozak: false,
     dinuc: false,
+    customRestrictionSites: [],
     results: null,
     isOptimizing: false,
     history: JSON.parse(localStorage.getItem('factorforge_history') || '[]')
@@ -49,6 +50,7 @@ const elements = {
     useTemplateCheck: document.getElementById('useTemplate'),
     kozakToggle: document.getElementById('toggleKozak'),
     dinucToggle: document.getElementById('toggleDinuc'),
+    customRestrictionSites: document.getElementById('customRestrictionSites'),
     inputLenBadge: document.getElementById('inputLenBadge'),
     inputGCBadge: document.getElementById('inputGCBadge'),
     origLen: document.getElementById('origLen'),
@@ -61,6 +63,8 @@ const elements = {
     aaIdentity: document.getElementById('aaIdentity'),
     candidateComparisonContainer: document.getElementById('candidateComparisonContainer'),
     candidateComparisonBody: document.getElementById('candidateComparisonBody'),
+    customRestrictionResults: document.getElementById('customRestrictionResults'),
+    customRestrictionResultsBody: document.getElementById('customRestrictionResultsBody'),
     gcChart: document.getElementById('gcChart'),
     historyList: document.getElementById('historyList'),
     clearHistory: document.getElementById('clearHistory'),
@@ -102,6 +106,9 @@ function initEventListeners() {
 
     elements.kozakToggle.addEventListener('change', (e) => state.kozak = e.target.checked);
     elements.dinucToggle.addEventListener('change', (e) => state.dinuc = e.target.checked);
+    elements.customRestrictionSites.addEventListener('input', () => {
+        state.customRestrictionSites = [];
+    });
     elements.clearHistory.addEventListener('click', clearHistory);
 
     // Action
@@ -263,6 +270,11 @@ async function runOptimization() {
         } else {
             payload.profile = state.objective;
         }
+        const customRestrictionSites = parseCustomRestrictionSites(elements.customRestrictionSites.value);
+        if (customRestrictionSites.length > 0) {
+            payload.custom_restriction_sites = customRestrictionSites;
+            state.customRestrictionSites = customRestrictionSites;
+        }
 
         let response;
         try {
@@ -379,6 +391,7 @@ function renderResults() {
     // Render GC Graph
     renderGCGraph(primary.optimized_sequence);
     renderCandidateComparison(res);
+    renderCustomRestrictionResults(res);
 
     // PolyA color coding
     const polyaCount = primary.metrics.polya_signals;
@@ -416,6 +429,42 @@ function renderResults() {
 
     // JSON Details
     elements.jsonDetails.textContent = JSON.stringify(res, null, 2);
+}
+
+function parseCustomRestrictionSites(rawValue) {
+    const raw = (rawValue || '').trim();
+    if (!raw) return [];
+
+    const entries = raw.split(/[\n,]+/).map(item => item.trim()).filter(Boolean);
+    const seenNames = new Set();
+    const seenSequences = new Set();
+
+    return entries.map((entry, index) => {
+        const parts = entry.split(':');
+        const hasName = parts.length > 1;
+        const name = hasName ? parts[0].trim() : `Site ${index + 1}`;
+        const sequence = (hasName ? parts.slice(1).join(':') : parts[0]).trim().toUpperCase();
+
+        if (!name) {
+            throw new Error('Custom restriction site name is required');
+        }
+        if (!/^[ACGT]+$/.test(sequence)) {
+            throw new Error(`Invalid custom restriction site sequence: ${sequence || '(empty)'}`);
+        }
+        if (sequence.length < 4 || sequence.length > 12) {
+            throw new Error(`${name} must be 4-12 bp`);
+        }
+        if (seenNames.has(name)) {
+            throw new Error(`Duplicate custom restriction site name: ${name}`);
+        }
+        if (seenSequences.has(sequence)) {
+            throw new Error(`Duplicate custom restriction site sequence: ${sequence}`);
+        }
+
+        seenNames.add(name);
+        seenSequences.add(sequence);
+        return { name, sequence, scan_rc: true };
+    });
 }
 
 function getPrimaryResult(res) {
@@ -473,6 +522,77 @@ function renderCandidateComparison(res) {
         `;
     }).join('');
     elements.candidateComparisonContainer.classList.remove('hidden');
+}
+
+function renderCustomRestrictionResults(res) {
+    if (!elements.customRestrictionResults || !elements.customRestrictionResultsBody) return;
+
+    const custom = res.custom_restriction_sites;
+    if (!custom) {
+        elements.customRestrictionResults.classList.add('hidden');
+        elements.customRestrictionResultsBody.innerHTML = '';
+        return;
+    }
+
+    const removed = Array.isArray(custom.removed) ? custom.removed : [];
+    const unresolved = Array.isArray(custom.unresolved) ? custom.unresolved : [];
+    const before = res.metrics && res.metrics.before;
+    const after = res.metrics && res.metrics.after;
+
+    const removedHtml = removed.length > 0
+        ? removed.map(site => `
+            <li class="flex items-start justify-between gap-3 py-1">
+                <span><span class="text-emerald-600 font-black">✓</span> ${escapeHtml(site.name)} at ${site.position}</span>
+                <span class="font-mono text-[11px] text-emerald-700 dark:text-emerald-300">${escapeHtml(site.substitution || '')}</span>
+            </li>
+        `).join('')
+        : '<li class="py-1 text-slate-500 dark:text-slate-400">No custom sites removed</li>';
+
+    const unresolvedHtml = unresolved.length > 0
+        ? unresolved.map(site => `
+            <li class="flex items-start justify-between gap-3 py-1">
+                <span><span class="text-amber-600 font-black">!</span> ${escapeHtml(site.name)} at ${site.position}</span>
+                <span class="text-[11px] text-amber-700 dark:text-amber-300">${escapeHtml(site.reason || 'unresolved')}</span>
+            </li>
+        `).join('')
+        : '<li class="py-1 text-slate-500 dark:text-slate-400">No unresolved custom sites</li>';
+
+    const metricsHtml = before && after ? `
+        <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+            <div class="rounded-xl bg-slate-50 dark:bg-slate-800 p-3">
+                <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Before</p>
+                <p class="mt-1 font-bold text-slate-800 dark:text-slate-100">CAI ${Number(before.cai || 0).toFixed(3)} · GC ${Number(before.gc || 0).toFixed(1)}%</p>
+            </div>
+            <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-3">
+                <p class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-600">After</p>
+                <p class="mt-1 font-bold text-slate-800 dark:text-slate-100">CAI ${Number(after.cai || 0).toFixed(3)} · GC ${Number(after.gc || 0).toFixed(1)}%</p>
+            </div>
+        </div>
+    ` : '';
+
+    elements.customRestrictionResultsBody.innerHTML = `
+        <div class="grid grid-cols-1 gap-4 text-xs">
+            <div>
+                <p class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-600 mb-2">Removed sites</p>
+                <ul class="divide-y divide-slate-100 dark:divide-slate-800">${removedHtml}</ul>
+            </div>
+            <div>
+                <p class="text-[10px] font-extrabold uppercase tracking-widest text-amber-600 mb-2">Unresolved sites</p>
+                <ul class="divide-y divide-slate-100 dark:divide-slate-800">${unresolvedHtml}</ul>
+            </div>
+            ${metricsHtml}
+        </div>
+    `;
+    elements.customRestrictionResults.classList.remove('hidden');
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
 
@@ -639,11 +759,14 @@ function clearHistory() {
 function clearAll() {
     elements.sequenceInput.value = '';
     elements.fileUpload.value = '';
+    elements.customRestrictionSites.value = '';
     state.sequence = '';
+    state.customRestrictionSites = [];
     state.results = null;
     elements.previewContainer.classList.add('hidden');
     elements.resultsContainer.classList.add('hidden');
     if (elements.candidateComparisonContainer) elements.candidateComparisonContainer.classList.add('hidden');
+    if (elements.customRestrictionResults) elements.customRestrictionResults.classList.add('hidden');
     elements.emptyState.classList.remove('hidden');
     elements.validationStatus.classList.add('hidden');
     showToast('Input cleared', 'info');

@@ -359,6 +359,24 @@
                                     </div>
                                 </div>
                             </label>
+                            <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                <div class="flex items-center justify-between mb-2">
+                                    <label for="customRestrictionSites"
+                                        class="text-[13px] font-bold text-slate-900 dark:text-slate-100">
+                                        Custom Restriction Sites
+                                        <span class="tooltip-container">
+                                            <span class="info-icon">i</span>
+                                            <span class="tooltip-text">Format entries as Name:SEQUENCE and separate them with commas or new lines.</span>
+                                        </span>
+                                    </label>
+                                </div>
+                                <textarea id="customRestrictionSites" rows="3"
+                                    class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all font-mono text-xs placeholder:text-slate-400 resize-none"
+                                    placeholder="EcoRI:GAATTC, XhoI:CTCGAG"></textarea>
+                                <p class="mt-2 text-[11px] text-slate-600 dark:text-slate-400">
+                                    Sites will be removed from CDS by synonymous substitution where possible.
+                                </p>
+                            </div>
                         </div>
                     </div>
 
@@ -555,6 +573,13 @@
                                     </thead>
                                     <tbody id="candidateComparisonBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
                                 </table>
+                            </div>
+                        </div>
+
+                        <div id="customRestrictionResults" class="mb-8 hidden">
+                            <h3 class="text-lg font-semibold mb-3">Custom Restriction Sites</h3>
+                            <div id="customRestrictionResultsBody"
+                                class="space-y-3 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
                             </div>
                         </div>
 

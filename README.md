@@ -62,6 +62,8 @@ Protein sequence (FASTA or plain text)
 3. Domestication
    Removes Golden Gate / MoClo-incompatible
    BsaI / BsmBI recognition sites via silent edits
+   Optional custom restriction sites can be removed
+   by synonymous substitution when feasible
         │
         ▼
 4. Output
@@ -192,7 +194,7 @@ Each optimized sequence includes:
 - **CAI score** — codon adaptation index for *N. benthamiana*
 - **GC content** — global and first-region
 - **Scan report** — PolyA signals detected/fixed, homopolymers, restriction sites
-- **Domestication report** — BsaI/BsmBI sites removed, edit count
+- **Domestication report** — BsaI/BsmBI and optional custom restriction sites removed, edit count
 - **Construct ID** — reproducible hash for tracking
 
 ---
