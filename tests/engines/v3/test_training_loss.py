@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 import pytest
-import torch
+torch = pytest.importorskip("torch", reason="torch not installed — skipping ML tests")
 
 ROOT = Path(__file__).resolve().parents[3]
 TRAINING = ROOT / "scripts" / "3_training"
