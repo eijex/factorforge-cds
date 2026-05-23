@@ -2,6 +2,8 @@
 
 FactorForge predictions are in-silico only. This file tracks community wet-lab validation results.
 
+**Try it first**: [factorforge-cds.vercel.app](https://factorforge-cds.vercel.app) — generate an optimized sequence in your browser before running it in the lab.
+
 ---
 
 ## How to Contribute
