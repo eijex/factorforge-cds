@@ -56,6 +56,7 @@ Protein sequence (FASTA or plain text)
         ▼
 2. Rule Scan
    Detects PolyA signals, homopolymers,
+   CpG/TpA dinucleotide hotspots,
    repeat sequences, rare codon runs,
    forbidden restriction sites
         │
@@ -194,7 +195,7 @@ Each optimized sequence includes:
 - **Optimized CDS** — synonymous codon replacements only, AA identity 100%
 - **CAI score** — codon adaptation index for *N. benthamiana*
 - **GC content** — global and first-region
-- **Scan report** — PolyA signals detected/fixed, homopolymers, rare codon runs, restriction sites
+- **Scan report** — PolyA signals detected/fixed, CpG/TpA hotspots, homopolymers, rare codon runs, restriction sites
 - **Domestication report** — BsaI/BsmBI and optional custom restriction sites removed, edit count
 - **Construct ID** — reproducible hash for tracking
 

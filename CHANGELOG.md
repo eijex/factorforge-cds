@@ -13,6 +13,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Custom restriction site detection and synonymous CDS cleanup for API and web UI requests.
 - Rare codon run scanner in the v2 rule engine, included in full scan mode and excluded from fast scan mode.
+- Greedy CpG/TpA dinucleotide reduction pass in the v2 rule engine and optimization pipeline.
 
 ---
 

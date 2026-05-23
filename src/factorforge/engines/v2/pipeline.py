@@ -199,6 +199,17 @@ class OptimizationPipeline:
                     f"Remaining: {polya_fix.get('remaining_violations', '?')}"
                 )
 
+        # Dinucleotide reduction pass (CpG/TpA greedy synonymous fix)
+        if self.rule_engine.scan_dinucleotides(optimized_dna):
+            dinu_fix = self.rule_engine.fix_dinucleotides(optimized_dna)
+            if dinu_fix["success"]:
+                optimized_dna = dinu_fix["modified_seq"]
+                logger.info(
+                    f"Dinucleotide reduction: {dinu_fix['initial_count']} -> "
+                    f"{dinu_fix['final_count']} ({dinu_fix['reduction_pct']}% reduction, "
+                    f"{dinu_fix['rounds']} round(s))"
+                )
+
         logger.debug("Scanning for final rule violations")
         scan_mode = str(kwargs.get("scan_mode", "full"))
         scan_include = kwargs.get("scan_include")

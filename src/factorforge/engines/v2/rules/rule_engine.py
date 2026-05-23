@@ -652,6 +652,100 @@ class RuleEngine:
 
         return violations
 
+    def fix_dinucleotides(
+        self,
+        seq: str,
+        max_rounds: int = 5,
+        target_dinucleotides: tuple[str, ...] = ("CG", "TA"),
+    ) -> dict[str, Any]:
+        """
+        Reduce CpG and TpA dinucleotide density via greedy synonymous substitution.
+
+        For each codon, tries synonymous alternatives and accepts the first swap that
+        reduces the count of target dinucleotides in the 4 positions directly adjacent
+        to the codon (one pair spanning the left boundary, two within the codon, one
+        spanning the right boundary). Repeats for up to max_rounds full-sequence passes.
+
+        Args:
+            seq: DNA coding sequence (must be divisible by 3).
+            max_rounds: Maximum number of full-sequence passes.
+            target_dinucleotides: Dinucleotides to reduce.
+
+        Returns:
+            Dict with modified sequence, success flag, round count, initial/final
+            dinucleotide counts, and reduction percentage.
+        """
+        seq_upper = seq.upper()
+        initial_count = sum(count_dinucleotides(seq_upper, di) for di in target_dinucleotides)
+
+        if len(seq) % 3 != 0 or len(seq) == 0:
+            return {
+                "modified_seq": seq,
+                "success": False,
+                "rounds": 0,
+                "initial_count": initial_count,
+                "final_count": initial_count,
+                "reduction_pct": 0.0,
+            }
+
+        targets_set = set(target_dinucleotides)
+        current_seq = seq_upper
+        round_num = 0
+
+        def _local_count(s: str, codon_start: int) -> int:
+            """Count target dinucleotides in the 4 positions adjacent to codon."""
+            n = len(s) - 1
+            total = 0
+            for di in range(max(0, codon_start - 1), min(n, codon_start + 3)):
+                if s[di : di + 2] in targets_set:
+                    total += 1
+            return total
+
+        for round_num in range(1, max_rounds + 1):
+            improved = False
+
+            for codon_idx in range(len(current_seq) // 3):
+                codon_start = codon_idx * 3
+                original_codon = current_seq[codon_start : codon_start + 3]
+
+                if original_codon not in self.codon_table["codons"]:
+                    continue
+
+                aa = self.codon_table["codons"][original_codon]["aa"]
+                synonyms = [c for c in self.aa_to_codons.get(aa, []) if c != original_codon]
+
+                if not synonyms:
+                    continue
+
+                current_local = _local_count(current_seq, codon_start)
+                if current_local == 0:
+                    continue
+
+                for alt_codon in synonyms:
+                    candidate = (
+                        current_seq[:codon_start] + alt_codon + current_seq[codon_start + 3 :]
+                    )
+                    if _local_count(candidate, codon_start) < current_local:
+                        current_seq = candidate
+                        improved = True
+                        break
+
+            if not improved:
+                break
+
+        final_count = sum(count_dinucleotides(current_seq, di) for di in target_dinucleotides)
+        initial_nonzero = initial_count if initial_count > 0 else 1
+        reduction_pct = round((initial_count - final_count) / initial_nonzero * 100.0, 1)
+
+        return {
+            "modified_seq": current_seq,
+            "success": final_count < initial_count,
+            "rounds": round_num,
+            "initial_count": initial_count,
+            "final_count": final_count,
+            "reduction_pct": reduction_pct,
+        }
+
     def scan_rare_codon_runs(
         self,
         seq: str,
