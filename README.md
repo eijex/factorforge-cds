@@ -36,7 +36,7 @@ print(result.metadata)   # CAI, GC%, scan results, domestication edits
 | Method | Description | Link |
 |--------|-------------|------|
 | **Web App** | No installation, demo & light use | [factorforge-cds.vercel.app](https://factorforge-cds.vercel.app) |
-| **CLI / Python** | Local use, batch processing, data privacy | `pip install factorforge` |
+| **CLI / Python** | Local use, batch processing, data privacy | `pip install factorforge-cds` |
 | **Notebooks** | Training & experimentation on Colab / Kaggle | See [notebooks/](notebooks/) |
 
 ---
