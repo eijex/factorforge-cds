@@ -112,11 +112,14 @@ Benchmarked on *N. benthamiana* codon usage table (v2 engine, 3,876 sequences):
 pip install factorforge-cds
 ```
 
-For ML features (ESM2 + BART decoder, experimental):
+Experimental ML research modules are available separately:
 
 ```bash
 pip install "factorforge-cds[ml]"
 ```
+
+> These modules (ESM2 + BART decoder) are not part of the stable v3.0.0 default optimizer.
+> The default v3.0.0 engine is the constraint-based DP feasibility engine.
 
 For development:
 
@@ -221,8 +224,8 @@ This project was built using the following tools and platforms:
 |------|------|
 | [Claude](https://claude.ai) / [Claude Code](https://claude.ai/code) (Anthropic) | Architecture design, domain analysis, code review |
 | [Codex](https://github.com/openai/codex) (OpenAI) | Code generation and implementation |
-| [Google Colab](https://colab.research.google.com) | ML training (Run 1, Run 2) |
-| [Kaggle](https://www.kaggle.com) | ML training (alpha_run1, alpha_run2) |
+| [Google Colab](https://colab.research.google.com) | ML training experiments |
+| [Kaggle](https://www.kaggle.com) | ML training experiments |
 | [ESM2](https://github.com/facebookresearch/esm) (Meta) | Protein language model (encoder) |
 | [PyTorch](https://pytorch.org) | ML framework |
 | [Conda](https://docs.conda.io) / [Miniconda](https://docs.anaconda.com/miniconda/) | Environment management |
