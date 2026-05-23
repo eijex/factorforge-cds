@@ -1,6 +1,8 @@
 # Contributing to FactorForge
 
-Thank you for your interest in contributing to FactorForge. This project is maintained by [Eijex](https://eijex.com) and welcomes contributions from the scientific community.
+Thank you for your interest in contributing to FactorForge. This project is maintained by [Eijex](https://github.com/eijex) and welcomes contributions from the scientific community.
+
+**Live demo**: [factorforge.vercel.app](https://factorforge.vercel.app) — try FactorForge in your browser without installation.
 
 ## Ways to Contribute
 

@@ -37,7 +37,7 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://eijex.com"
+Homepage = "https://factorforge.vercel.app"
 Repository = "https://github.com/eijex/factorforge"
 Issues = "https://github.com/eijex/factorforge/issues"
 
