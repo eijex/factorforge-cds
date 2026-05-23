@@ -43,7 +43,6 @@ Thumbs.db
 # AI agent / internal workflow files (not for public repo)
 CLAUDE.md
 GEMINI.md
-AGENTS.md
 CODE_OF_CONDUCT.md
 .claude/
 
