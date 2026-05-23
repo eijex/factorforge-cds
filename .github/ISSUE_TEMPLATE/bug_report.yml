@@ -1,0 +1,46 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: FactorForge version
+      placeholder: "e.g. 3.0.0 (pip show factorforge-cds)"
+    validations:
+      required: true
+
+  - type: input
+    id: python
+    attributes:
+      label: Python version & OS
+      placeholder: "e.g. Python 3.11, Ubuntu 22.04"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      placeholder: Describe the bug
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal reproducible example
+      render: python
+      placeholder: |
+        from factorforge.engines.v2.pipeline import OptimizationPipeline
+        pipeline = OptimizationPipeline(profile="balanced")
+        result = pipeline.run("MSKGEEL...")
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true

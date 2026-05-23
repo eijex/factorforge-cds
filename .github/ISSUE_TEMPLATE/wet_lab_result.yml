@@ -1,0 +1,55 @@
+name: Wet-lab Result
+description: Share experimental validation results — credited in VALIDATION.md
+labels: ["wet-lab-result"]
+body:
+  - type: markdown
+    attributes:
+      value: "Thank you for testing FactorForge in the lab! Results will be credited in [VALIDATION.md](https://github.com/eijex/factorforge-cds/blob/main/VALIDATION.md)."
+
+  - type: input
+    id: protein
+    attributes:
+      label: Protein
+      placeholder: "e.g. GFP, CD47, custom antigen"
+    validations:
+      required: true
+
+  - type: input
+    id: host
+    attributes:
+      label: Host organism
+      placeholder: "e.g. Nicotiana benthamiana"
+    validations:
+      required: true
+
+  - type: input
+    id: system
+    attributes:
+      label: Expression system / assay
+      placeholder: "e.g. Agrobacterium infiltration, Western blot, ELISA"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: result
+    attributes:
+      label: Expression result
+      options:
+        - Expressed (confirmed)
+        - Expressed (improved vs native)
+        - No expression
+        - Partial / inconclusive
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      placeholder: "Quantitative data, comparison with native sequence, conditions, etc."
+
+  - type: input
+    id: institution
+    attributes:
+      label: Institution (optional)
+      placeholder: "e.g. University of X"
