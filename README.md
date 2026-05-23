@@ -126,6 +126,26 @@ cd factorforge
 pip install -e ".[dev]"
 ```
 
+### Docker (local web app)
+
+Run the full web interface locally — no data leaves your machine:
+
+```bash
+docker pull ghcr.io/eijex/factorforge-cds:latest
+docker run -p 8080:8080 ghcr.io/eijex/factorforge-cds:latest
+```
+
+Then open [http://localhost:8080](http://localhost:8080).
+
+Or build from source:
+
+```bash
+git clone https://github.com/eijex/factorforge-cds.git
+cd factorforge
+docker build -t factorforge-cds .
+docker run -p 8080:8080 factorforge-cds
+```
+
 ---
 
 ## CLI Reference
