@@ -38,8 +38,8 @@ dev = [
 
 [project.urls]
 Homepage = "https://factorforge.vercel.app"
-Repository = "https://github.com/eijex/factorforge"
-Issues = "https://github.com/eijex/factorforge/issues"
+Repository = "https://github.com/eijex/factorforge-cds"
+Issues = "https://github.com/eijex/factorforge-cds/issues"
 
 [project.scripts]
 factorforge = "factorforge.cli.main:main"

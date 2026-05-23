@@ -17,7 +17,7 @@ Thank you for your interest in contributing to FactorForge. This project is main
 ### 1. Fork and Clone
 
 ```bash
-git clone https://github.com/eijex/factorforge.git
+git clone https://github.com/eijex/factorforge-cds.git
 cd factorforge
 pip install -e ".[dev]"
 ```

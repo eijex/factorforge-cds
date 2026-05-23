@@ -84,5 +84,5 @@ Outcome: **✅ GC recovery** — mixed teacher distribution + `gc_weight=2.0` re
 
 ---
 
-[Unreleased]: https://github.com/eijex/factorforge/compare/v3.0.0...HEAD
-[3.0.0]: https://github.com/eijex/factorforge/releases/tag/v3.0.0
+[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/eijex/factorforge-cds/releases/tag/v3.0.0

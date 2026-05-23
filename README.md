@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-3.0.0-green.svg)](https://github.com/eijex/factorforge/releases)
+[![Version](https://img.shields.io/badge/version-3.0.0-green.svg)](https://github.com/eijex/factorforge-cds/releases)
 [![Web App](https://img.shields.io/badge/web-factorforge.vercel.app-brightgreen.svg)](https://factorforge.vercel.app)
 
 FactorForge optimizes protein sequences into *N. benthamiana*-compatible CDS by maximizing CAI, controlling GC content, eliminating PolyA signals, and producing MoClo/Golden Gate-ready constructs.
@@ -121,7 +121,7 @@ pip install "factorforge-cds[ml]"
 For development:
 
 ```bash
-git clone https://github.com/eijex/factorforge.git
+git clone https://github.com/eijex/factorforge-cds.git
 cd factorforge
 pip install -e ".[dev]"
 ```
@@ -186,7 +186,7 @@ FactorForge in your experiments, we'd love to hear from you:
 - How did CAI / GC% correlate with actual expression levels?
 - Any unexpected results?
 
-**Share your results** → [GitHub Issues](https://github.com/eijex/factorforge/issues)
+**Share your results** → [GitHub Issues](https://github.com/eijex/factorforge-cds/issues)
 or email: eijex.lab@gmail.com
 
 Validated results will be credited in [VALIDATION.md](VALIDATION.md) and future releases.
@@ -219,7 +219,7 @@ If you use FactorForge in your research, please cite:
 
 ```
 FactorForge v3.0.0 (2026). Open-source constraint-based CDS design engine.
-Eijex. https://github.com/eijex/factorforge
+Eijex. https://github.com/eijex/factorforge-cds
 ```
 
 *A citable publication is in preparation. Until then, please cite the GitHub repository.*
@@ -239,6 +239,6 @@ own discretion.
 
 ## Get in Touch
 
-- **GitHub Issues** — bug reports, feature requests, wet-lab results: [github.com/eijex/factorforge/issues](https://github.com/eijex/factorforge/issues)
+- **GitHub Issues** — bug reports, feature requests, wet-lab results: [github.com/eijex/factorforge-cds/issues](https://github.com/eijex/factorforge-cds/issues)
 - **Email** — collaborations, feedback, questions: eijex.lab@gmail.com
 - **Web** — [factorforge.vercel.app](https://factorforge.vercel.app)

@@ -8,7 +8,7 @@ FactorForge predictions are in-silico only. This file tracks community wet-lab v
 
 If you tested a FactorForge-optimized sequence in the lab, please share your results:
 
-- Open a [GitHub Issue](https://github.com/eijex/factorforge/issues) with the label `wet-lab-result`
+- Open a [GitHub Issue](https://github.com/eijex/factorforge-cds/issues) with the label `wet-lab-result`
 - Or email: eijex.lab@gmail.com
 
 Include:
