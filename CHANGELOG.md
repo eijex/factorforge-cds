@@ -15,6 +15,10 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 First official release of FactorForge.
 
+### Distribution
+- **PyPI** — `pip install factorforge-cds` ([pypi.org/project/factorforge-cds](https://pypi.org/project/factorforge-cds/))
+- **Docker** — `docker pull ghcr.io/eijex/factorforge-cds:latest` for local deployment
+
 ### Added
 
 - **v2 Rule-based Optimizer** — CAI-maximizing baseline with profiles: `balanced`, `high_cai`, `gc_target`, `viral_delivery` (`src/factorforge/engines/v2/`)
