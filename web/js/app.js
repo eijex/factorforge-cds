@@ -42,7 +42,6 @@ const elements = {
     downloadGenbank: document.getElementById('downloadGenbank'),
     copyBtn: document.getElementById('copyBtn'),
     submitValidationBtn: document.getElementById('submitValidationBtn'),
-    submitValidationFooterBtn: document.getElementById('submitValidationFooterBtn'),
     validationModal: document.getElementById('validationModal'),
     closeValidationModal: document.getElementById('closeValidationModal'),
     validationModalOverlay: document.getElementById('validationModalOverlay'),
@@ -125,7 +124,6 @@ function initEventListeners() {
     elements.copyBtn.addEventListener('click', copyToClipboard);
     elements.submitValidationBtn.addEventListener('click', submitValidation);
     elements.closeValidationModal.addEventListener('click', closeValidationForm);
-    elements.submitValidationFooterBtn.addEventListener('click', submitValidation);
     elements.validationModalOverlay.addEventListener('click', closeValidationForm);
     elements.toggleDetails.addEventListener('click', toggleDetailsPanel);
     elements.themeToggle.addEventListener('click', toggleTheme);
