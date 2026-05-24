@@ -43,10 +43,6 @@ const elements = {
     copyBtn: document.getElementById('copyBtn'),
     submitValidationBtn: document.getElementById('submitValidationBtn'),
     copyJsonBtn: document.getElementById('copyJsonBtn'),
-    validationModal: document.getElementById('validationModal'),
-    closeValidationModal: document.getElementById('closeValidationModal'),
-    validationModalOverlay: document.getElementById('validationModalOverlay'),
-    validationFormFrame: document.getElementById('validationFormFrame'),
     toggleDetails: document.getElementById('toggleDetails'),
     detailsContent: document.getElementById('detailsContent'),
     toggleArrow: document.getElementById('toggleArrow'),
@@ -149,8 +145,6 @@ function initEventListeners() {
     elements.copyBtn.addEventListener('click', copyToClipboard);
     elements.submitValidationBtn.addEventListener('click', submitValidation);
     elements.copyJsonBtn.addEventListener('click', copyJson);
-    elements.closeValidationModal.addEventListener('click', closeValidationForm);
-    elements.validationModalOverlay.addEventListener('click', closeValidationForm);
     elements.toggleDetails.addEventListener('click', toggleDetailsPanel);
     elements.themeToggle.addEventListener('click', toggleTheme);
     elements.changelogBtn.addEventListener('click', toggleChangelog);
@@ -949,10 +943,7 @@ function submitValidation() {
         params.set('entry.1499442935', state.objective || '');
     }
 
-    params.set('embedded', 'true');
-    elements.validationFormFrame.src = `${FORM_BASE}?${params.toString()}`;
-    elements.validationModal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+    window.open(`${FORM_BASE}?${params.toString()}`, '_blank', 'noopener,noreferrer');
 }
 
 async function copyJson() {
@@ -963,11 +954,6 @@ async function copyJson() {
     btn.textContent = 'Copied!';
     btn.classList.add('text-emerald-400');
     setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('text-emerald-400'); }, 2000);
-}
-
-function closeValidationForm() {
-    elements.validationModal.classList.add('hidden');
-    document.body.style.overflow = '';
 }
 
 // Static Data
