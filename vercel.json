@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": null,
+  "buildCommand": "echo build",
   "outputDirectory": "web",
   "env": {
     "PYTHONPATH": "src",
