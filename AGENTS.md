@@ -1,7 +1,6 @@
 # FactorForge Agent Operating Rules
 
 > Implementation rules for any coding agent working in this repo.
-> Planning, job tracking, and workflow rules live in the PlantFormOrg private repo.
 
 ---
 
