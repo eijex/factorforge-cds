@@ -8,7 +8,8 @@
     "FACTORFORGE_ENABLE_MOCK": "false"
   },
   "functions": {
-    "api/*.py": {
+    "api/optimize.py": {
+      "runtime": "vercel-python@latest",
       "memory": 1024,
       "maxDuration": 30
     }
