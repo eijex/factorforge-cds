@@ -1,7 +1,8 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Version: 3.1.1
-Engine: FactorForge v2 (rule-based)
+Product Version: 3.1.1
+Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
+Legacy comparison engine: v2 rule-based profiles
 """
 
 from http.server import BaseHTTPRequestHandler
@@ -55,8 +56,6 @@ VALID_PROFILES = [
     "high_cai",
     "gc_target",
     "assembly_friendly",
-    "ramp",
-    "viral_delivery",
 ]
 VALID_OBJECTIVES = ["feasibility_best"]
 DEFAULT_OBJECTIVE = "feasibility_best"
@@ -85,7 +84,7 @@ class handler(BaseHTTPRequestHandler):
             body = self.rfile.read(content_length).decode("utf-8")
             data = json.loads(body)
 
-            logger.info(f"Received optimization request: {len(data.get('sequence', ''))} bp")
+            logger.info(f"Received optimization request: sequence_length={len(data.get('sequence', ''))}")
 
             # Extract parameters
             sequence = data.get("sequence", "")
@@ -330,7 +329,7 @@ class handler(BaseHTTPRequestHandler):
             # Validation checks
             polya_check = "PASS" if polya_warnings == 0 else "WARNING"
             gc_check = self.gc_check(gc_percent, constraints)
-            moclo_check = "PASS"  # From v2 domesticator
+            moclo_check = "UNCHECKED"  # MoClo site validation requires explicit restriction-site analysis via custom_restriction_sites
 
             logger.info(
                 f"Optimization metrics: CAI={cai:.3f}, GC={gc_percent:.1f}%, PolyA={polya_warnings}"
@@ -580,8 +579,7 @@ class handler(BaseHTTPRequestHandler):
             "high_cai": "High CAI",
             "balanced": "Balanced",
             "assembly_friendly": "Assembly Friendly",
-            "ramp": "Ramp",
-            "viral_delivery": "Viral Delivery",
+
         }
         return labels.get(candidate_id, candidate_id.replace("_", " ").title())
 
@@ -661,7 +659,7 @@ class handler(BaseHTTPRequestHandler):
             "high_cai": 0.920,
             "gc_target": 0.800,
             "assembly_friendly": 0.830,
-            "ramp": 0.870,
+
         }
         mock_cai = mock_cai_values.get(profile, 0.850)
 
@@ -683,7 +681,7 @@ class handler(BaseHTTPRequestHandler):
             "validation": {
                 "polya": "PASS",
                 "gc": self.gc_check(gc_percent, constraints),
-                "moclo": "PASS",
+                "moclo": "UNCHECKED",
             },
             "engine": {"name": "Mock Engine", "version": "0.0.0"},
             "note": "⚠️ Mock data - FactorForge engine not available. Deploy with FactorForge for real optimization.",

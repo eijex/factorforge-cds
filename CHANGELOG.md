@@ -19,6 +19,8 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 3. Update version strings: `src/factorforge/__init__.py`, `src/factorforge/engines/v2/__init__.py`, `src/factorforge/engines/v3/__init__.py`, `src/factorforge/engines/__init__.py`, `src/factorforge/engines/v2/optimizer.py`, `src/factorforge/engines/v3/pipeline.py`, `api/optimize.py` (comment + ENGINE_VERSIONS), `web/index.html` (button + changelog entry), `web/js/app.js`
 4. Update tests: `tests/api/test_optimize_contract.py`, `tests/engines/v2/test_cli_optimize.py`
 5. Update `README.md` version badge and citation
+6. Update `docs/index.md` version badge
+7. Update `docs/changelog.md` — add new version entry (mirrors CHANGELOG.md, summarized)
 6. `git commit -m "chore: release vX.Y.Z"`
 7. `git tag -a vX.Y.Z -m "Release vX.Y.Z"` → `git push && git push --tags`
 8. Create GitHub Release from the tag
