@@ -161,7 +161,7 @@ class handler(BaseHTTPRequestHandler):
             "status": "healthy",
             "service": "FactorForge API",
             "version": ENGINE_VERSIONS["product"],
-            "codonforge_available": FACTORFORGE_AVAILABLE,
+            "factorforge_available": FACTORFORGE_AVAILABLE,
             "endpoints": {
                 "POST /api/optimize": "Run codon optimization",
                 "GET /api/optimize": "Health check",
@@ -615,7 +615,7 @@ class handler(BaseHTTPRequestHandler):
         self, sequence, profile, kozak, dinuc, constraints=None, return_candidates=False
     ):
         """Generate mock result for testing (when FactorForge is not available)"""
-        logger.warning("Generating mock result - CodonForge engine not available")
+        logger.warning("Generating mock result - FactorForge engine not available")
         constraints = constraints or {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX}
 
         # Determine if input is DNA or Protein
