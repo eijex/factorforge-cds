@@ -19,14 +19,12 @@ Planning docs, job specs, and internal workflow tracking are in a separate priva
 ## 2. Package Name
 
 The PyPI distribution name is **`factorforge-cds`** — install with `pip install factorforge-cds`.
-The Python import name is **`factorforge`** — not `codonforge`.
+The Python import name is **`factorforge`**.
 
 ```python
 from factorforge.ml.metrics import calculate_cai
 from factorforge.engines.v3.synonym_mask import build_synonym_mask
 ```
-
-Do not use `codonforge` in any import path, file path, or script.
 
 ## 3. Branch & Commit Conventions
 
