@@ -14,8 +14,6 @@ FactorForge is the **public implementation repo**.
 - Docs: `docs/` (design, reports, model cards)
 - Configs: `configs/`
 
-Planning docs, job specs, and internal workflow tracking are in a separate private repo. Do not duplicate them here.
-
 ## 2. Package Name
 
 The PyPI distribution name is **`factorforge-cds`** — install with `pip install factorforge-cds`.
@@ -41,7 +39,7 @@ Commit message format:
 feat: add Wolffia globosa codon table
 fix: correct GC% calculation for short sequences
 docs: update README installation section
-chore: bump version to 3.1.0
+chore: bump version to 3.1.1
 ```
 
 ## 4. Source of Truth
@@ -120,7 +118,7 @@ After any change, update the relevant public-facing files before pushing:
 |-------------|----------------|
 | New feature / API change | `README.md`, `CHANGELOG.md` |
 | Bug fix | `CHANGELOG.md` |
-| Version bump | `pyproject.toml`, `CHANGELOG.md`, `src/factorforge/__init__.py` |
+| Version bump | `pyproject.toml`, `CHANGELOG.md`, `docs/changelog.md`, `README.md`, `docs/index.md`, `src/factorforge/__init__.py`, `src/factorforge/engines/__init__.py`, `src/factorforge/engines/v2/__init__.py`, `src/factorforge/engines/v3/__init__.py`, `src/factorforge/engines/v2/optimizer.py`, `src/factorforge/engines/v3/pipeline.py`, `api/optimize.py`, `web/index.html`, `web/js/app.js`, `tests/api/test_optimize_contract.py`, `tests/engines/v2/test_cli_optimize.py` |
 | New distribution method | `README.md` (Installation), `CHANGELOG.md` |
 | Web UI change | `web/index.html`, `web/README.md` |
 | New engine / model | `docs/model_cards/`, `CHANGELOG.md` |
