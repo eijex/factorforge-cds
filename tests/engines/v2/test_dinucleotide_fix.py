@@ -80,7 +80,7 @@ class TestDinucleotideFix:
         }
         local_engine = RuleEngine(codon_table)
         seq = ("ACG" * 4) + ("CCG" * 6)
-        result = local_engine.fix_dinucleotides(seq)
+        result = local_engine.fix_dinucleotides(seq, mode="aggressive")
 
         assert result["initial_count"] == 10
         assert result["final_count"] == 6

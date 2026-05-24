@@ -204,6 +204,14 @@ class OptimizationPipeline:
             dinu_fix = self.rule_engine.fix_dinucleotides(optimized_dna, mode="balanced")
             if dinu_fix["success"]:
                 optimized_dna = dinu_fix["modified_seq"]
+                candidate_metrics["cai"] = round(self.translator.calculate_cai(optimized_dna), 4)
+                candidate_metrics["gc"] = self.translator.calculate_gc_content(optimized_dna)
+                candidate_metrics["score"] = calculate_composite_score(
+                    cai=candidate_metrics["cai"],
+                    gc=candidate_metrics["gc"],
+                    sequence=optimized_dna,
+                    profile=effective_profile,
+                )
                 logger.info(
                     f"Dinucleotide reduction [{dinu_fix['mode']}]: "
                     f"{dinu_fix['initial_count']} -> "

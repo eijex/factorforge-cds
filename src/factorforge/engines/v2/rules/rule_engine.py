@@ -5,6 +5,7 @@ Plant-aware rule engine - scanning + auto-fix (P0-3)
 
 from __future__ import annotations
 
+import json
 import logging
 import math
 import re
@@ -16,6 +17,7 @@ from factorforge.engines.v2.utils import (
     count_dinucleotides,
     get_data_path,
     load_codon_table,
+    load_golden_set,
 )
 
 logger = logging.getLogger(__name__)
@@ -65,6 +67,13 @@ class RuleEngine:
         self._rare_codon_weights: dict[str, float] = ReverseTranslator._build_ref_weights(
             self.codon_table
         )
+        try:
+            golden_table = load_golden_set()
+            self._golden_cai_weights: dict[str, float] = ReverseTranslator._build_ref_weights(
+                golden_table
+            )
+        except (FileNotFoundError, json.JSONDecodeError):
+            self._golden_cai_weights = self._rare_codon_weights
 
     def _build_aa_to_codons_map(self) -> dict[str, list[str]]:
         """Build amino-acid-to-codons map"""
@@ -654,10 +663,10 @@ class RuleEngine:
         return violations
 
     def _calc_cai(self, seq: str) -> float:
-        """Calculate CAI from cached ref weights (geometric mean of w values)."""
+        """Calculate CAI using golden set reference weights (Sharp & Li 1987)."""
         _stop = {"TAA", "TAG", "TGA"}
         ws = [
-            self._rare_codon_weights.get(seq[i : i + 3], 0.001)
+            self._golden_cai_weights.get(seq[i : i + 3], 0.001)
             for i in range(0, len(seq) - 2, 3)
             if seq[i : i + 3] not in _stop
         ]
