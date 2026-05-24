@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-3.0.0-green.svg)](https://github.com/eijex/factorforge-cds/releases)
+[![Version](https://img.shields.io/badge/version-3.1.0-green.svg)](https://github.com/eijex/factorforge-cds/releases)
 [![Web App](https://img.shields.io/badge/web-factorforge-cds.vercel.app-brightgreen.svg)](https://factorforge-cds.vercel.app)
 
 FactorForge optimizes protein sequences into *N. benthamiana*-compatible CDS by maximizing CAI, controlling GC content, eliminating PolyA signals, and producing MoClo/Golden Gate-ready constructs.
@@ -123,8 +123,8 @@ Experimental ML research modules are available separately:
 pip install "factorforge-cds[ml]"
 ```
 
-> These modules (ESM2 + BART decoder) are not part of the stable v3.0.0 default optimizer.
-> The default v3.0.0 engine is the constraint-based DP feasibility engine.
+> These modules (ESM2 + BART decoder) are not part of the stable v3.1.0 default optimizer.
+> The default v3.1.0 engine is the constraint-based DP feasibility engine.
 
 For development:
 
@@ -153,6 +153,37 @@ cd factorforge
 docker build -t factorforge-cds .
 docker run -p 8080:8080 factorforge-cds
 ```
+
+### Updating
+
+**PyPI (pip install):**
+
+```bash
+pip install --upgrade factorforge-cds
+```
+
+**Docker:**
+
+```bash
+docker pull ghcr.io/eijex/factorforge-cds:latest
+```
+
+**Git clone / local development:**
+
+```bash
+git pull origin main
+pip install -e ".[dev]"
+```
+
+To check your installed version:
+
+```bash
+pip show factorforge-cds
+# or
+factorforge --version
+```
+
+Release notes for each version are in [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -246,7 +277,7 @@ This project was built using the following tools and platforms:
 If you use FactorForge in your research, please cite:
 
 ```
-FactorForge v3.0.0 (2026). Open-source constraint-based CDS design engine.
+FactorForge v3.1.0 (2026). Open-source constraint-based CDS design engine.
 Eijex. https://github.com/eijex/factorforge-cds
 ```
 

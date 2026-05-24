@@ -5,16 +5,40 @@ All notable changes to FactorForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### Versioning Policy
+
+| Bump | When to use |
+|------|-------------|
+| **Major** (`X.0.0`) | Breaking API change, codon table replacement, engine architecture overhaul |
+| **Minor** (`3.X.0`) | New rule, scan feature, optimization mode, new profile, new CLI flag |
+| **Patch** (`3.1.X`) | Bug fix, metric correction, documentation update, dependency patch |
+
+**Release checklist:**
+1. Move `[Unreleased]` entries to `[X.Y.Z] — YYYY-MM-DD` in this file
+2. Bump `version` in `pyproject.toml`
+3. `git commit -m "chore: release vX.Y.Z"`
+4. `git tag -a vX.Y.Z -m "Release vX.Y.Z"` → `git push && git push --tags`
+5. Create GitHub Release from the tag
+
 ---
 
 ## [Unreleased]
 
+---
+
+## [3.1.0] — 2026-05-24
+
 ### Added
 
-- Custom restriction site detection and synonymous CDS cleanup for API and web UI requests.
-- Rare codon run scanner in the v2 rule engine, included in full scan mode and excluded from fast scan mode.
-- Greedy CpG/TpA dinucleotide reduction pass in the v2 rule engine and optimization pipeline.
-- CAI-budgeted dinucleotide reduction modes: `aggressive`, `balanced`, and `cai_preserving`.
+- **Custom restriction site removal** — synonymous substitution of user-specified restriction sites via API and web UI.
+- **Rare codon run detection** (`scan_rare_codon_runs`) — detects consecutive rare codons (w < 0.3, default `min_run=3`) for ribosome stalling risk; included in full scan mode, excluded from fast mode.
+- **Dinucleotide reduction pass** (`fix_dinucleotides`) — greedy CpG/TpA synonymous substitution integrated into the v2 optimization pipeline.
+- **CAI-budgeted dinucleotide modes** — `aggressive` (no CAI check), `balanced` (CAI floor), `cai_preserving` (max CAI drop budget); `cai_before` / `cai_after` added to return dict.
+
+### Fixed
+
+- **Pipeline metric accuracy** — `candidate_metrics` CAI, GC%, and composite score are now re-measured from the final sequence after dinucleotide fix. Previously, pre-fix values were reported, understating CAI by ~0.04 on average (49/49 sequences now correctly report CAI ≥ 0.75).
+- **CAI guard weight consistency** — `_calc_cai()` now uses golden-set reference weights (Sharp & Li 1987), consistent with `calculate_cai()`. Previously used working-table weights (~0.15 higher), which prevented the `balanced` guard from ever triggering.
 
 ---
 
@@ -54,5 +78,6 @@ First official release of FactorForge.
 
 ---
 
-[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/eijex/factorforge-cds/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/eijex/factorforge-cds/releases/tag/v3.0.0
