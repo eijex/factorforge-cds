@@ -892,6 +892,17 @@ function downloadFile(format) {
 }
 
 function submitValidation() {
+    const FORM_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform';
+    const params = new URLSearchParams({ usp: 'pp_url' });
+
+    if (state.results) {
+        const version = state.results.engine_versions?.product || '3.1.0';
+        params.set('entry.543712242', version);
+        params.set('entry.1499442935', state.objective || '');
+    }
+
+    params.set('embedded', 'true');
+    elements.validationFormFrame.src = `${FORM_BASE}?${params.toString()}`;
     elements.validationModal.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 }
