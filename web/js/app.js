@@ -41,6 +41,7 @@ const elements = {
     downloadFasta: document.getElementById('downloadFasta'),
     downloadGenbank: document.getElementById('downloadGenbank'),
     copyBtn: document.getElementById('copyBtn'),
+    submitValidationBtn: document.getElementById('submitValidationBtn'),
     toggleDetails: document.getElementById('toggleDetails'),
     detailsContent: document.getElementById('detailsContent'),
     toggleArrow: document.getElementById('toggleArrow'),
@@ -118,6 +119,7 @@ function initEventListeners() {
     elements.downloadFasta.addEventListener('click', () => downloadFile('fasta'));
     elements.downloadGenbank.addEventListener('click', () => downloadFile('genbank'));
     elements.copyBtn.addEventListener('click', copyToClipboard);
+    elements.submitValidationBtn.addEventListener('click', submitValidation);
     elements.toggleDetails.addEventListener('click', toggleDetailsPanel);
     elements.themeToggle.addEventListener('click', toggleTheme);
     elements.changelogBtn.addEventListener('click', toggleChangelog);
@@ -882,6 +884,40 @@ function downloadFile(format) {
     a.click();
     window.URL.revokeObjectURL(url);
     showToast(`File ${fileName} ready`, 'success');
+}
+
+function submitValidation() {
+    if (!state.results) return;
+
+    const r = state.results;
+    const candidate = r.recommended_candidate || {};
+    const constructId = candidate.construct_id || 'unknown';
+    const cai = candidate.cai || candidate.metrics?.cai || 'N/A';
+    const gc = candidate.gc || candidate.metrics?.gc || 'N/A';
+    const profile = r.profile || state.lastProfile || 'N/A';
+    const version = r.engine_versions?.product || '3.1.0';
+
+    const body = encodeURIComponent(
+`## FactorForge Design Info
+- **Version**: ${version}
+- **Construct ID**: ${constructId}
+- **Profile**: ${profile}
+- **CAI**: ${cai}
+- **GC%**: ${gc}
+
+## Wet-lab Result
+<!-- Please fill in below -->
+
+**Protein**:
+**Host organism**:
+**Expression system / assay**:
+**Result**: (Expressed / No expression / Partial / Improved vs native)
+**Details**:
+**Institution** (optional):
+`);
+
+    const url = `https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml&title=Wet-lab+result%3A+${constructId}&body=${body}`;
+    window.open(url, '_blank');
 }
 
 // Static Data

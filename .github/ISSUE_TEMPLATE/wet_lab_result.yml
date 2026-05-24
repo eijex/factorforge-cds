@@ -4,13 +4,36 @@ labels: ["wet-lab-result"]
 body:
   - type: markdown
     attributes:
-      value: "Thank you for testing FactorForge in the lab! Results will be credited in [VALIDATION.md](https://github.com/eijex/factorforge-cds/blob/main/VALIDATION.md)."
+      value: |
+        Thank you for testing FactorForge in the lab!
+        Results (positive or negative) will be credited in [VALIDATION.md](https://github.com/eijex/factorforge-cds/blob/main/VALIDATION.md).
+
+  - type: input
+    id: version
+    attributes:
+      label: FactorForge version
+      placeholder: "e.g. 3.1.0 (pip show factorforge-cds)"
+    validations:
+      required: true
+
+  - type: input
+    id: construct_id
+    attributes:
+      label: Construct ID
+      description: Found in the optimization result (construct_id field)
+      placeholder: "e.g. a3f7b2c1"
+
+  - type: input
+    id: profile
+    attributes:
+      label: Optimization profile used
+      placeholder: "e.g. balanced, high_cai, gc_target, viral_delivery"
 
   - type: input
     id: protein
     attributes:
       label: Protein
-      placeholder: "e.g. GFP, CD47, custom antigen"
+      placeholder: "e.g. GFP, CD47, CD9, custom antigen"
     validations:
       required: true
 
@@ -46,7 +69,8 @@ body:
     id: details
     attributes:
       label: Details
-      placeholder: "Quantitative data, comparison with native sequence, conditions, etc."
+      description: Quantitative data, comparison with native sequence, conditions, notes
+      placeholder: "e.g. Western band at expected MW, yield ~5 mg/L, compared with unoptimized sequence..."
 
   - type: input
     id: institution
