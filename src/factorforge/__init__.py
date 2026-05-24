@@ -5,7 +5,7 @@ v2: Rule-based engine (Production)
 v3: ML engine (ESM2 + BART)
 """
 
-__version__ = "3.0.0"
+__version__ = "3.1.0"
 __author__ = "Eijex"
 
 # Auto-register engines (safe when running from source tree)
