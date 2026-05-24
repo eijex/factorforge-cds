@@ -954,6 +954,26 @@
         </div>
     </div>
 
+    <!-- Wet-lab Submission Modal -->
+    <div id="validationModal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" id="validationModalOverlay"></div>
+        <div class="relative bg-white dark:bg-slate-900 w-full max-w-2xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                <div>
+                    <h2 class="text-lg font-bold">Submit Wet-lab Result</h2>
+                    <p class="text-amber-50 text-xs opacity-90">Your data helps improve FactorForge for everyone</p>
+                </div>
+                <button id="closeValidationModal" class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
+            </div>
+            <div class="flex-1 overflow-hidden">
+                <iframe id="validationFormFrame"
+                    src="https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?embedded=true"
+                    width="100%" height="600" frameborder="0" marginheight="0" marginwidth="0"
+                    class="w-full">Loading…</iframe>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-8">
         <div class="max-w-7xl mx-auto px-4 text-center">

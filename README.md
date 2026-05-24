@@ -63,6 +63,7 @@ Apache License 2.0 — see [LICENSE](LICENSE).
 ## Get in Touch
 
 - **Docs** — [eijex.github.io/factorforge-cds](https://eijex.github.io/factorforge-cds/)
-- **GitHub Issues** — bugs, features, wet-lab results: [github.com/eijex/factorforge-cds/issues](https://github.com/eijex/factorforge-cds/issues)
+- **Wet-lab Results** — [Submit via Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header) (recommended) or [GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml)
+- **GitHub Issues** — bugs, features: [github.com/eijex/factorforge-cds/issues](https://github.com/eijex/factorforge-cds/issues)
 - **Email** — eijex.lab@gmail.com
 - **Web** — [factorforge-cds.vercel.app](https://factorforge-cds.vercel.app)

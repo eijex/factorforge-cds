@@ -42,6 +42,9 @@ const elements = {
     downloadGenbank: document.getElementById('downloadGenbank'),
     copyBtn: document.getElementById('copyBtn'),
     submitValidationBtn: document.getElementById('submitValidationBtn'),
+    validationModal: document.getElementById('validationModal'),
+    closeValidationModal: document.getElementById('closeValidationModal'),
+    validationModalOverlay: document.getElementById('validationModalOverlay'),
     toggleDetails: document.getElementById('toggleDetails'),
     detailsContent: document.getElementById('detailsContent'),
     toggleArrow: document.getElementById('toggleArrow'),
@@ -120,6 +123,8 @@ function initEventListeners() {
     elements.downloadGenbank.addEventListener('click', () => downloadFile('genbank'));
     elements.copyBtn.addEventListener('click', copyToClipboard);
     elements.submitValidationBtn.addEventListener('click', submitValidation);
+    elements.closeValidationModal.addEventListener('click', closeValidationForm);
+    elements.validationModalOverlay.addEventListener('click', closeValidationForm);
     elements.toggleDetails.addEventListener('click', toggleDetailsPanel);
     elements.themeToggle.addEventListener('click', toggleTheme);
     elements.changelogBtn.addEventListener('click', toggleChangelog);
@@ -887,8 +892,13 @@ function downloadFile(format) {
 }
 
 function submitValidation() {
-    const url = 'https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header';
-    window.open(url, '_blank');
+    elements.validationModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeValidationForm() {
+    elements.validationModal.classList.add('hidden');
+    document.body.style.overflow = '';
 }
 
 // Static Data
