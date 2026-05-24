@@ -97,5 +97,5 @@ def test_cli_optimize_v2_profile_still_works(tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 0, result.output
-    assert "Optimizing with Rule-based v3.1.0" in result.output
+    assert "Optimizing with Rule-based v3.1.1" in result.output
     assert "Metrics:" in result.output

@@ -38,9 +38,13 @@ If you tested a FactorForge-optimized sequence in the lab, please share your res
 Include:
 - Host organism
 - Protein name / class (e.g. antibody, enzyme, membrane protein)
-- FactorForge run parameters or optimized sequence
+- FactorForge version and optimization profile used
 - Expression system and assay used
 - Result (qualitative or quantitative)
+- Promoter used (optional)
+- Subcellular targeting (optional)
+- Harvest timepoint (optional)
+- Whether a native/unoptimized sequence was used as a control
 
 Contributors will be credited below.
 

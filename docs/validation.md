@@ -32,4 +32,13 @@ If you tested a FactorForge-optimized sequence in the lab, please share your res
 
 Or open a [GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) with the label `wet-lab-result`.
 
+Please include:
+
+- Host organism and protein
+- FactorForge version and optimization profile
+- Expression system and assay
+- Result (qualitative or quantitative)
+- Promoter, subcellular targeting, harvest timepoint (optional)
+- Whether a native/unoptimized sequence was used as a control
+
 Contributors will be credited in [VALIDATION.md](https://github.com/eijex/factorforge-cds/blob/main/VALIDATION.md) and future releases.

@@ -17,7 +17,7 @@ class RuleBasedOptimizer(OptimizerEngine):
     """Rule-based optimization engine"""
 
     name = "Rule-based"
-    version = "3.1.0"
+    version = "3.1.1"
 
     def __init__(self) -> None:
         self.validator = InputValidator()

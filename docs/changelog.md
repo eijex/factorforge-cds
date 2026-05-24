@@ -2,6 +2,19 @@
 
 Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cds/blob/main/CHANGELOG.md)
 
+## v3.1.1 — 2026-05-24
+
+### Added
+- **Wet-lab feedback modal** — Submit result button opens embedded Google Form with version and profile pre-filled
+- **JSON Copy button** — one-click copy of full optimization JSON output
+
+### Changed
+- **Design Objective order** — reordered to match recommended wet-lab testing sequence
+- **Validation fields** — Issue template updated with promoter, subcellular targeting, harvest timepoint, native control
+
+### Fixed
+- **Vercel deployment** — resolved /api/optimize 404 caused by incorrect Root Directory setting
+
 ## v3.1.0 — 2026-05-24
 
 ### Added

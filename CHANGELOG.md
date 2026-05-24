@@ -29,6 +29,26 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [3.1.1] — 2026-05-24
+
+### Added
+
+- **Wet-lab feedback modal** — "Submit Wet-lab Result" button opens an embedded Google Form iframe with version and optimization profile pre-filled from the current result.
+- **JSON Copy button** — one-click copy of the full optimization JSON output in the terminal panel.
+- **Submit button tooltip** — info icon explains what wet-lab feedback is used for.
+
+### Changed
+
+- **Design Objective order** — reordered to match recommended wet-lab testing sequence: Feasibility Best → 5' Ramp → High CAI → GC Target → Assembly Friendly → Viral Delivery.
+- **Wet-lab feedback fields** — GitHub Issue Template updated with promoter, subcellular targeting, harvest timepoint, and native control fields.
+- **VALIDATION.md / docs/validation.md** — "Include" section updated with new experimental metadata fields.
+
+### Fixed
+
+- **Vercel deployment** — `/api/optimize` was returning 404 due to Root Directory being set to `web/` in Vercel project settings; resolved by clearing Root Directory to repo root.
+
+---
+
 ## [3.1.0] — 2026-05-24
 
 ### Added
@@ -81,6 +101,7 @@ First official release of FactorForge.
 
 ---
 
-[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.1...HEAD
+[3.1.1]: https://github.com/eijex/factorforge-cds/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/eijex/factorforge-cds/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/eijex/factorforge-cds/releases/tag/v3.0.0

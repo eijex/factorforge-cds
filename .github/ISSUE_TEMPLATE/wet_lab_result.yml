@@ -53,6 +53,38 @@ body:
     validations:
       required: true
 
+  - type: input
+    id: promoter
+    attributes:
+      label: Promoter (optional)
+      placeholder: "e.g. 35S, AtUBQ10, custom"
+
+  - type: dropdown
+    id: subcellular_targeting
+    attributes:
+      label: Subcellular targeting (optional)
+      options:
+        - Cytosol
+        - ER
+        - Apoplast
+        - Membrane
+        - Other
+
+  - type: input
+    id: harvest_timepoint
+    attributes:
+      label: Harvest timepoint (optional)
+      placeholder: "e.g. 4 dpi, 6 dpi"
+
+  - type: dropdown
+    id: native_control
+    attributes:
+      label: Native / unoptimized sequence used as control?
+      options:
+        - "Yes"
+        - "No"
+        - Not tested
+
   - type: dropdown
     id: result
     attributes:
