@@ -84,6 +84,29 @@ const elements = {
 
 let chartInstance = null;
 
+// Analytics helpers
+function seqLenBucket(len) {
+    if (len < 100) return '<100';
+    if (len < 300) return '100-300';
+    if (len < 1000) return '300-1000';
+    return '>1000';
+}
+function caiBucket(cai) {
+    if (cai < 0.7) return '<0.7';
+    if (cai < 0.8) return '0.7-0.8';
+    if (cai < 0.9) return '0.8-0.9';
+    return '>0.9';
+}
+function gcBucket(gc) {
+    if (gc < 40) return '<40';
+    if (gc < 55) return '40-55';
+    if (gc < 65) return '55-65';
+    return '>65';
+}
+function trackEvent(name, data) {
+    try { window.va?.('event', { name, data }); } catch (_) {}
+}
+
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
@@ -262,6 +285,12 @@ async function runOptimization() {
     }
 
     setLoading(true);
+    trackEvent('optimization_run', {
+        objective: state.objective,
+        kozak: state.kozak,
+        dinuc: state.dinuc,
+        seq_len_bucket: seqLenBucket(state.sequence.length),
+    });
 
     try {
         // Prepare Request
@@ -315,6 +344,15 @@ async function runOptimization() {
         addToHistory(state.sequence, data);
         renderResults();
         showToast('Optimization complete!', 'success');
+        const primary = getPrimaryResult(data);
+        if (primary?.metrics) {
+            trackEvent('optimization_result', {
+                objective: state.objective,
+                cai_bucket: caiBucket(primary.metrics.cai ?? 0),
+                gc_bucket: gcBucket(primary.metrics.gc_percent ?? 0),
+                success: true,
+            });
+        }
 
     } catch (error) {
         console.error('Optimization Failed:', error);
@@ -414,9 +452,9 @@ function renderResults() {
 
     // Validation Badges
     elements.validationStatus.classList.remove('hidden');
-    const v = primary.validation || { polya: 'PASS', moclo: 'PASS', gc: 'PASS' };
+    const v = primary.validation || { polya: 'PASS', moclo: 'UNCHECKED', gc: 'PASS' };
     updateValidationIcon('valPolyA', v.polya === 'PASS');
-    updateValidationIcon('valMoClo', v.moclo === 'PASS');
+    updateValidationIcon('valMoClo', v.moclo === 'PASS' ? true : v.moclo === 'UNCHECKED' ? null : false);
 
     // Improved GC Status (Logic separation: N/A vs Out of Range)
     const valGC = document.getElementById('valGC');
@@ -497,7 +535,7 @@ function getPrimaryResult(res) {
         },
         validation: {
             polya: 'PASS',
-            moclo: 'PASS',
+            moclo: 'UNCHECKED',
             gc: candidate.gc_percent >= 40 && candidate.gc_percent <= 55 ? 'PASS' : 'WARNING'
         },
         aaPreserved: candidate.validator_status === 'pass' ? '✅ 100%' : '⚠️ Review'
@@ -608,8 +646,13 @@ function escapeHtml(value) {
 function updateValidationIcon(id, pass) {
     const el = document.getElementById(id);
     if (el) {
-        el.textContent = pass ? '✅' : '❌';
-        el.className = pass ? 'text-emerald-400' : 'text-rose-500';
+        if (pass === null) {
+            el.textContent = '⚠️';
+            el.className = 'text-amber-500';
+        } else {
+            el.textContent = pass ? '✅' : '❌';
+            el.className = pass ? 'text-emerald-400' : 'text-rose-500';
+        }
     }
 }
 
@@ -854,6 +897,7 @@ async function copyToClipboard() {
 
 function downloadFile(format) {
     if (!state.results) return;
+    trackEvent('file_download', { format });
 
     let content = '';
     let fileName = '';
@@ -894,6 +938,7 @@ function downloadFile(format) {
 }
 
 function submitValidation() {
+    trackEvent('validation_submit', { objective: state.objective });
     const FORM_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform';
     const params = new URLSearchParams({ usp: 'pp_url' });
 
@@ -940,7 +985,7 @@ function getMockResult() {
         profile: state.objective,
         validation: {
             polya: 'PASS',
-            moclo: 'PASS',
+            moclo: 'UNCHECKED',
             gc: 'PASS'
         }
     };
