@@ -28,15 +28,8 @@ FactorForge is an **in-silico only** tool. It optimizes codon usage, GC content,
 
 If you tested a FactorForge-optimized sequence in the lab, please share your result — positive or negative. Failed experiments are just as valuable.
 
-- Open a [GitHub Issue](https://github.com/eijex/factorforge-cds/issues) with the label `wet-lab-result`
-- Or email: eijex.lab@gmail.com
+**→ [Submit via Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header)** (recommended)
 
-**Include:**
-
-- Host organism
-- Protein name / class (e.g. antibody, enzyme, membrane protein)
-- FactorForge version and run parameters
-- Expression system and assay used
-- Result (qualitative or quantitative)
+Or open a [GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) with the label `wet-lab-result`.
 
 Contributors will be credited in [VALIDATION.md](https://github.com/eijex/factorforge-cds/blob/main/VALIDATION.md) and future releases.

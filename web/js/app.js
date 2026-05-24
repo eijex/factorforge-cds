@@ -887,36 +887,7 @@ function downloadFile(format) {
 }
 
 function submitValidation() {
-    if (!state.results) return;
-
-    const r = state.results;
-    const candidate = r.recommended_candidate || {};
-    const constructId = candidate.construct_id || 'unknown';
-    const cai = candidate.cai || candidate.metrics?.cai || 'N/A';
-    const gc = candidate.gc || candidate.metrics?.gc || 'N/A';
-    const profile = r.profile || state.lastProfile || 'N/A';
-    const version = r.engine_versions?.product || '3.1.0';
-
-    const body = encodeURIComponent(
-`## FactorForge Design Info
-- **Version**: ${version}
-- **Construct ID**: ${constructId}
-- **Profile**: ${profile}
-- **CAI**: ${cai}
-- **GC%**: ${gc}
-
-## Wet-lab Result
-<!-- Please fill in below -->
-
-**Protein**:
-**Host organism**:
-**Expression system / assay**:
-**Result**: (Expressed / No expression / Partial / Improved vs native)
-**Details**:
-**Institution** (optional):
-`);
-
-    const url = `https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml&title=Wet-lab+result%3A+${constructId}&body=${body}`;
+    const url = 'https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header';
     window.open(url, '_blank');
 }
 
