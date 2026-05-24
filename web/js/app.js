@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initEventListeners();
     renderHistory();
-    console.log('FactorForge v3.0.0 Engaged');
+    console.log('FactorForge v3.1.0 Engaged');
 });
 
 function initEventListeners() {
