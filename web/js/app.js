@@ -46,6 +46,7 @@ const elements = {
     validationModal: document.getElementById('validationModal'),
     closeValidationModal: document.getElementById('closeValidationModal'),
     validationModalOverlay: document.getElementById('validationModalOverlay'),
+    validationFormFrame: document.getElementById('validationFormFrame'),
     toggleDetails: document.getElementById('toggleDetails'),
     detailsContent: document.getElementById('detailsContent'),
     toggleArrow: document.getElementById('toggleArrow'),
