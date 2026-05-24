@@ -226,17 +226,17 @@
                         </label>
 
                         <label class="block relative group">
-                            <input type="radio" name="objective" value="gc_target" class="peer sr-only">
+                            <input type="radio" name="objective" value="ramp" class="peer sr-only">
                             <div
                                 class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
                                 <span class="flex items-center text-sm font-bold text-slate-800">
-                                    GC Target
+                                    5' Ramp
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
-                                        <span class="tooltip-text">v2 comparison profile that prioritizes global GC proximity for N. benthamiana.</span>
+                                        <span class="tooltip-text">Uses rare codons at positions 1–50 to slow ribosome speed and promote efficient co-translational folding. Recommended for membrane proteins.</span>
                                     </span>
                                 </span>
-                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Compare against GC-focused rule-based output</span>
+                                <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">Optimized N-terminal translation ramp</span>
                                 <div
                                     class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
                                     ✓</div>
@@ -262,6 +262,24 @@
                         </label>
 
                         <label class="block relative group">
+                            <input type="radio" name="objective" value="gc_target" class="peer sr-only">
+                            <div
+                                class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
+                                <span class="flex items-center text-sm font-bold text-slate-800">
+                                    GC Target
+                                    <span class="tooltip-container">
+                                        <span class="info-icon">i</span>
+                                        <span class="tooltip-text">v2 comparison profile that prioritizes global GC proximity for N. benthamiana.</span>
+                                    </span>
+                                </span>
+                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Compare against GC-focused rule-based output</span>
+                                <div
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
+                                    ✓</div>
+                            </div>
+                        </label>
+
+                        <label class="block relative group">
                             <input type="radio" name="objective" value="assembly_friendly" class="peer sr-only">
                             <div
                                 class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
@@ -274,26 +292,6 @@
                                     </span>
                                 </span>
                                 <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Golden Gate friendly (BsaI/BsmBI/BpII removed)</span>
-                                <div
-                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
-                                    ✓</div>
-                            </div>
-                        </label>
-
-                        <label class="block relative group">
-                            <input type="radio" name="objective" value="ramp" class="peer sr-only">
-                            <div
-                                class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
-                                <span class="flex items-center text-sm font-bold text-slate-800">
-                                    5' Ramp
-                                    <span class="tooltip-container">
-                                        <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Uses rare codons at positions 1–50 to slow ribosome speed and promote efficient co-translational folding.</span>
-                                    </span>
-                                </span>
-                                <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">Optimized N-terminal
-                                    translation
-                                    ramp</span>
                                 <div
                                     class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
                                     ✓</div>
