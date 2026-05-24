@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "framework": null,
   "buildCommand": null,
   "outputDirectory": "web",
   "env": {
@@ -8,8 +7,7 @@
     "FACTORFORGE_ENABLE_MOCK": "false"
   },
   "functions": {
-    "api/optimize.py": {
-      "runtime": "vercel-python@latest",
+    "api/*.py": {
       "memory": 1024,
       "maxDuration": 30
     }
