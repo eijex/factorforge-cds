@@ -41,6 +41,9 @@ const elements = {
     downloadFasta: document.getElementById('downloadFasta'),
     downloadGenbank: document.getElementById('downloadGenbank'),
     copyBtn: document.getElementById('copyBtn'),
+    constructIdRow: document.getElementById('constructIdRow'),
+    constructIdDisplay: document.getElementById('constructIdDisplay'),
+    copyConstructId: document.getElementById('copyConstructId'),
     submitValidationBtn: document.getElementById('submitValidationBtn'),
     copyJsonBtn: document.getElementById('copyJsonBtn'),
     toggleDetails: document.getElementById('toggleDetails'),
@@ -75,6 +78,7 @@ const elements = {
     closeModal: document.getElementById('closeModal'),
     modalOverlay: document.getElementById('modalOverlay'),
     inputTypeBadge: document.getElementById('inputTypeBadge'),
+    toastContainer: document.getElementById('toastContainer'),
     logoIcon: document.getElementById('logoIcon'),
     logoTitle: document.getElementById('logoTitle')
 };
@@ -143,6 +147,7 @@ function initEventListeners() {
     elements.downloadFasta.addEventListener('click', () => downloadFile('fasta'));
     elements.downloadGenbank.addEventListener('click', () => downloadFile('genbank'));
     elements.copyBtn.addEventListener('click', copyToClipboard);
+    elements.copyConstructId.addEventListener('click', copyConstructId);
     elements.submitValidationBtn.addEventListener('click', submitValidation);
     elements.copyJsonBtn.addEventListener('click', copyJson);
     elements.toggleDetails.addEventListener('click', toggleDetailsPanel);
@@ -390,6 +395,14 @@ function renderResults() {
 
     elements.emptyState.classList.add('hidden');
     elements.resultsContainer.classList.remove('hidden');
+
+    if (res.construct_id) {
+        elements.constructIdDisplay.textContent = res.construct_id;
+        elements.constructIdRow.classList.remove('hidden');
+    } else {
+        elements.constructIdDisplay.textContent = '';
+        elements.constructIdRow.classList.add('hidden');
+    }
 
     // Metrics
     elements.caiValue.textContent = primary.metrics.cai.toFixed(3);
@@ -812,6 +825,8 @@ function clearAll() {
     state.results = null;
     elements.previewContainer.classList.add('hidden');
     elements.resultsContainer.classList.add('hidden');
+    elements.constructIdDisplay.textContent = '';
+    elements.constructIdRow.classList.add('hidden');
     if (elements.candidateComparisonContainer) elements.candidateComparisonContainer.classList.add('hidden');
     if (elements.customRestrictionResults) elements.customRestrictionResults.classList.add('hidden');
     elements.emptyState.classList.remove('hidden');
@@ -890,6 +905,22 @@ async function copyToClipboard() {
     }
 }
 
+async function copyConstructId() {
+    const constructId = state.results?.construct_id;
+    if (!constructId) return;
+    try {
+        await navigator.clipboard.writeText(constructId);
+        const originalText = elements.copyConstructId.textContent;
+        elements.copyConstructId.textContent = 'Copied';
+        setTimeout(() => {
+            elements.copyConstructId.textContent = originalText;
+        }, 2000);
+        showToast('Construct ID copied', 'success');
+    } catch (err) {
+        showToast('Failed to copy construct ID', 'error');
+    }
+}
+
 function downloadFile(format) {
     if (!state.results) return;
     trackEvent('file_download', { format });
@@ -939,8 +970,17 @@ function submitValidation() {
 
     if (state.results) {
         const version = state.results.engine_versions?.product || '3.1.1';
+        const profile = state.results?.profile || state.objective || '';
         params.set('entry.543712242', version);
-        params.set('entry.1499442935', state.objective || '');
+        params.set('entry.1499442935', profile);
+
+        // TODO: Confirm Google Form entry ID before enabling construct_id pre-fill.
+        // const FORM_ENTRY_CONSTRUCT_ID = 'entry.XXXXXXXXX';
+        // if (state.results?.construct_id) params.set(FORM_ENTRY_CONSTRUCT_ID, state.results.construct_id);
+
+        // TODO: Confirm Google Form entry ID before enabling host_profile pre-fill.
+        // const FORM_ENTRY_HOST = 'entry.XXXXXXXXX';
+        // if (state.results?.host_profile) params.set(FORM_ENTRY_HOST, state.results.host_profile);
     }
 
     window.open(`${FORM_BASE}?${params.toString()}`, '_blank', 'noopener,noreferrer');

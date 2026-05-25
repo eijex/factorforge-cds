@@ -23,6 +23,7 @@ dependencies = [
     "biopython>=1.81",
     "requests>=2.31",
     "click>=8.0",
+    "pydantic>=2.0",
 ]
 
 [project.optional-dependencies]

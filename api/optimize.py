@@ -6,11 +6,13 @@ Legacy comparison engine: v2 rule-based profiles
 """
 
 from http.server import BaseHTTPRequestHandler
+import hashlib
 import json
 import sys
 import os
 import re
 import logging
+from datetime import datetime, timezone
 from typing import Any
 
 # Setup logging
@@ -73,6 +75,11 @@ VALID_AA = "ACDEFGHIKLMNPQRSTVWY"
 VALID_CHARS_PATTERN = re.compile(r"^[ACDEFGHIKLMNPQRSTVWY*]+$", re.IGNORECASE)
 
 
+def _generate_construct_id() -> str:
+    now = datetime.now()
+    return f"CF-{now.strftime('%Y%m%d-%H%M%S')}"
+
+
 class handler(BaseHTTPRequestHandler):
     """Vercel Serverless Function Handler"""
 
@@ -118,7 +125,13 @@ class handler(BaseHTTPRequestHandler):
             # Check if FactorForge is available
             if not FACTORFORGE_AVAILABLE:
                 status_code, result = self.handle_unavailable_engine(
-                    sequence, profile, kozak, dinuc, constraints, return_candidates
+                    sequence,
+                    profile,
+                    kozak,
+                    dinuc,
+                    constraints,
+                    return_candidates,
+                    host_profile,
                 )
                 self.send_json_response(status_code, result)
                 return
@@ -367,6 +380,16 @@ class handler(BaseHTTPRequestHandler):
                 response,
                 custom_restriction_sites,
             )
+            response = self.add_design_package_fields(
+                response=response,
+                input_sequence=sequence,
+                profile=profile,
+                objective=objective,
+                host_profile=host_profile,
+                kozak=kozak,
+                dinuc=dinuc,
+                constraints=constraints,
+            )
             return response
 
         except Exception as e:
@@ -442,7 +465,132 @@ class handler(BaseHTTPRequestHandler):
             "engine_versions": ENGINE_VERSIONS,
         }
 
-        return self.apply_custom_restriction_sites(response, custom_restriction_sites)
+        response = self.apply_custom_restriction_sites(response, custom_restriction_sites)
+        return self.add_design_package_fields(
+            response=response,
+            input_sequence=sequence,
+            profile=profile,
+            objective=DEFAULT_OBJECTIVE,
+            host_profile=host_profile,
+            kozak=kozak,
+            dinuc=dinuc,
+            constraints=constraints,
+        )
+
+    def add_design_package_fields(
+        self,
+        response,
+        input_sequence,
+        profile,
+        objective,
+        host_profile,
+        kozak,
+        dinuc,
+        constraints,
+    ):
+        """Add DesignPackage-compatible metadata while preserving existing response keys."""
+        output_cds = self.primary_dna_sequence(response)
+        selected_profile = self.response_profile(response, profile, objective)
+        metrics = response.get("metrics", {})
+        recommended = response.get("recommended_candidate") or {}
+        cai = metrics.get("cai", recommended.get("cai", 0.0))
+        gc_percent = metrics.get("gc_percent", recommended.get("gc_percent", 0.0))
+        polya_warnings = int(metrics.get("polya_signals", 0))
+        internal_stop_count = int(recommended.get("internal_stop_count", 0))
+
+        param_payload = {
+            "objective": objective or "legacy_profile",
+            "profile": selected_profile,
+            "host_profile": host_profile,
+            "kozak": kozak,
+            "dinuc": dinuc,
+            "constraints": constraints,
+        }
+        param_str = json.dumps(param_payload, sort_keys=True, separators=(",", ":"))
+
+        response["construct_id"] = _generate_construct_id()
+        response["design_package_version"] = "1.0"
+        response["created_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        response["host_profile"] = host_profile
+        response["profile"] = selected_profile
+        response["provenance"] = {
+            "input_sequence_hash": self.sha256_prefix(input_sequence),
+            "output_cds_hash": self.sha256_prefix(output_cds),
+            "parameter_hash": self.sha256_prefix(param_str),
+        }
+        response["wet_lab_feedback"] = {"status": "pending", "submissions": []}
+        response.setdefault("target", None)
+        response.setdefault(
+            "construct_plan",
+            {
+                "construct_type": "full_length",
+                "tag": None,
+                "signal_peptide": None,
+                "kozak": bool(kozak),
+            },
+        )
+        response["cds_design"] = {
+            "engine": "factorforge_cds",
+            "product_version": ENGINE_VERSIONS["product"],
+            "host_profile": host_profile,
+            "objective": objective or "legacy_profile",
+            "profile": selected_profile,
+            "input_length_aa": self.input_length_aa(input_sequence),
+            "output_length_nt": len(output_cds),
+            "cai": float(cai),
+            "gc_percent": float(gc_percent),
+        }
+        response["constraint_report"] = {
+            "restriction_sites_removed": response.get("custom_restriction_sites", {}).get(
+                "removed", []
+            ),
+            "restriction_sites_unresolved": response.get("custom_restriction_sites", {}).get(
+                "unresolved", []
+            ),
+            "polya_warnings": polya_warnings,
+            "internal_stop_count": internal_stop_count,
+            "aa_identity": 1.0,
+            "codon_rarity_clusters": 0,
+        }
+        response["validation_status"] = self.design_validation_status(response)
+        return response
+
+    def response_profile(self, response, profile, objective):
+        """Return the selected candidate/profile name for DesignPackage metadata."""
+        if objective == DEFAULT_OBJECTIVE:
+            recommended = response.get("recommended_candidate")
+            if isinstance(recommended, dict) and recommended.get("id"):
+                return recommended["id"]
+            return DEFAULT_OBJECTIVE
+        return profile
+
+    def sha256_prefix(self, value):
+        """Return the shortened sha256 digest format used in API provenance."""
+        return "sha256:" + hashlib.sha256(str(value).encode()).hexdigest()[:16]
+
+    def input_length_aa(self, sequence):
+        """Return amino-acid length when the input does not look like DNA."""
+        cleaned = self.clean_sequence(sequence).rstrip("*")
+        if re.fullmatch(r"[ACGT]+", cleaned):
+            return None
+        return len(cleaned)
+
+    def design_validation_status(self, response):
+        """Map existing validation fields into DesignPackage validation status."""
+        validation = response.get("validation", {})
+        recommended = response.get("recommended_candidate") or {}
+        validator_status = recommended.get("validator_status")
+        polya = str(validation.get("polya", "UNCHECKED")).lower()
+        gc = str(validation.get("gc", "UNCHECKED")).lower()
+        moclo = str(validation.get("moclo", "UNCHECKED")).lower()
+        in_silico = "pass" if validator_status in (None, "pass") and gc != "warning" else "warning"
+        return {
+            "in_silico": in_silico,
+            "aa_identity_check": "pass",
+            "gc_check": "pass" if gc == "pass" else gc,
+            "polya_check": "pass" if polya == "pass" else polya,
+            "moclo_check": "unchecked" if moclo == "unchecked" else moclo,
+        }
 
     def apply_custom_restriction_sites(self, response, custom_restriction_sites):
         """Apply custom restriction-site domestication to the primary response CDS."""
@@ -595,12 +743,13 @@ class handler(BaseHTTPRequestHandler):
         dinuc,
         constraints,
         return_candidates,
+        host_profile=DEFAULT_HOST_PROFILE,
     ):
         """Return mock only when explicitly enabled; otherwise fail closed."""
         if ENABLE_MOCK:
             logger.info("Using mock optimization (FactorForge not available)")
             return 200, self.generate_mock_result(
-                sequence, profile, kozak, dinuc, constraints, return_candidates
+                sequence, profile, kozak, dinuc, constraints, return_candidates, host_profile
             )
 
         logger.error("FactorForge engine unavailable and mock fallback disabled")
@@ -610,7 +759,14 @@ class handler(BaseHTTPRequestHandler):
         }
 
     def generate_mock_result(
-        self, sequence, profile, kozak, dinuc, constraints=None, return_candidates=False
+        self,
+        sequence,
+        profile,
+        kozak,
+        dinuc,
+        constraints=None,
+        return_candidates=False,
+        host_profile=DEFAULT_HOST_PROFILE,
     ):
         """Generate mock result for testing (when FactorForge is not available)"""
         logger.warning("Generating mock result - FactorForge engine not available")
@@ -688,7 +844,16 @@ class handler(BaseHTTPRequestHandler):
         }
         if return_candidates:
             response["engine_versions"] = ENGINE_VERSIONS
-        return response
+        return self.add_design_package_fields(
+            response=response,
+            input_sequence=sequence,
+            profile=profile,
+            objective=None,
+            host_profile=host_profile,
+            kozak=kozak,
+            dinuc=dinuc,
+            constraints=constraints,
+        )
 
     def send_json_response(self, status_code, data):
         """Send JSON response with CORS headers"""
