@@ -974,13 +974,8 @@ function submitValidation() {
         params.set('entry.543712242', version);
         params.set('entry.1499442935', profile);
 
-        // TODO: Confirm Google Form entry ID before enabling construct_id pre-fill.
-        // const FORM_ENTRY_CONSTRUCT_ID = 'entry.XXXXXXXXX';
-        // if (state.results?.construct_id) params.set(FORM_ENTRY_CONSTRUCT_ID, state.results.construct_id);
-
-        // TODO: Confirm Google Form entry ID before enabling host_profile pre-fill.
-        // const FORM_ENTRY_HOST = 'entry.XXXXXXXXX';
-        // if (state.results?.host_profile) params.set(FORM_ENTRY_HOST, state.results.host_profile);
+        if (state.results?.construct_id) params.set('entry.1775159786', state.results.construct_id);
+        if (state.results?.host_profile) params.set('entry.1092797153', state.results.host_profile);
     }
 
     window.open(`${FORM_BASE}?${params.toString()}`, '_blank', 'noopener,noreferrer');
