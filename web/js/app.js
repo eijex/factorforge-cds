@@ -111,6 +111,7 @@ function trackEvent(name, data) {
 // Initialization
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
+    applyStaticLabelPatches();
     initEventListeners();
     renderHistory();
     console.log('FactorForge v3.1.1 Engaged');
@@ -161,6 +162,30 @@ function initEventListeners() {
 
 function reloadPage() {
     window.location.reload();
+}
+
+function applyStaticLabelPatches() {
+    if (!elements.submitValidationBtn) return;
+    const label = elements.submitValidationBtn.children[1];
+    if (label) label.textContent = 'Share Wet-Lab Result';
+}
+
+function isProteinInputResult(res) {
+    const explicitType = [
+        res?.validation?.input_type,
+        res?.input_type,
+        res?.sequence_type
+    ].find(Boolean);
+
+    if (explicitType) {
+        const normalized = String(explicitType).toLowerCase();
+        return normalized === 'protein' || normalized === 'amino_acid' || normalized === 'amino-acid';
+    }
+
+    const seq = state.sequence || '';
+    const isDNA = /^[ACGT]+$/i.test(seq);
+    const isProtein = /^[ACDEFGHIKLMNPQRSTVWY*]+$/i.test(seq);
+    return isProtein && !isDNA;
 }
 
 // Theme Handling
@@ -410,24 +435,28 @@ function renderResults() {
     elements.polyaValue.textContent = primary.metrics.polya_signals === 0 ? '0 (Clean)' : primary.metrics.polya_signals;
 
     // Metrics Comparison Table
-    elements.origLen.textContent = `${res.original_length || state.sequence.length} ${res.validation && res.validation.input_type === 'protein' ? 'aa' : 'bp'}`;
+    const isProteinInput = isProteinInputResult(res);
+    elements.origLen.textContent = `${res.original_length || state.sequence.length} ${isProteinInput ? 'aa' : 'bp'}`;
     elements.optLen.textContent = `${primary.metrics.length || primary.optimized_sequence.length} bp`;
 
     // Variables for calculations
     const origSeq = state.sequence;
     const optSeq = primary.optimized_sequence;
     const calculatedGC = calculateGC(optSeq);
-    const oGC = calculateGC(origSeq);
+    const oGC = isProteinInput ? null : calculateGC(origSeq);
 
-    elements.origGC.textContent = `${oGC}%`;
+    elements.origGC.textContent = isProteinInput ? 'N/A' : `${oGC}%`;
     elements.optGCComp.textContent = `${calculatedGC.toFixed(1)}%`;
     elements.gcValue.textContent = `${calculatedGC.toFixed(1)}%`;
     elements.origCAI.textContent = 'N/A';
     elements.optCAIComp.textContent = primary.metrics.cai.toFixed(3);
 
-    if (res.validation && res.validation.input_type === 'protein') {
-        elements.mutationRate.textContent = 'Reverse-translated CDS generated';
+    const mutationRow = elements.mutationRate?.closest('tr, .metric-row');
+    if (isProteinInput) {
+        elements.mutationRate.textContent = 'N/A';
+        if (mutationRow) mutationRow.classList.add('hidden');
     } else {
+        if (mutationRow) mutationRow.classList.remove('hidden');
         // Calculate Mutation Rate
         let diffCount = 0;
         const compareLen = Math.min(origSeq.length, optSeq.length);
@@ -471,7 +500,7 @@ function renderResults() {
         valGC.className = 'text-amber-500';
         valGC.nextElementSibling.textContent = 'GC Content: N/A';
         valGC.nextElementSibling.title = 'GC calculation failed or sequence not available';
-    } else if (v.gc !== 'PASS' || (calculatedGC < 40.5 || calculatedGC > 44.5)) {
+    } else if (v.gc !== 'PASS' || (calculatedGC < 40.0 || calculatedGC > 55.0)) {
         valGC.textContent = '⚠️';
         valGC.className = 'text-amber-500';
         valGC.nextElementSibling.textContent = `⚠️ Outside target range (${calculatedGC.toFixed(1)}%)`;
@@ -479,7 +508,7 @@ function renderResults() {
     } else {
         valGC.textContent = '✅';
         valGC.className = 'text-emerald-400';
-        valGC.nextElementSibling.textContent = 'GC Content Check (42.5% ± 2%)';
+        valGC.nextElementSibling.textContent = 'GC Content Check (40–55%)';
     }
 
     // JSON Details

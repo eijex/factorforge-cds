@@ -140,7 +140,9 @@
                         <div class="relative">
                             <textarea id="sequenceInput" rows="10"
                                 class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all font-mono text-xs placeholder:text-slate-400 resize-none"
-                                placeholder="Paste your DNA sequence here..."></textarea>
+                                data-protein-placeholder="Paste amino acid sequence (single-letter code, e.g. MAST...)"
+                                data-dna-placeholder="Paste coding DNA sequence (ATG ... stop codon)"
+                                placeholder="Paste amino acid sequence (single-letter code, e.g. MAST...)"></textarea>
                         </div>
 
                         <!-- Validation Alert -->
@@ -180,7 +182,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-sm font-bold flex items-center text-slate-800 dark:text-slate-200">
                             <span class="bg-amber-50 p-1.5 rounded-lg mr-2 text-amber-600">🕒</span>
-                            Recent History
+                            Recent Designs
                         </h3>
                         <button id="clearHistory"
                             class="text-[10px] font-bold text-rose-500 uppercase hover:underline">Clear</button>
@@ -222,7 +224,7 @@
                                         <span class="tooltip-text">Dynamic-programming candidate with maximum CAI inside the requested GC range when feasible.</span>
                                     </span>
                                 </span>
-                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Constraint-based CDS design with v2 comparison candidates</span>
+                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Constraint-based CDS design with comparison candidates</span>
                                 <div
                                     class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
                                     ✓</div>
@@ -235,6 +237,8 @@
                                 class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
                                 <span class="flex items-center text-sm font-bold text-slate-800">
                                     5' Ramp
+                                    <span
+                                        class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 border border-amber-300">Experimental</span>
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
                                         <span class="tooltip-text">Uses rare codons at positions 1–50 to slow ribosome speed and promote efficient co-translational folding. Recommended for membrane proteins.</span>
@@ -308,6 +312,8 @@
                                 class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
                                 <span class="flex items-center text-sm font-bold text-slate-800">
                                     Viral Delivery
+                                    <span
+                                        class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 border border-amber-300">Experimental</span>
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
                                         <span class="tooltip-text">TRV-based virus delivery optimization for transient
@@ -347,11 +353,11 @@
                             </label>
                             <label class="flex items-center justify-between group cursor-pointer py-1">
                                 <span class="text-[13px] font-bold text-slate-900 dark:text-slate-100">
-                                    Dinucleotide Scrutiny
+                                    Suppress Immunostimulatory Dinucleotides
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Strict avoidance of CpG and TpA hotspots to prevent
-                                            silencing and instability.</span>
+                                        <span class="tooltip-text">Reduces CpG and TpA dinucleotides to minimize innate
+                                            immune activation in mammalian systems.</span>
                                     </span>
                                 </span>
                                 <div class="relative inline-flex items-center">
@@ -407,7 +413,7 @@
                     <!-- Action Button -->
                     <button id="optimizeBtn"
                         class="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-blue-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-emerald-200 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-                        <span id="btnText">🚀 Optimize Sequence</span>
+                        <span id="btnText">🚀 Generate Optimized CDS</span>
                     </button>
 
                     <!-- Loading Indicator -->
@@ -427,8 +433,7 @@
                     <!-- Validation Status -->
                     <div id="validationStatus"
                         class="hidden mt-8 space-y-3 p-5 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl">
-                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Live Validation
-                            Status</p>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Sequence Checks</p>
                         <div class="flex items-center space-x-3 text-xs text-slate-300">
                             <span id="valPolyA" class="text-emerald-400">✅</span>
                             <span class="font-medium">PolyA Scanner</span>
@@ -461,7 +466,7 @@
                             class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-5xl animate-bounce duration-1000 grayscale opacity-40">
                             🧬</div>
                         <div class="max-w-xs">
-                            <p class="text-slate-900 font-extrabold text-lg">Ready to sequence.</p>
+                            <p class="text-slate-900 font-extrabold text-lg">Ready to design.</p>
                             <p class="text-slate-500 text-sm mt-2">Optimization will unlock:</p>
                         </div>
                         <div class="grid grid-cols-2 gap-3 w-full max-w-sm">
@@ -478,7 +483,7 @@
                                 <p class="text-[9px] text-slate-500 font-medium">Local History & Session Sync</p>
                             </div>
                             <div class="p-3 bg-white border border-slate-100 rounded-xl shadow-sm text-left">
-                                <p class="text-[10px] font-bold text-amber-500 uppercase">🧬 Validation</p>
+                                <p class="text-[10px] font-bold text-amber-500 uppercase">🧬 Sequence Checks</p>
                                 <p class="text-[9px] text-slate-500 font-medium">Live DNA Sequence Scrutiny</p>
                             </div>
                         </div>
@@ -493,8 +498,7 @@
                             <div>
                                 <p
                                     class="text-emerald-900 dark:text-emerald-300 font-extrabold text-sm uppercase tracking-tight">
-                                    Optimization
-                                    Complete!</p>
+                                    CDS DESIGN COMPLETE</p>
                                 <p class="text-emerald-700 dark:text-emerald-400 text-xs mt-0.5 font-medium">N.
                                     benthamiana specific logic applied.</p>
                             </div>
@@ -663,9 +667,10 @@
                                 <span>Copy to Clipboard</span>
                             </button>
                             <button id="submitValidationBtn"
+                                title="Open Google Form to report your experimental result"
                                 class="w-full py-3 px-4 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold rounded-xl flex items-center justify-center space-x-2 transition-all active:scale-95">
                                 <span>🧪</span>
-                                <span>Submit Wet-lab Result</span>
+                                <span>Share Wet-Lab Result</span>
                                 <span class="tooltip-container">
                                     <span class="info-icon">i</span>
                                     <span class="tooltip-text">Tested this sequence in the lab? Share your result — version &amp; profile are auto-filled.</span>
@@ -710,13 +715,22 @@
     <div id="toastContainer" class="fixed bottom-6 right-6 flex flex-col space-y-3 z-[100]"></div>
 
     <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="mt-6 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl text-xs text-amber-800 dark:text-amber-300">
+        <div id="privacy" class="mt-6 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl text-xs text-amber-800 dark:text-amber-300">
             <div class="flex flex-col space-y-1">
                 <span>⚠ This tool produces computational predictions only. Wet-lab validation is always required before experimental use.</span>
                 <span>⚠ In-silico metrics do not guarantee protein expression, yield, solubility, or purification performance.</span>
                 <span>⚠ Users are responsible for verifying intellectual property rights and regulatory compliance for their sequences.</span>
-                <span>ℹ Anonymous usage statistics (optimization options selected, result quality metrics) are collected to improve this tool. Sequence content is never recorded.</span>
+                <span>ℹ Anonymous usage statistics (optimization options selected, result quality metrics) are collected to improve this tool. Sequence content is not intentionally stored.</span>
             </div>
+        </div>
+        <div class="flex flex-wrap justify-center gap-4 text-xs text-slate-400 mt-3">
+            <a href="https://github.com/PlantFormOrg/factorforge" target="_blank" rel="noopener"
+                class="hover:text-slate-200 transition-colors">GitHub</a>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform"
+                target="_blank" rel="noopener" class="hover:text-slate-200 transition-colors">Validation Feedback</a>
+            <a href="https://github.com/PlantFormOrg/factorforge/releases" target="_blank" rel="noopener"
+                class="hover:text-slate-200 transition-colors">Release Notes</a>
+            <a href="#privacy" class="hover:text-slate-200 transition-colors">Privacy</a>
         </div>
     </div>
 
