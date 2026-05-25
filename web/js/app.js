@@ -495,20 +495,23 @@ function renderResults() {
 
     // Improved GC Status (Logic separation: N/A vs Out of Range)
     const valGC = document.getElementById('valGC');
+    const gcMin = (primary.gc_window_min != null) ? Number(primary.gc_window_min) : 40.0;
+    const gcMax = (primary.gc_window_max != null) ? Number(primary.gc_window_max) : 55.0;
+
     if (!optSeq || optSeq.length === 0 || calculatedGC === 0) {
         valGC.textContent = '⚠️';
         valGC.className = 'text-amber-500';
         valGC.nextElementSibling.textContent = 'GC Content: N/A';
         valGC.nextElementSibling.title = 'GC calculation failed or sequence not available';
-    } else if (v.gc !== 'PASS' || (calculatedGC < 40.0 || calculatedGC > 55.0)) {
+    } else if (v.gc !== 'PASS' || (calculatedGC < gcMin || calculatedGC > gcMax)) {
         valGC.textContent = '⚠️';
         valGC.className = 'text-amber-500';
         valGC.nextElementSibling.textContent = `⚠️ Outside target range (${calculatedGC.toFixed(1)}%)`;
-        valGC.nextElementSibling.title = `Target: 40-55% | Calculated: ${calculatedGC.toFixed(1)}%`;
+        valGC.nextElementSibling.title = `Target: ${gcMin.toFixed(0)}–${gcMax.toFixed(0)}% | Calculated: ${calculatedGC.toFixed(1)}%`;
     } else {
         valGC.textContent = '✅';
         valGC.className = 'text-emerald-400';
-        valGC.nextElementSibling.textContent = 'GC Content Check (40–55%)';
+        valGC.nextElementSibling.textContent = `GC Content Check (${gcMin.toFixed(0)}–${gcMax.toFixed(0)}%)`;
     }
 
     // JSON Details
