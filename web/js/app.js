@@ -565,6 +565,8 @@ function getPrimaryResult(res) {
         };
     }
 
+    const gcWinMin = candidate.gc_window_min != null ? Number(candidate.gc_window_min) : 40.0;
+    const gcWinMax = candidate.gc_window_max != null ? Number(candidate.gc_window_max) : 55.0;
     return {
         optimized_sequence: candidate.dna_sequence,
         metrics: {
@@ -576,8 +578,10 @@ function getPrimaryResult(res) {
         validation: {
             polya: 'PASS',
             moclo: 'UNCHECKED',
-            gc: candidate.gc_percent >= 40 && candidate.gc_percent <= 55 ? 'PASS' : 'WARNING'
+            gc: candidate.gc_percent >= gcWinMin && candidate.gc_percent <= gcWinMax ? 'PASS' : 'WARNING'
         },
+        gc_window_min: gcWinMin,
+        gc_window_max: gcWinMax,
         aaPreserved: candidate.validator_status === 'pass' ? '✅ 100%' : '⚠️ Review'
     };
 }
