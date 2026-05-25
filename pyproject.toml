@@ -46,6 +46,7 @@ Issues = "https://github.com/eijex/factorforge-cds/issues"
 
 [project.scripts]
 factorforge = "factorforge.cli.main:main"
+factorforge-validate = "factorforge.validation.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
