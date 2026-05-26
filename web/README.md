@@ -81,4 +81,4 @@ const API_ENDPOINT = 'https://your-vercel-app.vercel.app/api/optimize';
 
 ## 📄 License
 
-Apache License 2.0 - see [LICENSE](../LICENSE)
+GNU Affero General Public License v3.0 - see [LICENSE](../LICENSE)

@@ -44,4 +44,4 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 ## v3.0.0 — 2026-05-23
 
-First official release. DP Feasibility Engine, CLI, Validator, open-source under Apache 2.0.
+First official release. DP Feasibility Engine, CLI, Validator, open-source under AGPL-3.0.

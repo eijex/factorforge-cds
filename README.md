@@ -2,7 +2,7 @@
 
 **Open-source constraint-based CDS design engine for *Nicotiana benthamiana* expression workflows.**
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Version](https://img.shields.io/badge/version-3.1.3-green.svg)](https://github.com/eijex/factorforge-cds/releases)
 [![PyPI](https://img.shields.io/pypi/v/factorforge-cds.svg)](https://pypi.org/project/factorforge-cds/)
@@ -54,7 +54,7 @@ Eijex. https://github.com/eijex/factorforge-cds
 
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE).
+GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).
 
 **Disclaimer:** FactorForge is provided for research purposes only. Predictions are computational and have not been experimentally validated.
 
