@@ -35,12 +35,6 @@ For general development and testing:
 pip install -e ".[dev]"
 ```
 
-For ML Research Track work (ESM2/BART, requires PyTorch):
-
-```bash
-pip install -e ".[ml]"
-```
-
 ### 3. Run Tests
 
 ```bash
@@ -51,8 +45,8 @@ All tests must pass before submitting a pull request. Tests are organized under 
 
 ```
 tests/
-├── engines/v2/    # Rule-based engine, scoring, domestication
-├── ml/            # DP feasibility engine
+├── engines/profile/    # Profile engine registration and contracts
+├── test_analysis/       # Sequence metrics and DP feasibility tests
 ├── api/           # API contract tests
 └── validation/    # Design Package schema
 ```

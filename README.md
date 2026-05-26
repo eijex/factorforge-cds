@@ -35,6 +35,19 @@ Or use the **[web app](https://factorforge-cds.vercel.app)** — no installation
 
 ---
 
+## Repository Structure
+
+The supported production engine is the deterministic profile engine under:
+
+```text
+src/factorforge/engines/profile/
+```
+
+Historical implementation tracks are preserved under `archive/` for provenance
+and are not imported by the installed package or exposed as supported engines.
+
+---
+
 ## ⚠️ Validation Status
 
 FactorForge predictions are **in-silico only** and have not been experimentally validated in wet-lab conditions. See [Validation](https://eijex.github.io/factorforge-cds/validation/) and [VALIDATION.md](VALIDATION.md).

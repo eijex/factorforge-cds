@@ -11,9 +11,9 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from factorforge.engines.v2.utils import parse_fasta_records
-from factorforge.engines.v3.metrics import load_codon_usage_table
-from factorforge.ml.feasibility import analyze_feasibility
+from factorforge.analysis.feasibility import analyze_feasibility  # noqa: E402
+from factorforge.analysis.metrics import load_codon_usage_table  # noqa: E402
+from factorforge.engines.profile.utils import parse_fasta_records  # noqa: E402
 
 
 def _load_protein(args: argparse.Namespace) -> str:
@@ -72,4 +72,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

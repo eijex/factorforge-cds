@@ -1,10 +1,10 @@
-"""Structured candidate DNA validation for v3-alpha."""
+"""Structured candidate DNA validation for FactorForge v3.1.x."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from factorforge.ml.metrics import (
+from factorforge.analysis.metrics import (
     amino_acid_identity,
     calculate_first_region_gc,
     calculate_gc,
@@ -101,4 +101,3 @@ def validate_candidate_sequence(
         "warnings": warnings,
         "errors": errors,
     }
-

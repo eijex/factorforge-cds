@@ -36,7 +36,6 @@ Protein sequence (FASTA or plain text)
 |--------|------|-------------|
 | `dp` | `--engine dp` | DP feasibility engine (default) — constraint-based, deterministic |
 | `profile` | `--engine profile` | Rule/profile optimizer — profile-driven CAI and constraint handling |
-| `v2` | `--engine v2` | Compatibility alias for `profile` |
 
 ## Design Objectives
 

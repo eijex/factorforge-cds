@@ -11,7 +11,7 @@ FactorForge is the **public implementation repo**.
 - Source code: `src/factorforge/`
 - Scripts: `scripts/`
 - Tests: `tests/`
-- Docs: `docs/` (design, reports, model cards)
+- Docs: `docs/` (public user documentation)
 - Configs: `configs/`
 
 ## 2. Package Name
@@ -20,8 +20,8 @@ The PyPI distribution name is **`factorforge-cds`** — install with `pip instal
 The Python import name is **`factorforge`**.
 
 ```python
-from factorforge.ml.metrics import calculate_cai
-from factorforge.engines.v3.synonym_mask import build_synonym_mask
+from factorforge.engines.profile import RuleBasedOptimizer
+from factorforge.engines.profile.pipeline import OptimizationPipeline
 ```
 
 ## 3. Branch & Commit Conventions
@@ -47,13 +47,13 @@ chore: bump version to 3.1.1
 Before editing, read in this order:
 
 1. Current repo code
-2. `docs/reports/v3_audit_report.md` — v2/v3 audit findings
-3. `docs/design/v3_alpha_product_boundary.md` — claims policy
+2. public user documentation under `docs/`
+3. `VALIDATION.md` and `docs/validation.md` — claims policy
 
 ## 5. Scope Guardrails
 
 Do not change without an explicit job:
-- v2 optimizer production behavior (`src/factorforge/engines/v2/`)
+- production optimizer behavior (`src/factorforge/engines/profile/`)
 - CodonTokenizer vocab or special token definitions
 - Codon table values
 
@@ -69,10 +69,11 @@ Do not add any of the following to code comments, docstrings, or docs:
 - "guarantees expression"
 - "validated expression optimizer"
 - "wet-lab proven"
-- "production replacement for v2"
+- "validated expression optimizer"
 
-v3-alpha is an **in-silico CDS design assistant and evidence layer**.
-v2 remains the production fallback until v3 shows consistent advantage on defined benchmarks.
+FactorForge is an **in-silico CDS design assistant**. Public claims must stay limited to
+deterministic CDS design, sequence metrics, validation checks, and reproducible output
+paths unless wet-lab evidence is explicitly documented.
 
 ## 7. Code Style & Testing
 
@@ -118,7 +119,7 @@ After any change, update the relevant public-facing files before pushing:
 |-------------|----------------|
 | New feature / API change | `README.md`, `CHANGELOG.md` |
 | Bug fix | `CHANGELOG.md` |
-| Version bump | `pyproject.toml`, `CHANGELOG.md`, `docs/changelog.md`, `README.md`, `docs/index.md`, `src/factorforge/__init__.py`, `src/factorforge/engines/__init__.py`, `src/factorforge/engines/v2/__init__.py`, `src/factorforge/engines/v3/__init__.py`, `src/factorforge/engines/v2/optimizer.py`, `src/factorforge/engines/v3/pipeline.py`, `api/optimize.py`, `web/index.html`, `web/js/app.js`, `tests/api/test_optimize_contract.py`, `tests/engines/v2/test_cli_optimize.py` |
+| Version bump | `pyproject.toml`, `CHANGELOG.md`, `docs/changelog.md`, `README.md`, `docs/index.md`, `src/factorforge/__init__.py`, `src/factorforge/engines/__init__.py`, `src/factorforge/engines/profile/__init__.py`, `src/factorforge/engines/profile/optimizer.py`, `api/optimize.py`, `web/index.html`, `web/js/app.js`, `tests/api/test_optimize_contract.py`, `tests/engines/profile/` |
 | New distribution method | `README.md` (Installation), `CHANGELOG.md` |
 | Web UI change | `web/index.html`, `web/README.md` |
 | New engine / model | `docs/model_cards/`, `CHANGELOG.md` |

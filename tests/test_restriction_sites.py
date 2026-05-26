@@ -5,9 +5,9 @@ from __future__ import annotations
 import pytest
 
 from api.optimize import handler
-from factorforge.engines.v2.rules.domesticator import Domesticator
-from factorforge.engines.v2.utils import get_data_path, load_codon_table
-from factorforge.ml.metrics import translate_dna
+from factorforge.engines.profile.rules.domesticator import Domesticator
+from factorforge.engines.profile.utils import get_data_path, load_codon_table
+from factorforge.analysis.metrics import translate_dna
 from factorforge.utils.restriction_sites import (
     detect_restriction_sites,
     domesticate_custom_sites,

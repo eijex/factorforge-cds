@@ -1,9 +1,0 @@
-{
-  "comparison_csv": "/kaggle/working/factorforge/experiments/results/run4b_full/run4_comparison.csv",
-  "decoded_count": 3876,
-  "max_gc_global": 53.807740324594256,
-  "min_amino_acid_identity": 1.0,
-  "min_gc_global": 41.99475065616798,
-  "min_v3_to_v2_cai_ratio": 0.968220246450391,
-  "validator_pass_rate": 1.0
-}

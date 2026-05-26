@@ -48,8 +48,8 @@ def _build_dp_result(sequence: str, objective: str, gc_min: float, gc_max: float
     if gc_min > gc_max:
         raise ValueError("--gc-min must be <= --gc-max.")
 
-    from factorforge.engines.v3.metrics import load_codon_usage_table
-    from factorforge.ml.feasibility import analyze_feasibility
+    from factorforge.analysis.metrics import load_codon_usage_table
+    from factorforge.analysis.feasibility import analyze_feasibility
 
     table = load_codon_usage_table()
     result = analyze_feasibility(
@@ -103,8 +103,8 @@ def list_engines():
     "--engine",
     "-e",
     default="dp",
-    type=click.Choice(["dp", "profile", "v2"], case_sensitive=False),
-    help="Engine (dp, profile, v2 alias)",
+    type=click.Choice(["dp", "profile"], case_sensitive=False),
+    help="Engine (dp, profile)",
 )
 @click.option("--profile", "-p", default="balanced", help="Optimization profile")
 @click.option(
@@ -243,7 +243,7 @@ def optimize(
             click.echo(f"  - recommendation_reason: {recommendation_reason}")
             return
 
-        if engine in {"profile", "v2"} and construct_template:
+        if engine == "profile" and construct_template:
             from factorforge.engines.profile.pipeline import OptimizationPipeline
 
             pipeline = OptimizationPipeline(profile=profile, construct_template=construct_template)

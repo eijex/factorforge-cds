@@ -2,8 +2,6 @@
 FactorForge - Codon Optimization Platform
 
 profile: constraint-aware rule/profile engine
-v2: compatibility alias for profile
-v3: experimental engine namespace
 """
 
 __version__ = "3.1.3"

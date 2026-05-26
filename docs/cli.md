@@ -14,7 +14,7 @@ factorforge optimize input.fasta -o output.fasta
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--engine`, `-e` | `dp` | Engine: `dp` (feasibility), `profile` (rule/profile), or `v2` compatibility alias |
+| `--engine`, `-e` | `dp` | Engine: `dp` (feasibility) or `profile` (rule/profile) |
 | `--profile`, `-p` | `balanced` | Optimization profile |
 | `--objective` | `feasibility_best` | DP objective |
 | `--gc-min` | `40` | Minimum GC% target |

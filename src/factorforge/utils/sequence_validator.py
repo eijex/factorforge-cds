@@ -2,7 +2,7 @@
 
 from typing import Literal, Tuple
 
-from factorforge.ml.metrics import detect_invalid_codons, translate_dna
+from factorforge.analysis.metrics import detect_invalid_codons, translate_dna
 
 from .exceptions import SequenceValidationError
 

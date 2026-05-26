@@ -26,9 +26,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 try:
     from factorforge.engines import EngineRegistry
     from factorforge.engines.profile.utils import get_data_path, load_codon_table
-    from factorforge.engines.v3.metrics import load_codon_usage_table
-    from factorforge.ml.feasibility import analyze_feasibility
-    from factorforge.ml.metrics import (
+    from factorforge.analysis.metrics import load_codon_usage_table
+    from factorforge.analysis.feasibility import analyze_feasibility
+    from factorforge.analysis.metrics import (
         calculate_cai,
         calculate_first_region_gc,
         calculate_gc,

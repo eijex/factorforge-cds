@@ -1,4 +1,4 @@
-"""Safe synthetic benchmark proteins for v3-alpha baseline checks."""
+"""Safe synthetic benchmark proteins for sequence-design checks."""
 
 BENCHMARK_PROTEINS: dict[str, str] = {
     "short_synthetic": "MSTNPKPQR",
@@ -13,4 +13,3 @@ BENCHMARK_PROTEINS: dict[str, str] = {
     "low_complexity": "MSSSSGGGGSSSSGGGGPPPPQQQQNNNNKKKK",
     "cysteine_rich": "MCCGCCGCCNPNCCTGCKCCTGCCGCC",
 }
-

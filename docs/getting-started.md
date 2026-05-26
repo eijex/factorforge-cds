@@ -10,12 +10,6 @@
 pip install factorforge-cds
 ```
 
-Experimental ML research modules (ESM2 + BART decoder):
-
-```bash
-pip install "factorforge-cds[ml]"
-```
-
 For development:
 
 ```bash

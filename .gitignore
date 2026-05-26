@@ -50,6 +50,7 @@ CODE_OF_CONDUCT.md
 notebooks/
 
 # Smoke test artifacts and leftover directories
+experiments/results/
 experiments/results/run4_smoke/
 experiments/results/run4b_full/
 
@@ -63,8 +64,29 @@ configs/v3_training_config*.yml
 
 # Internal dev scripts
 scripts/dev/
+scripts/1_data_preparation/
+scripts/2_preprocessing/
+scripts/3_training/
+scripts/4_evaluation/
+scripts/audit/
+scripts/benchmark_candidates.py
+scripts/diagnose_*_metrics.py
+scripts/run_*_baseline_benchmark.py
+scripts/evaluate_model.py
+scripts/4_optimization/compare_optimizers.py
+scripts/4_optimization/optimize_sequence.py
 
 # Internal development docs
+docs/design/
+docs/model_cards/
+docs/reports/
 docs/design/run4_experiment_plan.md
 docs/reports/run4_recovery_plan.md
 docs/superpowers/
+tests/engines/v3/
+
+# Archive is curated public provenance; keep it trackable even when it contains
+# paths that match internal-data ignore rules such as notebooks/ or results/.
+!archive/
+!archive/**
+archive/v3-ml-prototype/notebooks/*.ipynb

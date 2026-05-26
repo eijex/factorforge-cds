@@ -1,8 +1,7 @@
 """
 Engine Registry
 
-Registry that dynamically registers and manages engines
-No changes needed to existing code when adding new engines (v3, v4, etc.)
+Registry that dynamically registers and manages optimization engines.
 """
 
 from __future__ import annotations
@@ -34,7 +33,7 @@ class EngineRegistry:
         Register an engine
 
         Args:
-            name: Engine identifier (e.g., "v1", "v2", "v3")
+            name: Engine identifier such as "dp" or "profile"
             engine_class: Class implementing OptimizerEngine
             metadata: Optional engine metadata.
         """
@@ -56,7 +55,7 @@ class EngineRegistry:
         Register a lazy engine loader.
 
         Args:
-            name: Engine identifier (e.g., "v1", "v3")
+            name: Engine identifier
             loader: Callable that returns the engine class on demand
             metadata: Optional engine metadata.
         """

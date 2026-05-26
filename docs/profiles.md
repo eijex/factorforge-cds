@@ -1,6 +1,6 @@
 # Optimization Profiles
 
-Profiles apply to the profile engine (`--engine profile`). The `v2` engine key remains available as a compatibility alias.
+Profiles apply to the profile engine (`--engine profile`).
 
 | Profile | Description |
 |---------|-------------|

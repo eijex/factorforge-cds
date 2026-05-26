@@ -5,7 +5,7 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 ## Unreleased
 
 ### Changed
-- **Profile engine namespace** — stable rule/profile engine is now available as `factorforge.engines.profile` and CLI `--engine profile`; `v2` remains as a compatibility alias
+- **Public engine naming** — stable rule/profile optimization is documented as `factorforge.engines.profile` and CLI `--engine profile`
 
 ## v3.1.3 — 2026-05-26
 
@@ -19,9 +19,6 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 ### Fixed
 - **viral_delivery scoring** — corrected citation reference; `w_mfe` 0.40→0.30 per PMC11718241 (Peccoud et al. 2024)
 - **5' Ramp deoptimization** — N-terminal deoptimization bottom 50%→25% (mild, per PMC11718241)
-
-### Changed
-- **Changelog label** — "ML Research Track" renamed to "Research Track"
 
 ## v3.1.1 — 2026-05-24
 

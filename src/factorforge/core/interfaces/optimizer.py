@@ -1,7 +1,7 @@
 """
 Optimizer Engine Interface
 
-Interface that all optimization engines (v1, v2, v3...) must implement
+Interface that all optimization engines must implement.
 """
 
 from __future__ import annotations

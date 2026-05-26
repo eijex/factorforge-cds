@@ -16,8 +16,8 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 **Release checklist:**
 1. Move `[Unreleased]` entries to `[X.Y.Z] — YYYY-MM-DD` in this file; update comparison links at bottom
 2. Bump `version` in `pyproject.toml`
-3. Update version strings: `src/factorforge/__init__.py`, `src/factorforge/engines/profile/__init__.py`, `src/factorforge/engines/v2/__init__.py` (compat alias), `src/factorforge/engines/v3/__init__.py`, `src/factorforge/engines/__init__.py`, `src/factorforge/engines/profile/optimizer.py`, `src/factorforge/engines/v3/pipeline.py`, `api/optimize.py` (comment + ENGINE_VERSIONS), `web/index.html` (button + changelog entry), `web/js/app.js`
-4. Update tests: `tests/api/test_optimize_contract.py`, `tests/engines/profile/test_profile_engine_alias.py`, `tests/engines/v2/test_cli_optimize.py`
+3. Update version strings: `src/factorforge/__init__.py`, `src/factorforge/engines/profile/__init__.py`, `src/factorforge/engines/__init__.py`, `src/factorforge/engines/profile/optimizer.py`, `api/optimize.py` (comment + ENGINE_VERSIONS), `web/index.html` (button + changelog entry), `web/js/app.js`
+4. Update tests: `tests/api/test_optimize_contract.py`, `tests/engines/profile/`
 5. Update `README.md` version badge and citation
 6. Update `docs/index.md` version badge
 7. Update `docs/changelog.md` — add new version entry (mirrors CHANGELOG.md, summarized)
@@ -31,7 +31,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- **Profile engine namespace** — promoted the stable rule/profile engine to `factorforge.engines.profile` and CLI `--engine profile`; retained `factorforge.engines.v2` and `--engine v2` as compatibility aliases.
+- **Public engine naming** — promoted the stable rule/profile engine to `factorforge.engines.profile` and CLI `--engine profile`.
 
 ---
 
@@ -51,10 +51,6 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - **viral_delivery scoring** — corrected citation reference; adjusted weights: `w_gc` 0.25→0.35, `w_mfe` 0.40→0.30 per PMC11718241 (Peccoud et al. 2024).
 - **5' Ramp deoptimization** — N-terminal codon deoptimization strength reduced from bottom 50% to bottom 25% of frequency-sorted codons; aligns with PMC11718241 tAI_ramp 0.8–1.2 optimal range.
-
-### Changed
-
-- **Changelog label** — "ML Research Track" renamed to "Research Track".
 
 ---
 
@@ -104,29 +100,19 @@ First official release of FactorForge.
 
 ### Added
 
-- **Profile Rule-based Optimizer** — CAI-maximizing baseline with profiles: `balanced`, `high_cai`, `gc_target`, `viral_delivery` (`src/factorforge/engines/profile/`; `src/factorforge/engines/v2/` remains a compatibility alias)
-- **DP Feasibility Engine** — constraint-based dynamic programming; computes achievable CAI/GC ranges under synonymous codon constraints (`src/factorforge/ml/feasibility.py`)
-- **Metrics Engine** — CAI, GC (global/local/first-region), amino acid identity, internal stop count, homopolymer/repeat/forbidden motif/invalid codon detection (`src/factorforge/ml/metrics.py`)
+- **Profile Rule-based Optimizer** — CAI-maximizing baseline with profiles: `balanced`, `high_cai`, `gc_target`, `viral_delivery` (`src/factorforge/engines/profile/`)
+- **DP Feasibility Engine** — constraint-based dynamic programming; computes achievable CAI/GC ranges under synonymous codon constraints
+- **Metrics Engine** — CAI, GC (global/local/first-region), amino acid identity, internal stop count, homopolymer/repeat/forbidden motif/invalid codon detection
 - **Sequence Validator** — structured hard-fail contract (AA identity, stops, invalid codons, GC, length) returning machine-readable dict (`src/factorforge/utils/validation.py`)
-- **Synonym Mask** — per-position boolean mask restricting decoding to valid synonymous codons (`src/factorforge/engines/v3/synonym_mask.py`)
-- **Constrained Decoder** — synonym-constrained autoregressive decoding + post-validation + profile engine fallback on failure (`src/factorforge/engines/v3/inference/constrained_decoder.py`)
-- **Profile Engine Adapter** — formal baseline wrapper, returns structured dict with metrics and validator result (`src/factorforge/engines/v3/inference/v2_adapter.py`)
 - **SGN data pipeline** — fetch, CAI-filter, and split *N. benthamiana* CDS from Sol Genomics Network v2.6.1
 - **Benchmark Panel** — 5 synthetic proteins in `tests/fixtures/benchmark_proteins.py`
-- **Diagnostic & benchmark scripts** — `diagnose_v2_v3_metrics.py`, `benchmark_candidates.py`, `check_constraint_feasibility.py`, `run_v2_baseline_benchmark.py`
+- **Diagnostic & benchmark scripts** — reproducible sequence metric checks and feasibility benchmarks
 - **CLI** — `factorforge optimize` / `factorforge list-engines` with FASTA and GenBank output
-- **Docs** — `docs/reports/v3_audit_report.md`, `docs/design/v3_alpha_product_boundary.md`, `docs/model_cards/factorforge_v3_alpha_model_card.md`
-
-### Architecture
-
-- Encoder: ESM2 esm2_t6_8M_UR50D (frozen, 320-dim per-token)
-- Decoder: BART (6 layers, d_model=256, vocab_size=69)
-- Parameters: 4,206,336
-- Host: *Nicotiana benthamiana* (primary)
+- **Docs** — public installation, CLI, profile, output, validation, and changelog pages
 
 ### Tests
 
-- 333 passing (metrics, validation, feasibility, synonym mask, constrained decoder, loss gradient flow)
+- 333 passing at release time
 
 ---
 
