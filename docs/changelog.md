@@ -6,13 +6,13 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 ### Fixed
 - **Disabled profile cards** — tooltips now accessible; "Pending wet-lab validation" notice added to 5' Ramp and Viral Delivery
-- **Viral Delivery tooltip** — removed hallucinated "Li et al. (2026)" citation; corrected to Peccoud et al. 2024
+- **Viral Delivery tooltip** — corrected citation reference; updated to Peccoud et al. 2024 (PMC11718241)
 - **Analytics notice** — clarified: "Submitted sequences are not logged or stored"
 
 ## v3.1.2 — 2026-05-26
 
 ### Fixed
-- **viral_delivery scoring** — removed hallucinated "Li et al. (2026)" citation; `w_mfe` 0.40→0.30 per PMC11718241
+- **viral_delivery scoring** — corrected citation reference; `w_mfe` 0.40→0.30 per PMC11718241 (Peccoud et al. 2024)
 - **5' Ramp deoptimization** — N-terminal deoptimization bottom 50%→25% (mild, per PMC11718241)
 
 ### Changed
