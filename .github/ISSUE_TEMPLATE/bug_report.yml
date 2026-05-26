@@ -32,7 +32,7 @@ body:
       label: Minimal reproducible example
       render: python
       placeholder: |
-        from factorforge.engines.v2.pipeline import OptimizationPipeline
+        from factorforge.engines.profile.pipeline import OptimizationPipeline
         pipeline = OptimizationPipeline(profile="balanced")
         result = pipeline.run("MSKGEEL...")
     validations:

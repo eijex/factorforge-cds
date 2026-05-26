@@ -16,7 +16,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 **Release checklist:**
 1. Move `[Unreleased]` entries to `[X.Y.Z] — YYYY-MM-DD` in this file; update comparison links at bottom
 2. Bump `version` in `pyproject.toml`
-3. Update version strings: `src/factorforge/__init__.py`, `src/factorforge/engines/profile/__init__.py`, `src/factorforge/engines/v2/__init__.py`, `src/factorforge/engines/v3/__init__.py`, `src/factorforge/engines/__init__.py`, `src/factorforge/engines/profile/optimizer.py`, `src/factorforge/engines/v3/pipeline.py`, `api/optimize.py` (comment + ENGINE_VERSIONS), `web/index.html` (button + changelog entry), `web/js/app.js`
+3. Update version strings: `src/factorforge/__init__.py`, `src/factorforge/engines/profile/__init__.py`, `src/factorforge/engines/v2/__init__.py` (compat alias), `src/factorforge/engines/v3/__init__.py`, `src/factorforge/engines/__init__.py`, `src/factorforge/engines/profile/optimizer.py`, `src/factorforge/engines/v3/pipeline.py`, `api/optimize.py` (comment + ENGINE_VERSIONS), `web/index.html` (button + changelog entry), `web/js/app.js`
 4. Update tests: `tests/api/test_optimize_contract.py`, `tests/engines/profile/test_profile_engine_alias.py`, `tests/engines/v2/test_cli_optimize.py`
 5. Update `README.md` version badge and citation
 6. Update `docs/index.md` version badge
