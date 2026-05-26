@@ -31,6 +31,19 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [3.1.2] — 2026-05-26
+
+### Fixed
+
+- **viral_delivery scoring** — removed non-existent "Li et al. (2026)" citation (AI hallucination); adjusted weights: `w_gc` 0.25→0.35, `w_mfe` 0.40→0.30 per PMC11718241 (Peccoud 2024).
+- **5' Ramp deoptimization** — N-terminal codon deoptimization strength reduced from bottom 50% to bottom 25% of frequency-sorted codons; aligns with PMC11718241 tAI_ramp 0.8–1.2 optimal range.
+
+### Changed
+
+- **Changelog label** — "ML Research Track" renamed to "Research Track".
+
+---
+
 ## [3.1.1] — 2026-05-24
 
 ### Added
@@ -103,7 +116,8 @@ First official release of FactorForge.
 
 ---
 
-[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.1...HEAD
+[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.2...HEAD
+[3.1.2]: https://github.com/eijex/factorforge-cds/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/eijex/factorforge-cds/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/eijex/factorforge-cds/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/eijex/factorforge-cds/releases/tag/v3.0.0

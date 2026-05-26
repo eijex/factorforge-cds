@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.1.1
+Product Version: 3.1.2
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Legacy comparison engine: v2 rule-based profiles
 """
@@ -66,9 +66,9 @@ DEFAULT_GC_MIN = 40.0
 DEFAULT_GC_MAX = 55.0
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": "3.1.1",
-    "rule_engine": "3.1.1",
-    "dp_engine": "3.1.1",
+    "product": "3.1.2",
+    "rule_engine": "3.1.2",
+    "dp_engine": "3.1.2",
 }
 # Valid characters: ACGT (DNA) or standard 20 Amino Acids (Protein) + * (Stop)
 VALID_AA = "ACDEFGHIKLMNPQRSTVWY"

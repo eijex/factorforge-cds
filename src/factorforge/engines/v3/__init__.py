@@ -4,7 +4,7 @@ FactorForge v3 - BART decoder scaffolding.
 
 from __future__ import annotations
 
-__version__ = "3.1.1"
+__version__ = "3.1.2"
 
 from .pipeline import V3Optimizer, V3Pipeline
 from .tokenizer import AATokenizer, CodonTokenizer

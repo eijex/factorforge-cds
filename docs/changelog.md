@@ -2,6 +2,15 @@
 
 Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cds/blob/main/CHANGELOG.md)
 
+## v3.1.2 — 2026-05-26
+
+### Fixed
+- **viral_delivery scoring** — removed hallucinated "Li et al. (2026)" citation; `w_mfe` 0.40→0.30 per PMC11718241
+- **5' Ramp deoptimization** — N-terminal deoptimization bottom 50%→25% (mild, per PMC11718241)
+
+### Changed
+- **Changelog label** — "ML Research Track" renamed to "Research Track"
+
 ## v3.1.1 — 2026-05-24
 
 ### Added

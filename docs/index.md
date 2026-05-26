@@ -3,7 +3,7 @@
 **Open-source constraint-based CDS design engine for *Nicotiana benthamiana* expression workflows.**
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/eijex/factorforge-cds/blob/main/LICENSE)
-[![Version](https://img.shields.io/badge/version-3.1.1-green.svg)](https://github.com/eijex/factorforge-cds/releases)
+[![Version](https://img.shields.io/badge/version-3.1.2-green.svg)](https://github.com/eijex/factorforge-cds/releases)
 [![PyPI](https://img.shields.io/pypi/v/factorforge-cds.svg)](https://pypi.org/project/factorforge-cds/)
 
 FactorForge optimizes protein sequences into *N. benthamiana*-compatible CDS by maximizing CAI, controlling GC content, eliminating PolyA signals, and producing MoClo/Golden Gate-ready constructs.

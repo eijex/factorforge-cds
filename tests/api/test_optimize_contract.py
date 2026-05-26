@@ -43,7 +43,7 @@ def test_feasibility_best_response_includes_candidate_contract() -> None:
         "sequence_length": 35,
         "host_profile": "nbenthamiana",
     }
-    assert result["engine_versions"]["product"] == "3.1.1"
+    assert result["engine_versions"]["product"] == "3.1.2"
     assert result["recommended_candidate"]["validator_status"] == "pass"
 
 
