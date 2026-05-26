@@ -109,8 +109,8 @@ First official release of FactorForge.
 - **Metrics Engine** — CAI, GC (global/local/first-region), amino acid identity, internal stop count, homopolymer/repeat/forbidden motif/invalid codon detection (`src/factorforge/ml/metrics.py`)
 - **Sequence Validator** — structured hard-fail contract (AA identity, stops, invalid codons, GC, length) returning machine-readable dict (`src/factorforge/utils/validation.py`)
 - **Synonym Mask** — per-position boolean mask restricting decoding to valid synonymous codons (`src/factorforge/engines/v3/synonym_mask.py`)
-- **Constrained Decoder** — synonym-constrained autoregressive decoding + post-validation + v2 fallback on failure (`src/factorforge/engines/v3/inference/constrained_decoder.py`)
-- **v2 Adapter** — formal baseline wrapper, returns structured dict with metrics and validator result (`src/factorforge/engines/v3/inference/v2_adapter.py`)
+- **Constrained Decoder** — synonym-constrained autoregressive decoding + post-validation + profile engine fallback on failure (`src/factorforge/engines/v3/inference/constrained_decoder.py`)
+- **Profile Engine Adapter** — formal baseline wrapper, returns structured dict with metrics and validator result (`src/factorforge/engines/v3/inference/v2_adapter.py`)
 - **SGN data pipeline** — fetch, CAI-filter, and split *N. benthamiana* CDS from Sol Genomics Network v2.6.1
 - **Benchmark Panel** — 5 synthetic proteins in `tests/fixtures/benchmark_proteins.py`
 - **Diagnostic & benchmark scripts** — `diagnose_v2_v3_metrics.py`, `benchmark_candidates.py`, `check_constraint_feasibility.py`, `run_v2_baseline_benchmark.py`
