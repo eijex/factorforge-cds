@@ -2,8 +2,8 @@
 FactorForge CLI
 
 Usage:
-  factorforge optimize input.fasta -e v2 -p balanced -o output.fasta
-  factorforge optimize input.fasta -e v2 -p balanced --template standard_expression -o output.gb --format genbank
+  factorforge optimize input.fasta -e profile -p balanced -o output.fasta
+  factorforge optimize input.fasta -e profile -p balanced --template standard_expression -o output.gb --format genbank
   factorforge list-engines
 """
 
@@ -14,7 +14,7 @@ import click
 
 from factorforge import __version__
 from factorforge.engines.registry import EngineRegistry
-from factorforge.engines.v2.utils import parse_fasta_records
+from factorforge.engines.profile.utils import parse_fasta_records
 
 
 def _configure_stdio() -> None:
@@ -103,8 +103,8 @@ def list_engines():
     "--engine",
     "-e",
     default="dp",
-    type=click.Choice(["dp", "v2"], case_sensitive=False),
-    help="Engine (dp, v2)",
+    type=click.Choice(["dp", "profile", "v2"], case_sensitive=False),
+    help="Engine (dp, profile, v2 alias)",
 )
 @click.option("--profile", "-p", default="balanced", help="Optimization profile")
 @click.option(
@@ -158,7 +158,7 @@ def optimize(
 
         if fasta_records is not None and len(fasta_records) > 1:
             if engine == "dp":
-                raise ValueError("Multi-FASTA input requires --engine v2.")
+                raise ValueError("Multi-FASTA input requires --engine profile.")
             if construct_template:
                 raise ValueError("Multi-FASTA input does not support --template mode.")
             if output_format.lower() != "fasta":
@@ -243,8 +243,8 @@ def optimize(
             click.echo(f"  - recommendation_reason: {recommendation_reason}")
             return
 
-        if engine == "v2" and construct_template:
-            from factorforge.engines.v2.pipeline import OptimizationPipeline
+        if engine in {"profile", "v2"} and construct_template:
+            from factorforge.engines.profile.pipeline import OptimizationPipeline
 
             pipeline = OptimizationPipeline(profile=profile, construct_template=construct_template)
             result = pipeline.run(
@@ -268,7 +268,7 @@ def optimize(
                 click.echo(f"  - {key}: {value}")
         else:
             if output_format.lower() != "fasta":
-                raise ValueError("Non-FASTA output requires --template with v2 pipeline.")
+                raise ValueError("Non-FASTA output requires --template with profile pipeline.")
 
             # Get engine
             optimizer = EngineRegistry.get(engine)

@@ -33,7 +33,7 @@ Or use the **[web app](https://factorforge-cds.vercel.app)** — no installation
 
 ## Performance
 
-Benchmarked on *N. benthamiana* codon usage table (v2 engine, 3,876 sequences):
+Benchmarked on *N. benthamiana* codon usage table (profile engine, 3,876 sequences):
 
 | Metric | Value | Target |
 |--------|-------|--------|

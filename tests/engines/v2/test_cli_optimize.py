@@ -1,4 +1,4 @@
-"""CLI tests for v2 optimize command."""
+"""CLI tests for profile optimize command and v2 compatibility alias."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ def test_cli_optimize_multifasta_batch(tmp_path: Path) -> None:
             "optimize",
             str(input_file),
             "--engine",
-            "v2",
+            "profile",
             "--profile",
             "balanced",
             "--scan-mode",
@@ -54,7 +54,7 @@ def test_cli_multifasta_template_rejected(tmp_path: Path) -> None:
             "optimize",
             str(input_file),
             "--engine",
-            "v2",
+            "profile",
             "--profile",
             "balanced",
             "--template",
@@ -97,5 +97,27 @@ def test_cli_optimize_v2_profile_still_works(tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 0, result.output
-    assert "Optimizing with Rule-based v3.1.3" in result.output
+    assert "Optimizing with Profile-based v3.1.3" in result.output
+    assert "Metrics:" in result.output
+
+
+def test_cli_optimize_profile_engine(tmp_path: Path) -> None:
+    runner = CliRunner()
+    input_file = tmp_path / "input.fasta"
+    input_file.write_text(">test\nMSKGEELFTGVVPILVELD\n", encoding="utf-8")
+
+    result = runner.invoke(
+        cli,
+        [
+            "optimize",
+            str(input_file),
+            "--engine",
+            "profile",
+            "--profile",
+            "gc_target",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "Optimizing with Profile-based v3.1.3" in result.output
     assert "Metrics:" in result.output

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from factorforge.engines.v2.rules.reverse_translator import OptimizationProfile, ReverseTranslator
-from factorforge.engines.v2.rules.rule_engine import RuleEngine
-from factorforge.engines.v2.scoring import calculate_composite_score
+from factorforge.engines.profile.rules.reverse_translator import OptimizationProfile, ReverseTranslator
+from factorforge.engines.profile.rules.rule_engine import RuleEngine
+from factorforge.engines.profile.scoring import calculate_composite_score
 from factorforge.engines.v3.metrics import load_codon_usage_table
 from factorforge.ml.metrics import calculate_cai, calculate_gc
 from factorforge.utils.validation import validate_candidate_sequence
@@ -69,4 +69,3 @@ def optimize_with_v2(
             "scan_results": scan_results,
         },
     }
-

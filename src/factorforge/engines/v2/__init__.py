@@ -1,13 +1,12 @@
-"""
-FactorForge v2 - Rule-based Engine
+"""Compatibility alias for the FactorForge profile engine.
 
-Production system (2026)
-Plant-specific rule-based optimization
+New code should import from `factorforge.engines.profile`. This package remains
+available so existing `factorforge.engines.v2` imports continue to work.
 """
+
+from factorforge.engines.profile import OptimizationPipeline, RuleBasedOptimizer
+from factorforge.engines.profile.construct_builder import ConstructBuilder
 
 __version__ = "3.1.3"
 
-from .optimizer import RuleBasedOptimizer
-from .pipeline import OptimizationPipeline
-
-__all__ = ["OptimizationPipeline", "RuleBasedOptimizer"]
+__all__ = ["ConstructBuilder", "OptimizationPipeline", "RuleBasedOptimizer"]

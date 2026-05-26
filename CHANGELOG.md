@@ -16,8 +16,8 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 **Release checklist:**
 1. Move `[Unreleased]` entries to `[X.Y.Z] — YYYY-MM-DD` in this file; update comparison links at bottom
 2. Bump `version` in `pyproject.toml`
-3. Update version strings: `src/factorforge/__init__.py`, `src/factorforge/engines/v2/__init__.py`, `src/factorforge/engines/v3/__init__.py`, `src/factorforge/engines/__init__.py`, `src/factorforge/engines/v2/optimizer.py`, `src/factorforge/engines/v3/pipeline.py`, `api/optimize.py` (comment + ENGINE_VERSIONS), `web/index.html` (button + changelog entry), `web/js/app.js`
-4. Update tests: `tests/api/test_optimize_contract.py`, `tests/engines/v2/test_cli_optimize.py`
+3. Update version strings: `src/factorforge/__init__.py`, `src/factorforge/engines/profile/__init__.py`, `src/factorforge/engines/v2/__init__.py`, `src/factorforge/engines/v3/__init__.py`, `src/factorforge/engines/__init__.py`, `src/factorforge/engines/profile/optimizer.py`, `src/factorforge/engines/v3/pipeline.py`, `api/optimize.py` (comment + ENGINE_VERSIONS), `web/index.html` (button + changelog entry), `web/js/app.js`
+4. Update tests: `tests/api/test_optimize_contract.py`, `tests/engines/profile/test_profile_engine_alias.py`, `tests/engines/v2/test_cli_optimize.py`
 5. Update `README.md` version badge and citation
 6. Update `docs/index.md` version badge
 7. Update `docs/changelog.md` — add new version entry (mirrors CHANGELOG.md, summarized)
@@ -28,6 +28,10 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ---
 
 ## [Unreleased]
+
+### Changed
+
+- **Profile engine namespace** — promoted the stable rule/profile engine to `factorforge.engines.profile` and CLI `--engine profile`; retained `factorforge.engines.v2` and `--engine v2` as compatibility aliases.
 
 ---
 
@@ -80,7 +84,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - **Custom restriction site removal** — synonymous substitution of user-specified restriction sites via API and web UI.
 - **Rare codon run detection** (`scan_rare_codon_runs`) — detects consecutive rare codons (w < 0.3, default `min_run=3`) for ribosome stalling risk; included in full scan mode, excluded from fast mode.
-- **Dinucleotide reduction pass** (`fix_dinucleotides`) — greedy CpG/TpA synonymous substitution integrated into the v2 optimization pipeline.
+- **Dinucleotide reduction pass** (`fix_dinucleotides`) — greedy CpG/TpA synonymous substitution integrated into the profile optimization pipeline.
 - **CAI-budgeted dinucleotide modes** — `aggressive` (no CAI check), `balanced` (CAI floor), `cai_preserving` (max CAI drop budget); `cai_before` / `cai_after` added to return dict.
 
 ### Fixed
@@ -100,7 +104,7 @@ First official release of FactorForge.
 
 ### Added
 
-- **v2 Rule-based Optimizer** — CAI-maximizing baseline with profiles: `balanced`, `high_cai`, `gc_target`, `viral_delivery` (`src/factorforge/engines/v2/`)
+- **Profile Rule-based Optimizer** — CAI-maximizing baseline with profiles: `balanced`, `high_cai`, `gc_target`, `viral_delivery` (`src/factorforge/engines/profile/`; `src/factorforge/engines/v2/` remains a compatibility alias)
 - **DP Feasibility Engine** — constraint-based dynamic programming; computes achievable CAI/GC ranges under synonymous codon constraints (`src/factorforge/ml/feasibility.py`)
 - **Metrics Engine** — CAI, GC (global/local/first-region), amino acid identity, internal stop count, homopolymer/repeat/forbidden motif/invalid codon detection (`src/factorforge/ml/metrics.py`)
 - **Sequence Validator** — structured hard-fail contract (AA identity, stops, invalid codons, GC, length) returning machine-readable dict (`src/factorforge/utils/validation.py`)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
-from factorforge.engines.v2.utils import build_aa_to_codons_map
+from factorforge.engines.profile.utils import build_aa_to_codons_map
 
 DNA_BASES = set("ACGT")
 STOP_CODONS = {"TAA", "TAG", "TGA"}

@@ -14,7 +14,7 @@ factorforge optimize input.fasta -o output.fasta
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--engine`, `-e` | `dp` | Engine: `dp` (feasibility) or `v2` (rule-based) |
+| `--engine`, `-e` | `dp` | Engine: `dp` (feasibility), `profile` (rule/profile), or `v2` compatibility alias |
 | `--profile`, `-p` | `balanced` | Optimization profile |
 | `--objective` | `feasibility_best` | DP objective |
 | `--gc-min` | `40` | Minimum GC% target |
@@ -37,11 +37,11 @@ factorforge list-engines
 # Default (DP feasibility engine)
 factorforge optimize input.fasta -o output.fasta
 
-# Rule-based engine with profile
-factorforge optimize input.fasta -e v2 -p balanced -o output.fasta
+# Profile engine
+factorforge optimize input.fasta -e profile -p balanced -o output.fasta
 
 # GenBank output with MoClo template
-factorforge optimize input.fasta -e v2 -p balanced \
+factorforge optimize input.fasta -e profile -p balanced \
   --template standard_expression -o output.gb --format genbank
 
 # Custom GC target range

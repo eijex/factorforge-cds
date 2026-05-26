@@ -2,7 +2,7 @@
 FactorForge REST API — /api/optimize endpoint
 Product Version: 3.1.3
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
-Legacy comparison engine: v2 rule-based profiles
+Profile comparison engine: constraint-aware rule-based profiles
 """
 
 from http.server import BaseHTTPRequestHandler
@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 # Try to import FactorForge
 try:
     from factorforge.engines import EngineRegistry
-    from factorforge.engines.v2.utils import get_data_path, load_codon_table
+    from factorforge.engines.profile.utils import get_data_path, load_codon_table
     from factorforge.engines.v3.metrics import load_codon_usage_table
     from factorforge.ml.feasibility import analyze_feasibility
     from factorforge.ml.metrics import (
@@ -45,7 +45,7 @@ try:
     )
 
     FACTORFORGE_AVAILABLE = True
-    logger.info("FactorForge v2 engine loaded successfully")
+    logger.info("FactorForge v3.x profile engine loaded successfully")
 except ImportError as e:
     FACTORFORGE_AVAILABLE = False
     logger.warning(f"FactorForge not available: {e}")
@@ -91,7 +91,9 @@ class handler(BaseHTTPRequestHandler):
             body = self.rfile.read(content_length).decode("utf-8")
             data = json.loads(body)
 
-            logger.info(f"Received optimization request: sequence_length={len(data.get('sequence', ''))}")
+            logger.info(
+                f"Received optimization request: sequence_length={len(data.get('sequence', ''))}"
+            )
 
             # Extract parameters
             sequence = data.get("sequence", "")
@@ -186,7 +188,7 @@ class handler(BaseHTTPRequestHandler):
 
         if FACTORFORGE_AVAILABLE:
             try:
-                optimizer = EngineRegistry.get("v2")
+                optimizer = EngineRegistry.get("profile")
                 health_info["engine"] = {"name": optimizer.name, "version": optimizer.version}
             except Exception:
                 pass
@@ -295,7 +297,7 @@ class handler(BaseHTTPRequestHandler):
         constraints=None,
         custom_restriction_sites=None,
     ):
-        """Run actual FactorForge v2 optimization"""
+        """Run actual FactorForge v3.x profile optimization."""
         try:
             constraints = constraints or {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX}
             if objective == DEFAULT_OBJECTIVE:
@@ -310,9 +312,11 @@ class handler(BaseHTTPRequestHandler):
                     custom_restriction_sites=custom_restriction_sites,
                 )
 
-            # Get v2 optimizer
-            optimizer = EngineRegistry.get("v2")
-            logger.info(f"Using FactorForge v2 engine: {optimizer.name} {optimizer.version}")
+            # Get profile-based optimizer
+            optimizer = EngineRegistry.get("profile")
+            logger.info(
+                f"Using FactorForge v3.x profile engine: {optimizer.name} {optimizer.version}"
+            )
 
             # Run optimization
             result = optimizer.optimize(
@@ -323,7 +327,7 @@ class handler(BaseHTTPRequestHandler):
             if use_template:
                 logger.info("Building construct with standard_expression template")
                 try:
-                    from factorforge.engines.v2 import ConstructBuilder
+                    from factorforge.engines.profile import ConstructBuilder
 
                     builder = ConstructBuilder(template="standard_expression")
                     construct = builder.build(result.sequence)
@@ -372,7 +376,7 @@ class handler(BaseHTTPRequestHandler):
                     label=self.candidate_label(profile),
                     dna_sequence=result.sequence,
                     codon_weights=table.codon_weights,
-                    recommendation_reason=f"Backward-compatible v2 {profile} profile result",
+                    recommendation_reason=f"Profile engine {profile} result",
                 )
                 response["candidates"] = [response["recommended_candidate"]]
                 response["engine_versions"] = ENGINE_VERSIONS
@@ -407,10 +411,10 @@ class handler(BaseHTTPRequestHandler):
         return_candidates=True,
         custom_restriction_sites=None,
     ):
-        """Run v1 feasibility_best contract and add v2 comparison candidates."""
+        """Run feasibility_best contract and add profile comparison candidates."""
         table = load_codon_usage_table()
         aa_seq = self.clean_sequence(sequence).rstrip("*")
-        optimizer = EngineRegistry.get("v2")
+        optimizer = EngineRegistry.get("profile")
 
         feasibility = analyze_feasibility(
             protein_sequence=aa_seq,
@@ -449,7 +453,7 @@ class handler(BaseHTTPRequestHandler):
                     label=self.candidate_label(candidate_profile),
                     dna_sequence=result.sequence,
                     codon_weights=table.codon_weights,
-                    recommendation_reason=f"v2 {candidate_profile} comparison candidate",
+                    recommendation_reason=f"Profile engine {candidate_profile} comparison candidate",
                 )
             )
 
@@ -727,7 +731,6 @@ class handler(BaseHTTPRequestHandler):
             "high_cai": "High CAI",
             "balanced": "Balanced",
             "assembly_friendly": "Assembly Friendly",
-
         }
         return labels.get(candidate_id, candidate_id.replace("_", " ").title())
 
@@ -815,7 +818,6 @@ class handler(BaseHTTPRequestHandler):
             "high_cai": 0.920,
             "gc_target": 0.800,
             "assembly_friendly": 0.830,
-
         }
         mock_cai = mock_cai_values.get(profile, 0.850)
 

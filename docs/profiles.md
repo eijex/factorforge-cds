@@ -1,6 +1,6 @@
 # Optimization Profiles
 
-Profiles apply to the v2 rule-based engine (`--engine v2`).
+Profiles apply to the profile engine (`--engine profile`). The `v2` engine key remains available as a compatibility alias.
 
 | Profile | Description |
 |---------|-------------|
@@ -12,15 +12,15 @@ Profiles apply to the v2 rule-based engine (`--engine v2`).
 ## Usage
 
 ```bash
-factorforge optimize input.fasta -e v2 -p balanced -o output.fasta
-factorforge optimize input.fasta -e v2 -p high_cai -o output.fasta
-factorforge optimize input.fasta -e v2 -p viral_delivery -o output.fasta
+factorforge optimize input.fasta -e profile -p balanced -o output.fasta
+factorforge optimize input.fasta -e profile -p high_cai -o output.fasta
+factorforge optimize input.fasta -e profile -p viral_delivery -o output.fasta
 ```
 
 ## Python API
 
 ```python
-from factorforge.engines.v2.pipeline import OptimizationPipeline
+from factorforge.engines.profile.pipeline import OptimizationPipeline
 
 pipeline = OptimizationPipeline(profile="high_cai")
 result = pipeline.run("MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG...")
@@ -29,6 +29,6 @@ result = pipeline.run("MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG...")
 ## Profile Selection Guide
 
 - **General expression** → `balanced`
-- **Maximizing expression level** → `high_cai`
+- **Maximizing CAI** → `high_cai`
 - **GC-sensitive downstream processes** → `gc_target`
 - **Viral vector (TRV, TMV)** → `viral_delivery`

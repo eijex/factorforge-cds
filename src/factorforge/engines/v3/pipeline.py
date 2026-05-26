@@ -6,9 +6,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from factorforge.core.interfaces import OptimizationResult, OptimizerEngine
-from factorforge.engines.registry import EngineRegistry
-from factorforge.engines.v2.rules.domesticator import Domesticator
-from factorforge.engines.v2.rules.rule_engine import RuleEngine
+from factorforge.engines.profile.rules.domesticator import Domesticator
+from factorforge.engines.profile.rules.rule_engine import RuleEngine
 
 from .explain import ExplainabilityInputs, build_fda_report
 from .metrics import CodonUsageTable, compute_cai, compute_gc, load_codon_usage_table
@@ -123,7 +122,7 @@ class V3Pipeline:
         rule_engine = RuleEngine()
         domesticator = Domesticator()
 
-        # Step 1: PolyA iterative fix (v2 pipeline과 동일한 방식)
+        # Step 1: PolyA iterative fix (profile pipeline과 동일한 방식)
         polya_fix: dict[str, Any] | None = None
         current_seq = dna_sequence
         has_polya = any(p in dna_sequence for p in rule_engine.POLYA_PATTERNS)

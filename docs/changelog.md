@@ -2,6 +2,11 @@
 
 Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cds/blob/main/CHANGELOG.md)
 
+## Unreleased
+
+### Changed
+- **Profile engine namespace** — stable rule/profile engine is now available as `factorforge.engines.profile` and CLI `--engine profile`; `v2` remains as a compatibility alias
+
 ## v3.1.3 — 2026-05-26
 
 ### Fixed

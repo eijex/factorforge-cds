@@ -1,3 +1,1 @@
-"""Rule-based optimization rules"""
-
-# TODO: Add PolyA scanner, domesticator, etc.
+"""Compatibility wrappers for profile-engine rule modules."""

@@ -46,7 +46,7 @@ factorforge optimize my_protein.fasta -o output.fasta
 **Python API:**
 
 ```python
-from factorforge.engines.v2.pipeline import OptimizationPipeline
+from factorforge.engines.profile.pipeline import OptimizationPipeline
 
 pipeline = OptimizationPipeline(profile="balanced")
 result = pipeline.run("MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG...")

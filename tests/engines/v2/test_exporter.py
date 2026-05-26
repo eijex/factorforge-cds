@@ -112,7 +112,7 @@ class TestFASTAExport:
         fasta = exporter.export_fasta(sample_sequence, sample_metadata, line_width=60)
 
         lines = fasta.split("\n")[1:]  # Skip header
-        lines = [l for l in lines if l]  # Remove empty lines
+        lines = [line for line in lines if line]  # Remove empty lines
 
         # Check that lines (except possibly last) are 60 chars
         for line in lines[:-1]:
@@ -158,7 +158,7 @@ class TestGenBankExport:
 
             assert "LOCUS" in genbank
             assert "PFORM_" in genbank
-            assert "FactorForge v2.0" in genbank
+            assert "FactorForge v3.x" in genbank
             assert "CDS" in genbank
         except ImportError:
             pytest.skip("Biopython not installed")
@@ -300,7 +300,7 @@ class TestReportExport:
         """Test basic report export"""
         report = exporter.export_report(sample_sequence, sample_metadata)
 
-        assert "FactorForge v2.0" in report
+        assert "FactorForge v3.x" in report
         assert "Run ID:" in report
         assert "GFP" in report
         assert "CAI: 0.870" in report
@@ -340,7 +340,7 @@ class TestReportExport:
 
             with open(temp_file, "r", encoding="utf-8") as f:
                 content = f.read()
-                assert "FactorForge v2.0" in content
+                assert "FactorForge v3.x" in content
         finally:
             if os.path.exists(temp_file):
                 os.unlink(temp_file)
@@ -358,7 +358,7 @@ class TestEdgeCases:
         assert fasta.startswith(">")
 
         report = exporter.export_report(seq, metadata)
-        assert "FactorForge v2.0" in report
+        assert "FactorForge v3.x" in report
 
     def test_empty_sequence(self, exporter):
         """Test export with empty sequence"""
@@ -371,10 +371,10 @@ class TestEdgeCases:
     def test_special_characters_in_gene_name(self, exporter):
         """Test gene name with special characters"""
         seq = "ATGGCCTAA"
-        metadata = {"gene_name": "test-gene_v2.1"}
+        metadata = {"gene_name": "test-gene_v3.1"}
 
         fasta = exporter.export_fasta(seq, metadata)
-        assert "test-gene_v2.1" in fasta
+        assert "test-gene_v3.1" in fasta
 
 
 if __name__ == "__main__":

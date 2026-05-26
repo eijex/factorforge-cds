@@ -1,8 +1,9 @@
 """
 FactorForge - Codon Optimization Platform
 
-v2: Rule-based engine (Production)
-v3: ML engine (ESM2 + BART)
+profile: constraint-aware rule/profile engine
+v2: compatibility alias for profile
+v3: experimental engine namespace
 """
 
 __version__ = "3.1.3"
