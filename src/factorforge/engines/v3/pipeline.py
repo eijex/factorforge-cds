@@ -153,7 +153,7 @@ class V3Optimizer(OptimizerEngine):
     """Optimizer wrapper for v3 pipeline."""
 
     name = "v3 BART Decoder"
-    version = "3.1.2"
+    version = "3.1.3"
 
     def __init__(self, pipeline: V3Pipeline | None = None) -> None:
         self.pipeline = pipeline or V3Pipeline()

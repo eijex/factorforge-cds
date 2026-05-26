@@ -29,7 +29,7 @@ def register_builtin_engines() -> None:
         "v2",
         RuleBasedOptimizer,
         metadata={
-            "version": "3.1.2",
+            "version": "3.1.3",
             "engine_type": "rule_based",
             "role": "legacy_fallback",
             "stable": True,

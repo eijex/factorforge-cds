@@ -31,6 +31,16 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [3.1.3] — 2026-05-26
+
+### Fixed
+
+- **Disabled profile cards** — removed `pointer-events-none` so tooltips are accessible on hover; added "Pending wet-lab validation before enabling" notice to 5' Ramp and Viral Delivery cards.
+- **Viral Delivery tooltip** — removed hallucinated "Li et al. (2026)" citation from card tooltip; replaced with correct reference (Peccoud et al. 2024).
+- **Analytics notice** — "Sequence content is not intentionally stored" → "Submitted sequences are not logged or stored" for clarity.
+
+---
+
 ## [3.1.2] — 2026-05-26
 
 ### Fixed
@@ -116,7 +126,8 @@ First official release of FactorForge.
 
 ---
 
-[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.2...HEAD
+[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.3...HEAD
+[3.1.3]: https://github.com/eijex/factorforge-cds/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/eijex/factorforge-cds/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/eijex/factorforge-cds/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/eijex/factorforge-cds/compare/v3.0.0...v3.1.0

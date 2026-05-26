@@ -2,6 +2,13 @@
 
 Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cds/blob/main/CHANGELOG.md)
 
+## v3.1.3 — 2026-05-26
+
+### Fixed
+- **Disabled profile cards** — tooltips now accessible; "Pending wet-lab validation" notice added to 5' Ramp and Viral Delivery
+- **Viral Delivery tooltip** — removed hallucinated "Li et al. (2026)" citation; corrected to Peccoud et al. 2024
+- **Analytics notice** — clarified: "Submitted sequences are not logged or stored"
+
 ## v3.1.2 — 2026-05-26
 
 ### Fixed
