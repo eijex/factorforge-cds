@@ -562,9 +562,10 @@ class ReverseTranslator:
             if len(all_codons) <= 1:
                 continue
 
-            # Select from bottom 50% by frequency (deoptimized)
-            midpoint = max(1, len(all_codons) // 2)
-            low_freq_codons = all_codons[midpoint:]
+            # Select from bottom 25% by frequency (mild deoptimization).
+            # PMC11718241: optimal tAI_ramp ~0.8-1.2 (max 20% slower than full sequence).
+            cutoff = max(1, (3 * len(all_codons)) // 4)
+            low_freq_codons = all_codons[cutoff:]
 
             if not low_freq_codons:
                 continue

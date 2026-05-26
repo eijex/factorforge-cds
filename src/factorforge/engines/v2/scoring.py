@@ -63,8 +63,10 @@ PROFILE_SCORING_CONFIGS: dict[str, ScoringConfig] = {
     "gc_target": ScoringConfig(w_cai=0.1, w_gc=0.7, w_mfe=0.2, gc_opt=GC_OPT_MID),
     "assembly_friendly": ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.2, gc_opt=GC_OPT_MID),
     "ramp": ScoringConfig(w_cai=0.4, w_gc=0.3, w_mfe=0.3, gc_opt=GC_OPT_MID),
-    # TRV viral-delivery profile — Li et al. (2026): prioritize MFE and viral-context GC target.
-    "viral_delivery": ScoringConfig(w_cai=0.35, w_gc=0.25, w_mfe=0.40, gc_opt=47.5, use_mfe=True),
+    # TRV viral-delivery profile — GC target ~47.5% based on TRV genome composition.
+    # MFE weighted at 0.30 (Peccoud et al. 2024, PMC11718241: secondary structure shows
+    # weak univariate correlation with yield in tobacco viral expression).
+    "viral_delivery": ScoringConfig(w_cai=0.35, w_gc=0.35, w_mfe=0.30, gc_opt=47.5, use_mfe=True),
 }
 
 
