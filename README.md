@@ -52,6 +52,14 @@ Eijex. https://github.com/eijex/factorforge-cds
 
 ---
 
+## Contributors
+
+| | Name | Role |
+|--|------|------|
+| 👤 | Mun-Kyu Kim ([@eijex](https://github.com/eijex)) | Author & maintainer |
+| 🤖 | Claude (Anthropic) | Design, analysis, planning |
+| 🤖 | Codex (OpenAI) | Implementation |
+
 ## License
 
 GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).
