@@ -4,6 +4,7 @@ title: "FactorForge: constraint-based CDS design engine for Nicotiana benthamian
 version: 3.1.4
 date-released: "2026-05-27"
 license: AGPL-3.0
+doi: "10.5281/zenodo.20407331"
 repository-code: "https://github.com/eijex/factorforge-cds"
 url: "https://factorforge-cds.vercel.app"
 authors:
