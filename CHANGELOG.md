@@ -15,12 +15,12 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 **Release checklist:**
 1. Move `[Unreleased]` entries to `[X.Y.Z] — YYYY-MM-DD` in this file; update comparison links at bottom
-2. Run `python bump_version.py X.Y.Z` — updates all 14 version-bearing files automatically
+2. Run `python bump_version.py X.Y.Z` — updates all 17 version-bearing files automatically
 3. Add changelog entry to `web/index.html` (version panel HTML — manual, not automated)
 4. Add summary entry to `docs/changelog.md`
 5. `git commit -m "chore: release vX.Y.Z"`
 6. `git tag -a vX.Y.Z -m "Release vX.Y.Z"` → `git push && git push --tags`
-7. Create GitHub Release from the tag (triggers Zenodo DOI)
+7. GitHub Actions automatically creates the GitHub Release → Zenodo DOI issued automatically
 
 ---
 
