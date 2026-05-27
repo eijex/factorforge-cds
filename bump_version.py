@@ -154,11 +154,14 @@ def bump(old: str, new: str, dry_run: bool = False) -> int:
         print(f"Version bumped: {old} → {new}")
         print("\nNext steps (manual):")
         print("  1. Move [Unreleased] entries to a new [X.Y.Z] block in CHANGELOG.md")
-        print("  2. Add a changelog entry in web/index.html (version panel HTML)")
+        print(f"  2. Add v{new} entry to web/index.html changelog panel")
+        print("     → Copy the previous version block, update version/date/bullet points")
+        print("     → Set previous 'Current' block: remove emerald classes, remove Current badge")
+        print("     → Set new block: border-emerald-500, dot bg-emerald-500, add Current badge")
         print("  3. Add a summary entry in docs/changelog.md")
         print(f"  4. git commit -m 'chore: release v{new}'")
         print(f"  5. git tag -a v{new} -m 'Release v{new}' && git push && git push --tags")
-        print("  6. Create GitHub Release from the tag")
+        print("  6. GitHub Release is created automatically by GitHub Actions")
     return errors
 
 
