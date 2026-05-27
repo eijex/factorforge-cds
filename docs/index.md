@@ -33,12 +33,12 @@ Or use the **[web app](https://factorforge-cds.vercel.app)** — no installation
 
 ## Performance
 
-Benchmarked on *N. benthamiana* codon usage table (profile engine, 3,876 sequences):
+Benchmarked on *N. benthamiana* SGN CDS (v3.1.3, balanced profile, N=3,876 sequences):
 
 | Metric | Value | Target |
 |--------|-------|--------|
-| CAI (mean) | 0.80 | ≥ 0.75 |
-| GC% (mean) | 42.54% | 40–55% |
+| CAI (mean) | 0.76 | ≥ 0.75 |
+| GC% (mean) | 59.77% | 55–65% |
 | AA identity | 100% | 100% |
 | Validator pass rate | 100% | 100% |
 
