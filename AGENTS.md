@@ -124,3 +124,17 @@ After any change, update the relevant public-facing files before pushing:
 | Web UI change | `web/index.html`, `web/README.md` |
 | New engine / model | `docs/model_cards/`, `CHANGELOG.md` |
 | Wet-lab result added | `VALIDATION.md` |
+
+## 12. Public Repo Structure Checklist
+
+For every audit, release, or repo-structure change, check the repository as a
+user- and paper-facing artifact:
+
+- `README.md`, `docs/`, and `web/` should describe only supported public
+  runtime paths first.
+- `src/factorforge/` should contain installable, supported package code; historical
+  engines and experiments should stay under `archive/`.
+- `archive/` is public provenance, not an active import surface.
+- Claims must stay aligned with `VALIDATION.md` and `docs/validation.md`.
+- Run or report proportional checks for CLI, API, package build metadata, and
+  untracked-file hygiene before push.
