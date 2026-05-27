@@ -10,14 +10,14 @@ Current production code lives under:
 src/factorforge/engines/profile/
 ```
 
-Archive layout:
+## Archive Layout
 
-```text
-archive/
-  v1-nbent-opticodon/
-  v2-rule-engine/
-  v3-ml-prototype/
-```
+| Directory | Generation | Status | Description |
+|-----------|-----------|--------|-------------|
+| `v1-nbent-opticodon/` | v1 | Internal | Thesis-derived codon optimization baseline (NBent_OptiCodon); not vendored — pointer only |
+| `v2-rule-engine/` | v2 | Internal → Production | Deterministic rule-based engine that became `factorforge.engines.profile` |
+| `v3-ml-prototype/` | v3-alpha | Archived | ML-based design attempt; insufficient performance vs deterministic baseline; preserved for research provenance |
 
 The archive keeps implementation history visible without mixing old engine
-names into the public production package.
+names into the public production package. See the project README for the full
+[development history](https://github.com/eijex/factorforge-cds#development-history).
