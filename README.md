@@ -48,6 +48,22 @@ and are not imported by the installed package or exposed as supported engines.
 
 ---
 
+## Development History
+
+FactorForge has gone through several implementation generations before the current public release:
+
+| Generation | Status | Description |
+|-----------|--------|-------------|
+| **v1** — NBent_OptiCodon | Internal | Thesis-derived codon optimization baseline for *N. benthamiana* |
+| **v2** — Rule-Based Engine | Internal → Production | Deterministic, constraint-aware design engine; became the foundation for the public release |
+| **v3-alpha** — ML Prototype | Archived | ML-based design attempt; performance was insufficient for production use; preserved under `archive/v3-ml-prototype/` |
+| **v3.0+** — Current release | Public | Open-source release of the matured v2 engine under `factorforge.engines.profile` |
+| **v4** — ML Research Track | Planned | Future ML re-attempt with improved data and architecture |
+
+The `archive/` directory preserves all three earlier tracks for provenance. None are installed or exposed by the current package.
+
+---
+
 ## ⚠️ Validation Status
 
 FactorForge predictions are **in-silico only** and have not been experimentally validated in wet-lab conditions. See [Validation](https://eijex.github.io/factorforge-cds/validation/) and [VALIDATION.md](VALIDATION.md).

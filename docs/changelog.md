@@ -2,6 +2,8 @@
 
 Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cds/blob/main/CHANGELOG.md)
 
+FactorForge v3.0+ is the public release of an internal deterministic rule-based engine (v2) that succeeded an earlier thesis-derived prototype (v1) and a later ML prototype (v3-alpha, archived). See [README](https://github.com/eijex/factorforge-cds#development-history) for the full version lineage.
+
 ## Unreleased
 
 ### Changed

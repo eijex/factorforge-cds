@@ -27,6 +27,20 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## Development History
+
+FactorForge's public release history (v3.0+) builds on earlier internal implementation generations. Archived tracks are preserved under `archive/` for provenance and are not part of the installed package.
+
+| Generation | Status | Description |
+|-----------|--------|-------------|
+| v1 — NBent_OptiCodon | Internal | Thesis-derived codon optimization baseline for *N. benthamiana* |
+| v2 — Rule-Based Engine | Internal → Production | Deterministic constraint-aware engine; matured into `factorforge.engines.profile` |
+| v3-alpha — ML Prototype | Archived | ML-based design attempt; performance insufficient; see `archive/v3-ml-prototype/` |
+| v3.0+ — Current release | Public | Open-source release of the v2 engine; development continues here |
+| v4 — ML Research Track | Planned | Future ML re-attempt with improved data and architecture |
+
+---
+
 ## [Unreleased]
 
 ### Changed
