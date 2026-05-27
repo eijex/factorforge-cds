@@ -15,15 +15,12 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 **Release checklist:**
 1. Move `[Unreleased]` entries to `[X.Y.Z] — YYYY-MM-DD` in this file; update comparison links at bottom
-2. Bump `version` in `pyproject.toml`
-3. Update version strings: `src/factorforge/__init__.py`, `src/factorforge/engines/profile/__init__.py`, `src/factorforge/engines/__init__.py`, `src/factorforge/engines/profile/optimizer.py`, `api/optimize.py` (comment + ENGINE_VERSIONS), `web/index.html` (button + changelog entry), `web/js/app.js`
-4. Update tests: `tests/api/test_optimize_contract.py`, `tests/engines/profile/`
-5. Update `README.md` version badge and citation
-6. Update `docs/index.md` version badge
-7. Update `docs/changelog.md` — add new version entry (mirrors CHANGELOG.md, summarized)
-6. `git commit -m "chore: release vX.Y.Z"`
-7. `git tag -a vX.Y.Z -m "Release vX.Y.Z"` → `git push && git push --tags`
-8. Create GitHub Release from the tag
+2. Run `python bump_version.py X.Y.Z` — updates all 14 version-bearing files automatically
+3. Add changelog entry to `web/index.html` (version panel HTML — manual, not automated)
+4. Add summary entry to `docs/changelog.md`
+5. `git commit -m "chore: release vX.Y.Z"`
+6. `git tag -a vX.Y.Z -m "Release vX.Y.Z"` → `git push && git push --tags`
+7. Create GitHub Release from the tag (triggers Zenodo DOI)
 
 ---
 
@@ -43,10 +40,23 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 
 ## [Unreleased]
 
+### Added
+
+- **CITATION.cff** — GitHub "Cite this repository" button; updated at every version bump.
+- **SECURITY.md** — vulnerability reporting policy (GitHub Private Vulnerability Reporting + email).
+- **ROADMAP.md** — public development direction: v3.2 planned features, ML Research Track (v4), wet-lab scope.
+- **bump_version.py** — automates version string updates across 14 files (`python bump_version.py X.Y.Z`).
+- **Development history narrative** — README, CHANGELOG, archive READMEs, and docs/changelog.md now document the v1→v2→v3-alpha→v3.x→v4 version lineage.
+
 ### Changed
 
 - **Public engine naming** — promoted the stable rule/profile engine to `factorforge.engines.profile` and CLI `--engine profile`.
 - **Package metadata** — switched to SPDX license metadata and removed the stale archived v1 CLI runtime path from the installed package surface.
+- **Benchmark numbers corrected** — docs/index.md updated with v3.1.3 measurements (N=3,876 SGN CDS, balanced profile): CAI 0.76, GC% 59.77%, target range 55–65%. Previous values were measured with pre-v3.1.0 parameters.
+
+### Fixed
+
+- **Stale test version** — `tests/test_schemas/test_design_package.py` `product_version` bumped from 3.1.1 → 3.1.3.
 
 ---
 
