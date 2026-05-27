@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     applyStaticLabelPatches();
     initEventListeners();
     renderHistory();
-    console.log('FactorForge v3.1.3 Engaged');
+    console.log('FactorForge v3.1.4 Engaged');
 });
 
 function initEventListeners() {

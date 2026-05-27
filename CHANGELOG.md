@@ -40,6 +40,10 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 
 ## [Unreleased]
 
+---
+
+## [3.1.4] — 2026-05-27
+
 ### Added
 
 - **CITATION.cff** — GitHub "Cite this repository" button; updated at every version bump.
@@ -141,7 +145,8 @@ First official release of FactorForge.
 
 ---
 
-[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.3...HEAD
+[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.4...HEAD
+[3.1.4]: https://github.com/eijex/factorforge-cds/compare/v3.1.3...v3.1.4
 [3.1.3]: https://github.com/eijex/factorforge-cds/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/eijex/factorforge-cds/compare/v3.1.1...v3.1.2
 [3.1.1]: https://github.com/eijex/factorforge-cds/compare/v3.1.0...v3.1.1
