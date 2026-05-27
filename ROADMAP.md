@@ -2,7 +2,7 @@
 
 FactorForge development direction and planned work.
 
-> Current release: **v3.1.3** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current release: **v3.1.4** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 
 ---
 

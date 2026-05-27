@@ -1005,7 +1005,7 @@ function submitValidation() {
     const params = new URLSearchParams({ usp: 'pp_url' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.1.3';
+        const version = state.results.engine_versions?.product || '3.1.4';
         const profile = state.results?.profile || state.objective || '';
         params.set('entry.543712242', version);
         params.set('entry.1499442935', profile);

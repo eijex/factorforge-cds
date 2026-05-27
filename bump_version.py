@@ -59,6 +59,13 @@ def build_targets(old: str, new: str) -> list[tuple[str, list[tuple[str, str]]]]
         ]),
         ("web/js/app.js", [
             (f"FactorForge v{old} Engaged", f"FactorForge v{new} Engaged"),
+            (f"?.product || '{old}'", f"?.product || '{new}'"),
+        ]),
+        ("ROADMAP.md", [
+            (f"**v{old}**", f"**v{new}**"),
+        ]),
+        ("tests/api/test_optimize_contract.py", [
+            (f'"product"] == "{old}"', f'"product"] == "{new}"'),
         ]),
         ("README.md", [
             (f"version-{old}-green", f"version-{new}-green"),

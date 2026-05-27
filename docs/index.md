@@ -33,7 +33,7 @@ Or use the **[web app](https://factorforge-cds.vercel.app)** — no installation
 
 ## Performance
 
-Benchmarked on *N. benthamiana* SGN CDS (v3.1.3, balanced profile, N=3,876 sequences):
+Benchmarked on *N. benthamiana* SGN CDS (v3.1.4, balanced profile, N=3,876 sequences):
 
 | Metric | Value | Target |
 |--------|-------|--------|
