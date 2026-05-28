@@ -748,7 +748,7 @@
                     class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
             </div>
             <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
-                <!-- Version 3.1.4 -->
+                <!-- Version 3.1.5 -->
                 <div class="relative pl-8 border-l-2 border-emerald-500">
                     <div
                         class="absolute -left-[9px] top-0 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
@@ -756,6 +756,22 @@
                     <div class="flex items-center space-x-2 mb-2">
                         <span
                             class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.1.5</h3>
+                        <span class="text-slate-400 text-[10px]">2026-05-28</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Data File Packaging:</b> JSON data files now correctly included in PyPI wheel; resolved path error after <code>pip install</code>.</li>
+                        <li><b>Path Resolution:</b> Replaced hardcoded <code>parents[N]</code> with <code>get_data_path()</code> across all engine files; pip, Docker, and Vercel all work correctly.</li>
+                        <li><b>CI Matrix:</b> Python 3.13 + Windows added (8-combination matrix: 3.10–3.13 × ubuntu/windows).</li>
+                    </ul>
+                </div>
+
+                <!-- Version 3.1.4 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-800">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-200 dark:bg-slate-700 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
                         <h3 class="font-bold text-slate-800 dark:text-white">v3.1.4</h3>
                         <span class="text-slate-400 text-[10px]">2026-05-27</span>
                     </div>
