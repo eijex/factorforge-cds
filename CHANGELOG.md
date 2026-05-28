@@ -22,8 +22,10 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 6. `git tag -a vX.Y.Z -m "Release vX.Y.Z"` → `git push && git push --tags`
 7. GitHub Actions publishes to PyPI + Docker; creates GitHub Release → Zenodo DOI issued automatically
 8. Verify PyPI: `pip install factorforge-cds==X.Y.Z && factorforge --help` (smoke test)
-9. **Bioconda** — update `recipes/meta.yaml` (version + SHA256 via `curl -s https://pypi.org/pypi/factorforge-cds/X.Y.Z/json | python -c "import sys,json; d=json.load(sys.stdin); [print(f['digests']['sha256']) for f in d['urls'] if f['packagetype']=='sdist']"`), push to fork branch `add-factorforge-cds`. Once PR is merged by Bioconda maintainers, autobump handles subsequent releases automatically.
-10. **GitHub Issues** — close all issues that were completed in this release; if a full milestone is done, close the milestone too (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
+9. Verify Docker: `docker run ghcr.io/eijex/factorforge-cds:vX.Y.Z factorforge --help` (smoke test)
+10. Confirm Zenodo DOI was issued: check https://zenodo.org/doi/10.5281/zenodo.20407331 redirects to new version
+11. **Bioconda** — update `recipes/meta.yaml` (version + SHA256 via `curl -s https://pypi.org/pypi/factorforge-cds/X.Y.Z/json | python -c "import sys,json; d=json.load(sys.stdin); [print(f['digests']['sha256']) for f in d['urls'] if f['packagetype']=='sdist']"`), push to fork branch `add-factorforge-cds`. Once PR is merged by Bioconda maintainers, autobump handles subsequent releases automatically.
+12. **GitHub Issues** — close all issues completed in this release; if a full milestone is done, close the milestone too (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
 
 ---
 

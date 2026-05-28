@@ -75,11 +75,7 @@ def build_targets(old: str, new: str) -> list[tuple[str, list[tuple[str, str]]]]
             (f'"product"] == "{old}"', f'"product"] == "{new}"'),
         ]),
         ("README.md", [
-            (f"version-{old}-green", f"version-{new}-green"),
             (f"FactorForge v{old} (", f"FactorForge v{new} ("),
-        ]),
-        ("docs/index.md", [
-            (f"version-{old}-green", f"version-{new}-green"),
         ]),
         ("tests/engines/profile/test_cli_optimize.py", [
             (f"Profile-based v{old}", f"Profile-based v{new}"),
