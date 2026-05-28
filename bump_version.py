@@ -12,7 +12,14 @@ After running, manually:
   3. Add a new entry in docs/changelog.md (summarized)
   4. git commit -m "chore: release vX.Y.Z"
   5. git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push && git push --tags
-  6. Create GitHub Release from the tag
+  6. GitHub Actions automatically creates GitHub Release from the tag
+
+JOSS paper review (C:\Work\PlantFormOrg\refs\papers\factorforge-joss\paper.md):
+  - Minor release (patch): no update needed unless claims changed
+  - Feature release (minor, e.g. v3.2 → v3.3): review Software Design section
+  - Algorithm added (tAI, codon pair bias, 5' UTR MFE): update State of the Field differentiators
+  - New host added: update Statement of Need + State of the Field
+  - Zenodo DOI updated: update paper.bib @kim2026factorforge doi field
 """
 
 import argparse
