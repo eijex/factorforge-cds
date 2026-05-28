@@ -22,8 +22,8 @@ programming over a synonymous codon table — proved more reliable and interpret
 for the target use case.
 
 The prototype was archived rather than deleted to preserve the research record.
-The lessons from this track inform the planned v4 ML re-attempt, which will
-revisit ML-based design with improved data and architecture.
+The lessons from this track inform the planned ML engine (v3.7+), which will
+revisit ML-based design as `--engine ml` once sufficient wet-lab validation data is available.
 
 ## What Is Preserved
 
