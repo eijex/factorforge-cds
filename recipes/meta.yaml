@@ -7,8 +7,7 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  # sha256: <run: curl -s https://pypi.org/pypi/factorforge-cds/3.1.4/json | python -c "import sys,json; d=json.load(sys.stdin); [print(f['digests']['sha256']) for f in d['urls'] if f['packagetype']=='sdist']">
-  sha256: FILL_IN_FROM_PYPI
+  sha256: e484ff3fe6e3fc3374dac7e1e91241f7500dc8046d242c928c303db0547e5187
 
 build:
   number: 0
