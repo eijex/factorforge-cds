@@ -9,9 +9,9 @@ FactorForge v3.0+ is the public release of an internal deterministic rule-based 
 ### Added
 - **CITATION.cff** — GitHub "Cite this repository" button; version-bumped automatically
 - **SECURITY.md** — vulnerability reporting policy
-- **ROADMAP.md** — public development direction (v3.2, ML v4, wet-lab scope)
+- **ROADMAP.md** — public development direction (v3.2–v3.9, ML engine v3.7+, wet-lab scope)
 - **bump_version.py** — automates version string updates across 14 files
-- **Development history** — v1→v2→v3-alpha→v3.x→v4 lineage documented across README, CHANGELOG, archive READMEs
+- **Development history** — v1→v2→v3-alpha→v3.x→v3.7+(ML) lineage documented across README, CHANGELOG, archive READMEs
 
 ### Changed
 - **Public engine naming** — `factorforge.engines.profile` / CLI `--engine profile` formalized
