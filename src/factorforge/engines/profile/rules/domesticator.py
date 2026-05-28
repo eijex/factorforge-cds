@@ -8,7 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from factorforge.engines.profile.utils import build_aa_to_codons_map, load_codon_table
+from factorforge.engines.profile.utils import build_aa_to_codons_map, get_data_path, load_codon_table
 
 
 class Domesticator:
@@ -53,9 +53,7 @@ class Domesticator:
             codon_table: Codon table (loads default if None)
         """
         if codon_table is None:
-            # Load from default path
-            project_root = Path(__file__).resolve().parents[5]
-            codon_table = load_codon_table("nbenthamiana", project_root / "data")
+            codon_table = load_codon_table("nbenthamiana", get_data_path())
 
         self.codon_table: dict[str, Any] = codon_table
         self.aa_to_codons: dict[str, list[str]] = self._build_aa_to_codons_map()

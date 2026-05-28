@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from factorforge.engines.profile.construct_builder import ConstructBuilder
+from factorforge.engines.profile.utils import get_data_path
 from factorforge.engines.profile.rules.domesticator import Domesticator
 from factorforge.engines.profile.rules.reverse_translator import (
     OptimizationProfile,
@@ -109,7 +110,7 @@ class OptimizationPipeline:
 
         if construct_template:
             if template_dir is None:
-                template_dir = Path(__file__).resolve().parents[4] / "data" / "templates"
+                template_dir = get_data_path() / "templates"
             self.construct_builder: ConstructBuilder | None = ConstructBuilder(template_dir)
         else:
             self.construct_builder = None
@@ -242,7 +243,7 @@ class OptimizationPipeline:
         if template_name:
             if self.construct_builder is None:
                 template_dir = (
-                    self.template_dir or Path(__file__).resolve().parents[4] / "data" / "templates"
+                    self.template_dir or get_data_path() / "templates"
                 )
                 self.construct_builder = ConstructBuilder(template_dir)
             construct_record = self.construct_builder.generate_construct(

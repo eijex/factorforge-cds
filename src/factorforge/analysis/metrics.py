@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from factorforge.engines.profile.utils import get_data_path
+
 
 STANDARD_GENETIC_CODE: dict[str, str] = {
     "TTT": "F",
@@ -90,7 +92,7 @@ class CodonUsageTable:
 
 
 def _default_codon_table_path() -> Path:
-    return Path(__file__).resolve().parents[3] / "data" / "nbenthamiana_codons.json"
+    return get_data_path() / "nbenthamiana_codons.json"
 
 
 def load_codon_usage_table(path: Path | None = None) -> CodonUsageTable:

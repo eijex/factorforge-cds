@@ -46,6 +46,9 @@ factorforge-validate = "factorforge.validation.cli:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"factorforge" = ["data/*.json", "data/templates/*.json", "schemas/*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 norecursedirs = ["archive"]
