@@ -4,6 +4,13 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the public release of an internal deterministic rule-based engine (v2) that succeeded an earlier thesis-derived prototype (v1) and a later ML prototype (v3-alpha, archived). See [README](https://github.com/eijex/factorforge-cds#development-history) for the full version lineage.
 
+## v3.1.5 — 2026-05-28
+
+### Fixed
+- **Data file packaging** — PyPI wheel에 JSON 데이터 파일 미포함 버그 수정 (`pip install` 후 경로 오류)
+- **Path resolution** — `parents[N]` 하드코딩 → `get_data_path()` 통일 (pip/Docker/Vercel 모두 정상 작동)
+- **CI matrix** — Python 3.13 + Windows 테스트 추가
+
 ## v3.1.4 — 2026-05-27
 
 ### Added

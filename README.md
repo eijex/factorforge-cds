@@ -4,7 +4,7 @@
 
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-3.1.4-green.svg)](https://github.com/eijex/factorforge-cds/releases)
+[![Version](https://img.shields.io/badge/version-3.1.5-green.svg)](https://github.com/eijex/factorforge-cds/releases)
 [![PyPI](https://img.shields.io/pypi/v/factorforge-cds.svg)](https://pypi.org/project/factorforge-cds/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20407331.svg)](https://doi.org/10.5281/zenodo.20407331)
 [![Web App](https://img.shields.io/badge/web-factorforge--cds.vercel.app-brightgreen.svg)](https://factorforge-cds.vercel.app)
@@ -74,7 +74,7 @@ FactorForge predictions are **in-silico only** and have not been experimentally 
 ## Citing
 
 ```
-FactorForge v3.1.4 (2026). Open-source constraint-based CDS design engine.
+FactorForge v3.1.5 (2026). Open-source constraint-based CDS design engine.
 Eijex. https://github.com/eijex/factorforge-cds
 ```
 
