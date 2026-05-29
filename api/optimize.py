@@ -59,6 +59,13 @@ VALID_PROFILES = [
     "gc_target",
     "assembly_friendly",
 ]
+DEFAULT_COMPARE_PROFILES = [
+    "balanced",
+    "high_cai",
+    "gc_target",
+    "assembly_friendly",
+]
+MAX_COMPARE_PROFILES = 6
 VALID_OBJECTIVES = ["feasibility_best"]
 DEFAULT_OBJECTIVE = "feasibility_best"
 DEFAULT_HOST_PROFILE = "nbenthamiana"
@@ -94,6 +101,12 @@ class handler(BaseHTTPRequestHandler):
             logger.info(
                 f"Received optimization request: sequence_length={len(data.get('sequence', ''))}"
             )
+
+            request_path = self.path.split("?", 1)[0]
+            if request_path == "/api/optimize/compare":
+                status_code, result = self.handle_compare_request(data)
+                self.send_json_response(status_code, result)
+                return
 
             # Extract parameters
             sequence = data.get("sequence", "")
@@ -178,6 +191,7 @@ class handler(BaseHTTPRequestHandler):
             "factorforge_available": FACTORFORGE_AVAILABLE,
             "endpoints": {
                 "POST /api/optimize": "Run codon optimization",
+                "POST /api/optimize/compare": "Compare profile optimization results",
                 "GET /api/optimize": "Health check",
             },
             "supported_profiles": VALID_PROFILES,
@@ -270,6 +284,88 @@ class handler(BaseHTTPRequestHandler):
             return "constraints.gc_min must be <= constraints.gc_max"
 
         return None
+
+    def validate_compare_profiles(self, profiles):
+        """Validate and normalize profile comparison list."""
+        if profiles is None:
+            return list(DEFAULT_COMPARE_PROFILES)
+        if not isinstance(profiles, list):
+            raise ValueError("profiles must be a list")
+        if not profiles:
+            raise ValueError("profiles must include at least one profile")
+        if len(profiles) > MAX_COMPARE_PROFILES:
+            raise ValueError(f"profiles must include at most {MAX_COMPARE_PROFILES} profiles")
+
+        normalized = []
+        for profile in profiles:
+            profile_name = str(profile).strip()
+            if profile_name not in VALID_PROFILES:
+                raise ValueError(f"Invalid profile: {profile_name}")
+            normalized.append(profile_name)
+        return normalized
+
+    def validate_compare_sequence(self, sequence):
+        """Validate and clean a profile comparison input sequence."""
+        if not sequence or not str(sequence).strip():
+            raise ValueError("Sequence is required")
+
+        cleaned = self.clean_sequence(str(sequence))
+        if len(cleaned) < MIN_SEQUENCE_LENGTH:
+            raise ValueError(f"Sequence must be at least {MIN_SEQUENCE_LENGTH} bp")
+        if len(cleaned) > MAX_SEQUENCE_LENGTH:
+            raise ValueError(f"Sequence must be less than {MAX_SEQUENCE_LENGTH} bp")
+        if not VALID_CHARS_PATTERN.match(cleaned):
+            invalid_chars = set(cleaned) - set(VALID_AA + "*")
+            raise ValueError(
+                f"Sequence contains invalid characters: {', '.join(sorted(invalid_chars))}"
+            )
+        return cleaned
+
+    def handle_compare_request(self, data):
+        """Handle POST /api/optimize/compare requests."""
+        try:
+            sequence = self.validate_compare_sequence(data.get("sequence", ""))
+            profiles = self.validate_compare_profiles(data.get("profiles"))
+            scan_mode = str(data.get("scan_mode", "fast")).lower()
+            if scan_mode not in {"fast", "full"}:
+                raise ValueError("scan_mode must be one of: fast, full")
+
+            if not FACTORFORGE_AVAILABLE:
+                logger.error("FactorForge engine unavailable for profile comparison")
+                return 503, {"success": False, "error": "Engine unavailable. Contact support."}
+
+            result = self.optimize_profile_comparison(sequence, profiles, scan_mode)
+            return 200, result
+
+        except ValueError as e:
+            logger.warning(f"Compare validation error: {e}")
+            return 400, {"success": False, "error": str(e)}
+
+    def optimize_profile_comparison(self, sequence, profiles, scan_mode="fast"):
+        """Run profile optimization sequentially and return compact comparison rows."""
+        optimizer = EngineRegistry.get("profile")
+        results = []
+
+        for profile in profiles:
+            result = optimizer.optimize(
+                sequence=sequence,
+                profile=profile,
+                scan_mode=scan_mode,
+            )
+            results.append(
+                {
+                    "profile": profile,
+                    "cai": round(float(result.metrics.get("cai", 0.0)), 3),
+                    "gc_percent": round(
+                        float(result.metrics.get("gc_percent", result.metrics.get("gc_content", 0.0))),
+                        2,
+                    ),
+                    "score": round(float(result.metrics.get("score", 0.0)), 3),
+                    "sequence": result.sequence,
+                }
+            )
+
+        return {"results": results}
 
     def clean_sequence(self, sequence):
         """Clean sequence: remove whitespace, FASTA headers, convert to uppercase"""

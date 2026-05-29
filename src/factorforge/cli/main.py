@@ -79,6 +79,44 @@ def _format_dp_fasta(sequence_id: str, dna_sequence: str, cai: float, gc: float)
     return f"{header}\n{_wrap_sequence(dna_sequence)}\n"
 
 
+def _engine_option_was_explicitly_set() -> bool:
+    """Return whether --engine/-e was provided on the command line."""
+    ctx = click.get_current_context(silent=True)
+    if ctx is None:
+        return False
+    get_parameter_source = getattr(ctx, "get_parameter_source", None)
+    if not callable(get_parameter_source):
+        return False
+    return get_parameter_source("engine") == click.core.ParameterSource.COMMANDLINE
+
+
+def _format_profile_fasta(sequence_id: str, profile: str, result) -> str:
+    """Format a profile optimization result as FASTA."""
+    cai = float(result.metrics.get("cai", 0.0))
+    gc = float(result.metrics.get("gc_percent", result.metrics.get("gc_content", 0.0)))
+    score = float(result.metrics.get("score", 0.0))
+    header = f">{sequence_id}|profile={profile}|cai={cai:.3f}|gc={gc:.2f}|score={score:.3f}"
+    return f"{header}\n{_wrap_sequence(result.sequence)}\n"
+
+
+def _format_profile_comparison_table(profile_results) -> str:
+    """Format profile optimization metrics as a comparison table."""
+    divider = "─" * 45
+    lines = [
+        "Profile comparison results:",
+        divider,
+        f"{'Profile':<18}{'CAI':>7} {'GC%':>7} {'Score':>8}",
+        divider,
+    ]
+    for profile_name, result in profile_results:
+        cai = float(result.metrics.get("cai", 0.0))
+        gc = float(result.metrics.get("gc_percent", result.metrics.get("gc_content", 0.0)))
+        score = float(result.metrics.get("score", 0.0))
+        lines.append(f"{profile_name:<18}{cai:>7.3f} {gc:>7.2f} {score:>8.3f}")
+    lines.append(divider)
+    return "\n".join(lines)
+
+
 @click.group()
 @click.version_option(version=__version__)
 def cli():
@@ -119,6 +157,13 @@ def list_engines():
 @click.option("--output", "-o", help="Output file")
 @click.option("--format", "output_format", default="fasta", help="Output format (fasta, genbank)")
 @click.option(
+    "--compare-profiles",
+    help=(
+        "Comma-separated profiles to compare "
+        "(e.g. balanced,high_cai,gc_target). Implies --engine profile."
+    ),
+)
+@click.option(
     "--scan-mode",
     default="full",
     type=click.Choice(["full", "fast"], case_sensitive=False),
@@ -136,11 +181,20 @@ def optimize(
     construct_template,
     output,
     output_format,
+    compare_profiles,
     scan_mode,
     scan_include,
     scan_exclude,
 ):
     """Optimize protein sequence"""
+    compare_profile_list = _parse_csv_option(compare_profiles)
+    engine = engine.lower()
+
+    if compare_profile_list:
+        if engine == "dp" and _engine_option_was_explicitly_set():
+            raise click.UsageError("--compare-profiles cannot be used with --engine dp.")
+        engine = "profile"
+
     try:
         # Read file
         with open(input_file, encoding="utf-8") as f:
@@ -155,6 +209,37 @@ def optimize(
             fasta_records = parse_fasta_records(raw_input)
             if len(fasta_records) == 1:
                 sequence = fasta_records[0][1]
+
+        if compare_profile_list:
+            if fasta_records is not None and len(fasta_records) > 1:
+                raise ValueError("Profile comparison requires a single input sequence.")
+            if construct_template:
+                raise ValueError("Profile comparison does not support --template mode.")
+            if output_format.lower() != "fasta":
+                raise ValueError("Profile comparison only supports FASTA output.")
+
+            optimizer = EngineRegistry.get("profile")
+            profile_results = []
+            for profile_name in compare_profile_list:
+                result = optimizer.optimize(
+                    sequence,
+                    profile=profile_name,
+                    scan_mode=scan_mode,
+                    scan_include=scan_include_list,
+                    scan_exclude=scan_exclude_list,
+                )
+                profile_results.append((profile_name, result))
+
+            if output:
+                first_profile, first_result = profile_results[0]
+                sequence_id = Path(input_file).stem or "factorforge_profile"
+                fasta = _format_profile_fasta(sequence_id, first_profile, first_result)
+                with open(output, "w", encoding="utf-8") as f:
+                    f.write(fasta)
+                click.echo(f"Saved to: {output}")
+
+            click.echo(_format_profile_comparison_table(profile_results))
+            return
 
         if fasta_records is not None and len(fasta_records) > 1:
             if engine == "dp":

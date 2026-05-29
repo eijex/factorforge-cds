@@ -51,6 +51,7 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 - **`ml_enhanced` scoring profile** — `w_cai=0.35, w_gc=0.25, w_mfe=0.15, w_syncodonlm=0.25`. Opt-in; existing four profiles unchanged.
 - **`[ml]` optional dependency group** — `pip install factorforge-cds[ml]` installs `transformers>=4.40` and `torch>=2.0` for SynCodonLM inference.
 - **`scoring_ml.py`** — `SynCodonLMScorer` class with lazy model loading; `calculate_syncodonlm_score(sequence, organism)`.
+- **Profile comparison mode** — `factorforge optimize input.fasta --engine profile --compare-profiles balanced,high_cai,gc_target` outputs a side-by-side CAI / GC% / score table. First profile result saved to `--output` when specified. `POST /api/optimize/compare` endpoint added with same functionality via JSON API.
 
 ---
 
