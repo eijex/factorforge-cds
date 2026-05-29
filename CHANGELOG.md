@@ -45,7 +45,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - [ ] `docs/validation.md` — GC% range note
 - [ ] `docs/profiles.md` — Supported Hosts section
 - [ ] `mkdocs.yml` `site_description`
-- [ ] `paper.md` (PlantFormOrg) — Summary, Statement of Need, State of the Field
+- [ ] Documentation sync (internal) — update capability descriptions
 - [ ] `_analysis/` — codon table validation analysis job (prerequisite)
 
 </details>
@@ -54,7 +54,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 <summary>New algorithm added (tAI, codon pair bias, 5' UTR MFE, etc.)</summary>
 
 - [ ] `CHANGELOG.md` [Unreleased] entry
-- [ ] `paper.md` State of the Field — update differentiators
+- [ ] Documentation sync (internal) — update differentiators
 - [ ] `docs/how-it-works.md` — pipeline stage description
 - [ ] `docs/profiles.md` — new scan/feature description
 
@@ -66,7 +66,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - [ ] `docs/index.md` Access Options table — add conda install
 - [ ] `docs/getting-started.md` — add `conda install -c bioconda factorforge-cds`
 - [ ] `README.md` — add Bioconda badge + install instructions
-- [ ] `paper.md` Availability — add Bioconda distribution
+- [ ] Documentation sync (internal) — add Bioconda distribution note
 
 </details>
 

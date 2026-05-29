@@ -60,7 +60,7 @@ Wet-lab validation and stability. The core engine is feature-complete; this trac
 | **5' Ramp activation** | Enable once wet-lab data confirms N-terminal ramp benefit |
 | **Viral Delivery activation** | Enable once wet-lab data confirms scoring validity |
 | **Tissue-specific optimization** | Leaf vs seed vs root codon preference tuning |
-| **Publication draft** | Software manuscript draft |
+| **Documentation audit** | Comprehensive docs and capability review |
 
 ---
 
@@ -70,7 +70,7 @@ Wet-lab validation and stability. The core engine is feature-complete; this trac
 |---------|-------------|
 | **Insect expression (Sf9, Tni)** | Baculovirus/BEVS codon optimization |
 | **Additional plant hosts** | Arabidopsis, tomato, Lemna, Wolffia globosa |
-| **Publication finalized** | Manuscript finalized |
+| **Documentation finalized** | Final docs pass |
 
 ---
 
