@@ -66,6 +66,7 @@ DEFAULT_COMPARE_PROFILES = [
     "assembly_friendly",
 ]
 MAX_COMPARE_PROFILES = 6
+MAX_BATCH_SEQUENCES = 20
 VALID_OBJECTIVES = ["feasibility_best"]
 DEFAULT_OBJECTIVE = "feasibility_best"
 DEFAULT_HOST_PROFILE = "nbenthamiana"
@@ -105,6 +106,10 @@ class handler(BaseHTTPRequestHandler):
             request_path = self.path.split("?", 1)[0]
             if request_path == "/api/optimize/compare":
                 status_code, result = self.handle_compare_request(data)
+                self.send_json_response(status_code, result)
+                return
+            if request_path == "/api/optimize/batch":
+                status_code, result = self.handle_batch_request(data)
                 self.send_json_response(status_code, result)
                 return
 
@@ -192,6 +197,7 @@ class handler(BaseHTTPRequestHandler):
             "endpoints": {
                 "POST /api/optimize": "Run codon optimization",
                 "POST /api/optimize/compare": "Compare profile optimization results",
+                "POST /api/optimize/batch": "Run batch profile optimization",
                 "GET /api/optimize": "Health check",
             },
             "supported_profiles": VALID_PROFILES,
@@ -366,6 +372,77 @@ class handler(BaseHTTPRequestHandler):
             )
 
         return {"results": results}
+
+    def validate_batch_sequences(self, sequences):
+        """Validate and normalize batch optimization sequence entries."""
+        if not isinstance(sequences, list) or not sequences:
+            raise ValueError("sequences is required and must be non-empty")
+        if len(sequences) > MAX_BATCH_SEQUENCES:
+            raise ValueError("Batch limit is 20 sequences")
+
+        normalized = []
+        for index, entry in enumerate(sequences, start=1):
+            if isinstance(entry, dict):
+                sequence_id = str(entry.get("id") or f"seq_{index}").strip() or f"seq_{index}"
+                raw_sequence = entry.get("sequence", "")
+            else:
+                sequence_id = f"seq_{index}"
+                raw_sequence = entry
+
+            sequence = self.validate_compare_sequence(raw_sequence)
+            normalized.append({"id": sequence_id, "sequence": sequence})
+        return normalized
+
+    def handle_batch_request(self, data):
+        """Handle POST /api/optimize/batch requests."""
+        try:
+            profile = str(data.get("profile", "balanced")).strip()
+            if profile not in VALID_PROFILES:
+                raise ValueError(f"Invalid profile. Must be one of: {', '.join(VALID_PROFILES)}")
+
+            scan_mode = str(data.get("scan_mode", "fast")).lower()
+            if scan_mode not in {"fast", "full"}:
+                raise ValueError("scan_mode must be one of: fast, full")
+
+            sequences = self.validate_batch_sequences(data.get("sequences"))
+
+            if not FACTORFORGE_AVAILABLE:
+                logger.error("FactorForge engine unavailable for batch optimization")
+                return 503, {"success": False, "error": "Engine unavailable. Contact support."}
+
+            result = self.optimize_batch_sequences(sequences, profile, scan_mode)
+            return 200, result
+
+        except ValueError as e:
+            logger.warning(f"Batch validation error: {e}")
+            return 400, {"success": False, "error": str(e)}
+
+    def optimize_batch_sequences(self, sequences, profile, scan_mode="fast"):
+        """Run profile optimization sequentially for a batch of input sequences."""
+        optimizer = EngineRegistry.get("profile")
+        results = []
+
+        for entry in sequences:
+            result = optimizer.optimize(
+                sequence=entry["sequence"],
+                profile=profile,
+                scan_mode=scan_mode,
+            )
+            results.append(
+                {
+                    "id": entry["id"],
+                    "sequence": result.sequence,
+                    "cai": round(float(result.metrics.get("cai", 0.0)), 3),
+                    "gc_percent": round(
+                        float(result.metrics.get("gc_percent", result.metrics.get("gc_content", 0.0))),
+                        2,
+                    ),
+                    "score": round(float(result.metrics.get("score", 0.0)), 3),
+                    "violations": int(result.metrics.get("violations", 0)),
+                }
+            )
+
+        return {"results": results, "count": len(results), "profile": profile}
 
     def clean_sequence(self, sequence):
         """Clean sequence: remove whitespace, FASTA headers, convert to uppercase"""
