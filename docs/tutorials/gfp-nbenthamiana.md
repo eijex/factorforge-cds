@@ -1,0 +1,174 @@
+# Tutorial: Optimizing GFP for *N. benthamiana* Expression
+
+This tutorial walks through a complete codon optimization workflow using Green Fluorescent Protein (GFP) as an example target, showing how to go from an amino acid sequence to a *Nicotiana benthamiana*-ready CDS.
+
+## Prerequisites
+
+```bash
+pip install factorforge-cds
+```
+
+Verify installation:
+
+```bash
+factorforge --version
+```
+
+## Input Sequence
+
+We use the *Aequorea victoria* GFP sequence (239 amino acids) as our target protein. Save it as `gfp.fasta`:
+
+```
+>GFP|Aequorea_victoria|239aa
+MVSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWP
+TLVTTLTYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDT
+LVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQL
+ADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITLGMDELYK
+```
+
+## Step 1: Run Optimization (CLI)
+
+Optimize with the `balanced` profile — the recommended starting point for *N. benthamiana* expression:
+
+```bash
+factorforge optimize gfp.fasta --engine profile --profile balanced -o gfp_optimized.fasta
+```
+
+Expected output:
+
+```
+Optimizing with Profile-based v3.1.5...
+Saved to: gfp_optimized.fasta
+Metrics:
+  - cai: 0.781
+  - gc_percent: 57.32
+  - score: 0.843
+```
+
+The optimized CDS begins with `ATGGTCAGCAAGGGCGAGGAG...` — ready for synthesis or downstream assembly.
+
+**What happened:**
+
+| Metric | Value | Target range |
+|--------|-------|-------------|
+| CAI | 0.781 | — (higher is better) |
+| GC% | 57.32% | 55–65% |
+| Internal stop codons | 0 | 0 (hard requirement) |
+| Rare codon runs | 0 | 0 (ribosome stalling risk) |
+
+## Step 2: Compare Profiles
+
+Different expression goals call for different profiles. Use `--compare-profiles` to evaluate all options at once:
+
+```bash
+factorforge optimize gfp.fasta --engine profile \
+  --compare-profiles balanced,high_cai,gc_target,assembly_friendly \
+  --scan-mode fast
+```
+
+Output:
+
+```
+Profile comparison results:
+─────────────────────────────────────────────
+Profile               CAI     GC%    Score
+─────────────────────────────────────────────
+balanced            0.767   58.86    0.846
+high_cai            1.000   31.24    0.936
+gc_target           0.897   42.40    0.679
+assembly_friendly   0.769   55.09    0.819
+─────────────────────────────────────────────
+```
+
+**How to choose:**
+
+| Profile | Best for |
+|---------|----------|
+| `balanced` | General *N. benthamiana* expression; good CAI with GC% in target range |
+| `high_cai` | Maximum translation speed; note GC% may fall outside 55–65% range |
+| `gc_target` | When GC% must stay near 42.5% (e.g. specific vector requirements) |
+| `assembly_friendly` | MoClo / Golden Gate workflows; avoids problematic restriction sites |
+
+For most *N. benthamiana* agroinfiltration experiments, `balanced` is the recommended starting profile.
+
+## Step 3: Python API
+
+The same optimization is available programmatically:
+
+```python
+from factorforge.engines import EngineRegistry
+
+# Load the profile engine
+optimizer = EngineRegistry.get("profile")
+
+gfp_aa = (
+    "MVSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWP"
+    "TLVTTLTYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDT"
+    "LVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQL"
+    "ADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITLGMDELYK"
+)
+
+result = optimizer.optimize(gfp_aa, profile="balanced")
+
+print(f"Optimized CDS: {result.sequence[:60]}...")
+print(f"CAI:   {result.metrics['cai']:.3f}")
+print(f"GC%:   {result.metrics['gc_percent']:.2f}")
+print(f"Score: {result.metrics['score']:.3f}")
+```
+
+To compare profiles programmatically:
+
+```python
+profiles = ["balanced", "high_cai", "gc_target", "assembly_friendly"]
+
+for p in profiles:
+    r = optimizer.optimize(gfp_aa, profile=p, scan_mode="fast")
+    cai = r.metrics["cai"]
+    gc  = r.metrics["gc_percent"]
+    score = r.metrics["score"]
+    print(f"{p:<20} CAI={cai:.3f}  GC={gc:.2f}%  Score={score:.3f}")
+```
+
+## Step 4: Custom Restriction Site Removal
+
+For MoClo / Golden Gate assembly, remove specific restriction sites:
+
+```bash
+factorforge optimize gfp.fasta --engine profile --profile assembly_friendly \
+  --scan-include restriction_sites \
+  -o gfp_moclo.fasta
+```
+
+The engine performs synonymous substitutions to eliminate recognition sequences while preserving the amino acid sequence.
+
+## Step 5: Downstream Use
+
+The output FASTA is ready for:
+
+- **Gene synthesis** — submit directly to IDT, Twist, or Genscript
+- **MoClo Level 0** — use with the `assembly_friendly` profile; check for BsaI/BpiI site removal
+- **Agroinfiltration** — clone into a binary vector (e.g. pEAQ-HT, pK7WG2) for *A. tumefaciens*-mediated delivery
+
+!!! note "Wet-lab validation"
+    The `5' Ramp` and `Viral Delivery` profiles are currently **pending wet-lab validation** and are disabled by default. Submit your expression results via the [feedback form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform) to help validate these profiles.
+
+## Summary
+
+| Step | Command |
+|------|---------|
+| Install | `pip install factorforge-cds` |
+| Optimize (balanced) | `factorforge optimize gfp.fasta --engine profile --profile balanced -o out.fasta` |
+| Compare profiles | `factorforge optimize gfp.fasta --engine profile --compare-profiles balanced,high_cai,gc_target` |
+| Assembly-ready | `factorforge optimize gfp.fasta --engine profile --profile assembly_friendly -o out.fasta` |
+
+**GFP optimization results (balanced profile, N=1):**
+
+| Metric | Result |
+|--------|--------|
+| Input length | 239 aa |
+| Output CDS length | 720 bp (239 × 3 + stop) |
+| CAI | 0.781 |
+| GC% | 57.32% |
+| Internal stop codons | 0 |
+| Rare codon runs (≥3) | 0 |
+| Composite score | 0.843 |

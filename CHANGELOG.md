@@ -52,6 +52,7 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 - **`[ml]` optional dependency group** — `pip install factorforge-cds[ml]` installs `transformers>=4.40` and `torch>=2.0` for SynCodonLM inference.
 - **`scoring_ml.py`** — `SynCodonLMScorer` class with lazy model loading; `calculate_syncodonlm_score(sequence, organism)`.
 - **Profile comparison mode** — `factorforge optimize input.fasta --engine profile --compare-profiles balanced,high_cai,gc_target` outputs a side-by-side CAI / GC% / score table. First profile result saved to `--output` when specified. `POST /api/optimize/compare` endpoint added with same functionality via JSON API.
+- **Tutorial: GFP N. benthamiana** — end-to-end worked example at `docs/tutorials/gfp-nbenthamiana.md`. Covers CLI, Python API, profile comparison, and MoClo assembly preparation.
 
 ---
 

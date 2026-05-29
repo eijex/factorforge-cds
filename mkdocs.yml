@@ -30,6 +30,8 @@ nav:
   - Home: index.md
   - Getting Started:
     - Installation: getting-started.md
+  - Tutorials:
+    - GFP Optimization: tutorials/gfp-nbenthamiana.md
   - User Guide:
     - How It Works: how-it-works.md
     - Optimization Profiles: profiles.md
