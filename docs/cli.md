@@ -4,7 +4,7 @@
 
 ### `factorforge optimize`
 
-Optimize a protein sequence into a *N. benthamiana*-compatible CDS.
+Optimize a protein sequence into a host-compatible CDS (*N. benthamiana* by default; `--host by2` for Tobacco BY-2).
 
 ```bash
 factorforge optimize input.fasta -o output.fasta
@@ -20,6 +20,8 @@ factorforge optimize input.fasta -o output.fasta
 | `--gc-min` | `40` | Minimum GC% target |
 | `--gc-max` | `55` | Maximum GC% target |
 | `--format` | `fasta` | Output format: `fasta` or `genbank` |
+| `--host` | `nbenthamiana` | Expression host: `nbenthamiana` or `by2` (Tobacco BY-2) |
+| `--compare-profiles` | — | Comma-separated profiles to compare (e.g. `balanced,high_cai,gc_target`) |
 | `--scan-mode` | `full` | Rule scan: `full` or `fast` |
 | `--template` | — | MoClo construct template |
 

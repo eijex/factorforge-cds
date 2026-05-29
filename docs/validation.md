@@ -13,7 +13,7 @@ FactorForge is an **in-silico only** tool. It optimizes codon usage, GC content,
 |-------|---------|-------|
 | Internal stop codons | ✅ | Hard fail |
 | Amino acid identity | ✅ | Hard fail |
-| GC% range | ✅ | Target 40–60% for *N. benthamiana* |
+| GC% range | ✅ | Host-dependent; default *N. benthamiana*: 55–65% |
 | Forbidden restriction sites | ✅ | BsaI, BsmBI, BpII (Golden Gate) |
 | Invalid codons | ✅ | Hard fail |
 | Rare codon runs | ✅ | Ribosome stalling risk detection |

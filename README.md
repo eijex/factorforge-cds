@@ -1,6 +1,6 @@
 # FactorForge
 
-**Open-source constraint-based CDS design engine for *Nicotiana benthamiana* expression workflows.**
+**Open-source constraint-based CDS design engine for plant expression workflows, with initial focus on *Nicotiana benthamiana* and Tobacco BY-2.**
 
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
@@ -10,7 +10,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20407331.svg)](https://doi.org/10.5281/zenodo.20407331)
 [![Web App](https://img.shields.io/badge/web-factorforge--cds.vercel.app-brightgreen.svg)](https://factorforge-cds.vercel.app)
 
-FactorForge optimizes protein sequences into *N. benthamiana*-compatible CDS by maximizing CAI, controlling GC content, eliminating PolyA signals, and producing MoClo/Golden Gate-ready constructs.
+FactorForge optimizes protein sequences into host-compatible CDS by maximizing CAI, controlling GC content, eliminating PolyA signals, and producing MoClo/Golden Gate-ready constructs. Supports *N. benthamiana* (agroinfiltration) and Tobacco BY-2 (`--host by2`, bioreactor/cGMP workflows).
 
 **→ [Full Documentation](https://eijex.github.io/factorforge-cds/)**
 

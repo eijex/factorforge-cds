@@ -1,6 +1,6 @@
 # FactorForge
 
-**Open-source constraint-based CDS design engine for *Nicotiana benthamiana* expression workflows.**
+**Open-source constraint-based CDS design engine for plant expression workflows, with initial focus on *Nicotiana benthamiana* and Tobacco BY-2.**
 
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](https://github.com/eijex/factorforge-cds/blob/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/factorforge-cds.svg)](https://pypi.org/project/factorforge-cds/)
@@ -8,7 +8,7 @@
 [![codecov](https://codecov.io/gh/eijex/factorforge-cds/branch/main/graph/badge.svg)](https://codecov.io/gh/eijex/factorforge-cds)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20407331.svg)](https://doi.org/10.5281/zenodo.20407331)
 
-FactorForge optimizes protein sequences into *N. benthamiana*-compatible CDS by maximizing CAI, controlling GC content, eliminating PolyA signals, and producing MoClo/Golden Gate-ready constructs.
+FactorForge optimizes protein sequences into host-compatible CDS by maximizing CAI, controlling GC content, eliminating PolyA signals, and producing MoClo/Golden Gate-ready constructs. Supports *N. benthamiana* (agroinfiltration) and Tobacco BY-2 (`--host by2`, bioreactor/cGMP).
 
 ---
 
@@ -50,7 +50,8 @@ Benchmarked on *N. benthamiana* SGN CDS (v3.1.4, balanced profile, N=3,876 seque
 
 | Host | Status |
 |------|--------|
-| *Nicotiana benthamiana* | ✅ Supported |
+| *Nicotiana benthamiana* | ✅ Supported (`--host nbenthamiana`, default) |
+| Tobacco BY-2 (*N. tabacum*) | ✅ Supported (`--host by2`) |
 | *Wolffia globosa* | 🔶 Codon table available, coming soon |
 | Other plant hosts | 📋 Planned |
 

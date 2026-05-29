@@ -8,7 +8,8 @@ Protein sequence (FASTA or plain text)
         ▼
 1. Reverse Translation
    Selects synonymous codons to maximize CAI
-   against the N. benthamiana codon usage table
+   against the selected host codon usage table
+   (N. benthamiana by default; --host by2 for Tobacco BY-2)
         │
         ▼
 2. Rule Scan

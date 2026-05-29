@@ -5,7 +5,7 @@ Each optimized sequence includes:
 | Field | Description |
 |-------|-------------|
 | **Optimized CDS** | Synonymous codon replacements only — AA identity 100% |
-| **CAI score** | Codon adaptation index for *N. benthamiana* |
+| **CAI score** | Codon adaptation index for the selected expression host |
 | **GC content** | Global and first-region (first 90 nt) |
 | **Scan report** | PolyA signals, CpG/TpA hotspots, homopolymers, rare codon runs, restriction sites |
 | **Domestication report** | BsaI/BsmBI and custom restriction sites removed, edit count |
