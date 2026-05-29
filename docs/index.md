@@ -51,7 +51,7 @@ Benchmarked on *N. benthamiana* SGN CDS (v3.1.4, balanced profile, N=3,876 seque
 | Host | Status |
 |------|--------|
 | *Nicotiana benthamiana* | ✅ Supported (`--host nbenthamiana`, default) |
-| Tobacco BY-2 (*N. tabacum*) | ✅ Supported (`--host by2`) |
+| Tobacco BY-2 (*N. tabacum*) | ⚠️ Experimental (`--host by2`) |
 | *Wolffia globosa* | 🔶 Codon table available, coming soon |
 | Other plant hosts | 📋 Planned |
 

@@ -72,8 +72,8 @@ DEFAULT_OBJECTIVE = "feasibility_best"
 DEFAULT_HOST_PROFILE = "nbenthamiana"
 VALID_HOSTS = ["nbenthamiana", "by2"]
 HOST_MAP = {"nbenthamiana": "nbenthamiana", "by2": "ntabacum"}
-DEFAULT_GC_MIN = 40.0
-DEFAULT_GC_MAX = 55.0
+DEFAULT_GC_MIN = 55.0
+DEFAULT_GC_MAX = 65.0
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
     "product": "3.1.5",

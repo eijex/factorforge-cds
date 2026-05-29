@@ -329,7 +329,7 @@ async function runOptimization() {
         if (state.objective === 'feasibility_best') {
             payload.objective = 'feasibility_best';
             payload.host_profile = 'nbenthamiana';
-            payload.constraints = { gc_min: 40.0, gc_max: 55.0 };
+            payload.constraints = { gc_min: 55.0, gc_max: 65.0 };
         } else {
             payload.profile = state.objective;
         }
