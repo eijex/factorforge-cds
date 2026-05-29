@@ -109,6 +109,22 @@ Contributions of codon usage tables for new plant hosts are highly valuable. If 
 - Source of the codon usage data (database, publication, or custom analysis)
 - Target expression system (transient, stable, viral)
 
+## Release Process (maintainers)
+
+Releases are managed by the project maintainer using the following workflow:
+
+1. Update `CHANGELOG.md` — move `[Unreleased]` entries to the new version section
+2. Run the version bump script:
+   ```bash
+   python bump_version.py X.Y.Z          # updates 16 version-bearing files
+   python bump_version.py X.Y.Z --dry-run # preview changes without writing
+   ```
+3. Manually update `web/index.html` changelog panel (new Current block)
+4. Add summary entry to `docs/changelog.md`
+5. Commit, tag, and push — GitHub Actions handles PyPI, Docker, and GitHub Release automatically
+
+See `CHANGELOG.md` for the full release checklist.
+
 ## Code of Conduct
 
 This project follows the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/). By participating, you agree to uphold these standards.
