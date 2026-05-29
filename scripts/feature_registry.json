@@ -1,0 +1,19 @@
+{
+  "hosts": {
+    "nbenthamiana": {
+      "display": "N. benthamiana",
+      "species": "Nicotiana benthamiana",
+      "codon_table": "nbenthamiana",
+      "use_case": "agroinfiltration"
+    },
+    "by2": {
+      "display": "Tobacco BY-2",
+      "species": "Nicotiana tabacum",
+      "codon_table": "ntabacum",
+      "use_case": "bioreactor/cGMP"
+    }
+  },
+  "algorithms": {},
+  "profiles": {},
+  "engines": {}
+}
