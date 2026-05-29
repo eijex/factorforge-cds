@@ -1,5 +1,5 @@
 site_name: FactorForge
-site_description: Open-source constraint-based CDS design engine for N. benthamiana expression workflows
+site_description: Open-source constraint-based CDS design engine for plant expression workflows (N. benthamiana, Tobacco BY-2)
 site_url: https://eijex.github.io/factorforge-cds/
 repo_url: https://github.com/eijex/factorforge-cds
 repo_name: eijex/factorforge-cds
