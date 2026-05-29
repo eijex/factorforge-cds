@@ -35,7 +35,15 @@ class TestScoringConfig:
 
     def test_profile_presets_exist(self):
         """All expected profile presets are available."""
-        expected = {"balanced", "high_cai", "gc_target", "assembly_friendly", "ramp", "viral_delivery"}
+        expected = {
+            "balanced",
+            "high_cai",
+            "gc_target",
+            "assembly_friendly",
+            "ramp",
+            "viral_delivery",
+            "ml_enhanced",
+        }
         assert set(PROFILE_SCORING_CONFIGS.keys()) == expected
 
 

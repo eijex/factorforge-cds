@@ -33,6 +33,10 @@ dev = [
     "ruff>=0.1",
     "pyyaml>=6.0",
 ]
+ml = [
+    "transformers>=4.40",
+    "torch>=2.0",
+]
 
 [project.urls]
 Homepage = "https://factorforge-cds.vercel.app"

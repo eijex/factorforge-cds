@@ -31,6 +31,7 @@ class ScoringConfig:
     w_gc: float = 0.3
     w_mfe: float = 0.2
     w_dinuc: float = 0.0  # CpG/TpA dinucleotide penalty (opt-in, default off)
+    w_syncodonlm: float = 0.0  # SynCodonLM quality score (opt-in, default off)
     gc_opt: float = GC_OPT_MID
     use_mfe: bool = True
 
@@ -40,7 +41,13 @@ class ScoringConfig:
 
     def _normalize(self) -> None:
         """Ensure active weights sum to 1.0."""
-        total = self.w_cai + self.w_gc + (self.w_mfe if self.use_mfe else 0.0) + self.w_dinuc
+        total = (
+            self.w_cai
+            + self.w_gc
+            + (self.w_mfe if self.use_mfe else 0.0)
+            + self.w_dinuc
+            + self.w_syncodonlm
+        )
         if total > 0:
             self.w_cai /= total
             self.w_gc /= total
@@ -49,6 +56,7 @@ class ScoringConfig:
             else:
                 self.w_mfe = 0.0
             self.w_dinuc /= total
+            self.w_syncodonlm /= total
 
 
 # Pre-defined scoring configs per optimization profile
@@ -62,6 +70,13 @@ PROFILE_SCORING_CONFIGS: dict[str, ScoringConfig] = {
     # MFE weighted at 0.30 (Peccoud et al. 2024, PMC11718241: secondary structure shows
     # weak univariate correlation with yield in tobacco viral expression).
     "viral_delivery": ScoringConfig(w_cai=0.35, w_gc=0.35, w_mfe=0.30, gc_opt=47.5, use_mfe=True),
+    "ml_enhanced": ScoringConfig(
+        w_cai=0.35,
+        w_gc=0.25,
+        w_mfe=0.15,
+        w_syncodonlm=0.25,
+        gc_opt=GC_OPT_MID,
+    ),
 }
 
 
@@ -167,12 +182,13 @@ def calculate_composite_score(
     """
     Calculate multidimensional composite score.
 
-    S = w1*CAI + w2*(1 - |GC - GC_opt|/50) + w3*MFE_norm + w4*dinuc_score
+    S = w1*CAI + w2*(1 - |GC - GC_opt|/50) + w3*MFE_norm
+        + w4*dinuc_score + w5*SynCodonLM_score
 
     Args:
         cai: Codon Adaptation Index (0-1).
         gc: GC content percentage (0-100).
-        sequence: DNA sequence for optional MFE calculation.
+        sequence: DNA sequence for optional MFE, dinucleotide, and SynCodonLM calculation.
         config: Explicit ScoringConfig. Overrides profile.
         profile: Profile name for preset config lookup.
         **kwargs: Additional parameters (e.g., target_gc for gc_target profile).
@@ -217,8 +233,19 @@ def calculate_composite_score(
     elif actual_w_dinuc > 0:
         actual_w_dinuc = 0.0  # Cannot compute without sequence
 
-    # Compute weighted score (re-normalize if MFE/dinuc disabled)
-    w_total = config.w_cai + config.w_gc + actual_w_mfe + actual_w_dinuc
+    # Component 5: SynCodonLM score (opt-in, default weight 0.0)
+    syncodonlm_score = 0.5  # neutral default
+    actual_w_syncodonlm = config.w_syncodonlm
+    if actual_w_syncodonlm > 0 and sequence is not None:
+        from factorforge.engines.profile.scoring_ml import calculate_syncodonlm_score
+
+        organism = str(kwargs.get("organism", "Nicotiana_benthamiana"))
+        syncodonlm_score = calculate_syncodonlm_score(sequence, organism=organism)
+    elif actual_w_syncodonlm > 0:
+        actual_w_syncodonlm = 0.0  # Cannot compute without sequence
+
+    # Compute weighted score (re-normalize if optional components are disabled)
+    w_total = config.w_cai + config.w_gc + actual_w_mfe + actual_w_dinuc + actual_w_syncodonlm
     if w_total == 0:
         return 0.0
 
@@ -227,6 +254,7 @@ def calculate_composite_score(
         + (config.w_gc / w_total) * gc_score
         + (actual_w_mfe / w_total) * mfe_score
         + (actual_w_dinuc / w_total) * dinuc_score
+        + (actual_w_syncodonlm / w_total) * syncodonlm_score
     )
 
     return round(score, 3)

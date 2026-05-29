@@ -45,6 +45,13 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 
 ## [Unreleased]
 
+### Added
+
+- **SynCodonLM scoring dimension** — optional 5th composite score component (`w_syncodonlm`, default `0.0`). Integrates Boehringer-Ingelheim's BERT-based codon language model ([SynCodonLM, NAR 2025](https://github.com/Boehringer-Ingelheim/SynCodonLM); HuggingFace: `jheuschkel/SynCodonLM-V2`). Graceful fallback (score 0.5, WARNING) when `transformers` is not installed. No change to existing scoring behavior.
+- **`ml_enhanced` scoring profile** — `w_cai=0.35, w_gc=0.25, w_mfe=0.15, w_syncodonlm=0.25`. Opt-in; existing four profiles unchanged.
+- **`[ml]` optional dependency group** — `pip install factorforge-cds[ml]` installs `transformers>=4.40` and `torch>=2.0` for SynCodonLM inference.
+- **`scoring_ml.py`** — `SynCodonLMScorer` class with lazy model loading; `calculate_syncodonlm_score(sequence, organism)`.
+
 ---
 
 ## [3.1.5] — 2026-05-28
