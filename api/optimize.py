@@ -70,6 +70,8 @@ MAX_BATCH_SEQUENCES = 20
 VALID_OBJECTIVES = ["feasibility_best"]
 DEFAULT_OBJECTIVE = "feasibility_best"
 DEFAULT_HOST_PROFILE = "nbenthamiana"
+VALID_HOSTS = ["nbenthamiana", "by2"]
+HOST_MAP = {"nbenthamiana": "nbenthamiana", "by2": "ntabacum"}
 DEFAULT_GC_MIN = 40.0
 DEFAULT_GC_MAX = 55.0
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
@@ -116,11 +118,16 @@ class handler(BaseHTTPRequestHandler):
             # Extract parameters
             sequence = data.get("sequence", "")
             profile = data.get("profile", "balanced")
+            host = self.validate_host(data.get("host", DEFAULT_HOST_PROFILE))
+            internal_host = HOST_MAP[host]
             objective = data.get("objective")
             legacy_profile_request = "profile" in data and "objective" not in data
             if objective is None and not legacy_profile_request:
-                objective = DEFAULT_OBJECTIVE
-            host_profile = data.get("host_profile", DEFAULT_HOST_PROFILE)
+                if "host" in data and internal_host != DEFAULT_HOST_PROFILE:
+                    objective = None
+                else:
+                    objective = DEFAULT_OBJECTIVE
+            host_profile = data.get("host_profile", host)
             return_candidates = bool(data.get("return_candidates", True))
             constraints = self.parse_constraints(data.get("constraints", {}))
             use_template = data.get("use_template", False)
@@ -169,6 +176,7 @@ class handler(BaseHTTPRequestHandler):
                     dinuc,
                     objective=objective,
                     host_profile=host_profile,
+                    host=internal_host,
                     return_candidates=return_candidates,
                     constraints=constraints,
                     custom_restriction_sites=custom_restriction_sites,
@@ -201,6 +209,7 @@ class handler(BaseHTTPRequestHandler):
                 "GET /api/optimize": "Health check",
             },
             "supported_profiles": VALID_PROFILES,
+            "supported_hosts": VALID_HOSTS,
             "supported_objectives": VALID_OBJECTIVES,
             "mock_enabled": ENABLE_MOCK,
             "engine_versions": ENGINE_VERSIONS,
@@ -253,6 +262,13 @@ class handler(BaseHTTPRequestHandler):
         detect_restriction_sites("", parsed)
         return parsed
 
+    def validate_host(self, host):
+        """Validate public host flag and return the normalized public name."""
+        host_value = str(host or DEFAULT_HOST_PROFILE).strip().lower()
+        if host_value not in VALID_HOSTS:
+            raise ValueError(f"Invalid host: {host_value}")
+        return host_value
+
     def validate_input(
         self, sequence, profile, objective=None, host_profile=DEFAULT_HOST_PROFILE, constraints=None
     ):
@@ -282,8 +298,9 @@ class handler(BaseHTTPRequestHandler):
         if objective is not None and objective not in VALID_OBJECTIVES:
             return f"Invalid objective. Must be one of: {', '.join(VALID_OBJECTIVES)}"
 
-        if host_profile != DEFAULT_HOST_PROFILE:
-            return f"Unsupported host_profile. Must be: {DEFAULT_HOST_PROFILE}"
+        host_profile_value = str(host_profile or DEFAULT_HOST_PROFILE).lower()
+        if host_profile_value not in VALID_HOSTS and host_profile_value not in HOST_MAP.values():
+            return f"Unsupported host_profile. Must be one of: {', '.join(VALID_HOSTS)}"
 
         constraints = constraints or {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX}
         if constraints["gc_min"] > constraints["gc_max"]:
@@ -466,6 +483,7 @@ class handler(BaseHTTPRequestHandler):
         dinuc,
         objective=None,
         host_profile=DEFAULT_HOST_PROFILE,
+        host=DEFAULT_HOST_PROFILE,
         return_candidates=False,
         constraints=None,
         custom_restriction_sites=None,
@@ -478,6 +496,7 @@ class handler(BaseHTTPRequestHandler):
                     sequence=sequence,
                     profile=profile,
                     host_profile=host_profile,
+                    host=host,
                     constraints=constraints,
                     kozak=kozak,
                     dinuc=dinuc,
@@ -493,7 +512,11 @@ class handler(BaseHTTPRequestHandler):
 
             # Run optimization
             result = optimizer.optimize(
-                sequence=sequence, profile=profile, kozak=kozak, dinuc=dinuc
+                sequence=sequence,
+                profile=profile,
+                host=host,
+                kozak=kozak,
+                dinuc=dinuc,
             )
 
             # Build construct if requested
@@ -581,6 +604,7 @@ class handler(BaseHTTPRequestHandler):
         constraints,
         kozak,
         dinuc,
+        host=DEFAULT_HOST_PROFILE,
         return_candidates=True,
         custom_restriction_sites=None,
     ):
@@ -617,6 +641,7 @@ class handler(BaseHTTPRequestHandler):
             result = optimizer.optimize(
                 sequence=aa_seq,
                 profile=candidate_profile,
+                host=host,
                 kozak=kozak,
                 dinuc=dinuc,
             )

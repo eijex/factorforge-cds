@@ -34,6 +34,12 @@ Optimize with the `balanced` profile — the recommended starting point for *N. 
 factorforge optimize gfp.fasta --engine profile --profile balanced -o gfp_optimized.fasta
 ```
 
+For BY-2 bioreactor production:
+
+```bash
+factorforge optimize gfp.fasta --engine profile --profile balanced --host by2
+```
+
 Expected output:
 
 ```

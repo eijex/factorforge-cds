@@ -92,21 +92,24 @@ class OptimizationPipeline:
         profile: str = "balanced",
         construct_template: str | None = None,
         template_dir: Path | None = None,
+        host: str = "nbenthamiana",
     ) -> None:
         """
         Args:
             profile: Optimization profile name.
             construct_template: Optional construct template name.
             template_dir: Optional template directory.
+            host: Host codon table name.
         """
         self.profile = profile
         self.construct_template = construct_template
         self.template_dir = template_dir
+        self.host = host
 
         self.validator = InputValidator()
-        self.translator = ReverseTranslator()
-        self.rule_engine = RuleEngine()
-        self.domesticator = Domesticator()
+        self.translator = ReverseTranslator(host=host)
+        self.rule_engine = RuleEngine(host=host)
+        self.domesticator = Domesticator(host=host)
 
         if construct_template:
             if template_dir is None:
@@ -120,6 +123,7 @@ class OptimizationPipeline:
         sequence: str,
         profile: str | None = None,
         construct_template: str | None = None,
+        host: str | None = None,
         **kwargs: Any,
     ) -> PipelineResult:
         """
@@ -129,6 +133,7 @@ class OptimizationPipeline:
             sequence: Input protein or DNA sequence.
             profile: Optional profile override.
             construct_template: Optional template override.
+            host: Optional host codon table override.
             **kwargs: Additional settings.
 
         Returns:
@@ -138,6 +143,15 @@ class OptimizationPipeline:
             ValueError: If input sequence is invalid.
         """
         logger.info(f"Starting optimization pipeline with profile: {profile or self.profile}")
+        effective_host = host or self.host or "nbenthamiana"
+        if effective_host == self.host:
+            translator = self.translator
+            rule_engine = self.rule_engine
+            domesticator = self.domesticator
+        else:
+            translator = ReverseTranslator(host=effective_host)
+            rule_engine = RuleEngine(host=effective_host)
+            domesticator = Domesticator(host=effective_host)
 
         val_result = self.validator.validate(sequence)
         if not val_result["valid"]:
@@ -161,15 +175,15 @@ class OptimizationPipeline:
 
         if seq_type == "dna":
             optimized_dna = processed
-            cai = self.translator.calculate_cai(optimized_dna)
-            gc = self.translator.calculate_gc_content(optimized_dna)
+            cai = translator.calculate_cai(optimized_dna)
+            gc = translator.calculate_gc_content(optimized_dna)
             score = calculate_composite_score(
                 cai=cai, gc=gc, sequence=optimized_dna, profile=effective_profile
             )
             candidate_metrics = {"cai": cai, "gc": gc, "score": score}
         else:
             logger.debug(f"Generating candidates with profile: {opt_profile.value}")
-            candidates = self.translator.generate_candidates(processed, profile=opt_profile, n=1)
+            candidates = translator.generate_candidates(processed, profile=opt_profile, n=1)
             if not candidates:
                 logger.error("No candidates generated for input sequence")
                 raise ValueError("No candidates generated for input sequence.")
@@ -186,11 +200,11 @@ class OptimizationPipeline:
 
         # Fast pre-check avoids an expensive full rule scan before PolyA fixing.
         has_polya_signal = any(
-            pattern in optimized_dna for pattern in self.rule_engine.POLYA_PATTERNS
+            pattern in optimized_dna for pattern in rule_engine.POLYA_PATTERNS
         )
         if has_polya_signal:
             logger.debug("Potential PolyA signal detected; attempting iterative fix")
-            polya_fix = self.rule_engine.fix_polya_iterative(optimized_dna)
+            polya_fix = rule_engine.fix_polya_iterative(optimized_dna)
             if polya_fix["success"]:
                 optimized_dna = polya_fix["modified_seq"]
                 logger.info(
@@ -204,12 +218,12 @@ class OptimizationPipeline:
                 )
 
         # Dinucleotide reduction pass (CpG/TpA greedy synonymous fix)
-        if self.rule_engine.scan_dinucleotides(optimized_dna):
-            dinu_fix = self.rule_engine.fix_dinucleotides(optimized_dna, mode="balanced")
+        if rule_engine.scan_dinucleotides(optimized_dna):
+            dinu_fix = rule_engine.fix_dinucleotides(optimized_dna, mode="balanced")
             if dinu_fix["success"]:
                 optimized_dna = dinu_fix["modified_seq"]
-                candidate_metrics["cai"] = round(self.translator.calculate_cai(optimized_dna), 4)
-                candidate_metrics["gc"] = self.translator.calculate_gc_content(optimized_dna)
+                candidate_metrics["cai"] = round(translator.calculate_cai(optimized_dna), 4)
+                candidate_metrics["gc"] = translator.calculate_gc_content(optimized_dna)
                 candidate_metrics["score"] = calculate_composite_score(
                     cai=candidate_metrics["cai"],
                     gc=candidate_metrics["gc"],
@@ -228,7 +242,7 @@ class OptimizationPipeline:
         scan_mode = str(kwargs.get("scan_mode", "full"))
         scan_include = kwargs.get("scan_include")
         scan_exclude = kwargs.get("scan_exclude")
-        scan_results = self.rule_engine.scan_all(
+        scan_results = rule_engine.scan_all(
             optimized_dna,
             mode=scan_mode,
             include=scan_include,
@@ -236,7 +250,7 @@ class OptimizationPipeline:
         )
 
         assembly_standard = kwargs.get("assembly_standard", "golden_gate")
-        domestication = self.domesticator.domesticate(optimized_dna, standard=assembly_standard)
+        domestication = domesticator.domesticate(optimized_dna, standard=assembly_standard)
         domesticated_sequence = domestication.get("domesticated_seq", optimized_dna)
 
         template_name = construct_template or self.construct_template
@@ -258,6 +272,7 @@ class OptimizationPipeline:
         metadata: dict[str, Any] = {
             "construct_id": generate_construct_id(),
             "profile": effective_profile,
+            "host": effective_host,
             "construct_template": template_name,
             "construct_features": len(construct_record.features) if construct_record else 0,
             "validation": val_result,

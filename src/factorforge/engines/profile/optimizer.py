@@ -29,6 +29,7 @@ class RuleBasedOptimizer(OptimizerEngine):
         self,
         sequence: str,
         profile: str | None = "balanced",
+        host: str = "nbenthamiana",
         **kwargs: Any,
     ) -> OptimizationResult:
         """
@@ -37,6 +38,7 @@ class RuleBasedOptimizer(OptimizerEngine):
         Args:
             sequence: Protein sequence or DNA sequence
             profile: Optimization profile
+            host: Host codon table name.
             **kwargs: Additional settings
 
         Returns:
@@ -71,17 +73,24 @@ class RuleBasedOptimizer(OptimizerEngine):
                 f"Unknown profile: {profile_value}. Supported profiles: {supported}"
             ) from exc
 
+        if host == "nbenthamiana":
+            translator = self.translator
+            rule_engine = self.rule_engine
+        else:
+            translator = ReverseTranslator(host=host)
+            rule_engine = RuleEngine(host=host)
+
         # 3. Reverse-translate (pick the best candidate)
         if seq_type == "dna":
             optimized_dna = processed_seq
-            cai = self.translator.calculate_cai(optimized_dna)
-            gc = self.translator.calculate_gc_content(optimized_dna)
+            cai = translator.calculate_cai(optimized_dna)
+            gc = translator.calculate_gc_content(optimized_dna)
             score = calculate_composite_score(
                 cai=cai, gc=gc, sequence=optimized_dna, profile=profile_value
             )
             candidates = [{"sequence": optimized_dna, "cai": cai, "gc": gc, "score": score}]
         else:
-            candidates = self.translator.generate_candidates(
+            candidates = translator.generate_candidates(
                 processed_seq, profile=opt_profile, n=1
             )
             if not candidates:
@@ -92,7 +101,7 @@ class RuleBasedOptimizer(OptimizerEngine):
         scan_mode = str(kwargs.get("scan_mode", "full"))
         scan_include = kwargs.get("scan_include")
         scan_exclude = kwargs.get("scan_exclude")
-        scan_results = self.rule_engine.scan_all(
+        scan_results = rule_engine.scan_all(
             optimized_dna,
             mode=scan_mode,
             include=scan_include,
@@ -115,6 +124,7 @@ class RuleBasedOptimizer(OptimizerEngine):
             metadata={
                 "engine": "profile",
                 "profile": profile_value,
+                "host": host,
                 "scan_mode": scan_mode,
                 "scan_results": scan_results,
             },

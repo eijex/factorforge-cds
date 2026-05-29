@@ -5,7 +5,6 @@ Assembly standard compatibility (P0-4) - Golden Gate/MoClo/BioBricks
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 from factorforge.engines.profile.utils import build_aa_to_codons_map, get_data_path, load_codon_table
@@ -47,13 +46,19 @@ class Domesticator:
         },
     }
 
-    def __init__(self, codon_table: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self,
+        codon_table: dict[str, Any] | None = None,
+        host: str = "nbenthamiana",
+    ) -> None:
         """
         Args:
             codon_table: Codon table (loads default if None)
+            host: Host codon table name used when codon_table is not provided.
         """
+        self.host = host
         if codon_table is None:
-            codon_table = load_codon_table("nbenthamiana", get_data_path())
+            codon_table = load_codon_table(host, get_data_path())
 
         self.codon_table: dict[str, Any] = codon_table
         self.aa_to_codons: dict[str, list[str]] = self._build_aa_to_codons_map()

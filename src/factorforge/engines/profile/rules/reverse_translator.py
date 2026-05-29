@@ -53,17 +53,20 @@ class ReverseTranslator:
         self,
         codon_table_path: str | Path | None = None,
         golden_set_path: str | Path | None = None,
+        host: str = "nbenthamiana",
     ) -> None:
         """
         Args:
             codon_table_path: Path to codon table JSON file.
             golden_set_path: Path to golden set JSON for CAI reference weights.
                              If None, attempts to load default golden set.
+            host: Host codon table name used when codon_table_path is not provided.
         """
+        self.host = host
         if codon_table_path is None:
             # Use centralized data path management
             data_dir = get_data_path()
-            codon_table_path = data_dir / "nbenthamiana_codons.json"
+            codon_table_path = data_dir / f"{host}_codons.json"
 
         self.codon_table: dict[str, Any] = self._load_codon_table(codon_table_path)
         self.aa_to_codons: dict[str, list[tuple[str, float]]] = self._build_aa_to_codons_map()

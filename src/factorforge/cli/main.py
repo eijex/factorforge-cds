@@ -16,6 +16,8 @@ from factorforge import __version__
 from factorforge.engines.registry import EngineRegistry
 from factorforge.engines.profile.utils import parse_fasta_records
 
+HOST_MAP = {"nbenthamiana": "nbenthamiana", "by2": "ntabacum"}
+
 
 def _configure_stdio() -> None:
     """Best-effort UTF-8 for Windows consoles."""
@@ -79,15 +81,20 @@ def _format_dp_fasta(sequence_id: str, dna_sequence: str, cai: float, gc: float)
     return f"{header}\n{_wrap_sequence(dna_sequence)}\n"
 
 
-def _engine_option_was_explicitly_set() -> bool:
-    """Return whether --engine/-e was provided on the command line."""
+def _option_was_explicitly_set(option_name: str) -> bool:
+    """Return whether an option was provided on the command line."""
     ctx = click.get_current_context(silent=True)
     if ctx is None:
         return False
     get_parameter_source = getattr(ctx, "get_parameter_source", None)
     if not callable(get_parameter_source):
         return False
-    return get_parameter_source("engine") == click.core.ParameterSource.COMMANDLINE
+    return get_parameter_source(option_name) == click.core.ParameterSource.COMMANDLINE
+
+
+def _engine_option_was_explicitly_set() -> bool:
+    """Return whether --engine/-e was provided on the command line."""
+    return _option_was_explicitly_set("engine")
 
 
 def _format_profile_fasta(sequence_id: str, profile: str, result) -> str:
@@ -144,6 +151,12 @@ def list_engines():
     type=click.Choice(["dp", "profile"], case_sensitive=False),
     help="Engine (dp, profile)",
 )
+@click.option(
+    "--host",
+    default="nbenthamiana",
+    type=click.Choice(["nbenthamiana", "by2"], case_sensitive=False),
+    help="Expression host: nbenthamiana (default) or by2 (Tobacco BY-2 / N. tabacum)",
+)
 @click.option("--profile", "-p", default="balanced", help="Optimization profile")
 @click.option(
     "--objective",
@@ -174,6 +187,7 @@ def list_engines():
 def optimize(
     input_file,
     engine,
+    host,
     profile,
     objective,
     gc_min,
@@ -189,6 +203,14 @@ def optimize(
     """Optimize protein sequence"""
     compare_profile_list = _parse_csv_option(compare_profiles)
     engine = engine.lower()
+    host_value = host.lower()
+    internal_host = HOST_MAP[host_value]
+    host_was_explicit = _option_was_explicitly_set("host")
+
+    if host_was_explicit and engine == "dp" and _engine_option_was_explicitly_set():
+        raise click.UsageError("--host is only supported with --engine profile")
+    if host_was_explicit and engine == "dp" and internal_host != "nbenthamiana":
+        engine = "profile"
 
     if compare_profile_list:
         if engine == "dp" and _engine_option_was_explicitly_set():
@@ -224,6 +246,7 @@ def optimize(
                 result = optimizer.optimize(
                     sequence,
                     profile=profile_name,
+                    host=internal_host,
                     scan_mode=scan_mode,
                     scan_include=scan_include_list,
                     scan_exclude=scan_exclude_list,
@@ -255,6 +278,7 @@ def optimize(
                 results = optimizer.optimize_batch(
                     payload,
                     profile=profile,
+                    host=internal_host,
                     scan_mode=scan_mode,
                     scan_include=scan_include_list,
                     scan_exclude=scan_exclude_list,
@@ -264,6 +288,7 @@ def optimize(
                     optimizer.optimize(
                         seq,
                         profile=profile,
+                        host=internal_host,
                         scan_mode=scan_mode,
                         scan_include=scan_include_list,
                         scan_exclude=scan_exclude_list,
@@ -331,9 +356,14 @@ def optimize(
         if engine == "profile" and construct_template:
             from factorforge.engines.profile.pipeline import OptimizationPipeline
 
-            pipeline = OptimizationPipeline(profile=profile, construct_template=construct_template)
+            pipeline = OptimizationPipeline(
+                profile=profile,
+                construct_template=construct_template,
+                host=internal_host,
+            )
             result = pipeline.run(
                 sequence,
+                host=internal_host,
                 scan_mode=scan_mode,
                 scan_include=scan_include_list,
                 scan_exclude=scan_exclude_list,
@@ -363,6 +393,7 @@ def optimize(
             result = optimizer.optimize(
                 sequence,
                 profile=profile,
+                host=internal_host,
                 scan_mode=scan_mode,
                 scan_include=scan_include_list,
                 scan_exclude=scan_exclude_list,

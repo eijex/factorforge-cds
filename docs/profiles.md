@@ -2,6 +2,13 @@
 
 Profiles apply to the profile engine (`--engine profile`).
 
+## Supported Hosts
+
+| Host flag | Species | Codon table | Notes |
+|-----------|---------|-------------|-------|
+| `nbenthamiana` (default) | *Nicotiana benthamiana* | 3,876 SGN CDS | Recommended for agroinfiltration |
+| `by2` | *N. tabacum* BY-2 | 1,534 Kazusa CDS (2007) | BY-2 bioreactor production; CAI diff < 0.05 vs nbenthamiana |
+
 | Profile | Description |
 |---------|-------------|
 | `balanced` | CAI + GC balance — default for most use cases |
@@ -15,6 +22,7 @@ Profiles apply to the profile engine (`--engine profile`).
 factorforge optimize input.fasta -e profile -p balanced -o output.fasta
 factorforge optimize input.fasta -e profile -p high_cai -o output.fasta
 factorforge optimize input.fasta -e profile -p viral_delivery -o output.fasta
+factorforge optimize input.fasta -e profile -p balanced --host by2 -o output.fasta
 ```
 
 ## Python API
