@@ -14,12 +14,12 @@ After running, manually:
   5. git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push && git push --tags
   6. GitHub Actions automatically creates GitHub Release from the tag
 
-JOSS paper review (paper.md — keep in sync with feature changes):
+Publication sync (keep documentation in sync with feature changes):
   - Patch release: no update needed unless claims changed
-  - Feature release (minor, e.g. v3.2 → v3.3): review Software Design section
-  - Algorithm added (tAI, codon pair bias, 5' UTR MFE): update State of the Field differentiators
-  - New host added: update Statement of Need + State of the Field
-  - Zenodo DOI updated: update paper.bib @kim2026factorforge doi field
+  - Feature release (minor): review Software Design documentation
+  - Algorithm added (tAI, codon pair bias, 5' UTR MFE): update State of the Field documentation
+  - New host added: update Statement of Need + supported hosts documentation
+  - Zenodo DOI updated: update citation metadata
 """
 
 import argparse
