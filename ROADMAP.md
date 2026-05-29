@@ -53,24 +53,24 @@ Wet-lab validation and stability. The core engine is feature-complete; this trac
 
 ---
 
-## v3.5 — Validation-Driven *(JOSS submission candidate A)*
+## v3.5 — Validation-Driven
 
 | Feature | Description |
 |---------|-------------|
 | **5' Ramp activation** | Enable once wet-lab data confirms N-terminal ramp benefit |
 | **Viral Delivery activation** | Enable once wet-lab data confirms scoring validity |
 | **Tissue-specific optimization** | Leaf vs seed vs root codon preference tuning |
-| **paper.md draft** | JOSS / Application Note manuscript draft |
+| **Publication draft** | Software manuscript draft |
 
 ---
 
-## v3.6 — Host Expansion *(JOSS submission candidate B)*
+## v3.6 — Host Expansion
 
 | Feature | Description |
 |---------|-------------|
 | **Insect expression (Sf9, Tni)** | Baculovirus/BEVS codon optimization |
 | **Additional plant hosts** | Arabidopsis, tomato, Lemna, Wolffia globosa |
-| **paper.md final** | Manuscript finalized for submission |
+| **Publication finalized** | Manuscript finalized |
 
 ---
 
@@ -85,22 +85,20 @@ A ML-based CDS design engine added as `--engine ml` once sufficient wet-lab vali
 
 ---
 
-## v3.8 — JOSS Readiness *(if not submitted at v3.5/v3.6)*
+## v3.8 — Release Readiness
 
-- paper.md completion
-- State of the field comparison (JCat, OPTIMIZER, Codon Harmonizer, IDT)
 - Full API docstring coverage
 - Reproducible benchmark scripts
 - Extended tutorial
+- State of the field comparison (JCat, OPTIMIZER, Codon Harmonizer, IDT)
 
 ---
 
-## v3.9 — Stable / JOSS Submission
+## v3.9 — Stable Release
 
 - All profiles wet-lab validated and active
 - Full documentation audit
 - Final polish
-- JOSS submission
 
 ---
 
