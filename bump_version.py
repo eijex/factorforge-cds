@@ -80,6 +80,9 @@ def build_targets(old: str, new: str) -> list[tuple[str, list[tuple[str, str]]]]
         ("tests/engines/profile/test_cli_optimize.py", [
             (f"Profile-based v{old}", f"Profile-based v{new}"),
         ]),
+        ("docs/tutorials/gfp-nbenthamiana.md", [
+            (f"Profile-based v{old}", f"Profile-based v{new}"),
+        ]),
         ("tests/test_validation/test_package_generator.py", [
             (f'factorforge_version="{old}"', f'factorforge_version="{new}"'),
             # "--version" arg appears on its own line: '            "3.1.3",'
