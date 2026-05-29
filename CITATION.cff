@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use FactorForge in your research, please cite it using the metadata below."
-title: "FactorForge: constraint-based CDS design engine for Nicotiana benthamiana expression workflows"
+title: "FactorForge: constraint-based CDS design engine for plant expression workflows"
 version: 3.1.5
 date-released: "2026-05-28"
 license: AGPL-3.0
@@ -18,14 +18,17 @@ keywords:
   - CDS design
   - synthetic biology
   - Nicotiana benthamiana
+  - Nicotiana tabacum
+  - Tobacco BY-2
   - plant expression
   - MoClo
   - Golden Gate
   - constraint satisfaction
 abstract: >
   FactorForge is an open-source constraint-based coding sequence (CDS) design
-  engine for Nicotiana benthamiana transient expression workflows. It maximizes
-  the Codon Adaptation Index (CAI) under simultaneous GC content, PolyA signal,
-  rare codon, and restriction site constraints using a dynamic programming
-  feasibility engine, producing MoClo/Golden Gate-ready constructs with full
-  provenance tracking.
+  engine for plant expression workflows, with initial support for Nicotiana
+  benthamiana (agroinfiltration) and Tobacco BY-2 suspension culture cells
+  (--host by2). It maximizes the Codon Adaptation Index (CAI) under simultaneous
+  GC content, PolyA signal, rare codon, and restriction site constraints using a
+  dynamic programming feasibility engine, producing MoClo/Golden Gate-ready
+  constructs with full provenance tracking.

@@ -11,7 +11,7 @@ license = "AGPL-3.0-only"
 license-files = ["LICENSE"]
 requires-python = ">=3.10"
 authors = [{ name = "Eijex", email = "eijex.lab@gmail.com" }]
-keywords = ["codon optimization", "CDS design", "synthetic biology", "bioinformatics", "Nicotiana benthamiana", "constraint optimization", "dynamic programming"]
+keywords = ["codon optimization", "CDS design", "synthetic biology", "bioinformatics", "Nicotiana benthamiana", "Nicotiana tabacum", "Tobacco BY-2", "constraint optimization", "dynamic programming"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
