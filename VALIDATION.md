@@ -14,7 +14,7 @@ This file tracks community wet-lab results to build a shared evidence base over 
 |-------|---------|-------|
 | Internal stop codons | ✅ | Hard fail |
 | Amino acid identity | ✅ | Hard fail |
-| GC% range | ✅ | Target 40–60% for *N. benthamiana* |
+| GC% range | ✅ | Host-dependent; default *N. benthamiana*: 55–65% |
 | Forbidden restriction sites | ✅ | BsaI, BsmBI, BpII (Golden Gate) |
 | Invalid codons | ✅ | Hard fail |
 | Protein folding | ❌ | Requires wet-lab or AlphaFold |

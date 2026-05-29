@@ -1,6 +1,6 @@
 # FactorForge Web Interface
 
-3-Panel Dashboard for N. benthamiana Codon Optimization
+Plant CDS Design — N. benthamiana & Tobacco BY-2
 
 ## 🌐 Live Demo
 
