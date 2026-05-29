@@ -27,6 +27,49 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 11. **Bioconda** — update `recipes/meta.yaml` (version + SHA256 via `curl -s https://pypi.org/pypi/factorforge-cds/X.Y.Z/json | python -c "import sys,json; d=json.load(sys.stdin); [print(f['digests']['sha256']) for f in d['urls'] if f['packagetype']=='sdist']"`), push to fork branch `add-factorforge-cds`. Once PR is merged by Bioconda maintainers, autobump handles subsequent releases automatically.
 12. **GitHub Issues** — close all issues completed in this release; if a full milestone is done, close the milestone too (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
 
+**Conditional checklists — apply only when relevant:**
+
+<details>
+<summary>New expression host added (e.g. BY-2, Arabidopsis)</summary>
+
+- [ ] `src/factorforge/data/{host}_codons.json` — new codon table
+- [ ] `src/factorforge/engines/profile/rules/` — host param plumbing
+- [ ] `pyproject.toml` keywords — add new species names
+- [ ] `CITATION.cff` title, abstract, keywords
+- [ ] `web/index.html` `<title>` and `<meta description>`
+- [ ] `README.md` tagline
+- [ ] `docs/index.md` tagline + Supported Hosts table row
+- [ ] `docs/how-it-works.md` — host-agnostic description
+- [ ] `docs/cli.md` — `--host` option choices
+- [ ] `docs/output.md` — CAI description
+- [ ] `docs/validation.md` — GC% range note
+- [ ] `docs/profiles.md` — Supported Hosts section
+- [ ] `mkdocs.yml` `site_description`
+- [ ] `paper.md` (PlantFormOrg) — Summary, Statement of Need, State of the Field
+- [ ] `_analysis/` — codon table validation analysis job (prerequisite)
+
+</details>
+
+<details>
+<summary>New algorithm added (tAI, codon pair bias, 5' UTR MFE, etc.)</summary>
+
+- [ ] `CHANGELOG.md` [Unreleased] entry
+- [ ] `paper.md` State of the Field — update differentiators
+- [ ] `docs/how-it-works.md` — pipeline stage description
+- [ ] `docs/profiles.md` — new scan/feature description
+
+</details>
+
+<details>
+<summary>Bioconda PR merged (first time only)</summary>
+
+- [ ] `docs/index.md` Access Options table — add conda install
+- [ ] `docs/getting-started.md` — add `conda install -c bioconda factorforge-cds`
+- [ ] `README.md` — add Bioconda badge + install instructions
+- [ ] `paper.md` Availability — add Bioconda distribution
+
+</details>
+
 ---
 
 ## Development History
