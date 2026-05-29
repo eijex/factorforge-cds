@@ -10,10 +10,7 @@ from sqlalchemy import ARRAY, DECIMAL, TIMESTAMP, Column, ForeignKey, String, Te
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://plantform:plantform_dev_2026@localhost:5432/factorforge_operational",
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

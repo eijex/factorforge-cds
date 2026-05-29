@@ -45,6 +45,10 @@ CLAUDE.md
 GEMINI.md
 .claude/
 
+# Local environment (database credentials etc.)
+.env
+.env.local
+
 # Notebooks (Kaggle/Colab specific — not for public use)
 notebooks/
 
