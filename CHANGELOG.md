@@ -14,18 +14,31 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 | **Patch** (`3.1.X`) | Bug fix, metric correction, documentation update, dependency patch |
 
 **Release checklist:**
+
+**Pre-release gate (before bumping):**
+0. `git status --short` — working tree must be clean
+0. `python -m ruff check .` — no lint errors
+0. `python -m pytest tests/ -v --tb=short` — all tests pass
+0. `python bump_version.py X.Y.Z --dry-run` — verify 16 files
+
+**Version bump & manual updates:**
 1. Move `[Unreleased]` entries to `[X.Y.Z] — YYYY-MM-DD` in this file; update comparison links at bottom
-2. Run `python bump_version.py X.Y.Z` — updates all 16 version-bearing files automatically
-3. Add changelog entry to `web/index.html` (version panel HTML — manual, not automated; set new block to emerald/Current, demote previous to gray)
+2. Run `python bump_version.py X.Y.Z` — updates all 16 version-bearing files + residual check
+3. Add changelog entry to `web/index.html` (version panel HTML — manual; set new block to emerald/Current, demote previous to gray)
 4. Add summary entry to `docs/changelog.md`
-5. `git commit -m "chore: release vX.Y.Z"`
-6. `git tag -a vX.Y.Z -m "Release vX.Y.Z"` → `git push && git push --tags`
-7. GitHub Actions publishes to PyPI + Docker; creates GitHub Release → Zenodo DOI issued automatically
-8. Verify PyPI: `pip install factorforge-cds==X.Y.Z && factorforge --help` (smoke test)
-9. Verify Docker: `docker run ghcr.io/eijex/factorforge-cds:vX.Y.Z factorforge --help` (smoke test)
-10. Confirm Zenodo DOI was issued: check https://zenodo.org/doi/10.5281/zenodo.20407331 redirects to new version
-11. **Bioconda** — update `recipes/meta.yaml` (version + SHA256 via `curl -s https://pypi.org/pypi/factorforge-cds/X.Y.Z/json | python -c "import sys,json; d=json.load(sys.stdin); [print(f['digests']['sha256']) for f in d['urls'] if f['packagetype']=='sdist']"`), push to fork branch `add-factorforge-cds`. Once PR is merged by Bioconda maintainers, autobump handles subsequent releases automatically.
-12. **GitHub Issues** — close all issues completed in this release; if a full milestone is done, close the milestone too (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
+
+**Commit & CI gate (tag AFTER CI passes):**
+5. `git commit -m "chore: release vX.Y.Z"` → `git push`
+6. Wait for CI to pass: https://github.com/eijex/factorforge-cds/actions
+7. `git tag -a vX.Y.Z -m "Release vX.Y.Z"` → `git push --tags`
+8. GitHub Actions publishes to PyPI + Docker; creates GitHub Release → Zenodo DOI issued automatically
+
+**Post-release verification:**
+9. Verify PyPI: `pip install factorforge-cds==X.Y.Z && factorforge --help` (smoke test)
+10. Verify Docker: `docker run ghcr.io/eijex/factorforge-cds:vX.Y.Z factorforge --help` (smoke test)
+11. Confirm Zenodo DOI: https://zenodo.org/doi/10.5281/zenodo.20407331
+12. **Bioconda** — update `recipes/meta.yaml` (version + SHA256 via `curl -s https://pypi.org/pypi/factorforge-cds/X.Y.Z/json | python -c "import sys,json; d=json.load(sys.stdin); [print(f['digests']['sha256']) for f in d['urls'] if f['packagetype']=='sdist']"`), push to fork branch `add-factorforge-cds`. Once PR is merged by Bioconda maintainers, autobump handles subsequent releases automatically.
+13. **GitHub Issues** — close all issues completed in this release; if a full milestone is done, close the milestone too (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
 
 **Conditional checklists — apply only when relevant:**
 
