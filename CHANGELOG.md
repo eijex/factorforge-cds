@@ -88,6 +88,10 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 
 ## [Unreleased]
 
+---
+
+## [3.1.6] — 2026-05-30
+
 ### Added
 
 - **SynCodonLM scoring dimension** — optional 5th composite score component (`w_syncodonlm`, default `0.0`). Integrates Boehringer-Ingelheim's BERT-based codon language model ([SynCodonLM, NAR 2025](https://github.com/Boehringer-Ingelheim/SynCodonLM); HuggingFace: `jheuschkel/SynCodonLM-V2`). Graceful fallback (score 0.5, WARNING) when `transformers` is not installed. No change to existing scoring behavior.
@@ -214,7 +218,9 @@ First official release of FactorForge.
 
 ---
 
-[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.5...HEAD
+[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.6...HEAD
+[3.1.6]: https://github.com/eijex/factorforge-cds/compare/v3.1.5...v3.1.6
+[3.1.5]: https://github.com/eijex/factorforge-cds/compare/v3.1.4...v3.1.5
 [3.1.4]: https://github.com/eijex/factorforge-cds/compare/v3.1.3...v3.1.4
 [3.1.3]: https://github.com/eijex/factorforge-cds/compare/v3.1.2...v3.1.3
 [3.1.2]: https://github.com/eijex/factorforge-cds/compare/v3.1.1...v3.1.2

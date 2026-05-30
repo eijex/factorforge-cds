@@ -4,6 +4,19 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the public release of an internal deterministic rule-based engine (v2) that succeeded an earlier thesis-derived prototype (v1) and a later ML prototype (v3-alpha, archived). See [README](https://github.com/eijex/factorforge-cds#development-history) for the full version lineage.
 
+## v3.1.6 — 2026-05-30
+
+### Added
+- **BY-2 host (experimental)** — `--host by2`, N. tabacum Kazusa codon table
+- **Profile comparison** — `--compare-profiles` CLI + `POST /api/optimize/compare`
+- **Batch API** — `POST /api/optimize/batch` (최대 20개 서열)
+- **Structure links** — AlphaFold DB + ESM Atlas 링크 결과 화면에 추가
+- **SynCodonLM scoring** — 선택적 5번째 스코어 (`pip install factorforge-cds[ml]`)
+- **GFP Tutorial** — `docs/tutorials/gfp-nbenthamiana.md`
+
+### Fixed
+- API GC 기본값 CLI와 일치 (40-55% → 55-65%)
+
 ## v3.1.5 — 2026-05-28
 
 ### Fixed

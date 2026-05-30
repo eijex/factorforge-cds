@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: "If you use FactorForge in your research, please cite it using the metadata below."
 title: "FactorForge: constraint-based CDS design engine for plant expression workflows"
-version: 3.1.5
-date-released: "2026-05-28"
+version: 3.1.6
+date-released: "2026-05-30"
 license: AGPL-3.0
 doi: "10.5281/zenodo.20407331"
 repository-code: "https://github.com/eijex/factorforge-cds"
