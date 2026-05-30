@@ -1,4 +1,13 @@
-"""Check CAI/GC feasibility for a protein sequence."""
+"""
+check_constraint_feasibility.py — DP feasibility diagnostic tool
+
+Computes the achievable CAI/GC% range for a protein sequence using the
+DP Feasibility Engine, without running full optimization.
+
+Usage:
+    python scripts/check_constraint_feasibility.py "MVSK..."
+    python scripts/check_constraint_feasibility.py --gc-min 55 --gc-max 65 "MVSK..."
+"""
 
 from __future__ import annotations
 

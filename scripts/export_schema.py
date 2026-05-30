@@ -1,4 +1,13 @@
-"""Export the DesignPackage JSON Schema to a file."""
+"""
+export_schema.py — Export DesignPackage JSON Schema
+
+Writes the FactorForge DesignPackage JSON Schema to a file for
+documentation or downstream validation use.
+
+Usage:
+    python scripts/export_schema.py
+    python scripts/export_schema.py --output schema.json
+"""
 
 import json
 from pathlib import Path
