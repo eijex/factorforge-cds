@@ -119,7 +119,7 @@ After any change, update the relevant public-facing files before pushing:
 |-------------|----------------|
 | New feature / API change | `README.md`, `CHANGELOG.md` |
 | Bug fix | `CHANGELOG.md` |
-| Version bump | Run `python bump_version.py X.Y.Z` — updates all 16 version-bearing files automatically. Then manually update `web/index.html` changelog panel and `docs/changelog.md`. See `CHANGELOG.md` release checklist. |
+| Version bump | Run `python scripts/release.py X.Y.Z` — updates all 16 version-bearing files automatically. Then manually update `web/index.html` changelog panel and `docs/changelog.md`. See `CHANGELOG.md` release checklist. |
 | New distribution method | `README.md` (Installation), `CHANGELOG.md` |
 | Web UI change | `web/index.html`, `web/README.md` |
 | New engine / model | `docs/model_cards/`, `CHANGELOG.md` |

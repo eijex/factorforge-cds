@@ -19,11 +19,11 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 0. `git status --short` — working tree must be clean
 0. `python -m ruff check .` — no lint errors
 0. `python -m pytest tests/ -v --tb=short` — all tests pass
-0. `python bump_version.py X.Y.Z --dry-run` — verify 16 files
+0. `python scripts/release.py X.Y.Z --dry-run` — verify 16 files
 
 **Version bump & manual updates:**
 1. Move `[Unreleased]` entries to `[X.Y.Z] — YYYY-MM-DD` in this file; update comparison links at bottom
-2. Run `python bump_version.py X.Y.Z` — updates all 16 version-bearing files + residual check
+2. Run `python scripts/release.py X.Y.Z` — updates all 16 version-bearing files + residual check
 3. Add changelog entry to `web/index.html` (version panel HTML — manual; set new block to emerald/Current, demote previous to gray)
 4. Add summary entry to `docs/changelog.md`
 
@@ -135,7 +135,7 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 - **CITATION.cff** — GitHub "Cite this repository" button; updated at every version bump.
 - **SECURITY.md** — vulnerability reporting policy (GitHub Private Vulnerability Reporting + email).
 - **ROADMAP.md** — public development direction: v3.2 planned features, ML Research Track (v4), wet-lab scope.
-- **bump_version.py** — automates version string updates across 14 files (`python bump_version.py X.Y.Z`).
+- **bump_version.py** — automates version string updates across 14 files (`python scripts/release.py X.Y.Z`).
 - **Development history narrative** — README, CHANGELOG, archive READMEs, and docs/changelog.md now document the v1→v2→v3-alpha→v3.x→v4 version lineage.
 
 ### Changed

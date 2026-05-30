@@ -116,8 +116,8 @@ Releases are managed by the project maintainer using the following workflow:
 1. Update `CHANGELOG.md` — move `[Unreleased]` entries to the new version section
 2. Run the version bump script:
    ```bash
-   python bump_version.py X.Y.Z          # updates 16 version-bearing files
-   python bump_version.py X.Y.Z --dry-run # preview changes without writing
+   python scripts/release.py X.Y.Z          # updates 16 version-bearing files
+   python scripts/release.py X.Y.Z --dry-run # preview changes without writing
    ```
 3. Manually update `web/index.html` changelog panel (new Current block)
 4. Add summary entry to `docs/changelog.md`
