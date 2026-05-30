@@ -98,6 +98,7 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 - **Tutorial: GFP N. benthamiana** — end-to-end worked example at `docs/tutorials/gfp-nbenthamiana.md`. Covers CLI, Python API, profile comparison, and MoClo assembly preparation.
 - **Batch optimization API** — `POST /api/optimize/batch` accepts up to 20 sequences in a single request. Returns per-sequence CAI, GC%, score, and optimized CDS. Auto-generates IDs (`seq_1`, `seq_2`, ...) when omitted. CLI multi-FASTA was already supported.
 - **Tobacco BY-2 host support** — `--host by2` CLI flag and `"host": "by2"` API field optimize for *N. tabacum* BY-2 suspension culture cells using a Kazusa-derived codon table (1,534 CDS, species 4097). Default host remains `nbenthamiana`. CAI difference between hosts is < 0.05 (see analysis 008). Suitable for cGMP bioreactor production workflows.
+- **Structure prediction links** — AlphaFold DB and ESM Atlas fold links appear in the result panel after optimization. No API calls — links open external services with the input sequence.
 
 ---
 

@@ -45,6 +45,8 @@ const elements = {
     constructIdDisplay: document.getElementById('constructIdDisplay'),
     copyConstructId: document.getElementById('copyConstructId'),
     submitValidationBtn: document.getElementById('submitValidationBtn'),
+    alphafoldLink: document.getElementById('alphafoldLink'),
+    esmatlasFoldLink: document.getElementById('esmatlasFoldLink'),
     copyJsonBtn: document.getElementById('copyJsonBtn'),
     toggleDetails: document.getElementById('toggleDetails'),
     detailsContent: document.getElementById('detailsContent'),
@@ -413,6 +415,18 @@ function setLoading(loading) {
     }
 }
 
+function updateStructureLinks() {
+    const seq = (state.sequence || '').replace(/[^A-Za-z]/g, '').toUpperCase();
+    if (!seq || seq.length < 10) return;
+    const encoded = encodeURIComponent(seq);
+    if (elements.alphafoldLink) {
+        elements.alphafoldLink.href = `https://alphafold.ebi.ac.uk/search/sequence/${encoded}`;
+    }
+    if (elements.esmatlasFoldLink) {
+        elements.esmatlasFoldLink.href = `https://esmatlas.com/explore?tab=fold&sequence=${encoded}`;
+    }
+}
+
 function renderResults() {
     const res = state.results;
     if (!res) return;
@@ -513,6 +527,9 @@ function renderResults() {
         valGC.className = 'text-emerald-400';
         valGC.nextElementSibling.textContent = `GC Content Check (${gcMin.toFixed(0)}–${gcMax.toFixed(0)}%)`;
     }
+
+    // Structure prediction links
+    updateStructureLinks();
 
     // JSON Details
     elements.jsonDetails.textContent = JSON.stringify(res, null, 2);
