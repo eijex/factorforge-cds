@@ -52,7 +52,7 @@ git push origin gh-pages
 Edit `js/app.js` line 3:
 
 ```javascript
-const API_ENDPOINT = 'https://your-vercel-app.vercel.app/api/optimize';
+const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 ```
 
 ## 🎨 Features
