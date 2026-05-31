@@ -47,6 +47,10 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - [ ] New `--host` options? → update tool description
     - [ ] README tool table still accurate?
     - [ ] `skills/bio-research.md` workflow steps still accurate?
+    - [ ] `src/app/page.tsx` section labels/descriptions still accurate?
+    - [ ] `src/app/_lib/mcp-tools.ts` tool descriptions, tags, keyFeatures still accurate?
+    - [ ] `.claude-plugin/plugin.json` description still accurate?
+    - [ ] `package.json` version — bump eijex-mcp if interface changed
 
 **Conditional checklists — apply only when relevant:**
 
