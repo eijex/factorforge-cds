@@ -123,6 +123,13 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 - **Web UI host selector** — expression host toggle (N. benthamiana / BY-2 Experimental) in the input panel. BY-2 selection disables Feasibility Best objective and shows experimental warning. Result panel displays active host profile.
 - **E2E smoke tests** — 5 Playwright smoke tests covering UI load, protein input, BY-2 host toggle, Feasibility Best guard, and result rendering. Runs automatically after each deployment via `e2e.yml`.
 
+### Documentation
+- **Eijex MCP access** — added Eijex MCP as access option in `README.md` and `docs/index.md`
+- **API endpoints** — `docs/cli.md`에 `POST /api/optimize`, `/compare`, `/batch` 엔드포인트 섹션 추가
+- **MCP getting started** — `docs/getting-started.md`에 Eijex MCP 연결 방법 및 툴 목록 추가
+- **ml_enhanced profile** — `docs/profiles.md`에 ml_enhanced 프로파일 문서화
+- **AGENTS.md** — 새 API 엔드포인트 추가 시 eijex-mcp 동기화 항목 명시
+
 ---
 
 ## [3.1.6] — 2026-05-30
