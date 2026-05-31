@@ -1,0 +1,167 @@
+name: Failure inbox
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+      - Docker
+      - Deploy Docs
+      - Publish
+      - Release
+    types:
+      - completed
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  create-failure-issue:
+    name: Create failure issue
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.name != 'Failure inbox' }}
+    env:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    steps:
+      - name: Create labels and issue
+        id: issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const workflowName = run.name || 'Unknown workflow';
+            const lowerName = workflowName.toLowerCase();
+
+            let category = 'unknown';
+            if (/(docker|build|container|image)/.test(lowerName)) {
+              category = 'docker';
+            } else if (/(test|pytest|unit)/.test(lowerName)) {
+              category = 'tests';
+            } else if (/(lint|ruff|format)/.test(lowerName)) {
+              category = 'lint';
+            } else if (/(deploy|vercel|pages)/.test(lowerName)) {
+              category = 'deploy';
+            } else if (/(docs|mkdocs)/.test(lowerName)) {
+              category = 'docs';
+            }
+
+            const labelDefinitions = {
+              'ci-failure': { color: 'd73a4a', description: 'CI workflow failure captured automatically' },
+              'claude-review': { color: '5319e7', description: 'Needs Claude Code review' },
+              'docker': { color: '0e8a16', description: 'Docker, build, container, or image failure' },
+              'tests': { color: '1d76db', description: 'Test, pytest, or unit failure' },
+              'lint': { color: 'fbca04', description: 'Lint, ruff, or format failure' },
+              'deploy': { color: 'b60205', description: 'Deploy, Vercel, or Pages failure' },
+              'docs': { color: '0075ca', description: 'Documentation or MkDocs failure' },
+              'unknown': { color: 'ededed', description: 'Unclassified workflow failure' },
+              'urgent': { color: 'e11d21', description: 'Urgent operational follow-up' },
+              'idea': { color: 'c5def5', description: 'Captured product or development idea' },
+              'later': { color: 'bfdadc', description: 'Not urgent; revisit later' },
+              'needs-triage': { color: 'fef2c0', description: 'Needs human triage' },
+              'github-actions': { color: '2088ff', description: 'GitHub Actions related item' },
+              'user-feedback': { color: 'bfd4f2', description: 'User feedback inbox item' },
+              'feature-request': { color: 'a2eeef', description: 'Feature request from feedback' },
+              'bug-report': { color: 'd73a4a', description: 'Bug report from feedback' },
+              'docs-feedback': { color: '0075ca', description: 'Documentation feedback' },
+              'wet-lab': { color: '0e8a16', description: 'Wet-lab or experimental data follow-up' },
+              'joss-review': { color: '7057ff', description: 'JOSS review follow-up' }
+            };
+
+            for (const [name, meta] of Object.entries(labelDefinitions)) {
+              try {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name,
+                  color: meta.color,
+                  description: meta.description
+                });
+              } catch (error) {
+                if (error.status !== 422) {
+                  throw error;
+                }
+              }
+            }
+
+            const branch = run.head_branch || 'unknown-branch';
+            const sha = run.head_sha || 'unknown-sha';
+            const shortSha = sha.slice(0, 7);
+            const labels = ['ci-failure', 'claude-review', 'github-actions', category];
+            if (category === 'deploy') {
+              labels.push('urgent');
+            }
+
+            const title = `[ci-failure/${category}] ${workflowName} failed on ${branch}`;
+            const body = [
+              '## CI Failure Inbox',
+              '',
+              `- Repository: ${context.repo.owner}/${context.repo.repo}`,
+              `- Workflow: ${workflowName}`,
+              `- Category: ${category}`,
+              `- Branch: ${branch}`,
+              `- Commit SHA: ${sha}`,
+              `- Run URL: ${run.html_url}`,
+              '',
+              '## Claude Code Review Prompt',
+              '',
+              'Review this GitHub Actions failure and identify the smallest safe fix.',
+              '',
+              'Scope:',
+              '- Inspect the failed run logs and the related workflow file.',
+              '- Do not auto-merge or push changes without approval.',
+              '- If the failure is external or flaky, document evidence before changing code.',
+              '',
+              `Start from commit \`${shortSha}\` on branch \`${branch}\`.`
+            ].join('\n');
+
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels
+            });
+
+            core.setOutput('category', category);
+            core.setOutput('issue_url', issue.data.html_url);
+
+      - name: Notify Discord
+        if: ${{ env.DISCORD_WEBHOOK_URL != '' }}
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          BRANCH_NAME: ${{ github.event.workflow_run.head_branch }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          ISSUE_URL: ${{ steps.issue.outputs.issue_url }}
+          CATEGORY: ${{ steps.issue.outputs.category }}
+        run: |
+          python - <<'PY' || true
+          import json
+          import os
+          import urllib.request
+
+          webhook = os.environ.get("DISCORD_WEBHOOK_URL")
+          if not webhook:
+              print("DISCORD_WEBHOOK_URL is not set; skipping Discord notification.")
+              raise SystemExit(0)
+
+          payload = {
+              "content": (
+                  f":rotating_light: CI failure captured [{os.environ.get('CATEGORY', 'unknown')}]\n"
+                  f"Repository: {os.environ.get('GITHUB_REPOSITORY')}\n"
+                  f"Workflow: {os.environ.get('WORKFLOW_NAME')}\n"
+                  f"Branch: {os.environ.get('BRANCH_NAME')}\n"
+                  f"Run: {os.environ.get('RUN_URL')}\n"
+                  f"Issue: {os.environ.get('ISSUE_URL')}"
+              )
+          }
+          data = json.dumps(payload).encode("utf-8")
+          request = urllib.request.Request(
+              webhook,
+              data=data,
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          with urllib.request.urlopen(request, timeout=10) as response:
+              print(f"Discord notification status: {response.status}")
+          PY

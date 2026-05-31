@@ -1,0 +1,36 @@
+name: Idea
+description: Capture a development or product idea for later triage
+labels: ["idea", "later", "claude-review"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea
+      description: Describe the idea in one focused note.
+      placeholder: "e.g. Add a CLI preset for a recurring batch design workflow."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Codon optimization engine
+        - New host organism
+        - CLI
+        - Web app
+        - Docker
+        - Documentation
+        - Feedback inbox
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Add links, notes, or constraints that will help future triage.
+    validations:
+      required: false
