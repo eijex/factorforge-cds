@@ -4,6 +4,13 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the public release of an internal deterministic rule-based engine (v2) that succeeded an earlier thesis-derived prototype (v1) and a later ML prototype (v3-alpha, archived). See [README](https://github.com/eijex/factorforge-cds#development-history) for the full version lineage.
 
+## v3.1.7 — 2026-05-31
+
+### Added
+- **Host selector UI** — N. benthamiana / BY-2 Experimental toggle; BY-2 disables Feasibility Best
+- **E2E smoke tests** — 5 Playwright tests auto-run after each deployment
+- **Eijex MCP** — AI agent access via mcp.eijex.com
+
 ## v3.1.6 — 2026-05-30
 
 ### Added

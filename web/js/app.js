@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
     updateHostUI();
     renderHistory();
-    console.log('FactorForge v3.1.6 Engaged');
+    console.log('FactorForge v3.1.7 Engaged');
 });
 
 function initEventListeners() {
@@ -1097,7 +1097,7 @@ function submitValidation() {
     const params = new URLSearchParams({ usp: 'pp_url' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.1.6';
+        const version = state.results.engine_versions?.product || '3.1.7';
         const profile = state.results?.profile || state.objective || '';
         params.set('entry.543712242', version);
         params.set('entry.1499442935', profile);

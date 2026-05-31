@@ -76,7 +76,7 @@ FactorForge predictions are **in-silico only** and have not been experimentally 
 ## Citing
 
 ```
-FactorForge v3.1.6 (2026). Open-source constraint-based CDS design engine.
+FactorForge v3.1.7 (2026). Open-source constraint-based CDS design engine.
 Eijex. https://github.com/eijex/factorforge-cds
 ```
 
