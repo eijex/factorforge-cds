@@ -34,6 +34,7 @@ Or use the **[web app](https://factorforge.eijex.com)** — no installation requ
 | **Web App** | No installation, demo & light use | [factorforge.eijex.com](https://factorforge.eijex.com) |
 | **CLI / Python** | Local use, batch processing, data privacy | `pip install factorforge-cds` |
 | **Docker** | Full web interface locally | `docker pull ghcr.io/eijex/factorforge-cds:latest` |
+| **Eijex MCP** | AI agent access (Claude Code, Cursor) | [mcp.eijex.com](https://mcp.eijex.com) |
 
 ---
 
