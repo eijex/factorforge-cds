@@ -63,7 +63,13 @@ Use FactorForge directly from Claude Code, Cursor, or any MCP-compatible client:
 }
 ```
 
-Available tools: `factorforge_cds_optimize`, `factorforge_cds_compare`, `factorforge_cds_batch`
+Available tools:
+
+| Tool | Description |
+|------|-------------|
+| `factorforge_cds_optimize` | Optimize a single protein sequence |
+| `factorforge_cds_compare` | Compare multiple profiles side-by-side |
+| `factorforge_cds_batch` | Optimize up to 20 sequences at once |
 
 See [mcp.eijex.com](https://mcp.eijex.com) for the full tool list.
 
