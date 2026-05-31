@@ -1,7 +1,7 @@
 {
     "organism": "Nicotiana tabacum",
     "source": "Kazusa Codon Usage Database (species 4097); 1,534 CDS, 609,684 codons, GenBank release 160 (2007)",
-    "description": "N. tabacum codon usage for BY-2 suspension culture optimization. Kazusa 2007 data; CAI difference vs N. benthamiana < 0.05. Experimental host profile — not wet-lab validated for BY-2 expression.",
+    "description": "N. tabacum codon usage for BY-2 suspension culture optimization. Kazusa 2007 data. N. tabacum and N. benthamiana share highly similar codon preferences within the Nicotiana genus. Experimental host profile — not wet-lab validated for BY-2 expression.",
     "codons": {
         "TTT": {
             "aa": "F",
