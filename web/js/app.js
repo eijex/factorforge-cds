@@ -1064,7 +1064,8 @@ function downloadFile(format) {
     } else {
         // Basic GenBank template
         content = `LOCUS       Exported                ${seq.length} bp    DNA     linear   \n`;
-        content += `DEFINITION  FactorForge Optimized Sequence for N. benthamiana\n`;
+        const hostLabel = HOST_LABELS[state.host] || 'N. benthamiana';
+        content += `DEFINITION  FactorForge Optimized Sequence for ${hostLabel}\n`;
         content += `FEATURES             Location/Qualifiers\n`;
         content += `     CDS             1..${seq.length}\n`;
         content += `                     /label="Optimized_CDS"\n`;
