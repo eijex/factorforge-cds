@@ -39,7 +39,7 @@ test:
     - factorforge-validate --help
 
 about:
-  home: https://factorforge-cds.vercel.app
+  home: https://factorforge.eijex.com
   dev_url: https://github.com/eijex/factorforge-cds
   doc_url: https://eijex.github.io/factorforge-cds/
   license: AGPL-3.0-only

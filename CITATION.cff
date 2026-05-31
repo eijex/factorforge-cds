@@ -6,7 +6,7 @@ date-released: "2026-05-30"
 license: AGPL-3.0
 doi: "10.5281/zenodo.20407331"
 repository-code: "https://github.com/eijex/factorforge-cds"
-url: "https://factorforge-cds.vercel.app"
+url: "https://factorforge.eijex.com"
 authors:
   - family-names: Kim
     given-names: Mun-Kyu

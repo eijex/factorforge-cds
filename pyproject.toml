@@ -39,7 +39,7 @@ ml = [
 ]
 
 [project.urls]
-Homepage = "https://factorforge-cds.vercel.app"
+Homepage = "https://factorforge.eijex.com"
 Repository = "https://github.com/eijex/factorforge-cds"
 Issues = "https://github.com/eijex/factorforge-cds/issues"
 

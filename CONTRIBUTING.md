@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing to FactorForge. This project is maintained by [Eijex](https://github.com/eijex) and welcomes contributions from the scientific community.
 
-**Live demo**: [factorforge-cds.vercel.app](https://factorforge-cds.vercel.app) — try FactorForge in your browser without installation.
+**Live demo**: [factorforge.eijex.com](https://factorforge.eijex.com) — try FactorForge in your browser without installation.
 
 ## Ways to Contribute
 

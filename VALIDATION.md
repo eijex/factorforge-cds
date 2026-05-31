@@ -4,7 +4,7 @@ FactorForge is an in-silico CDS design tool. It optimizes codon usage, GC conten
 
 This file tracks community wet-lab results to build a shared evidence base over time.
 
-**Try it first**: [factorforge-cds.vercel.app](https://factorforge-cds.vercel.app)
+**Try it first**: [factorforge.eijex.com](https://factorforge.eijex.com)
 
 ---
 

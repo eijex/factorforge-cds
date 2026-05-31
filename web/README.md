@@ -4,8 +4,8 @@ Plant CDS Design — N. benthamiana & Tobacco BY-2
 
 ## 🌐 Live Demo
 
-**Web App**: https://factorforge-cds.vercel.app
-**API**: https://factorforge-cds.vercel.app/api/optimize
+**Web App**: https://factorforge.eijex.com
+**API**: https://factorforge.eijex.com/api/optimize
 
 ## 📁 Files
 

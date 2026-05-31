@@ -8,7 +8,7 @@
 [![CI](https://github.com/eijex/factorforge-cds/actions/workflows/ci.yml/badge.svg)](https://github.com/eijex/factorforge-cds/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/eijex/factorforge-cds/branch/main/graph/badge.svg)](https://codecov.io/gh/eijex/factorforge-cds)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20407331.svg)](https://doi.org/10.5281/zenodo.20407331)
-[![Web App](https://img.shields.io/badge/web-factorforge--cds.vercel.app-brightgreen.svg)](https://factorforge-cds.vercel.app)
+[![Web App](https://img.shields.io/badge/web-factorforge.eijex.com-brightgreen.svg)](https://factorforge.eijex.com)
 
 FactorForge optimizes protein sequences into host-compatible CDS by maximizing CAI, controlling GC content, eliminating PolyA signals, and producing MoClo/Golden Gate-ready constructs. Supports *N. benthamiana* (agroinfiltration) and Tobacco BY-2 (`--host by2`, bioreactor/cGMP workflows).
 
@@ -23,7 +23,7 @@ pip install factorforge-cds
 factorforge optimize my_protein.fasta -o output.fasta
 ```
 
-Or use the **[web app](https://factorforge-cds.vercel.app)** — no installation required.
+Or use the **[web app](https://factorforge.eijex.com)** — no installation required.
 
 ---
 
@@ -31,7 +31,7 @@ Or use the **[web app](https://factorforge-cds.vercel.app)** — no installation
 
 | Method | Description | Link |
 |--------|-------------|------|
-| **Web App** | No installation, demo & light use | [factorforge-cds.vercel.app](https://factorforge-cds.vercel.app) |
+| **Web App** | No installation, demo & light use | [factorforge.eijex.com](https://factorforge.eijex.com) |
 | **CLI / Python** | Local use, batch processing, data privacy | `pip install factorforge-cds` |
 | **Docker** | Full web interface locally | `docker pull ghcr.io/eijex/factorforge-cds:latest` |
 
@@ -105,4 +105,4 @@ GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).
 - **Wet-lab Results** — [Submit via Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header) (recommended) or [GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml)
 - **GitHub Issues** — bugs, features: [github.com/eijex/factorforge-cds/issues](https://github.com/eijex/factorforge-cds/issues)
 - **Email** — eijex.lab@gmail.com
-- **Web** — [factorforge-cds.vercel.app](https://factorforge-cds.vercel.app)
+- **Web** — [factorforge.eijex.com](https://factorforge.eijex.com)

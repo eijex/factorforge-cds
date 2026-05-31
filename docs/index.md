@@ -19,7 +19,7 @@ pip install factorforge-cds
 factorforge optimize my_protein.fasta -o output.fasta
 ```
 
-Or use the **[web app](https://factorforge-cds.vercel.app)** — no installation required.
+Or use the **[web app](https://factorforge.eijex.com)** — no installation required.
 
 ---
 
@@ -27,7 +27,7 @@ Or use the **[web app](https://factorforge-cds.vercel.app)** — no installation
 
 | Method | Description |
 |--------|-------------|
-| **[Web App](https://factorforge-cds.vercel.app)** | No installation, demo & light use |
+| **[Web App](https://factorforge.eijex.com)** | No installation, demo & light use |
 | **CLI / Python** | Local use, batch processing, data privacy |
 | **Docker** | Full web interface locally, no data leaves your machine |
 
