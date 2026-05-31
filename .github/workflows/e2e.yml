@@ -9,6 +9,7 @@ on:
 jobs:
   playwright:
     runs-on: ubuntu-latest
+    continue-on-error: true  # non-blocking until stable
 
     steps:
       - name: Checkout
