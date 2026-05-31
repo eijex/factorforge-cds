@@ -20,11 +20,32 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).parent.parent
 
 # (file_path, [(exact_old_string, exact_new_string)], required=True)
 # required=True → missing pattern increments errors (fails with --strict)
 # required=False → missing pattern is a WARN only
+
+
+def build_workspace_targets(old: str, new: str, workspace: Path) -> list[tuple[Path, list[tuple[str, str]], bool]]:
+    """Optional cross-repo targets in the PlantFormOrg workspace."""
+    return [
+        (workspace / "README.md", [
+            (f"FactorForge v{old}", f"FactorForge v{new}"),
+        ], False),
+        (workspace / "ROADMAP.md", [
+            (f"FactorForge v{old}", f"FactorForge v{new}"),
+        ], False),
+        (workspace / "CLAUDE.md", [
+            (f"pyproject.toml: 현재 v{old}", f"pyproject.toml: 현재 v{new}"),
+        ], False),
+        (workspace / "refs/papers/SUBMISSION_STRATEGY.md", [
+            (f"v{old} 공개", f"v{new} 공개"),
+        ], False),
+        (workspace / "refs/papers/factorforge-joss/README.md", [
+            (f"(v{old})", f"(v{new})"),
+        ], False),
+    ]
 
 
 def build_targets(old: str, new: str) -> list[tuple[str, list[tuple[str, str]], bool]]:
@@ -129,7 +150,7 @@ def _check_residual(old: str, dry_run: bool) -> int:
     return residual_errors
 
 
-def bump(old: str, new: str, dry_run: bool = False, strict: bool = False) -> int:
+def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, workspace: Path | None = None) -> int:
     targets = build_targets(old, new)
     errors = 0
     total_changes = 0
@@ -179,6 +200,35 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False) -> int
 
     print(f"\n{'[DRY RUN] ' if dry_run else ''}{'─' * 40}")
     print(f"Files modified: {total_changes}")
+
+    # Workspace targets (PlantFormOrg or other tracking repo)
+    if workspace is not None:
+        if not workspace.is_dir():
+            print(f"  WARN: --workspace path not found: {workspace}")
+        else:
+            print(f"\n{'[DRY RUN] ' if dry_run else ''}Workspace: {workspace}")
+            for abs_path, replacements, required in build_workspace_targets(old, new, workspace):
+                if not abs_path.exists():
+                    print(f"  {'ERROR' if required else 'SKIP'} (not found): {abs_path.name}")
+                    if required:
+                        errors += 1
+                    continue
+                content = abs_path.read_text(encoding="utf-8")
+                original = content
+                changes = []
+                for old_str, new_str in replacements:
+                    if old_str in content:
+                        content = content.replace(old_str, new_str)
+                        changes.append(f"  {old_str!r} → {new_str!r}")
+                    else:
+                        print(f"  WARN: pattern not found in {abs_path.name}: {old_str!r}")
+                if content != original:
+                    total_changes += 1
+                    print(f"\n{'[DRY RUN] ' if dry_run else ''}Updated: {abs_path.relative_to(workspace)}")
+                    for c in changes:
+                        print(c)
+                    if not dry_run:
+                        abs_path.write_text(content, encoding="utf-8")
 
     if errors:
         print(f"Errors: {errors} (patterns not found in required files)")
@@ -239,6 +289,8 @@ def main() -> None:
                         help="Print what would change without writing files")
     parser.add_argument("--strict", action="store_true",
                         help="Exit with error if any required pattern is not found")
+    parser.add_argument("--workspace", default=None,
+                        help="Path to PlantFormOrg workspace to also bump cross-repo docs (e.g. C:\\Work\\PlantFormOrg)")
     args = parser.parse_args()
 
     new = args.new_version
@@ -259,8 +311,9 @@ def main() -> None:
         print(f"Nothing to do — already at {new}")
         sys.exit(0)
 
+    workspace = Path(args.workspace) if args.workspace else None
     print(f"Bumping {old} → {new}{' (dry run)' if args.dry_run else ''}{' [strict]' if args.strict else ''}\n")
-    errors = bump(old, new, dry_run=args.dry_run, strict=args.strict)
+    errors = bump(old, new, dry_run=args.dry_run, strict=args.strict, workspace=workspace)
     sys.exit(errors)
 
 

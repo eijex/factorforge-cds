@@ -21,12 +21,17 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 0. `python -m pytest tests/ -v --tb=short` — all tests pass
 0. Verify `Dockerfile` references match current file locations (especially after any script/file moves)
 0. `python scripts/release.py X.Y.Z --dry-run` — verify 16 files
+0. `python scripts/release.py X.Y.Z --workspace C:\Work\PlantFormOrg --dry-run` — verify cross-repo docs (optional)
 
 **Version bump & manual updates:**
 1. Move `[Unreleased]` entries to `[X.Y.Z] — YYYY-MM-DD` in this file; update comparison links at bottom
-2. Run `python scripts/release.py X.Y.Z` — updates all 16 version-bearing files + residual check
+2. Run `python scripts/release.py X.Y.Z --workspace C:\Work\PlantFormOrg` — updates all 16 version-bearing files + 5 PlantFormOrg cross-repo docs + residual check
 3. Add changelog entry to `web/index.html` (version panel HTML — manual; set new block to emerald/Current, demote previous to gray)
 4. Add summary entry to `docs/changelog.md`
+5. **PlantFormOrg 문서 검토** (판단 필요 항목):
+   - [ ] `ROADMAP.md` "다음 단계" — 완료·신규 항목 반영
+   - [ ] `_JOB_CATALOG.md` — 이번 릴리즈에 포함된 job 추가 여부 확인
+   - [ ] `memory/MEMORY.md`, `memory/project_factorforge.md` — 현재 상태 서술 갱신
 
 **Commit & CI gate (tag AFTER CI passes):**
 5. `git commit -m "chore: release vX.Y.Z"` → `git push`
