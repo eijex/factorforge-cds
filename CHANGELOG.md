@@ -41,13 +41,14 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 12. **Bioconda** — update `recipes/meta.yaml` (version + SHA256 via `curl -s https://pypi.org/pypi/factorforge-cds/X.Y.Z/json | python -c "import sys,json; d=json.load(sys.stdin); [print(f['digests']['sha256']) for f in d['urls'] if f['packagetype']=='sdist']"`), push to fork branch `add-factorforge-cds`. Once PR is merged by Bioconda maintainers, autobump handles subsequent releases automatically.
 13. **GitHub Issues** — close all issues completed in this release; if a full milestone is done, close the milestone too (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
 14. **eijex-mcp sync** — check `C:\Work\eijex\eijex-mcp` for required updates:
-    - [ ] Version string in `factorforge_optimize_cds` description → bump to new version
+    - [ ] Version string in `factorforge_cds_optimize` description → bump to new version
     - [ ] New profiles added? → add to `profile` enum in route.ts and mcp-tools.ts
     - [ ] New API endpoints added? → expose as new MCP tools
     - [ ] New `--host` options? → update tool description
-    - [ ] README tool table still accurate?
+    - [ ] `CHANGELOG.md` — add entry for any tool additions or interface changes
+    - [ ] `README.md` tool table still accurate?
     - [ ] `skills/bio-research.md` workflow steps still accurate?
-    - [ ] `src/app/page.tsx` section labels/descriptions still accurate?
+    - [ ] `src/app/page.tsx` section labels/descriptions + safety disclaimer still accurate?
     - [ ] `src/app/_lib/mcp-tools.ts` tool descriptions, tags, keyFeatures still accurate?
     - [ ] `.claude-plugin/plugin.json` description still accurate?
     - [ ] `package.json` version — bump eijex-mcp if interface changed
