@@ -2,7 +2,7 @@
 
 from typing import Literal, Tuple
 
-from factorforge.analysis.metrics import detect_invalid_codons, translate_dna
+from factorforge.analysis.metrics import amino_acid_identity, detect_invalid_codons, translate_dna
 
 from .exceptions import SequenceValidationError
 
@@ -186,4 +186,5 @@ def validate_cds_output(input_protein: str, dna_sequence: str) -> dict[str, obje
     return {
         "passed": not errors,
         "errors": errors,
+        "aa_identity": amino_acid_identity(expected, seq),
     }

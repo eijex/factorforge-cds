@@ -11,13 +11,16 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-# Optimal GC range for N. benthamiana codon-optimized sequences.
+# GC band for N. benthamiana codon-optimized sequences.
 # Benchmark (analysis 004, n=49): balanced profile output average GC% = 60.1%
 # (range 55-71%). The genome-wide average (~42%) reflects all genes, not the
 # high-expression codon table which exhibits 3rd-position GC bias.
+# These constants define the acceptable band — sequences within [GC_OPT_MIN, GC_OPT_MAX]
+# receive full GC score; outside the band the score decays linearly.
 GC_OPT_MIN = 55.0
 GC_OPT_MAX = 65.0
-GC_OPT_MID = 60.0
+GC_OPT_MID = 60.0  # kept for gc_target point-scoring and viral_delivery centering
+GC_DECAY_WIDTH = 20.0  # percentage points outside band before score reaches 0.0
 
 # ViennaRNA availability cache
 _vienna_available: bool | None = None
@@ -32,7 +35,11 @@ class ScoringConfig:
     w_mfe: float = 0.2
     w_dinuc: float = 0.0  # CpG/TpA dinucleotide penalty (opt-in, default off)
     w_syncodonlm: float = 0.0  # SynCodonLM quality score (opt-in, default off)
-    gc_opt: float = GC_OPT_MID
+    gc_opt: float = GC_OPT_MID  # no longer used by calculate_composite_score (superseded by
+                                # gc_min/gc_max band); retained for external API compatibility
+    gc_min: float = GC_OPT_MIN  # acceptable band lower boundary
+    gc_max: float = GC_OPT_MAX  # acceptable band upper boundary
+    gc_decay_width: float = GC_DECAY_WIDTH  # % points outside band before score → 0
     use_mfe: bool = True
 
     def __post_init__(self) -> None:
@@ -61,22 +68,25 @@ class ScoringConfig:
 
 # Pre-defined scoring configs per optimization profile
 PROFILE_SCORING_CONFIGS: dict[str, ScoringConfig] = {
-    "balanced": ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.2, gc_opt=GC_OPT_MID),
-    "high_cai": ScoringConfig(w_cai=0.8, w_gc=0.1, w_mfe=0.1, gc_opt=GC_OPT_MID),
-    "gc_target": ScoringConfig(w_cai=0.1, w_gc=0.7, w_mfe=0.2, gc_opt=GC_OPT_MID),
-    "assembly_friendly": ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.2, gc_opt=GC_OPT_MID),
-    "ramp": ScoringConfig(w_cai=0.4, w_gc=0.3, w_mfe=0.3, gc_opt=GC_OPT_MID),
-    # TRV viral-delivery profile — GC target ~47.5% based on TRV genome composition.
-    # MFE weighted at 0.30 (Peccoud et al. 2024, PMC11718241: secondary structure shows
-    # weak univariate correlation with yield in tobacco viral expression).
-    "viral_delivery": ScoringConfig(w_cai=0.35, w_gc=0.35, w_mfe=0.30, gc_opt=47.5, use_mfe=True),
-    "ml_enhanced": ScoringConfig(
-        w_cai=0.35,
-        w_gc=0.25,
-        w_mfe=0.15,
-        w_syncodonlm=0.25,
-        gc_opt=GC_OPT_MID,
+    "balanced": ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.2),
+    "high_cai": ScoringConfig(w_cai=0.8, w_gc=0.1, w_mfe=0.1),
+    # gc_target: gc_min/gc_max are overridden dynamically from target_gc kwarg in
+    # calculate_composite_score — the config defaults here are not used for band scoring.
+    "gc_target": ScoringConfig(w_cai=0.1, w_gc=0.7, w_mfe=0.2),
+    # assembly_friendly: CAI pressure reduced vs balanced; GC/MFE weights raised to
+    # reflect Type IIS restriction-site avoidance priority (Golden Gate / MoClo).
+    # w_gc scores GC band compliance (global GC%), NOT local GC uniformity.
+    # Window-level GC variance and repeat-pattern penalties are not yet implemented.
+    "assembly_friendly": ScoringConfig(w_cai=0.3, w_gc=0.4, w_mfe=0.3),
+    "ramp": ScoringConfig(w_cai=0.4, w_gc=0.3, w_mfe=0.3),
+    # TRV viral-delivery profile — GC band centered on TRV genome composition (~47.5%).
+    # MFE weighted at 0.30 (Peccoud et al. 2024, PMC11718241).
+    "viral_delivery": ScoringConfig(
+        w_cai=0.35, w_gc=0.35, w_mfe=0.30,
+        gc_opt=47.5, gc_min=37.5, gc_max=57.5,
+        use_mfe=True,
     ),
+    "ml_enhanced": ScoringConfig(w_cai=0.35, w_gc=0.25, w_mfe=0.15, w_syncodonlm=0.25),
 }
 
 
@@ -144,6 +154,36 @@ def normalize_mfe(mfe: float, seq_length: int) -> float:
     return 1.0 + (clamped / 0.5)
 
 
+def gc_band_score(
+    gc: float,
+    gc_min: float,
+    gc_max: float,
+    decay_width: float = GC_DECAY_WIDTH,
+) -> float:
+    """Score GC content against an acceptable band.
+
+    Returns 1.0 inside [gc_min, gc_max]; linearly decays to 0.0 after
+    decay_width percentage points outside the band.
+
+    Args:
+        gc: GC content percentage (0-100).
+        gc_min: Lower boundary of acceptable band.
+        gc_max: Upper boundary of acceptable band.
+        decay_width: Percentage points outside band before score reaches 0.0.
+
+    Examples:
+        gc_min=55, gc_max=65, decay_width=20:
+          gc=60 → 1.00  (inside band)
+          gc=70 → 0.75  (5 pts above gc_max)
+          gc=80 → 0.25  (15 pts above gc_max)
+          gc=85 → 0.00  (20 pts above gc_max)
+    """
+    if gc_min <= gc <= gc_max:
+        return 1.0
+    distance = (gc_min - gc) if gc < gc_min else (gc - gc_max)
+    return max(0.0, 1.0 - distance / decay_width)
+
+
 def calculate_dinucleotide_score(sequence: str) -> float:
     """Calculate a dinucleotide avoidance score (0-1, higher = fewer CpG/TpA).
 
@@ -179,11 +219,15 @@ def calculate_composite_score(
     profile: str | None = None,
     **kwargs: Any,
 ) -> float:
-    """
-    Calculate multidimensional composite score.
+    """Calculate multidimensional composite score.
 
-    S = w1*CAI + w2*(1 - |GC - GC_opt|/50) + w3*MFE_norm
+    S = w1*CAI + w2*gc_band_score + w3*MFE_norm
         + w4*dinuc_score + w5*SynCodonLM_score
+
+    GC scoring uses a band function: sequences inside [gc_min, gc_max] receive
+    full score (1.0); outside the band the score decays linearly to 0.0 over
+    gc_decay_width percentage points. For gc_target profile, the band is
+    centred on the caller-supplied target_gc (±5 pp).
 
     Args:
         cai: Codon Adaptation Index (0-1).
@@ -191,7 +235,7 @@ def calculate_composite_score(
         sequence: DNA sequence for optional MFE, dinucleotide, and SynCodonLM calculation.
         config: Explicit ScoringConfig. Overrides profile.
         profile: Profile name for preset config lookup.
-        **kwargs: Additional parameters (e.g., target_gc for gc_target profile).
+        **kwargs: target_gc (float) — point target for gc_target profile.
 
     Returns:
         Composite score (0-1).
@@ -203,14 +247,17 @@ def calculate_composite_score(
         if config is None:
             config = PROFILE_SCORING_CONFIGS["balanced"]
 
-    # Allow target_gc override for gc_target profile
-    gc_opt = float(kwargs.get("target_gc", config.gc_opt))
-
     # Component 1: CAI (already 0-1)
     cai_score = max(0.0, min(1.0, cai))
 
-    # Component 2: GC proximity to optimum
-    gc_score = max(0.0, 1.0 - abs(gc - gc_opt) / 50.0)
+    # Component 2: GC band scoring
+    # gc_target profile: caller supplies target_gc; use a ±5 pp band around it.
+    # All other profiles: use the band defined in ScoringConfig (gc_min/gc_max).
+    if "target_gc" in kwargs:
+        tgt = float(kwargs["target_gc"])
+        gc_score = gc_band_score(gc, tgt - 5.0, tgt + 5.0, config.gc_decay_width)
+    else:
+        gc_score = gc_band_score(gc, config.gc_min, config.gc_max, config.gc_decay_width)
 
     # Component 3: MFE (optional)
     mfe_score = 0.5  # neutral default

@@ -6,8 +6,10 @@ GenBank and FASTA export module (P0-5)
 from __future__ import annotations
 
 import hashlib
+import json
 from datetime import datetime
 from io import StringIO
+from pathlib import Path
 from typing import Any
 
 
@@ -24,6 +26,26 @@ class SequenceExporter:
     def __init__(self) -> None:
         """Initialize"""
         pass
+
+    def host_species(self, metadata: dict[str, Any]) -> str:
+        """Resolve host species from feature_registry.json when possible."""
+        if metadata.get("organism"):
+            return str(metadata["organism"])
+
+        host = str(
+            metadata.get("host_profile") or metadata.get("host") or "nbenthamiana"
+        ).strip().lower()
+        host_aliases = {"ntabacum": "by2"}
+        registry_key = host_aliases.get(host, host)
+        registry_path = Path(__file__).resolve().parents[4] / "scripts" / "feature_registry.json"
+
+        try:
+            registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            registry = {}
+
+        species = registry.get("hosts", {}).get(registry_key, {}).get("species")
+        return str(species or "Nicotiana benthamiana")
 
     def generate_run_id(self, sequence: str, params: dict[str, Any]) -> str:
         """
@@ -69,6 +91,7 @@ class SequenceExporter:
                 "run_id": "abc12345",
                 "timestamp": "2026-01-22T12:00:00",
                 "organism": "Nicotiana benthamiana",
+                "host_profile": "nbenthamiana",
                 "gene_name": "GFP",
                 "violations_fixed": [...],
                 "warnings": [...]
@@ -99,7 +122,7 @@ class SequenceExporter:
         run_id = metadata.get("run_id", self.generate_run_id(sequence, metadata))
         timestamp = metadata.get("timestamp", datetime.now().strftime("%Y%m%d"))
         gene_name = metadata.get("gene_name", "optimized_gene")
-        organism = metadata.get("organism", "Nicotiana benthamiana")
+        organism = self.host_species(metadata)
 
         # Build locus ID
         locus_id = f"PFORM_{run_id}_{timestamp}"
@@ -355,7 +378,7 @@ class SequenceExporter:
             "--- Optimization Settings ---",
             f"Profile: {metadata.get('profile', 'N/A')}",
             f"Assembly Standard: {metadata.get('assembly_standard', 'None')}",
-            f"Organism: {metadata.get('organism', 'Nicotiana benthamiana')}",
+            f"Organism: {self.host_species(metadata)}",
             "",
         ]
 

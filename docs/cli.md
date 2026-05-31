@@ -17,8 +17,8 @@ factorforge optimize input.fasta -o output.fasta
 | `--engine`, `-e` | `dp` | Engine: `dp` (feasibility) or `profile` (rule/profile) |
 | `--profile`, `-p` | `balanced` | Optimization profile |
 | `--objective` | `feasibility_best` | DP objective |
-| `--gc-min` | `40` | Minimum GC% target |
-| `--gc-max` | `55` | Maximum GC% target |
+| `--gc-min` | `55` | Minimum GC% target |
+| `--gc-max` | `65` | Maximum GC% target |
 | `--format` | `fasta` | Output format: `fasta` or `genbank` |
 | `--host` | `nbenthamiana` | Expression host: `nbenthamiana` or `by2` (Tobacco BY-2) |
 | `--compare-profiles` | — | Comma-separated profiles to compare (e.g. `balanced,high_cai,gc_target`) |

@@ -10,9 +10,13 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src"))
 
 from factorforge.engines.profile.scoring import (
+    GC_DECAY_WIDTH,
+    GC_OPT_MAX,
+    GC_OPT_MIN,
     PROFILE_SCORING_CONFIGS,
     ScoringConfig,
     calculate_composite_score,
+    gc_band_score,
     normalize_mfe,
 )
 
@@ -61,9 +65,9 @@ class TestCompositeScore:
         assert score < 0.5
 
     def test_gc_far_from_optimum(self):
-        """GC very far from optimum should lower the score."""
-        score_good = calculate_composite_score(cai=0.8, gc=42.5, profile="balanced")
-        score_bad = calculate_composite_score(cai=0.8, gc=80.0, profile="balanced")
+        """GC inside band scores higher than GC far outside band."""
+        score_good = calculate_composite_score(cai=0.8, gc=60.0, profile="balanced")
+        score_bad = calculate_composite_score(cai=0.8, gc=85.0, profile="balanced")
         assert score_good > score_bad
 
     def test_high_cai_profile_weights(self):
@@ -125,6 +129,94 @@ class TestNormalizeMFE:
     def test_zero_length_returns_neutral(self):
         """Zero-length sequence → neutral 0.5."""
         assert normalize_mfe(0.0, 0) == 0.5
+
+
+class TestGCBandScore:
+    """Verify gc_band_score band function behaviour."""
+
+    def test_inside_band_scores_one(self):
+        assert gc_band_score(60.0, 55.0, 65.0) == 1.0
+
+    def test_lower_boundary_scores_one(self):
+        assert gc_band_score(55.0, 55.0, 65.0) == 1.0
+
+    def test_upper_boundary_scores_one(self):
+        assert gc_band_score(65.0, 55.0, 65.0) == 1.0
+
+    def test_above_band_linear_decay(self):
+        # 10 pp above gc_max=65, decay_width=20 → 1 - 10/20 = 0.5
+        assert gc_band_score(75.0, 55.0, 65.0, decay_width=20.0) == pytest.approx(0.5)
+
+    def test_below_band_linear_decay(self):
+        # 10 pp below gc_min=55, decay_width=20 → 1 - 10/20 = 0.5
+        assert gc_band_score(45.0, 55.0, 65.0, decay_width=20.0) == pytest.approx(0.5)
+
+    def test_beyond_decay_width_scores_zero(self):
+        # 20 pp above gc_max=65, decay_width=20 → 0.0
+        assert gc_band_score(85.0, 55.0, 65.0, decay_width=20.0) == 0.0
+
+    def test_far_outside_clamped_to_zero(self):
+        assert gc_band_score(10.0, 55.0, 65.0) == 0.0
+
+    def test_default_constants_used(self):
+        """Default gc_min/gc_max/decay_width match module constants."""
+        cfg = ScoringConfig()
+        assert cfg.gc_min == GC_OPT_MIN
+        assert cfg.gc_max == GC_OPT_MAX
+        assert cfg.gc_decay_width == GC_DECAY_WIDTH
+
+    def test_composite_score_uses_band_not_point(self):
+        """GC inside band → higher gc contribution than same distance from gc_opt."""
+        # GC=55 is at the lower boundary (score=1.0 with band, was 0.9 with old /50 formula)
+        score_at_min = calculate_composite_score(cai=0.8, gc=55.0, profile="balanced")
+        score_at_mid = calculate_composite_score(cai=0.8, gc=60.0, profile="balanced")
+        # Both inside band → same GC component → scores equal
+        assert score_at_min == score_at_mid
+
+    def test_gc_target_uses_narrow_band_around_target(self):
+        """gc_target profile: GC on-target scores higher than off-target."""
+        on_target = calculate_composite_score(
+            cai=0.8, gc=50.0, profile="gc_target", target_gc=50.0
+        )
+        off_target = calculate_composite_score(
+            cai=0.8, gc=70.0, profile="gc_target", target_gc=50.0
+        )
+        assert on_target > off_target
+
+
+class TestAssemblyFriendlyProfile:
+    """Verify assembly_friendly scoring is distinct from balanced."""
+
+    def test_assembly_friendly_differs_from_balanced(self):
+        """assembly_friendly must have different weights than balanced."""
+        af = PROFILE_SCORING_CONFIGS["assembly_friendly"]
+        bal = PROFILE_SCORING_CONFIGS["balanced"]
+        assert af.w_cai != bal.w_cai, "w_cai must differ"
+        assert af.w_gc != bal.w_gc, "w_gc must differ"
+
+    def test_assembly_friendly_lower_cai_weight(self):
+        """assembly_friendly reduces CAI pressure vs balanced."""
+        af = PROFILE_SCORING_CONFIGS["assembly_friendly"]
+        bal = PROFILE_SCORING_CONFIGS["balanced"]
+        assert af.w_cai < bal.w_cai
+
+    def test_assembly_friendly_higher_gc_weight(self):
+        """assembly_friendly raises GC scoring weight vs balanced."""
+        af = PROFILE_SCORING_CONFIGS["assembly_friendly"]
+        bal = PROFILE_SCORING_CONFIGS["balanced"]
+        assert af.w_gc > bal.w_gc
+
+    def test_assembly_friendly_weights_sum_to_one(self):
+        """assembly_friendly weights normalize correctly."""
+        af = PROFILE_SCORING_CONFIGS["assembly_friendly"]
+        total = af.w_cai + af.w_gc + af.w_mfe
+        assert abs(total - 1.0) < 1e-6
+
+    def test_balanced_unchanged(self):
+        """Modifying assembly_friendly must not affect balanced weights."""
+        bal = PROFILE_SCORING_CONFIGS["balanced"]
+        assert abs(bal.w_cai - 0.5) < 1e-6
+        assert abs(bal.w_gc - 0.3) < 1e-6
 
 
 if __name__ == "__main__":

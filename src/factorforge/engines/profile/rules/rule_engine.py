@@ -11,6 +11,7 @@ import math
 import re
 from typing import Any
 
+from factorforge.analysis.metrics import HOMOPOLYMER_SYNTHESIS_WARN_NT
 from factorforge.engines.profile.rules.reverse_translator import ReverseTranslator
 from factorforge.engines.profile.utils import (
     build_aa_to_codons_map,
@@ -246,24 +247,27 @@ class RuleEngine:
 
         return violations
 
-    def scan_homopolymers(self, seq: str, min_length: int = 8) -> list[dict[str, Any]]:
-        """
-        Detect 8+ homopolymers (synthesis risk)
+    def scan_homopolymers(
+        self, seq: str, min_length: int = HOMOPOLYMER_SYNTHESIS_WARN_NT
+    ) -> list[dict[str, Any]]:
+        """Detect homopolymer runs for synthesis/manufacturing risk evaluation.
+
+        Uses HOMOPOLYMER_SYNTHESIS_WARN_NT (default 8 nt) — the threshold at
+        which gene synthesis vendors flag homopolymers as difficult to synthesize
+        with high fidelity.
+
+        For expression stability risk (≥6 nt), see
+        factorforge.analysis.metrics.detect_homopolymers() which uses
+        HOMOPOLYMER_EXPRESSION_WARN_NT.
 
         Args:
             seq: DNA sequence
-            min_length: Minimum length
-
-        Returns:
-            List of violations
-
-        Raises:
-            None.
+            min_length: Minimum run length to flag (default: HOMOPOLYMER_SYNTHESIS_WARN_NT)
 
         Examples:
             >>> engine = RuleEngine()
             >>> engine.scan_homopolymers("AAAAAAAA", min_length=8)
-            [{'type': 'homopolymer', ...}]
+            [{'type': 'homopolymer', 'context': 'synthesis', ...}]
         """
         violations: list[dict[str, Any]] = []
 
@@ -280,16 +284,16 @@ class RuleEngine:
                 while idx + actual_length < len(seq) and seq[idx + actual_length] == base:
                     actual_length += 1
 
-                violations.append(
-                    {
-                        "type": "homopolymer",
-                        "base": base,
-                        "position": idx,
-                        "length": actual_length,
-                        "sequence": base * actual_length,
-                        "severity": "high" if actual_length >= 10 else "medium",
-                    }
-                )
+                violations.append({
+                    "type": "homopolymer",
+                    "context": "synthesis",
+                    "threshold_nt": min_length,
+                    "base": base,
+                    "position": idx,
+                    "length": actual_length,
+                    "sequence": base * actual_length,
+                    "severity": "high" if actual_length >= 10 else "medium",
+                })
                 pos = idx + actual_length
 
         return violations

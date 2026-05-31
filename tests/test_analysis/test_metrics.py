@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 
 from factorforge.analysis.metrics import (
+    HOMOPOLYMER_EXPRESSION_WARN_NT,
+    HOMOPOLYMER_SYNTHESIS_WARN_NT,
     amino_acid_identity,
     calculate_cai,
     calculate_first_region_gc,
@@ -60,6 +62,29 @@ def test_homopolymers_repeats_and_forbidden_motifs() -> None:
     assert detect_homopolymers("ATGAAAAAAT", max_run=6)[0]["base"] == "A"
     assert detect_repeats("ATATATGCGC")
     assert detect_forbidden_motifs("ATGGGTCTCTAA", ["GGTCTC"])[0]["motif"] == "GGTCTC"
+
+
+def test_homopolymer_context_expression_stability() -> None:
+    """6 nt run triggers expression warning; output carries context metadata."""
+    run_6 = "GCC" + "A" * 6 + "GCC"
+    findings = detect_homopolymers(run_6)
+    assert len(findings) == 1
+    assert findings[0]["context"] == "expression_stability"
+    assert findings[0]["threshold_nt"] == HOMOPOLYMER_EXPRESSION_WARN_NT
+    assert findings[0]["length"] == 6
+
+
+def test_homopolymer_thresholds_are_distinct() -> None:
+    """Constants confirm the two thresholds serve different purposes."""
+    assert HOMOPOLYMER_EXPRESSION_WARN_NT == 6
+    assert HOMOPOLYMER_SYNTHESIS_WARN_NT == 8
+    assert HOMOPOLYMER_EXPRESSION_WARN_NT < HOMOPOLYMER_SYNTHESIS_WARN_NT
+
+
+def test_homopolymer_expression_does_not_flag_below_threshold() -> None:
+    """5 nt run is below expression threshold — no findings."""
+    run_5 = "GCC" + "A" * 5 + "GCC"
+    assert detect_homopolymers(run_5) == []
 
 
 def test_codon_usage_profile() -> None:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from factorforge.analysis.metrics import (
+    HOMOPOLYMER_EXPRESSION_WARN_NT,
     amino_acid_identity,
     calculate_first_region_gc,
     calculate_gc,
@@ -24,7 +25,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "gc_window_step": 30,
     "forbidden_motifs": [],
     "fail_forbidden_motifs": False,
-    "homopolymer_max_run": 6,
+    # Expression-stability threshold (see HOMOPOLYMER_EXPRESSION_WARN_NT in metrics).
+    "homopolymer_max_run": HOMOPOLYMER_EXPRESSION_WARN_NT,
 }
 
 

@@ -16,7 +16,8 @@ Profiles apply to the profile engine (`--engine profile`).
 |---------|-------------|
 | `balanced` | CAI + GC balance — default for most use cases |
 | `high_cai` | Maximum codon adaptation index |
-| `gc_target` | Target GC 42.5% for *N. benthamiana* |
+| `gc_target` | Targets a configurable GC percentage, defaulting to the host-profile midpoint (60% for *N. benthamiana*). Pass an explicit target to drive GC higher or lower. |
+| `assembly_friendly` | Golden Gate / MoClo workflows — avoids BsaI/BpiI Type IIS restriction sites via synonymous substitution. Does not yet score local GC uniformity or repeat patterns. |
 | `viral_delivery` | Adjusted for TRV viral vector delivery |
 | `ml_enhanced` ⚠️ Experimental | SynCodonLM-augmented scoring (`pip install factorforge-cds[ml]` required) |
 
@@ -42,6 +43,7 @@ result = pipeline.run("MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG...")
 
 - **General expression** → `balanced`
 - **Maximizing CAI** → `high_cai`
-- **GC-sensitive downstream processes** → `gc_target`
+- **GC-sensitive downstream processes** → `gc_target` (pass an explicit GC target if you need a value other than the host midpoint)
+- **Golden Gate / MoClo assembly** → `assembly_friendly`
 - **Viral vector (TRV, TMV)** → `viral_delivery`
 - **ML-augmented scoring (experimental)** → `ml_enhanced` (requires `pip install factorforge-cds[ml]`)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import api.optimize as optimize_api
+import pytest
 from api.optimize import DEFAULT_GC_MAX, DEFAULT_GC_MIN, handler
 
 
@@ -66,6 +67,55 @@ def test_legacy_profile_response_keeps_old_fields_and_adds_candidates() -> None:
     assert "optimized_sequence" in result
     assert result["recommended_candidate"]["id"] == "gc_target"
     assert [candidate["id"] for candidate in result["candidates"]] == ["gc_target"]
+
+
+def test_design_package_aa_identity_uses_cds_validator_result() -> None:
+    h = _handler()
+
+    result = h.add_design_package_fields(
+        response={
+            "success": True,
+            "optimized_sequence": "ATGGCTTAC",
+            "metrics": {"cai": 0.8, "gc_percent": 44.4},
+            "validation": {"polya": "PASS", "moclo": "UNCHECKED", "gc": "PASS"},
+        },
+        input_sequence="MAF",
+        profile="balanced",
+        objective=None,
+        host_profile="nbenthamiana",
+        kozak=False,
+        dinuc=False,
+        constraints={"gc_min": 40.0, "gc_max": 55.0},
+    )
+
+    assert result["constraint_report"]["aa_identity"] == pytest.approx(2 / 3)
+    assert result["validation_status"]["aa_identity_check"] == "fail"
+    assert any(
+        error.startswith("aa_mismatch")
+        for error in result["constraint_report"]["cds_validation_errors"]
+    )
+
+
+def test_design_package_codon_rarity_clusters_use_rule_scan() -> None:
+    h = _handler()
+
+    result = h.add_design_package_fields(
+        response={
+            "success": True,
+            "optimized_sequence": "ATGCTACTACTA",
+            "metrics": {"cai": 0.8, "gc_percent": 16.7},
+            "validation": {"polya": "PASS", "moclo": "UNCHECKED", "gc": "PASS"},
+        },
+        input_sequence="MLLL",
+        profile="balanced",
+        objective=None,
+        host_profile="nbenthamiana",
+        kozak=False,
+        dinuc=False,
+        constraints={"gc_min": 40.0, "gc_max": 55.0},
+    )
+
+    assert result["constraint_report"]["codon_rarity_clusters"] == 1
 
 
 def test_legacy_gc_validation_uses_request_constraints() -> None:

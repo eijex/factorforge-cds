@@ -11,6 +11,12 @@ from typing import Any
 
 from factorforge.engines.profile.utils import get_data_path
 
+# Homopolymer thresholds — two distinct concerns, intentionally different values.
+# Expression stability: AT-rich runs ≥6 nt can resemble instability elements (ARE).
+# Synthesis/manufacturing: runs ≥8 nt are flagged by gene synthesis vendors as difficult.
+HOMOPOLYMER_EXPRESSION_WARN_NT = 6
+HOMOPOLYMER_SYNTHESIS_WARN_NT = 8
+
 
 STANDARD_GENETIC_CODE: dict[str, str] = {
     "TTT": "F",
@@ -286,8 +292,19 @@ def codon_usage_profile(sequence: str) -> dict[str, dict[str, float | int | str]
     return profile
 
 
-def detect_homopolymers(sequence: str, max_run: int = 6) -> list[dict[str, Any]]:
-    """Detect runs whose length is greater than or equal to max_run."""
+def detect_homopolymers(
+    sequence: str,
+    max_run: int = HOMOPOLYMER_EXPRESSION_WARN_NT,
+) -> list[dict[str, Any]]:
+    """Detect homopolymer runs for expression stability evaluation.
+
+    Uses HOMOPOLYMER_EXPRESSION_WARN_NT (default 6 nt) — AT-rich runs of this
+    length can resemble AU-rich instability elements (ARE) and affect mRNA
+    stability in plant expression systems.
+
+    For synthesis/manufacturing risk, see RuleEngine.scan_homopolymers()
+    which uses HOMOPOLYMER_SYNTHESIS_WARN_NT (8 nt).
+    """
     if max_run <= 1:
         raise ValueError("max_run must be > 1")
 
@@ -303,17 +320,27 @@ def detect_homopolymers(sequence: str, max_run: int = 6) -> list[dict[str, Any]]
             continue
         run_length = index - run_start
         if run_length >= max_run:
-            findings.append(
-                {"start": run_start, "end": index, "base": run_base, "length": run_length}
-            )
+            findings.append({
+                "start": run_start,
+                "end": index,
+                "base": run_base,
+                "length": run_length,
+                "context": "expression_stability",
+                "threshold_nt": max_run,
+            })
         run_base = base
         run_start = index
 
     run_length = len(seq) - run_start
     if run_length >= max_run:
-        findings.append(
-            {"start": run_start, "end": len(seq), "base": run_base, "length": run_length}
-        )
+        findings.append({
+            "start": run_start,
+            "end": len(seq),
+            "base": run_base,
+            "length": run_length,
+            "context": "expression_stability",
+            "threshold_nt": max_run,
+        })
     return findings
 
 

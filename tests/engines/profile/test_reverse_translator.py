@@ -181,6 +181,27 @@ class TestGCTargetProfile:
         # Should be close to 50%
         assert 45.0 <= gc <= 55.0
 
+    def test_gc_target_default_uses_host_midpoint(self, translator, sample_protein):
+        """Without explicit target_gc, gc_target defaults to host midpoint (GC_OPT_MID=60),
+        NOT the legacy 42.5%."""
+        from factorforge.engines.profile.scoring import GC_OPT_MID
+
+        dna = translator.reverse_translate(
+            sample_protein, profile=OptimizationProfile.GC_TARGET
+        )
+        gc = translator.calculate_gc_content(dna)
+        # Default should drive GC toward the host midpoint (60%), well above legacy 42.5%
+        assert abs(gc - GC_OPT_MID) <= 10.0
+        assert gc > 50.0  # explicitly not the old 42.5% behavior
+
+    def test_gc_target_explicit_low_still_supported(self, translator, sample_protein):
+        """Users wanting low GC can still request it explicitly."""
+        dna = translator.reverse_translate(
+            sample_protein, profile=OptimizationProfile.GC_TARGET, target_gc=42.5
+        )
+        gc = translator.calculate_gc_content(dna)
+        assert gc < 50.0  # explicit low target honored
+
     def test_gc_target_extreme_high_gc(self, translator):
         """Test GC-target profile with high target GC"""
         protein = "GGGG"

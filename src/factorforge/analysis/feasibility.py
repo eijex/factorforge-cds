@@ -88,9 +88,9 @@ def _reconstruct_sequence(
 def analyze_feasibility(
     protein_sequence: str,
     codon_weights: dict[str, float],
-    target_cai: float = 0.92,
-    target_gc_low: float = 41.0,
-    target_gc_high: float = 44.0,
+    target_cai: float = 0.82,
+    target_gc_low: float = 55.0,
+    target_gc_high: float = 65.0,
     gc_ranges: list[tuple[float, float]] | None = None,
 ) -> dict[str, Any]:
     """Compute exact CAI/GC feasibility over synonymous codon choices.
@@ -98,12 +98,16 @@ def analyze_feasibility(
     The dynamic program keeps the best log-CAI sequence for each reachable
     global GC count. This is exact for global GC and CAI under the supplied
     codon weights.
+
+    Defaults calibrated to nbenthamiana profile engine output distribution
+    (analysis 004, n=49): avg CAI=0.76, avg GC=60.1% (range 55-71%).
+    target_cai=0.82 aligns with industry practice (>0.8) and is achievable.
     """
     protein = "".join(protein_sequence.upper().split()).rstrip("*")
     if not protein:
         raise ValueError("protein_sequence must not be empty")
 
-    ranges = gc_ranges or [(41.0, 44.0), (40.0, 50.0), (40.0, 55.0)]
+    ranges = gc_ranges or [(55.0, 65.0), (50.0, 65.0), (40.0, 65.0)]
     normalized_ranges = [
         (_normalize_gc_bound(low), _normalize_gc_bound(high)) for low, high in ranges
     ]

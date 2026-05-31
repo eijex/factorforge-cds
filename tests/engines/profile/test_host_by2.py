@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from factorforge.analysis.metrics import translate_dna
+from factorforge.engines.profile.exporter import SequenceExporter
 from factorforge.engines.profile.optimizer import RuleBasedOptimizer
 from factorforge.engines.profile.rules.reverse_translator import ReverseTranslator
 from factorforge.engines.profile.utils import get_data_path, load_codon_table
@@ -67,3 +68,23 @@ def test_nbenthamiana_and_by2_hosts_both_produce_valid_sequences() -> None:
     assert nb_result.metadata["host"] == "nbenthamiana"
     assert by2_result.metadata["host"] == "ntabacum"
     assert Path(get_data_path(), "ntabacum_codons.json").exists()
+
+
+def test_by2_genbank_organism_comes_from_feature_registry() -> None:
+    exporter = SequenceExporter()
+
+    try:
+        genbank = exporter.export_genbank(
+            "ATGAAAAAAAAA",
+            {
+                "gene_name": "by2_test",
+                "protein_seq": "MKKK",
+                "host_profile": "by2",
+                "cai": 0.8,
+                "gc": 16.7,
+            },
+        )
+    except ImportError:
+        pytest.skip("Biopython not installed")
+
+    assert "Nicotiana tabacum" in genbank

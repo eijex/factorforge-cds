@@ -119,6 +119,24 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 
 ## [Unreleased]
 
+### Breaking Changes
+- **`gc_target` profile default changed** — calling `gc_target` without an explicit `target_gc` now produces sequences targeting ~60% GC (host midpoint) instead of the previous 42.5%. If you relied on the 42.5% default, pass `target_gc=42.5` explicitly to preserve the old behavior.
+
+### Changed
+- **`gc_target` profile default** — now targets the host-profile GC midpoint (60% for *N. benthamiana*) when `target_gc` is not supplied, instead of the legacy hardcoded 42.5%. To target a lower GC, pass `target_gc` explicitly. Output sequences from `gc_target` without an explicit target will differ.
+- **GC scoring** — `calculate_composite_score` now scores GC using a band function (`gc_band_score`): full score inside `[gc_min, gc_max]`, linear decay outside over `gc_decay_width` (default 20 pp). Replaces the previous `1 - |GC - GC_opt|/50` proximity formula, which under-discriminated GC quality.
+- **`assembly_friendly` scoring weights** — changed from balanced-identical `(0.5, 0.3, 0.2)` to `(0.3, 0.4, 0.3)` (lower CAI pressure, higher GC/MFE weight) to align scoring with its Type IIS site-avoidance translation strategy.
+- **`feasibility.py` defaults** — `target_cai` 0.92 → 0.82 (achievable; aligns with industry >0.8 practice); `target_gc` 41–44% → 55–65%; fallback GC ranges realigned to the 55–65% output distribution.
+
+### Fixed
+- **Homopolymer thresholds documented** — expression-stability (≥6 nt) and synthesis/manufacturing (≥8 nt) scans now use named constants (`HOMOPOLYMER_EXPRESSION_WARN_NT`, `HOMOPOLYMER_SYNTHESIS_WARN_NT`) and emit `context`/`threshold_nt` metadata so the two intentionally different thresholds are no longer mistaken for a bug.
+- **Misleading docs removed** — `gc_target` no longer described as "42.5% (N. benthamiana optimal)"; 42.5% was a legacy assumption inconsistent with the 55–65% codon-table output.
+- **CLI docs corrected** — `docs/cli.md` `--gc-min`/`--gc-max` defaults fixed from 40/55 to the actual 55/65.
+
+### Documentation
+- **`docs/profiles.md`** — added missing `assembly_friendly` profile; corrected `gc_target` description.
+- **`docs/tutorials/gfp-nbenthamiana.md`** — regenerated profile-comparison metrics under the new GC scoring and `gc_target` default.
+
 ---
 
 ## [3.1.7] — 2026-05-31

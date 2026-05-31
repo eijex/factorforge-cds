@@ -66,7 +66,7 @@ def test_validate_protein_sequence():
 def test_validate_cds_output_passes_normal_cds():
     result = validate_cds_output("MAF", "ATGGCTTTC")
 
-    assert result == {"passed": True, "errors": []}
+    assert result == {"passed": True, "errors": [], "aa_identity": 1.0}
 
 
 def test_validate_cds_output_fails_internal_stop():
@@ -80,6 +80,7 @@ def test_validate_cds_output_fails_aa_mismatch():
     result = validate_cds_output("MAF", "ATGGCTTAC")
 
     assert result["passed"] is False
+    assert result["aa_identity"] == pytest.approx(2 / 3)
     assert any(error.startswith("aa_mismatch") for error in result["errors"])
 
 

@@ -10,6 +10,7 @@ import pytest
 # Add project src to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src"))
 
+from factorforge.analysis.metrics import HOMOPOLYMER_SYNTHESIS_WARN_NT
 from factorforge.engines.profile.rules.rule_engine import RuleEngine
 
 
@@ -179,3 +180,29 @@ class TestScanModes:
     def test_scan_all_unknown_scanner_raises(self, engine):
         with pytest.raises(ValueError, match="Unknown scanners"):
             engine.scan_all("ATG", include=["polya", "unknown_scanner"])
+
+
+class TestHomopolymerSynthesisThreshold:
+    """Verify synthesis-risk homopolymer scanning uses correct threshold and context."""
+
+    def test_6nt_not_flagged_as_synthesis_risk(self, engine):
+        """6 nt run is below synthesis threshold — no synthesis warning."""
+        seq = "GCC" + "A" * 6 + "GCC"
+        assert engine.scan_homopolymers(seq) == []
+
+    def test_7nt_not_flagged_as_synthesis_risk(self, engine):
+        """7 nt run is below synthesis threshold — no synthesis warning."""
+        seq = "GCC" + "A" * 7 + "GCC"
+        assert engine.scan_homopolymers(seq) == []
+
+    def test_8nt_flagged_as_synthesis_risk(self, engine):
+        """8 nt run meets synthesis threshold — flagged with synthesis context."""
+        seq = "GCC" + "A" * 8 + "GCC"
+        findings = engine.scan_homopolymers(seq)
+        assert len(findings) == 1
+        assert findings[0]["context"] == "synthesis"
+        assert findings[0]["threshold_nt"] == HOMOPOLYMER_SYNTHESIS_WARN_NT
+        assert findings[0]["length"] == 8
+
+    def test_synthesis_threshold_constant_value(self):
+        assert HOMOPOLYMER_SYNTHESIS_WARN_NT == 8

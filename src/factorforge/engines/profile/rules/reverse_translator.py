@@ -15,7 +15,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, cast
 
-from factorforge.engines.profile.scoring import calculate_composite_score
+from factorforge.engines.profile.scoring import GC_OPT_MID, calculate_composite_score
 from factorforge.engines.profile.utils import (
     build_aa_to_codons_map,
     calculate_gc,
@@ -440,14 +440,22 @@ class ReverseTranslator:
         return "".join(dna_seq)
 
     def _gc_target_translate(self, protein_seq: str, **kwargs: Any) -> str:
-        """
-        GC-Target profile: enforce GC% 42.5% ±2% (N. benthamiana optimal)
+        """GC-Target profile: drive global GC toward a configurable target.
+
+        Targets the caller-supplied ``target_gc`` if provided, otherwise the
+        host-profile GC midpoint (GC_OPT_MID = 60% for N. benthamiana). To target
+        a lower GC (e.g. for specific vector requirements), pass target_gc explicitly.
 
         - GC constraint first
         - CAI may be sacrificed
         - Balance local window GC (50 bp)
+
+        TODO: GC_OPT_MID is currently a single N. benthamiana-calibrated constant.
+        When per-host GC profiles are added, source the default from the active host.
         """
-        target_gc = kwargs.get("target_gc", 42.5)
+        target_gc = kwargs.get("target_gc")
+        if target_gc is None:
+            target_gc = GC_OPT_MID
 
         dna_seq: list[str] = []
 
@@ -477,11 +485,22 @@ class ReverseTranslator:
         return "".join(dna_seq)
 
     def _assembly_friendly_translate(self, protein_seq: str, **kwargs: Any) -> str:
-        """
-        Assembly-Friendly profile: avoid BsaI/BpiI
+        """Translate for Golden Gate / MoClo assembly compatibility.
 
-        - Golden Gate compatible
-        - CAI trade-offs allowed
+        Strategy:
+        - Starts from balanced codon selection (preferred_ratio=0.6)
+        - Retries up to max_attempts times until no BsaI/BpiI Type IIS
+          restriction sites remain in the CDS (forward + reverse complement)
+        - CAI trade-offs are accepted to achieve site-free sequences
+
+        Current scope:
+        - Supported: BsaI/BpiI site avoidance via stochastic retry
+        - Not yet implemented: local GC window uniformity scoring,
+          repeat-pattern penalties, synthesis vendor constraint profiles
+
+        Args:
+            protein_seq: Amino acid sequence.
+            max_attempts: Retry limit for site removal (default: 10).
         """
         max_attempts = kwargs.get("max_attempts", 10)
         if max_attempts < 1:
@@ -529,12 +548,17 @@ class ReverseTranslator:
         return self._apply_nterminal_ramp(dna_seq, protein_seq, ramp_codons=ramp_codons)
 
     def _apply_nterminal_ramp(self, dna_seq: str, protein_seq: str, ramp_codons: int = 50) -> str:
-        """
-        Apply N-terminal codon ramp for co-translational folding.
+        """Apply N-terminal codon ramp for co-translational folding.
 
         Replaces the first `ramp_codons` codons with lower-frequency synonymous
         codons (bottom 50% by frequency) to slow the ribosome at the N-terminus.
         Single-codon amino acids (Met, Trp) are left unchanged.
+
+        TODO: ramp profile is currently not in VALID_PROFILES (not publicly accessible).
+        Before re-enabling, revisit ramp_codons=50:
+        - Literature suggests 10–30 codons (Tuller et al. 2010, Chu et al. 2014).
+        - For short proteins, 50 codons can cover the entire CDS.
+        - Consider: ramp_len = min(30, max(10, int(protein_length * 0.15)))
 
         Args:
             dna_seq: Full-length DNA sequence.

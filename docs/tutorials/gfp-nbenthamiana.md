@@ -46,19 +46,19 @@ Expected output:
 Optimizing with Profile-based v3.1.7...
 Saved to: gfp_optimized.fasta
 Metrics:
-  - cai: 0.781
-  - gc_percent: 57.32
-  - score: 0.843
+  - cai: 0.769
+  - gc_percent: 58.72
+  - score: 0.856
 ```
 
-The optimized CDS begins with `ATGGTCAGCAAGGGCGAGGAG...` — ready for synthesis or downstream assembly.
+The optimized CDS begins with `ATGGTGAGCAAGGGCGAGGAA...` — ready for synthesis or downstream assembly. (Reverse translation is stochastic, so exact codons and metrics vary slightly between runs.)
 
 **What happened:**
 
 | Metric | Value | Target range |
 |--------|-------|-------------|
-| CAI | 0.781 | — (higher is better) |
-| GC% | 57.32% | 55–65% |
+| CAI | 0.769 | — (higher is better) |
+| GC% | 58.72% | 55–65% |
 | Internal stop codons | 0 | 0 (hard requirement) |
 | Rare codon runs | 0 | 0 (ribosome stalling risk) |
 
@@ -79,10 +79,10 @@ Profile comparison results:
 ─────────────────────────────────────────────
 Profile               CAI     GC%    Score
 ─────────────────────────────────────────────
-balanced            0.767   58.86    0.846
-high_cai            1.000   31.24    0.936
-gc_target           0.897   42.40    0.679
-assembly_friendly   0.769   55.09    0.819
+balanced            0.770   57.74    0.856
+high_cai            1.000   31.24    0.889
+gc_target           0.774   59.83    0.972
+assembly_friendly   0.779   57.18    0.905
 ─────────────────────────────────────────────
 ```
 
@@ -92,7 +92,7 @@ assembly_friendly   0.769   55.09    0.819
 |---------|----------|
 | `balanced` | General *N. benthamiana* expression; good CAI with GC% in target range |
 | `high_cai` | Maximum translation speed; note GC% may fall outside 55–65% range |
-| `gc_target` | When GC% must stay near 42.5% (e.g. specific vector requirements) |
+| `gc_target` | When GC% must hit a specific value (defaults to the host midpoint of 60%; pass `--target-gc` for other values, e.g. specific vector requirements) |
 | `assembly_friendly` | MoClo / Golden Gate workflows; avoids problematic restriction sites |
 
 For most *N. benthamiana* agroinfiltration experiments, `balanced` is the recommended starting profile.

@@ -25,6 +25,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 # Try to import FactorForge
 try:
     from factorforge.engines import EngineRegistry
+    from factorforge.engines.profile.rules.rule_engine import RuleEngine
     from factorforge.engines.profile.utils import get_data_path, load_codon_table
     from factorforge.analysis.metrics import load_codon_usage_table
     from factorforge.analysis.feasibility import analyze_feasibility
@@ -43,6 +44,7 @@ try:
         detect_restriction_sites,
         domesticate_custom_sites,
     )
+    from factorforge.utils.sequence_validator import validate_cds_output
 
     FACTORFORGE_AVAILABLE = True
     logger.info("FactorForge v3.x profile engine loaded successfully")
@@ -699,6 +701,9 @@ class handler(BaseHTTPRequestHandler):
         gc_percent = metrics.get("gc_percent", recommended.get("gc_percent", 0.0))
         polya_warnings = int(metrics.get("polya_signals", 0))
         internal_stop_count = int(recommended.get("internal_stop_count", 0))
+        cds_validation = self.cds_validation_result(input_sequence, output_cds)
+        aa_identity = float(cds_validation.get("aa_identity", 0.0))
+        codon_rarity_clusters = self.count_rare_codon_runs(output_cds, host_profile)
 
         param_payload = {
             "objective": objective or "legacy_profile",
@@ -751,11 +756,24 @@ class handler(BaseHTTPRequestHandler):
             ),
             "polya_warnings": polya_warnings,
             "internal_stop_count": internal_stop_count,
-            "aa_identity": 1.0,
-            "codon_rarity_clusters": 0,
+            "aa_identity": aa_identity,
+            "codon_rarity_clusters": codon_rarity_clusters,
+            "cds_validation_errors": cds_validation.get("errors", []),
         }
         response["validation_status"] = self.design_validation_status(response)
         return response
+
+    def cds_validation_result(self, input_sequence, output_cds):
+        """Return validate_cds_output() status for protein inputs."""
+        cleaned = self.clean_sequence(input_sequence)
+        if re.fullmatch(r"[ACGT]+", cleaned):
+            return {"passed": True, "errors": [], "aa_identity": 1.0}
+        return validate_cds_output(cleaned, output_cds)
+
+    def count_rare_codon_runs(self, output_cds, host_profile):
+        """Count rare codon runs using the host-specific rule scanner."""
+        internal_host = HOST_MAP.get(str(host_profile or DEFAULT_HOST_PROFILE).lower(), host_profile)
+        return len(RuleEngine(host=internal_host).scan_rare_codon_runs(output_cds))
 
     def response_profile(self, response, profile, objective):
         """Return the selected candidate/profile name for DesignPackage metadata."""
@@ -780,15 +798,23 @@ class handler(BaseHTTPRequestHandler):
     def design_validation_status(self, response):
         """Map existing validation fields into DesignPackage validation status."""
         validation = response.get("validation", {})
+        constraint_report = response.get("constraint_report", {})
         recommended = response.get("recommended_candidate") or {}
         validator_status = recommended.get("validator_status")
+        aa_identity = float(constraint_report.get("aa_identity", 0.0))
+        cds_errors = constraint_report.get("cds_validation_errors", [])
         polya = str(validation.get("polya", "UNCHECKED")).lower()
         gc = str(validation.get("gc", "UNCHECKED")).lower()
         moclo = str(validation.get("moclo", "UNCHECKED")).lower()
-        in_silico = "pass" if validator_status in (None, "pass") and gc != "warning" else "warning"
+        aa_identity_check = "pass" if aa_identity == 1.0 and not cds_errors else "fail"
+        in_silico = (
+            "pass"
+            if validator_status in (None, "pass") and gc != "warning" and aa_identity_check == "pass"
+            else "warning"
+        )
         return {
             "in_silico": in_silico,
-            "aa_identity_check": "pass",
+            "aa_identity_check": aa_identity_check,
             "gc_check": "pass" if gc == "pass" else gc,
             "polya_check": "pass" if polya == "pass" else polya,
             "moclo_check": "unchecked" if moclo == "unchecked" else moclo,
