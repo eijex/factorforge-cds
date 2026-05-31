@@ -19,6 +19,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 0. `git status --short` — working tree must be clean
 0. `python -m ruff check .` — no lint errors
 0. `python -m pytest tests/ -v --tb=short` — all tests pass
+0. Verify `Dockerfile` references match current file locations (especially after any script/file moves)
 0. `python scripts/release.py X.Y.Z --dry-run` — verify 16 files
 
 **Version bump & manual updates:**
