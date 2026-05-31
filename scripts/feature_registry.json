@@ -4,13 +4,30 @@
       "display": "N. benthamiana",
       "species": "Nicotiana benthamiana",
       "codon_table": "nbenthamiana",
-      "use_case": "agroinfiltration"
+      "use_case": "agroinfiltration",
+      "status": "stable",
+      "validation_status": "benchmarked",
+      "recommended_use": [
+        "Agrobacterium-mediated transient expression",
+        "Stable transformation"
+      ],
+      "confidence": "high"
     },
     "by2": {
       "display": "Tobacco BY-2",
       "species": "Nicotiana tabacum",
       "codon_table": "ntabacum",
-      "use_case": "bioreactor/cGMP"
+      "use_case": "bioreactor/cGMP",
+      "status": "experimental",
+      "validation_status": "unvalidated_in_factorforge",
+      "recommended_use": [
+        "BY-2 suspension cell expression",
+        "Comparative codon usage analysis"
+      ],
+      "not_recommended_for": [
+        "N. benthamiana agroinfiltration"
+      ],
+      "confidence": "medium"
     }
   },
   "algorithms": {},
