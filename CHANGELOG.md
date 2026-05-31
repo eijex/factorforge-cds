@@ -40,6 +40,12 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 11. Confirm Zenodo DOI: https://zenodo.org/doi/10.5281/zenodo.20407331
 12. **Bioconda** — update `recipes/meta.yaml` (version + SHA256 via `curl -s https://pypi.org/pypi/factorforge-cds/X.Y.Z/json | python -c "import sys,json; d=json.load(sys.stdin); [print(f['digests']['sha256']) for f in d['urls'] if f['packagetype']=='sdist']"`), push to fork branch `add-factorforge-cds`. Once PR is merged by Bioconda maintainers, autobump handles subsequent releases automatically.
 13. **GitHub Issues** — close all issues completed in this release; if a full milestone is done, close the milestone too (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
+14. **eijex-mcp sync** — check `C:\Work\eijex\eijex-mcp` for required updates:
+    - [ ] Version string in `factorforge_optimize_cds` description → bump to new version
+    - [ ] New profiles added? → add to `profile` enum in route.ts and mcp-tools.ts
+    - [ ] New API endpoints added? → expose as new MCP tools
+    - [ ] New `--host` options? → update tool description
+    - [ ] README tool table still accurate?
 
 **Conditional checklists — apply only when relevant:**
 
