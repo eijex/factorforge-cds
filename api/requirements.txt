@@ -2,7 +2,7 @@
 # Minimal dependencies for FactorForge v3.x
 
 biopython>=1.81
-numpy>=1.24.0
+numpy>=2.2.6
 pandas>=2.0.0
 
 # Optional: ViennaRNA (if using MFE scoring)
