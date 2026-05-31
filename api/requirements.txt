@@ -3,7 +3,7 @@
 
 biopython>=1.81
 numpy>=1.24.0
-pandas>=2.0.0
+pandas>=2.3.3
 
 # Optional: ViennaRNA (if using MFE scoring)
 # Note: ViennaRNA may not work on Vercel due to system dependencies
