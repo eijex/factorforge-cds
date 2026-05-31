@@ -25,6 +25,18 @@ factorforge optimize input.fasta -o output.fasta
 | `--scan-mode` | `full` | Rule scan: `full` or `fast` |
 | `--template` | — | MoClo construct template |
 
+## API Endpoints
+
+The web API (`https://factorforge.eijex.com`) exposes the following endpoints:
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /api/optimize` | Single sequence optimization |
+| `POST /api/optimize/compare` | Compare multiple profiles side-by-side |
+| `POST /api/optimize/batch` | Optimize up to 20 sequences in one request |
+
+For AI agent access, use [Eijex MCP](https://mcp.eijex.com) which wraps these endpoints as MCP tools.
+
 ### `factorforge list-engines`
 
 List all available optimization engines.

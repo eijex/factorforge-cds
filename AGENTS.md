@@ -124,6 +124,7 @@ After any change, update the relevant public-facing files before pushing:
 | Web UI change | `web/index.html`, `web/README.md` — also run: `npx playwright test` |
 | New engine / model | `docs/model_cards/`, `CHANGELOG.md` |
 | Wet-lab result added | `VALIDATION.md` |
+| New API endpoint | `docs/cli.md` (API section), `CHANGELOG.md`, **eijex-mcp sync** (see `CHANGELOG.md` Step 14) |
 
 ## 12. Public Repo Structure Checklist
 
