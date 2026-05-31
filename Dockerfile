@@ -12,8 +12,8 @@ RUN pip install --no-cache-dir -e .
 COPY api/ api/
 COPY web/ web/
 COPY data/ data/
-COPY server.py .
+COPY scripts/serve.py .
 
 EXPOSE 8080
 
-CMD ["python", "server.py"]
+CMD ["python", "serve.py"]
