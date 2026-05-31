@@ -18,6 +18,7 @@ Profiles apply to the profile engine (`--engine profile`).
 | `high_cai` | Maximum codon adaptation index |
 | `gc_target` | Target GC 42.5% for *N. benthamiana* |
 | `viral_delivery` | Adjusted for TRV viral vector delivery |
+| `ml_enhanced` ⚠️ Experimental | SynCodonLM-augmented scoring (`pip install factorforge-cds[ml]` required) |
 
 ## Usage
 
@@ -43,3 +44,4 @@ result = pipeline.run("MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG...")
 - **Maximizing CAI** → `high_cai`
 - **GC-sensitive downstream processes** → `gc_target`
 - **Viral vector (TRV, TMV)** → `viral_delivery`
+- **ML-augmented scoring (experimental)** → `ml_enhanced` (requires `pip install factorforge-cds[ml]`)
