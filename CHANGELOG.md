@@ -46,6 +46,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - [ ] New API endpoints added? → expose as new MCP tools
     - [ ] New `--host` options? → update tool description
     - [ ] README tool table still accurate?
+    - [ ] `skills/bio-research.md` workflow steps still accurate?
 
 **Conditional checklists — apply only when relevant:**
 
