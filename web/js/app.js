@@ -950,6 +950,8 @@ function clearAll() {
     state.customRestrictionSites = [];
     state.results = null;
     elements.previewContainer.classList.add('hidden');
+    elements.inputTypeBadge.classList.add('hidden');
+    updateInputStats('');
     elements.resultsContainer.classList.add('hidden');
     elements.constructIdDisplay.textContent = '';
     elements.constructIdRow.classList.add('hidden');

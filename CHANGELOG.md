@@ -104,6 +104,7 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 
 ### Added
 - **Web UI host selector** — expression host toggle (N. benthamiana / BY-2 Experimental) in the input panel. BY-2 selection disables Feasibility Best objective and shows experimental warning. Result panel displays active host profile.
+- **E2E smoke tests** — 5 Playwright smoke tests covering UI load, protein input, BY-2 host toggle, Feasibility Best guard, and result rendering. Runs automatically after each deployment via `e2e.yml`.
 
 ---
 

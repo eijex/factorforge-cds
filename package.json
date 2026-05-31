@@ -1,0 +1,12 @@
+{
+  "name": "factorforge-web-e2e",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Playwright smoke tests for the FactorForge static web UI.",
+  "scripts": {
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2"
+  }
+}

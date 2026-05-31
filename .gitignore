@@ -59,6 +59,9 @@ experiments/results/run4b_full/
 
 # Tool caches
 .ruff_cache/
+node_modules/
+test-results/
+playwright-report/
 
 # Training configs (internal — all versions)
 configs/finetune_all.yaml
