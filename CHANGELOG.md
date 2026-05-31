@@ -102,6 +102,9 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 
 ## [Unreleased]
 
+### Added
+- **Web UI host selector** — expression host toggle (N. benthamiana / BY-2 Experimental) in the input panel. BY-2 selection disables Feasibility Best objective and shows experimental warning. Result panel displays active host profile.
+
 ---
 
 ## [3.1.6] — 2026-05-30

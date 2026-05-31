@@ -59,6 +59,7 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 
 - ✅ File upload (FASTA)
 - ✅ Text input (paste sequence)
+- ✅ Host selector (N. benthamiana / Tobacco BY-2)
 - ✅ 4 optimization profiles
 - ✅ Real-time results
 - ✅ Custom restriction site input and removal report

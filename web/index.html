@@ -213,12 +213,15 @@
                             Objective
                         </p>
 
-                        <label class="block relative group">
+                        <label id="feasibilityBestOption" class="block relative group">
                             <input type="radio" name="objective" value="feasibility_best" checked class="peer sr-only">
                             <div
+                                id="feasibilityBestCard"
                                 class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
                                 <span class="flex items-center text-sm font-bold text-slate-800">
                                     Feasibility Best (Recommended)
+                                    <span id="feasibilityBestHostBadge"
+                                        class="hidden ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 border border-slate-300">N. benthamiana only</span>
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
                                         <span class="tooltip-text">Dynamic-programming candidate with maximum CAI inside the requested GC range when feasible.</span>
@@ -327,6 +330,38 @@
                                     ✓</div>
                             </div>
                         </label>
+                    </div>
+
+                    <!-- Host Selector -->
+                    <div class="mb-8 border-t border-slate-100 pt-6">
+                        <p class="text-[10px] font-extrabold text-slate-600 uppercase tracking-widest mb-4">Host
+                            System
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="block relative group">
+                                <input id="hostNbenthamiana" type="radio" name="host" value="nbenthamiana" checked
+                                    class="peer sr-only">
+                                <div
+                                    class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
+                                    <span class="block text-sm font-bold text-slate-800">N. benthamiana</span>
+                                    <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Leaf transient expression host</span>
+                                    <div
+                                        class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
+                                        ✓</div>
+                                </div>
+                            </label>
+                            <label class="block relative group">
+                                <input id="hostBy2" type="radio" name="host" value="by2" class="peer sr-only">
+                                <div
+                                    class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
+                                    <span class="block text-sm font-bold text-slate-800">Tobacco BY-2</span>
+                                    <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">N. tabacum cell culture codon usage</span>
+                                    <div
+                                        class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
+                                        ✓</div>
+                                </div>
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Advanced Settings -->
@@ -629,6 +664,15 @@
                                     </p>
                                 </div>
                                 <span class="text-2xl opacity-50 dark:opacity-80">✨</span>
+                            </div>
+                            <div
+                                class="col-span-2 p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm">
+                                <p
+                                    class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">
+                                    Host Profile</p>
+                                <p id="hostProfileValue"
+                                    class="text-sm font-black text-slate-900 dark:text-slate-100 leading-none">-
+                                </p>
                             </div>
                         </div>
 

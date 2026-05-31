@@ -5,11 +5,17 @@
 
 const API_ENDPOINT = '/api/optimize';
 const ENABLE_MOCK = window.FACTORFORGE_ENABLE_MOCK === true;
+const HOST_LABELS = {
+    nbenthamiana: 'N. benthamiana',
+    by2: 'Tobacco BY-2',
+    ntabacum: 'Tobacco BY-2'
+};
 
 // State Management
 const state = {
     sequence: '',
     objective: 'feasibility_best',
+    host: 'nbenthamiana',
     useTemplate: false,
     kozak: false,
     dinuc: false,
@@ -36,6 +42,7 @@ const elements = {
     caiValue: document.getElementById('caiValue'),
     gcValue: document.getElementById('gcValue'),
     polyaValue: document.getElementById('polyaValue'),
+    hostProfileValue: document.getElementById('hostProfileValue'),
     optimizedSequence: document.getElementById('optimizedSequence'),
     jsonDetails: document.getElementById('jsonDetails'),
     downloadFasta: document.getElementById('downloadFasta'),
@@ -54,6 +61,10 @@ const elements = {
     themeToggle: document.getElementById('themeToggle'),
     themeIcon: document.getElementById('themeIcon'),
     objectiveRadios: document.getElementsByName('objective'),
+    hostRadios: document.getElementsByName('host'),
+    feasibilityBestOption: document.getElementById('feasibilityBestOption'),
+    feasibilityBestCard: document.getElementById('feasibilityBestCard'),
+    feasibilityBestHostBadge: document.getElementById('feasibilityBestHostBadge'),
     useTemplateCheck: document.getElementById('useTemplate'),
     kozakToggle: document.getElementById('toggleKozak'),
     dinucToggle: document.getElementById('toggleDinuc'),
@@ -115,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     applyStaticLabelPatches();
     initEventListeners();
+    updateHostUI();
     renderHistory();
     console.log('FactorForge v3.1.6 Engaged');
 });
@@ -129,6 +141,14 @@ function initEventListeners() {
     elements.objectiveRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             state.objective = e.target.value;
+            updateHostUI();
+        });
+    });
+
+    elements.hostRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            state.host = e.target.value;
+            updateHostUI();
         });
     });
 
@@ -170,6 +190,41 @@ function applyStaticLabelPatches() {
     if (!elements.submitValidationBtn) return;
     const label = elements.submitValidationBtn.children[1];
     if (label) label.textContent = 'Share Wet-Lab Result';
+}
+
+function updateHostUI() {
+    const selectedHost = Array.from(elements.hostRadios).find(radio => radio.checked);
+    state.host = selectedHost?.value || state.host || 'nbenthamiana';
+
+    const isBy2 = state.host === 'by2';
+    const objectiveRadios = Array.from(elements.objectiveRadios);
+    const feasibilityRadio = objectiveRadios.find(radio => radio.value === 'feasibility_best');
+
+    if (feasibilityRadio) {
+        feasibilityRadio.disabled = isBy2;
+        if (isBy2 && feasibilityRadio.checked) {
+            const fallback = objectiveRadios.find(radio => !radio.disabled && radio.value === 'high_cai')
+                || objectiveRadios.find(radio => !radio.disabled);
+            if (fallback) {
+                fallback.checked = true;
+                state.objective = fallback.value;
+            }
+        }
+    }
+
+    if (elements.feasibilityBestOption) {
+        elements.feasibilityBestOption.classList.toggle('cursor-not-allowed', isBy2);
+    }
+    if (elements.feasibilityBestCard) {
+        elements.feasibilityBestCard.classList.toggle('opacity-60', isBy2);
+        elements.feasibilityBestCard.classList.toggle('cursor-not-allowed', isBy2);
+        elements.feasibilityBestCard.classList.toggle('cursor-pointer', !isBy2);
+        elements.feasibilityBestCard.classList.toggle('hover:border-emerald-400', !isBy2);
+        elements.feasibilityBestCard.classList.toggle('hover:shadow-md', !isBy2);
+    }
+    if (elements.feasibilityBestHostBadge) {
+        elements.feasibilityBestHostBadge.classList.toggle('hidden', !isBy2);
+    }
 }
 
 function isProteinInputResult(res) {
@@ -314,6 +369,7 @@ async function runOptimization() {
     setLoading(true);
     trackEvent('optimization_run', {
         objective: state.objective,
+        host: state.host,
         kozak: state.kozak,
         dinuc: state.dinuc,
         seq_len_bucket: seqLenBucket(state.sequence.length),
@@ -323,6 +379,7 @@ async function runOptimization() {
         // Prepare Request
         const payload = {
             sequence: state.sequence,
+            host: state.host,
             use_template: state.useTemplate,
             kozak: state.kozak,
             dinuc: state.dinuc,
@@ -330,7 +387,7 @@ async function runOptimization() {
         };
         if (state.objective === 'feasibility_best') {
             payload.objective = 'feasibility_best';
-            payload.host_profile = 'nbenthamiana';
+            payload.host_profile = state.host;
             payload.constraints = { gc_min: 55.0, gc_max: 65.0 };
         } else {
             payload.profile = state.objective;
@@ -375,6 +432,7 @@ async function runOptimization() {
         if (primary?.metrics) {
             trackEvent('optimization_result', {
                 objective: state.objective,
+                host: getResultHostProfile(data),
                 cai_bucket: caiBucket(primary.metrics.cai ?? 0),
                 gc_bucket: gcBucket(primary.metrics.gc_percent ?? 0),
                 success: true,
@@ -427,6 +485,16 @@ function updateStructureLinks() {
     }
 }
 
+function getResultHostProfile(res) {
+    return res?.host_profile || res?.validation?.host_profile || state.host || 'nbenthamiana';
+}
+
+function formatHostProfile(hostProfile) {
+    const normalized = String(hostProfile || 'nbenthamiana').toLowerCase();
+    const label = HOST_LABELS[normalized] || hostProfile;
+    return `${hostProfile} (${label})`;
+}
+
 function renderResults() {
     const res = state.results;
     if (!res) return;
@@ -447,6 +515,9 @@ function renderResults() {
     elements.caiValue.textContent = primary.metrics.cai.toFixed(3);
     // GC Value updated below via manual calculation
     elements.polyaValue.textContent = primary.metrics.polya_signals === 0 ? '0 (Clean)' : primary.metrics.polya_signals;
+    if (elements.hostProfileValue) {
+        elements.hostProfileValue.textContent = formatHostProfile(getResultHostProfile(res));
+    }
 
     // Metrics Comparison Table
     const isProteinInput = isProteinInputResult(res);
@@ -813,6 +884,7 @@ function addToHistory(input, result) {
         timestamp: new Date().toLocaleString(),
         inputLen: input.length,
         profile: state.objective,
+        host: getResultHostProfile(result),
         cai: primary.metrics.cai,
         gc: calculateGC(primary.optimized_sequence),
         sequence: primary.optimized_sequence,
@@ -837,7 +909,7 @@ function renderHistory() {
         <div class="p-2 border border-slate-100 rounded-lg hover:bg-slate-50 cursor-pointer transition-all mb-2 flex justify-between items-center group" onclick="loadHistoryItem(${item.id})">
             <div>
                 <p class="text-[10px] font-bold text-slate-700">${item.inputLen}bp → ${item.profile}</p>
-                <p class="text-[9px] text-slate-400">${item.timestamp}</p>
+                <p class="text-[9px] text-slate-400">${formatHostProfile(item.host || 'nbenthamiana')} · ${item.timestamp}</p>
             </div>
             <div class="text-right">
                 <p class="text-[10px] font-bold text-emerald-600">CAI: ${item.cai.toFixed(3)}</p>
@@ -856,7 +928,8 @@ window.loadHistoryItem = (id) => {
     state.results = {
         optimized_sequence: item.sequence,
         metrics: { cai: item.cai, gc_percent: item.gc, polya_signals: 0, length: item.sequence.length },
-        profile: item.profile
+        profile: item.profile,
+        host_profile: item.host || 'nbenthamiana'
     };
     renderResults();
     showToast('History item loaded', 'success');
@@ -1058,6 +1131,7 @@ function getMockResult() {
             length: mockSeq.length
         },
         profile: state.objective,
+        host_profile: state.host,
         validation: {
             polya: 'PASS',
             moclo: 'UNCHECKED',
