@@ -78,6 +78,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - [ ] `mkdocs.yml` `site_description`
 - [ ] Documentation sync (internal) — update capability descriptions
 - [ ] `_analysis/` — codon table validation analysis job (prerequisite)
+- [ ] **Google Form** — add new host to "Host organism" field options
 
 </details>
 
