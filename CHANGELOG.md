@@ -45,7 +45,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 11. Confirm Zenodo DOI: https://zenodo.org/doi/10.5281/zenodo.20407331
 12. **Bioconda** — update `recipes/meta.yaml` (version + SHA256 via `curl -s https://pypi.org/pypi/factorforge-cds/X.Y.Z/json | python -c "import sys,json; d=json.load(sys.stdin); [print(f['digests']['sha256']) for f in d['urls'] if f['packagetype']=='sdist']"`), push to fork branch `add-factorforge-cds`. Once PR is merged by Bioconda maintainers, autobump handles subsequent releases automatically.
 13. **GitHub Issues** — close all issues completed in this release; if a full milestone is done, close the milestone too (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
-14. **eijex-mcp sync** — check `C:\Work\eijex\eijex-mcp` for required updates:
+14. **eijex-mcp sync** — check `C:\Work\eijex\eijex-mcp` for required updates (done-job.py [FORM] hint if feature_flags triggered):
     - [ ] Version string in `factorforge_cds_optimize` description → bump to new version
     - [ ] New profiles added? → add to `profile` enum in route.ts and mcp-tools.ts
     - [ ] New API endpoints added? → expose as new MCP tools
@@ -57,6 +57,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - [ ] `src/app/_lib/mcp-tools.ts` tool descriptions, tags, keyFeatures still accurate?
     - [ ] `.claude-plugin/plugin.json` description still accurate?
     - [ ] `package.json` version — bump eijex-mcp if interface changed
+15. **Wet-lab survey** — check if form fields need updating (done-job.py [FORM] hint auto-triggers on `host:*` or `profile:*` feature_flags; otherwise no action needed)
 
 **Conditional checklists — apply only when relevant:**
 
