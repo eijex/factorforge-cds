@@ -57,7 +57,9 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - [ ] `src/app/_lib/mcp-tools.ts` tool descriptions, tags, keyFeatures still accurate?
     - [ ] `.claude-plugin/plugin.json` description still accurate?
     - [ ] `package.json` version — bump eijex-mcp if interface changed
-15. **Wet-lab survey** — check if form fields need updating (done-job.py [FORM] hint auto-triggers on `host:*` or `profile:*` feature_flags; otherwise no action needed)
+    - [ ] `CHANGELOG.md` — add entry for FactorForge version bump and any breaking changes affecting MCP tools
+15. **Bioconda PR** — update PR title to new version: `gh pr edit 65834 --repo bioconda/bioconda-recipes --title "Add factorforge-cds X.Y.Z"` + add comment with new SHA256
+16. **Wet-lab survey** — check if form fields need updating (done-job.py [FORM] hint auto-triggers on `host:*` or `profile:*` feature_flags; otherwise no action needed)
 
 **Conditional checklists — apply only when relevant:**
 
