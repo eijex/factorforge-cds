@@ -69,6 +69,9 @@ class ScoringConfig:
 # Pre-defined scoring configs per optimization profile
 PROFILE_SCORING_CONFIGS: dict[str, ScoringConfig] = {
     "balanced": ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.2),
+    # high_cai: CAI 1.0 mimics naturally high-expression N. benthamiana genes (golden_set).
+    # For very long or structurally complex proteins under extreme agroinfiltration overexpression,
+    # consider the ramp profile instead (N-terminal codon deoptimization reduces ribosome stalling).
     "high_cai": ScoringConfig(w_cai=0.8, w_gc=0.1, w_mfe=0.1),
     # gc_target: gc_min/gc_max are overridden dynamically from target_gc kwarg in
     # calculate_composite_score — the config defaults here are not used for band scoring.
