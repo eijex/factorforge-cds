@@ -4,6 +4,8 @@ FactorForge is an in-silico CDS design tool. It optimizes codon usage, GC conten
 
 This file tracks community wet-lab results to build a shared evidence base over time.
 
+**Data use notice:** Submitted results may be used in aggregate to improve FactorForge. No personally identifying information is collected. Sequences are not stored or logged.
+
 **Try it first**: [factorforge.eijex.com](https://factorforge.eijex.com)
 
 ---
