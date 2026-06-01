@@ -120,6 +120,10 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 
 ## [Unreleased]
 
+---
+
+## [3.1.8] — 2026-06-01
+
 ### Breaking Changes
 - **`gc_target` profile default changed** — calling `gc_target` without an explicit `target_gc` now produces sequences targeting ~60% GC (host midpoint) instead of the previous 42.5%. If you relied on the 42.5% default, pass `target_gc=42.5` explicitly to preserve the old behavior.
 
@@ -283,7 +287,8 @@ First official release of FactorForge.
 
 ---
 
-[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.7...HEAD
+[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.8...HEAD
+[3.1.8]: https://github.com/eijex/factorforge-cds/compare/v3.1.7...v3.1.8
 [3.1.7]: https://github.com/eijex/factorforge-cds/compare/v3.1.6...v3.1.7
 [3.1.6]: https://github.com/eijex/factorforge-cds/compare/v3.1.5...v3.1.6
 [3.1.5]: https://github.com/eijex/factorforge-cds/compare/v3.1.4...v3.1.5
