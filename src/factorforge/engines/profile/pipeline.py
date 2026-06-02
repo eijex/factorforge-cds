@@ -20,7 +20,9 @@ from factorforge.engines.profile.rules.reverse_translator import (
 from factorforge.engines.profile.rules.rule_engine import RuleEngine
 from factorforge.engines.profile.scoring import calculate_composite_score
 from factorforge.engines.profile.validator import InputValidator
+from factorforge.analysis.metrics import translate_dna
 from factorforge.utils.construct_id import generate_construct_id
+from factorforge.utils.sequence_validator import validate_cds_output
 
 logger = logging.getLogger(__name__)
 
@@ -175,6 +177,7 @@ class OptimizationPipeline:
 
         if seq_type == "dna":
             optimized_dna = processed
+            expected_protein = translate_dna(processed).rstrip("*")
             cai = translator.calculate_cai(optimized_dna)
             gc = translator.calculate_gc_content(optimized_dna)
             score = calculate_composite_score(
@@ -182,6 +185,7 @@ class OptimizationPipeline:
             )
             candidate_metrics = {"cai": cai, "gc": gc, "score": score}
         else:
+            expected_protein = processed.rstrip("*")
             logger.debug(f"Generating candidates with profile: {opt_profile.value}")
             candidates = translator.generate_candidates(processed, profile=opt_profile, n=1)
             if not candidates:
@@ -251,7 +255,20 @@ class OptimizationPipeline:
 
         assembly_standard = kwargs.get("assembly_standard", "golden_gate")
         domestication = domesticator.domesticate(optimized_dna, standard=assembly_standard)
+        if not domestication.get("success", False):
+            unfixable = domestication.get("unfixable", [])
+            error = domestication.get("error")
+            detail = error or f"unfixable restriction sites: {unfixable}"
+            raise ValueError(f"Domestication failed for {assembly_standard}: {detail}")
+
         domesticated_sequence = domestication.get("domesticated_seq", optimized_dna)
+        final_validation = validate_cds_output(expected_protein, domesticated_sequence)
+        if not final_validation["passed"]:
+            raise ValueError(
+                "Final CDS validation failed: "
+                f"{final_validation['errors']} "
+                f"(aa_identity={final_validation['aa_identity']:.4f})"
+            )
 
         template_name = construct_template or self.construct_template
         if template_name:
@@ -278,6 +295,7 @@ class OptimizationPipeline:
             "validation": val_result,
             "scan_results": scan_results,
             "domestication": domestication,
+            "final_validation": final_validation,
             "metrics": candidate_metrics,
             "scan_mode": scan_mode,
         }

@@ -123,6 +123,10 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 
 ## [Unreleased]
 
+### Fixed
+- **Domestication Silence Fail** — `pipeline.py` now raises `ValueError` when restriction-site domestication fails (previously returned the undomesticated sequence silently as success).
+- **Pipeline Output Validator** — `validate_cds_output()` is now called in `pipeline.py` before final sequence return, catching AA identity violations and internal stops at the pipeline level (previously only enforced at the API layer since job 067).
+
 ---
 
 ## [3.1.8] — 2026-06-01

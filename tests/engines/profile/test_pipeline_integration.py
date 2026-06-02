@@ -98,6 +98,45 @@ def test_pipeline_run_batch(short_protein: str) -> None:
     assert results[1].metadata["input_id"] == "s2"
 
 
+def test_pipeline_rejects_domestication_failure(short_protein: str, monkeypatch) -> None:
+    """Pipeline must hard-fail when restriction-site domestication fails."""
+    pipeline = OptimizationPipeline(profile="balanced")
+
+    def failed_domestication(seq: str, standard: str = "golden_gate") -> dict[str, object]:
+        return {
+            "success": False,
+            "domesticated_seq": seq,
+            "removed_sites": [],
+            "unfixable": [{"enzyme": "BsaI", "site": "GGTCTC", "position": 0}],
+            "attempts": 1,
+        }
+
+    monkeypatch.setattr(pipeline.domesticator, "domesticate", failed_domestication)
+
+    with pytest.raises(ValueError, match="Domestication failed"):
+        pipeline.run(short_protein)
+
+
+def test_pipeline_rejects_final_aa_identity_violation(short_protein: str, monkeypatch) -> None:
+    """Pipeline must hard-fail if final CDS no longer translates to the input protein."""
+    pipeline = OptimizationPipeline(profile="balanced")
+
+    def nonsynonymous_domestication(seq: str, standard: str = "golden_gate") -> dict[str, object]:
+        mutated = "GCT" + seq[3:]
+        return {
+            "success": True,
+            "domesticated_seq": mutated,
+            "removed_sites": [],
+            "unfixable": [],
+            "attempts": 1,
+        }
+
+    monkeypatch.setattr(pipeline.domesticator, "domesticate", nonsynonymous_domestication)
+
+    with pytest.raises(ValueError, match="Final CDS validation failed"):
+        pipeline.run(short_protein)
+
+
 def test_pipeline_save_genbank(short_protein: str, tmp_path: Path) -> None:
     """GenBank save for constructs"""
     pipeline = OptimizationPipeline(profile="balanced", construct_template="standard_expression")
