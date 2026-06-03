@@ -102,6 +102,7 @@ body {
 
 /* Selection Background in Dark Mode Fix - Only for Cards, not Toggles */
 .dark input[name="objective"]:checked+div,
+.dark input[name="host"]:checked+div,
 .dark #useTemplate:checked+div {
     background-color: rgba(16, 185, 129, 0.25) !important;
     border-color: #34d399 !important;
@@ -111,12 +112,15 @@ body {
 
 .dark input[name="objective"]:checked+div span:first-child,
 .dark input[name="objective"]:checked+div span:nth-child(2),
+.dark input[name="host"]:checked+div span:first-child,
+.dark input[name="host"]:checked+div span:nth-child(2),
 .dark #useTemplate:checked+div span:first-child,
 .dark #useTemplate:checked+div span:nth-child(2) {
     color: var(--primary) !important;
 }
 
-.dark input[name="objective"]:checked+div div:last-child {
+.dark input[name="objective"]:checked+div div:last-child,
+.dark input[name="host"]:checked+div div:last-child {
     color: var(--primary) !important;
 }
 
@@ -217,6 +221,7 @@ body {
 
 /* Form Elements - Specific for Profile Radios and Top-level Checkboxes */
 input[name="objective"]:checked+div,
+input[name="host"]:checked+div,
 #useTemplate:checked+div {
     border-color: #059669 !important;
     /* Richer Emerald 600 */
@@ -228,19 +233,22 @@ input[name="objective"]:checked+div,
 }
 
 input[name="objective"]:checked+div span:first-child,
+input[name="host"]:checked+div span:first-child,
 #useTemplate:checked+div span:first-child {
     color: #064e3b !important;
     /* Darker green for header */
 }
 
 input[name="objective"]:checked+div span:nth-child(2),
+input[name="host"]:checked+div span:nth-child(2),
 #useTemplate:checked+div span:nth-child(2) {
     color: #065f46 !important;
     /* Darker green for description */
     font-weight: 600;
 }
 
-input[name="objective"]:checked+div div:last-child {
+input[name="objective"]:checked+div div:last-child,
+input[name="host"]:checked+div div:last-child {
     color: #064e3b !important;
     /* Darker green for checkmark */
     font-weight: 900;
@@ -265,6 +273,18 @@ input[name="objective"]:checked+div div:last-child {
 .dark .profile-card:hover {
     background-color: rgba(45, 55, 72, 1) !important;
     border-color: #10B981 !important;
+}
+
+/* Disabled (Coming soon / unavailable) cards: keep base appearance on hover
+   so they don't look selectable. */
+.profile-card.cursor-not-allowed:hover {
+    border-color: #e2e8f0 !important;
+    background-color: #ffffff !important;
+}
+
+.dark .profile-card.cursor-not-allowed:hover {
+    border-color: rgba(51, 65, 85, 1) !important;
+    background-color: rgba(30, 41, 59, 1) !important;
 }
 
 /* Toggle Switch Overrides - Clean up transition */
