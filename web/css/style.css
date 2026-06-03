@@ -251,12 +251,31 @@ input[name="host"]:checked+div div:last-child {
 /* Base card state for high visibility */
 .profile-card {
     background-color: #ffffff !important;
-    border-color: #e2e8f0 !important;
+    border-color: #cbd5e1 !important;
+    /* slate-300: stronger than slate-200 so cards separate from the white page */
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
 .dark .profile-card {
     background-color: rgba(30, 41, 59, 1) !important;
     border-color: rgba(51, 65, 85, 1) !important;
+    box-shadow: none;
+}
+
+/* Disabled (Experimental / unavailable) cards: clearly greyed out so they are
+   visually distinct from enabled-but-unselected cards. */
+.profile-card.cursor-not-allowed {
+    background-color: #f1f5f9 !important;
+    /* slate-100 */
+    border-color: #e2e8f0 !important;
+    border-style: dashed !important;
+    box-shadow: none;
+}
+
+.dark .profile-card.cursor-not-allowed {
+    background-color: rgba(15, 23, 42, 0.5) !important;
+    border-color: rgba(51, 65, 85, 0.7) !important;
+    border-style: dashed !important;
 }
 
 .profile-card:hover {
@@ -269,16 +288,16 @@ input[name="host"]:checked+div div:last-child {
     border-color: #10B981 !important;
 }
 
-/* Disabled (Coming soon / unavailable) cards: keep base appearance on hover
+/* Disabled (Experimental / unavailable) cards: keep the greyed base on hover
    so they don't look selectable. */
 .profile-card.cursor-not-allowed:hover {
     border-color: #e2e8f0 !important;
-    background-color: #ffffff !important;
+    background-color: #f1f5f9 !important;
 }
 
 .dark .profile-card.cursor-not-allowed:hover {
-    border-color: rgba(51, 65, 85, 1) !important;
-    background-color: rgba(30, 41, 59, 1) !important;
+    border-color: rgba(51, 65, 85, 0.7) !important;
+    background-color: rgba(15, 23, 42, 0.5) !important;
 }
 
 /* Toggle Switch Overrides - Clean up transition */
