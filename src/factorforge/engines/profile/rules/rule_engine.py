@@ -354,13 +354,20 @@ class RuleEngine:
         max_gc: float = 75,
     ) -> list[dict[str, Any]]:
         """
-        Detect extreme GC regions
+        Detect extreme GC regions in a sliding local window.
+
+        This is a LOCAL synthesis/extreme-window guard (default 25-75% over a
+        50 bp window), NOT the global GC target. Global GC is governed separately
+        by the scoring band (GC_OPT_MIN/MAX, ~55-65%) and the API/DP gc_min/gc_max
+        constraints. The wide 25-75% band intentionally flags only synthesis-hostile
+        local windows; narrowing it toward the global optimum would raise false
+        positives against the engine's own output distribution (analysis 004: 55-71%).
 
         Args:
             seq: DNA sequence
             window: Window size (bp)
-            min_gc: Minimum GC% threshold
-            max_gc: Maximum GC% threshold
+            min_gc: Minimum local GC% threshold (synthesis guard, not global target)
+            max_gc: Maximum local GC% threshold (synthesis guard, not global target)
 
         Returns:
             List of violations

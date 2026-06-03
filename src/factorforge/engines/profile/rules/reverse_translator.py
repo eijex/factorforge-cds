@@ -551,8 +551,8 @@ class ReverseTranslator:
         """Apply N-terminal codon ramp for co-translational folding.
 
         Replaces the first `ramp_codons` codons with lower-frequency synonymous
-        codons (bottom 50% by frequency) to slow the ribosome at the N-terminus.
-        Single-codon amino acids (Met, Trp) are left unchanged.
+        codons (bottom 25% by frequency; cutoff = 3*len//4) to slow the ribosome
+        at the N-terminus. Single-codon amino acids (Met, Trp) are left unchanged.
 
         TODO: ramp profile is currently not in VALID_PROFILES (not publicly accessible).
         Before re-enabling, revisit ramp_codons=50:
