@@ -3,9 +3,9 @@
 Bump FactorForge version across all version-bearing files.
 
 Usage:
-    python bump_version.py 3.1.7
-    python bump_version.py 3.2.0 --dry-run
-    python bump_version.py 3.2.0 --strict   # fail on any missing pattern
+    python release.py 3.1.7
+    python release.py 3.2.0 --dry-run
+    python release.py 3.2.0 --strict   # fail on any missing pattern
 
 Publication sync (keep documentation in sync with feature changes):
   - Patch release: no update needed unless claims changed
