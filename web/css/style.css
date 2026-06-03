@@ -102,8 +102,7 @@ body {
 
 /* Selection Background in Dark Mode Fix - Only for Cards, not Toggles */
 .dark input[name="objective"]:checked+div,
-.dark input[name="host"]:checked+div,
-.dark #useTemplate:checked+div {
+.dark input[name="host"]:checked+div {
     background-color: rgba(16, 185, 129, 0.25) !important;
     border-color: #34d399 !important;
     box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
@@ -113,9 +112,7 @@ body {
 .dark input[name="objective"]:checked+div span:first-child,
 .dark input[name="objective"]:checked+div span:nth-child(2),
 .dark input[name="host"]:checked+div span:first-child,
-.dark input[name="host"]:checked+div span:nth-child(2),
-.dark #useTemplate:checked+div span:first-child,
-.dark #useTemplate:checked+div span:nth-child(2) {
+.dark input[name="host"]:checked+div span:nth-child(2) {
     color: var(--primary) !important;
 }
 
@@ -221,8 +218,7 @@ body {
 
 /* Form Elements - Specific for Profile Radios and Top-level Checkboxes */
 input[name="objective"]:checked+div,
-input[name="host"]:checked+div,
-#useTemplate:checked+div {
+input[name="host"]:checked+div {
     border-color: #059669 !important;
     /* Richer Emerald 600 */
     border-width: 2.5px !important;
@@ -233,15 +229,13 @@ input[name="host"]:checked+div,
 }
 
 input[name="objective"]:checked+div span:first-child,
-input[name="host"]:checked+div span:first-child,
-#useTemplate:checked+div span:first-child {
+input[name="host"]:checked+div span:first-child {
     color: #064e3b !important;
     /* Darker green for header */
 }
 
 input[name="objective"]:checked+div span:nth-child(2),
-input[name="host"]:checked+div span:nth-child(2),
-#useTemplate:checked+div span:nth-child(2) {
+input[name="host"]:checked+div span:nth-child(2) {
     color: #065f46 !important;
     /* Darker green for description */
     font-weight: 600;
