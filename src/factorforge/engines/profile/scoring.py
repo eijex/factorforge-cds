@@ -302,3 +302,50 @@ def calculate_composite_score(
     )
 
     return round(score, 3)
+
+
+def compute_mfe_evidence(
+    sequence: str | None,
+    config: ScoringConfig | None = None,
+    profile: str | None = None,
+) -> dict[str, Any]:
+    """Return MFE provenance metadata for a scored sequence.
+
+    Mirrors the MFE branch of ``calculate_composite_score`` WITHOUT changing the
+    score. Its purpose is honesty: when MFE is not computed (e.g. ViennaRNA is
+    unavailable in the deployment, as on Vercel), callers must be able to tell
+    that ``mfe_kcal_mol`` is absent rather than a genuine 0.0.
+
+    Returns a dict with:
+        mfe_kcal_mol: float | None   (None when not computed)
+        mfe_status:   "computed" | "not_computed"
+        mfe_used:     bool           (whether MFE contributed to the score)
+        mfe_warning:  str | None     (reason when not used)
+        score_components: {cai_used, gc_used, mfe_used}
+    """
+    if config is None:
+        profile_name = (profile or "balanced").lower()
+        config = PROFILE_SCORING_CONFIGS.get(profile_name) or PROFILE_SCORING_CONFIGS["balanced"]
+
+    mfe_value: float | None = None
+    reason: str | None = None
+
+    if not config.use_mfe:
+        reason = "MFE scoring is disabled for this profile."
+    elif sequence is None:
+        reason = "MFE was not computed because no sequence was provided."
+    elif not _check_vienna_available():
+        reason = "MFE was not computed because ViennaRNA is unavailable in this environment."
+    else:
+        mfe_value = calculate_mfe(sequence)
+        if mfe_value is None:
+            reason = "MFE computation failed for this sequence."
+
+    mfe_used = mfe_value is not None
+    return {
+        "mfe_kcal_mol": round(mfe_value, 2) if mfe_used else None,
+        "mfe_status": "computed" if mfe_used else "not_computed",
+        "mfe_used": mfe_used,
+        "mfe_warning": None if mfe_used else reason,
+        "score_components": {"cai_used": True, "gc_used": True, "mfe_used": mfe_used},
+    }

@@ -573,6 +573,13 @@ class handler(BaseHTTPRequestHandler):
             cai = float(result.metrics.get("cai", 0.0))
             gc_percent = float(result.metrics.get("gc_percent", 0.0))
             polya_warnings = int(result.metrics.get("polya_warnings", 0))
+            # MFE provenance (016 audit): surface whether MFE was actually
+            # computed. ViennaRNA is not installed on Vercel, so MFE is normally
+            # not_computed in production — never report it as a misleading 0.0.
+            mfe_kcal_mol = result.metrics.get("mfe_kcal_mol")
+            mfe_status = result.metrics.get("mfe_status", "not_computed")
+            mfe_used = bool(result.metrics.get("mfe_used", False))
+            mfe_warning = result.metrics.get("mfe_warning")
 
             # Validation checks
             polya_check = "PASS" if polya_warnings == 0 else "WARNING"
@@ -594,6 +601,12 @@ class handler(BaseHTTPRequestHandler):
                     "gc_percent": round(gc_percent, 1),
                     "polya_signals": polya_warnings,
                     "length": len(optimized_sequence),
+                    "mfe_kcal_mol": (
+                        round(float(mfe_kcal_mol), 2) if mfe_kcal_mol is not None else None
+                    ),
+                    "mfe_status": mfe_status,
+                    "mfe_used": mfe_used,
+                    "mfe_warning": mfe_warning,
                 },
                 "profile": profile,
                 "use_template": use_template,

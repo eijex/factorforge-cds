@@ -18,7 +18,10 @@ from factorforge.engines.profile.rules.reverse_translator import (
     ReverseTranslator,
 )
 from factorforge.engines.profile.rules.rule_engine import RuleEngine
-from factorforge.engines.profile.scoring import calculate_composite_score
+from factorforge.engines.profile.scoring import (
+    calculate_composite_score,
+    compute_mfe_evidence,
+)
 from factorforge.engines.profile.validator import InputValidator
 from factorforge.analysis.metrics import translate_dna
 from factorforge.utils.construct_id import generate_construct_id
@@ -50,7 +53,15 @@ class PipelineResult:
             "optimization_profile": self.metadata.get("profile", ""),
             "cai_score": round(metrics.get("cai", 0.0), 4),
             "gc_content_pct": round(metrics.get("gc", 0.0), 2),
-            "mfe_kcal_mol": round(metrics.get("mfe", 0.0), 2),
+            # MFE provenance (016 audit): None when not computed (e.g. ViennaRNA
+            # unavailable) — never report an uncomputed MFE as a misleading 0.0.
+            "mfe_kcal_mol": (
+                round(metrics["mfe_kcal_mol"], 2)
+                if metrics.get("mfe_kcal_mol") is not None
+                else None
+            ),
+            "mfe_status": metrics.get("mfe_status", "not_computed"),
+            "mfe_used": metrics.get("mfe_used", False),
             "polya_signal_count": len(scan.get("polya", [])),
             "domestication_edits": len(dom.get("removed_sites", [])),
             "sequence_length_aa": len(self.sequence) // 3,
@@ -285,6 +296,13 @@ class OptimizationPipeline:
         else:
             construct_record = None
             final_sequence = domesticated_sequence
+
+        # MFE provenance for the final output sequence (016 audit): record
+        # whether MFE was computed so export_features / Design Package never
+        # report an uncomputed MFE as 0.0.
+        candidate_metrics.update(
+            compute_mfe_evidence(domesticated_sequence, profile=effective_profile)
+        )
 
         metadata: dict[str, Any] = {
             "construct_id": generate_construct_id(),

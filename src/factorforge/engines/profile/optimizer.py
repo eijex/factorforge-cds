@@ -9,7 +9,7 @@ from factorforge.core.interfaces import OptimizationResult, OptimizerEngine
 from .exporter import SequenceExporter
 from .rules.reverse_translator import OptimizationProfile, ReverseTranslator
 from .rules.rule_engine import RuleEngine
-from .scoring import calculate_composite_score
+from .scoring import calculate_composite_score, compute_mfe_evidence
 from .validator import InputValidator
 
 
@@ -117,6 +117,10 @@ class RuleBasedOptimizer(OptimizerEngine):
             "score": candidates[0]["score"],
             "violations": sum(len(v) for v in scan_results.values()),
         }
+        # MFE provenance: expose whether MFE was actually computed so downstream
+        # artifacts (API response, Design Package) never report an uncomputed
+        # MFE as a misleading 0.0 (016 audit). Score value is unchanged.
+        metrics.update(compute_mfe_evidence(optimized_dna, profile=profile_value))
 
         return OptimizationResult(
             sequence=optimized_dna,
