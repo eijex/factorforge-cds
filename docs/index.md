@@ -45,6 +45,13 @@ Benchmarked on *N. benthamiana* SGN CDS (v3.1.4, balanced profile, N=3,876 seque
 | AA identity | 100% | 100% |
 | Validator pass rate | 100% | 100% |
 
+Reproduce the benchmark:
+
+```bash
+python scripts/benchmark.py --n 100  # quick validation (~30s)
+python scripts/benchmark.py          # full benchmark (N. benthamiana SGN CDS)
+```
+
 ---
 
 ## Supported Hosts
