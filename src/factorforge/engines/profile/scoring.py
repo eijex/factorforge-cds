@@ -34,6 +34,8 @@ class ScoringConfig:
     w_gc: float = 0.3
     w_mfe: float = 0.2
     w_dinuc: float = 0.0  # CpG/TpA dinucleotide penalty (opt-in, default off)
+    cpg_weight: float = 0.0  # plant default: CpG inactive
+    tpa_weight: float = 1.0  # plant default: TpA active
     w_syncodonlm: float = 0.0  # SynCodonLM quality score (opt-in, default off)
     gc_opt: float = GC_OPT_MID  # no longer used by calculate_composite_score (superseded by
                                 # gc_min/gc_max band); retained for external API compatibility
@@ -187,31 +189,19 @@ def gc_band_score(
     return max(0.0, 1.0 - distance / decay_width)
 
 
-def calculate_dinucleotide_score(sequence: str) -> float:
-    """Calculate a dinucleotide avoidance score (0-1, higher = fewer CpG/TpA).
+def calculate_dinucleotide_score(
+    sequence: str,
+    cpg_weight: float = 0.0,
+    tpa_weight: float = 1.0,
+) -> float:
+    """Score dinucleotide avoidance.
 
-    Combines CpG and TpA observed/expected ratios. A sequence with no CpG
-    and no TpA scores 1.0; high density scores toward 0.0.
-
-    Args:
-        sequence: DNA sequence.
-
-    Returns:
-        Dinucleotide avoidance score (0-1).
+    Plant default: CpG inactive (cpg_weight=0.0), only TpA is penalized.
+    Mammalian opt-in: set cpg_weight=1.0 and tpa_weight=1.0 to penalize both.
     """
-    from factorforge.engines.profile.utils import calculate_dinucleotide_ratio
+    from factorforge.analysis.metrics import calculate_dinucleotide_score as _score
 
-    if len(sequence) < 6:
-        return 1.0
-
-    cpg_ratio = calculate_dinucleotide_ratio(sequence, "CG")
-    tpa_ratio = calculate_dinucleotide_ratio(sequence, "TA")
-
-    # Score: 1.0 when ratio=0, 0.0 when ratio>=2.0
-    cpg_score = max(0.0, 1.0 - cpg_ratio / 2.0)
-    tpa_score = max(0.0, 1.0 - tpa_ratio / 2.0)
-
-    return (cpg_score + tpa_score) / 2.0
+    return _score(sequence, cpg_weight=cpg_weight, tpa_weight=tpa_weight)
 
 
 def calculate_composite_score(
@@ -279,7 +269,11 @@ def calculate_composite_score(
     dinuc_score = 0.5  # neutral default
     actual_w_dinuc = config.w_dinuc
     if actual_w_dinuc > 0 and sequence is not None:
-        dinuc_score = calculate_dinucleotide_score(sequence)
+        dinuc_score = calculate_dinucleotide_score(
+            sequence,
+            cpg_weight=config.cpg_weight,
+            tpa_weight=config.tpa_weight,
+        )
     elif actual_w_dinuc > 0:
         actual_w_dinuc = 0.0  # Cannot compute without sequence
 

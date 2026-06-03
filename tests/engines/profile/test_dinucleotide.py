@@ -152,10 +152,14 @@ class TestDinucleotideScoring:
         """Very short sequence scores 1.0 (too short to evaluate)."""
         assert calculate_dinucleotide_score("ATG") == 1.0
 
-    def test_dinuc_score_cpg_rich_lower(self):
-        """CpG-rich sequence scores lower than clean sequence."""
-        clean = calculate_dinucleotide_score("AATTAATTAATTAATTAATTAATT")
-        rich = calculate_dinucleotide_score("ACGACGACGACGACGACGACGACG")
+    def test_dinuc_score_mammalian_opt_in_cpg_rich_lower(self):
+        """CpG-rich sequence scores lower when CpG scoring is explicitly enabled."""
+        clean = calculate_dinucleotide_score(
+            "CCCCGGGGCCCCGGGG", cpg_weight=1.0, tpa_weight=1.0
+        )
+        rich = calculate_dinucleotide_score(
+            "CGCGCGCGCGCGCGCG", cpg_weight=1.0, tpa_weight=1.0
+        )
         assert rich < clean
 
     def test_composite_score_dinuc_zero_backward_compat(self):

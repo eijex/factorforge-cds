@@ -16,6 +16,7 @@ from factorforge.engines.profile.scoring import (
     PROFILE_SCORING_CONFIGS,
     ScoringConfig,
     calculate_composite_score,
+    calculate_dinucleotide_score,
     gc_band_score,
     normalize_mfe,
 )
@@ -182,6 +183,37 @@ class TestGCBandScore:
             cai=0.8, gc=70.0, profile="gc_target", target_gc=50.0
         )
         assert on_target > off_target
+
+
+class TestDinucleotideScore:
+    """Verify CpG/TpA scoring weights."""
+
+    def test_plant_default_cpg_inactive(self):
+        """plant default: CpG inactive, so CpG-rich sequences are not penalized."""
+        score = calculate_dinucleotide_score("CGCCGCCGCCGCCGCCGCCG", cpg_weight=0.0)
+        assert score == pytest.approx(1.0)
+
+    def test_tpa_rich_sequence_is_penalized(self):
+        """TpA remains active in the plant default."""
+        score = calculate_dinucleotide_score("TATATATATATATATATATATA", cpg_weight=0.0)
+        assert score < 0.5
+
+    def test_default_call_uses_plant_weights(self):
+        """Default call keeps CpG inactive and TpA active."""
+        sequence = "CGCCGCCGCCGCCGCCGCCG"
+        assert calculate_dinucleotide_score(sequence) == calculate_dinucleotide_score(
+            sequence, cpg_weight=0.0, tpa_weight=1.0
+        )
+
+    def test_mammalian_opt_in_penalizes_cpg(self):
+        """Mammalian opt-in can penalize both CpG and TpA."""
+        clean = calculate_dinucleotide_score(
+            "CCCCGGGGCCCCGGGG", cpg_weight=1.0, tpa_weight=1.0
+        )
+        rich = calculate_dinucleotide_score(
+            "CGCGCGCGCGCGCGCG", cpg_weight=1.0, tpa_weight=1.0
+        )
+        assert rich < clean
 
 
 class TestAssemblyFriendlyProfile:

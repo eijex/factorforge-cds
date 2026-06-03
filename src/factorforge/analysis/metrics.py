@@ -277,6 +277,32 @@ def calculate_cai(sequence: str, codon_weights: dict[str, float]) -> float:
     return math.exp(log_sum / count) if count else 0.0
 
 
+def calculate_dinucleotide_score(
+    sequence: str,
+    cpg_weight: float = 0.0,
+    tpa_weight: float = 1.0,
+) -> float:
+    """Score dinucleotide avoidance.
+
+    Plant default: CpG inactive (cpg_weight=0.0), only TpA is penalized.
+    Mammalian opt-in: set cpg_weight=1.0 and tpa_weight=1.0 to penalize both.
+    """
+    from factorforge.engines.profile.utils import calculate_dinucleotide_ratio
+
+    if len(sequence) < 6:
+        return 1.0
+
+    total_weight = cpg_weight + tpa_weight
+    if total_weight == 0:
+        return 1.0
+
+    cpg_ratio = calculate_dinucleotide_ratio(sequence, "CG")
+    tpa_ratio = calculate_dinucleotide_ratio(sequence, "TA")
+    cpg_score = max(0.0, 1.0 - cpg_ratio / 2.0)
+    tpa_score = max(0.0, 1.0 - tpa_ratio / 2.0)
+    return (cpg_weight * cpg_score + tpa_weight * tpa_score) / total_weight
+
+
 def codon_usage_profile(sequence: str) -> dict[str, dict[str, float | int | str]]:
     """Return codon counts and frequencies for a DNA sequence."""
     codons = _codons(sequence)
