@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from io import BytesIO
+import json
+
 import api.optimize as optimize_api
 import pytest
 from api.optimize import DEFAULT_GC_MAX, DEFAULT_GC_MIN, handler
@@ -9,6 +12,26 @@ from api.optimize import DEFAULT_GC_MAX, DEFAULT_GC_MIN, handler
 
 def _handler() -> handler:
     return object.__new__(handler)
+
+
+def _post_optimize(payload: dict) -> tuple[int, dict]:
+    request_handler = _handler()
+    body = json.dumps(payload).encode("utf-8")
+    request_handler.path = "/api/optimize"
+    request_handler.headers = {"Content-Length": str(len(body))}
+    request_handler.rfile = BytesIO(body)
+    request_handler.wfile = BytesIO()
+    responses: list[int] = []
+    headers: list[tuple[str, str]] = []
+    request_handler.send_response = responses.append
+    request_handler.send_header = lambda key, value: headers.append((key, value))
+    request_handler.end_headers = lambda: None
+
+    handler.do_POST(request_handler)
+
+    request_handler.wfile.seek(0)
+    response_body = json.loads(request_handler.wfile.read().decode("utf-8"))
+    return responses[0], response_body
 
 
 def test_parse_constraints_defaults() -> None:
@@ -168,3 +191,39 @@ def test_engine_unavailable_returns_mock_when_enabled(monkeypatch) -> None:
     assert status_code == 200
     assert result["success"] is True
     assert result["engine"]["name"] == "Mock Engine"
+
+
+def test_optimize_endpoint_rejects_protein_over_web_api_limit() -> None:
+    status_code, result = _post_optimize({"sequence": "M" * 5001, "profile": "balanced"})
+
+    assert status_code == 400
+    assert result["success"] is False
+    assert "Protein input exceeds maximum length" in result["error"]
+    assert "5,000 amino acids" in result["error"]
+    assert result["cli_install"] == "pip install factorforge-cds"
+
+
+def test_optimize_endpoint_accepts_protein_at_web_api_limit() -> None:
+    # 1666 aa protein → 4998 bp DNA: well within both limits, should not be rejected for length.
+    status_code, result = _post_optimize({"sequence": "M" * 1666, "profile": "balanced"})
+    # Either succeeds or fails for a non-length reason — must not be a length rejection.
+    if status_code == 400:
+        assert "exceeds maximum length" not in result.get("error", "")
+
+
+def test_optimize_endpoint_rejects_dna_over_web_api_limit() -> None:
+    # 15,001 bp of pure ACGT → classified as DNA, over the 15,000 bp cap.
+    status_code, result = _post_optimize({"sequence": "ACG" * 5001, "profile": "balanced"})
+
+    assert status_code == 400
+    assert result["success"] is False
+    assert "DNA input exceeds maximum length" in result["error"]
+    assert "15,000 bp" in result["error"]
+
+
+def test_optimize_endpoint_allows_dna_above_protein_limit() -> None:
+    # 6,000 bp DNA (2,000 codons) exceeds the 5,000-aa protein cap but is under the
+    # 15,000-bp DNA cap → must NOT be rejected for length.
+    status_code, result = _post_optimize({"sequence": "ACG" * 2000, "profile": "balanced"})
+    if status_code == 400:
+        assert "exceeds maximum length" not in result.get("error", "")

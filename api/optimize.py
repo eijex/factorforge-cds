@@ -54,7 +54,10 @@ except ImportError as e:
 
 # Constants
 MIN_SEQUENCE_LENGTH = 3
-MAX_SEQUENCE_LENGTH = 50000  # 50kb max
+# Web API length limits (Vercel serverless timeout constraint). Split by input
+# type so the unit matches the message: 5,000 aa ≈ 15,000 bp.
+MAX_PROTEIN_LENGTH_AA = 5000
+MAX_DNA_LENGTH_BP = MAX_PROTEIN_LENGTH_AA * 3  # 15,000 bp
 VALID_PROFILES = [
     "balanced",
     "high_cai",
@@ -285,8 +288,13 @@ class handler(BaseHTTPRequestHandler):
         if len(cleaned) < MIN_SEQUENCE_LENGTH:
             return f"Sequence must be at least {MIN_SEQUENCE_LENGTH} bp"
 
-        if len(cleaned) > MAX_SEQUENCE_LENGTH:
-            return f"Sequence must be less than {MAX_SEQUENCE_LENGTH} bp"
+        length_error = self._length_limit_error(cleaned)
+        if length_error:
+            return {
+                "error": length_error,
+                "cli_install": "pip install factorforge-cds",
+                "docker_image": "ghcr.io/eijex/factorforge-cds:latest",
+            }
 
         # Check Valid Characters (DNA or Protein)
         if not VALID_CHARS_PATTERN.match(cleaned):
@@ -329,6 +337,30 @@ class handler(BaseHTTPRequestHandler):
             normalized.append(profile_name)
         return normalized
 
+    def _length_limit_error(self, cleaned):
+        """Return a web-API length-limit error message, or None if within limits.
+
+        Branches by input type so the unit matches the message: DNA (only
+        ACGTU/N) is capped in bp; everything else is treated as protein and
+        capped in aa. An ambiguous short ACGT-only protein falls under the
+        larger (DNA) limit and is unaffected in practice.
+        """
+        is_dna = bool(cleaned) and set(cleaned) <= set("ACGTUN")
+        if is_dna:
+            if len(cleaned) > MAX_DNA_LENGTH_BP:
+                return (
+                    f"DNA input exceeds maximum length for web API "
+                    f"({MAX_DNA_LENGTH_BP:,} bp, approximately {MAX_PROTEIN_LENGTH_AA:,} aa). "
+                    "For longer sequences, use the CLI or Docker."
+                )
+        elif len(cleaned) > MAX_PROTEIN_LENGTH_AA:
+            return (
+                f"Protein input exceeds maximum length for web API "
+                f"(max {MAX_PROTEIN_LENGTH_AA:,} amino acids). "
+                "For longer sequences, use the CLI or Docker."
+            )
+        return None
+
     def validate_compare_sequence(self, sequence):
         """Validate and clean a profile comparison input sequence."""
         if not sequence or not str(sequence).strip():
@@ -337,8 +369,9 @@ class handler(BaseHTTPRequestHandler):
         cleaned = self.clean_sequence(str(sequence))
         if len(cleaned) < MIN_SEQUENCE_LENGTH:
             raise ValueError(f"Sequence must be at least {MIN_SEQUENCE_LENGTH} bp")
-        if len(cleaned) > MAX_SEQUENCE_LENGTH:
-            raise ValueError(f"Sequence must be less than {MAX_SEQUENCE_LENGTH} bp")
+        length_error = self._length_limit_error(cleaned)
+        if length_error:
+            raise ValueError(length_error)
         if not VALID_CHARS_PATTERN.match(cleaned):
             invalid_chars = set(cleaned) - set(VALID_AA + "*")
             raise ValueError(
@@ -1091,6 +1124,12 @@ class handler(BaseHTTPRequestHandler):
 
     def send_error_response(self, status_code, message):
         """Send error response"""
+        if isinstance(message, dict):
+            payload = {"success": False}
+            payload.update(message)
+            self.send_json_response(status_code, payload)
+            return
+
         self.send_json_response(status_code, {"success": False, "error": message})
 
     def send_cors_headers(self):

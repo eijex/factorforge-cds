@@ -29,6 +29,14 @@ docker run -p 8080:8080 ghcr.io/eijex/factorforge-cds:latest
 
 Then open [http://localhost:8080](http://localhost:8080).
 
+## Sequence Length Limits
+
+| Mode | Max length | Notes |
+|------|------------|-------|
+| Web API (protein input) | 5,000 aa | Vercel serverless timeout constraint |
+| Web API (DNA/CDS input) | 15,000 bp | ≈ 5,000 aa |
+| CLI / Docker | No limit | Local computation, install via `pip install factorforge-cds` |
+
 ## Quick Start
 
 **CLI:**
