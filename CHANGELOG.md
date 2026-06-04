@@ -55,7 +55,10 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - [ ] `.claude-plugin/plugin.json` description still accurate?
     - [ ] `package.json` version — bump eijex-mcp if interface changed
     - [ ] `CHANGELOG.md` — add entry for FactorForge version bump and any breaking changes affecting MCP tools
-15. **Bioconda PR** — update PR title to new version: `gh pr edit 65834 --repo bioconda/bioconda-recipes --title "Add factorforge-cds X.Y.Z"` + add comment with new SHA256
+15. **eijex-web** — update version display (when repo is active):
+    - [ ] `src/app/components/StatsBar.tsx` — `latest release` value
+    - [ ] `src/app/components/Footer.tsx` — `factorforge-cds vX.Y.Z` string
+16. **Bioconda PR** — update PR title to new version: `gh pr edit 65834 --repo bioconda/bioconda-recipes --title "Add factorforge-cds X.Y.Z"` + add comment with new SHA256
 16. **Wet-lab survey** — check if Google Form host/profile fields need updating when a new host or profile is added
 
 **Conditional checklists — apply only when relevant:**
