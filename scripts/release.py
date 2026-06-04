@@ -329,7 +329,7 @@ def main() -> None:
     parser.add_argument("--strict", action="store_true",
                         help="Exit with error if any required pattern is not found")
     parser.add_argument("--workspace", default=None,
-                        help="Path to eijex-workspace to also bump cross-repo docs (e.g. C:\\Work\\eijex\\eijex-workspace)")
+                        help="Path to eijex-workspace to also bump cross-repo docs (default: C:\\Work\\eijex\\eijex-workspace)")
     parser.add_argument("--mcp", default=None,
                         help="Path to eijex-mcp repo to also bump MCP tool version strings (e.g. C:\\Work\\eijex\\eijex-mcp)")
     args = parser.parse_args()
