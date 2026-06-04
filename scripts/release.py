@@ -28,7 +28,7 @@ ROOT = Path(__file__).parent.parent
 
 
 def build_workspace_targets(old: str, new: str, workspace: Path) -> list[tuple[Path, list[tuple[str, str]], bool]]:
-    """Optional cross-repo targets in the PlantFormOrg workspace."""
+    """Optional cross-repo targets in the eijex-workspace (planning/tracking repo)."""
     return [
         (workspace / "README.md", [
             (f"FactorForge v{old}", f"FactorForge v{new}"),
@@ -44,6 +44,16 @@ def build_workspace_targets(old: str, new: str, workspace: Path) -> list[tuple[P
         ], False),
         (workspace / "refs/papers/factorforge-joss/README.md", [
             (f"(v{old})", f"(v{new})"),
+        ], False),
+    ]
+
+
+def build_mcp_targets(old: str, new: str, mcp: Path) -> list[tuple[Path, list[tuple[str, str]], bool]]:
+    """Optional cross-repo targets in the eijex-mcp repo."""
+    return [
+        (mcp / "src/app/_lib/mcp-tools.ts", [
+            (f"FactorForge v{old} stable design path", f"FactorForge v{new} stable design path"),
+            (f"DP feasibility design (v{old})", f"DP feasibility design (v{new})"),
         ], False),
     ]
 
@@ -150,7 +160,7 @@ def _check_residual(old: str, dry_run: bool) -> int:
     return residual_errors
 
 
-def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, workspace: Path | None = None) -> int:
+def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, workspace: Path | None = None, mcp: Path | None = None) -> int:
     targets = build_targets(old, new)
     errors = 0
     total_changes = 0
@@ -230,6 +240,35 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
                     if not dry_run:
                         abs_path.write_text(content, encoding="utf-8")
 
+    # MCP targets (eijex-mcp repo)
+    if mcp is not None:
+        if not mcp.is_dir():
+            print(f"  WARN: --mcp path not found: {mcp}")
+        else:
+            print(f"\n{'[DRY RUN] ' if dry_run else ''}MCP: {mcp}")
+            for abs_path, replacements, required in build_mcp_targets(old, new, mcp):
+                if not abs_path.exists():
+                    print(f"  {'ERROR' if required else 'SKIP'} (not found): {abs_path.name}")
+                    if required:
+                        errors += 1
+                    continue
+                content = abs_path.read_text(encoding="utf-8")
+                original = content
+                changes = []
+                for old_str, new_str in replacements:
+                    if old_str in content:
+                        content = content.replace(old_str, new_str)
+                        changes.append(f"  {old_str!r} → {new_str!r}")
+                    else:
+                        print(f"  WARN: pattern not found in {abs_path.name}: {old_str!r}")
+                if content != original:
+                    total_changes += 1
+                    print(f"\n{'[DRY RUN] ' if dry_run else ''}Updated: {abs_path.relative_to(mcp)}")
+                    for c in changes:
+                        print(c)
+                    if not dry_run:
+                        abs_path.write_text(content, encoding="utf-8")
+
     if errors:
         print(f"Errors: {errors} (patterns not found in required files)")
 
@@ -290,7 +329,9 @@ def main() -> None:
     parser.add_argument("--strict", action="store_true",
                         help="Exit with error if any required pattern is not found")
     parser.add_argument("--workspace", default=None,
-                        help="Path to PlantFormOrg workspace to also bump cross-repo docs (e.g. C:\\Work\\PlantFormOrg)")
+                        help="Path to eijex-workspace to also bump cross-repo docs (e.g. C:\\Work\\eijex\\eijex-workspace)")
+    parser.add_argument("--mcp", default=None,
+                        help="Path to eijex-mcp repo to also bump MCP tool version strings (e.g. C:\\Work\\eijex\\eijex-mcp)")
     args = parser.parse_args()
 
     new = args.new_version
@@ -312,8 +353,9 @@ def main() -> None:
         sys.exit(0)
 
     workspace = Path(args.workspace) if args.workspace else None
+    mcp = Path(args.mcp) if args.mcp else None
     print(f"Bumping {old} → {new}{' (dry run)' if args.dry_run else ''}{' [strict]' if args.strict else ''}\n")
-    errors = bump(old, new, dry_run=args.dry_run, strict=args.strict, workspace=workspace)
+    errors = bump(old, new, dry_run=args.dry_run, strict=args.strict, workspace=workspace, mcp=mcp)
     sys.exit(errors)
 
 
