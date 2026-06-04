@@ -60,6 +60,11 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - [ ] `src/app/components/Footer.tsx` — `factorforge-cds vX.Y.Z` string
 16. **Bioconda PR** — update PR title to new version: `gh pr edit 65834 --repo bioconda/bioconda-recipes --title "Add factorforge-cds X.Y.Z"` + add comment with new SHA256
 16. **Wet-lab survey** — check if Google Form host/profile fields need updating when a new host or profile is added
+17. **www.eijex.com sync (eijex-web)** — **conditional**, only when the release changes something the company site shows. The site links to FactorForge (factorforge.eijex.com, `pip install`, Docker, Bioconda) without pinning a version, so routine version bumps need **no** update. Update `C:\Work\eijex\eijex-web` only when:
+    - [ ] New capability/claim worth showcasing on the product/landing copy
+    - [ ] New install channel (e.g. Bioconda first becomes available) → add to install links
+    - [ ] A hard-coded FactorForge version string was introduced anywhere on the site
+    - [ ] Vercel auto-deploys eijex-web on push to its repo — no tag needed
 
 **Conditional checklists — apply only when relevant:**
 
