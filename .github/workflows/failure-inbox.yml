@@ -63,8 +63,7 @@ jobs:
               'feature-request': { color: 'a2eeef', description: 'Feature request from feedback' },
               'bug-report': { color: 'd73a4a', description: 'Bug report from feedback' },
               'docs-feedback': { color: '0075ca', description: 'Documentation feedback' },
-              'wet-lab': { color: '0e8a16', description: 'Wet-lab or experimental data follow-up' },
-              'joss-review': { color: '7057ff', description: 'JOSS review follow-up' }
+              'wet-lab': { color: '0e8a16', description: 'Wet-lab or experimental data follow-up' }
             };
 
             for (const [name, meta] of Object.entries(labelDefinitions)) {
