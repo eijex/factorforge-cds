@@ -22,7 +22,7 @@ structured fields before creating an issue.
 - `joss-review`: publication review follow-up
 - `needs-triage`: maintainer triage needed
 
-## Don Stewart Wet-Lab Data Schema
+## Wet-Lab Collaborator Data Schema
 
 Use this schema for structured experimental feedback. Keep private or unpublished
 details out of public issues unless the submitter has explicitly approved

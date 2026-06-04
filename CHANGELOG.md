@@ -21,17 +21,14 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 0. `python -m pytest tests/ -v --tb=short` — all tests pass
 0. Verify `Dockerfile` references match current file locations (especially after any script/file moves)
 0. `python scripts/release.py X.Y.Z --dry-run` — verify 16 files
-0. `python scripts/release.py X.Y.Z --workspace C:\Work\eijex\eijex-workspace --mcp C:\Work\eijex\eijex-mcp --dry-run` — verify cross-repo docs + MCP tool strings
+0. `python scripts/release.py X.Y.Z --dry-run` — verify cross-repo docs + MCP tool strings
 
 **Version bump & manual updates:**
 1. Move `[Unreleased]` entries to `[X.Y.Z] — YYYY-MM-DD` in this file; update comparison links at bottom
-2. Run `python scripts/release.py X.Y.Z --workspace C:\Work\eijex\eijex-workspace --mcp C:\Work\eijex\eijex-mcp` — updates all 16 version-bearing files + 5 eijex-workspace cross-repo docs + MCP tool strings + residual check
+2. Run `python scripts/release.py X.Y.Z` — updates all version-bearing files + cross-repo docs + MCP tool strings + residual check
 3. Add changelog entry to `web/index.html` (version panel HTML — manual; set new block to emerald/Current, demote previous to gray)
 4. Add summary entry to `docs/changelog.md`
-5. **PlantFormOrg 문서 검토** (판단 필요 항목):
-   - [ ] `ROADMAP.md` "다음 단계" — 완료·신규 항목 반영
-   - [ ] `_JOB_CATALOG.md` — 이번 릴리즈에 포함된 job 추가 여부 확인
-   - [ ] `memory/MEMORY.md`, `memory/project_factorforge.md` — 현재 상태 서술 갱신
+5. Review internal workspace docs (roadmap, job catalog, memory) for any updates needed
 
 **Commit & CI gate (tag AFTER CI passes):**
 5. `git commit -m "chore: release vX.Y.Z"` → `git push`
@@ -45,7 +42,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 11. Confirm Zenodo DOI: https://zenodo.org/doi/10.5281/zenodo.20407331
 12. **Bioconda** — update `recipes/meta.yaml` (version + SHA256 via `curl -s https://pypi.org/pypi/factorforge-cds/X.Y.Z/json | python -c "import sys,json; d=json.load(sys.stdin); [print(f['digests']['sha256']) for f in d['urls'] if f['packagetype']=='sdist']"`), push to fork branch `add-factorforge-cds`. Once PR is merged by Bioconda maintainers, autobump handles subsequent releases automatically.
 13. **GitHub Issues** — close all issues completed in this release; if a full milestone is done, close the milestone too (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
-14. **eijex-mcp sync** — check `C:\Work\eijex\eijex-mcp` for required updates (done-job.py [FORM] hint if feature_flags triggered):
+14. **eijex-mcp sync** — check the eijex-mcp repo for required updates:
     - [ ] Version string in `factorforge_cds_optimize` description → bump to new version
     - [ ] New profiles added? → add to `profile` enum in route.ts and mcp-tools.ts
     - [ ] New API endpoints added? → expose as new MCP tools
@@ -59,7 +56,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - [ ] `package.json` version — bump eijex-mcp if interface changed
     - [ ] `CHANGELOG.md` — add entry for FactorForge version bump and any breaking changes affecting MCP tools
 15. **Bioconda PR** — update PR title to new version: `gh pr edit 65834 --repo bioconda/bioconda-recipes --title "Add factorforge-cds X.Y.Z"` + add comment with new SHA256
-16. **Wet-lab survey** — check if form fields need updating (done-job.py [FORM] hint auto-triggers on `host:*` or `profile:*` feature_flags; otherwise no action needed)
+16. **Wet-lab survey** — check if Google Form host/profile fields need updating when a new host or profile is added
 
 **Conditional checklists — apply only when relevant:**
 
@@ -80,7 +77,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - [ ] `docs/profiles.md` — Supported Hosts section
 - [ ] `mkdocs.yml` `site_description`
 - [ ] Documentation sync (internal) — update capability descriptions
-- [ ] `_analysis/` — codon table validation analysis job (prerequisite)
+- [ ] Internal codon table validation analysis (prerequisite)
 - [ ] **Google Form** — add new host to "Host organism" field options
 
 </details>
@@ -133,6 +130,13 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 
 ### Documentation
 - **Stale constant corrections** — 5 doc/comment locations corrected to match live code: `target_cai` 0.92 → 0.82; GC feasibility range 41–44% → 55–65%; 5′ ramp docstring bottom 50% → 25%; `scan_gc_extremes` local-guard behaviour documented; feasibility fallback path description corrected.
+
+---
+
+## [3.1.9] — 2026-06-04
+
+### Documentation
+- **Internal housekeeping** — project tracking references updated. No engine changes.
 
 ---
 
@@ -301,7 +305,8 @@ First official release of FactorForge.
 
 ---
 
-[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.8...HEAD
+[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.9...HEAD
+[3.1.9]: https://github.com/eijex/factorforge-cds/compare/v3.1.8...v3.1.9
 [3.1.8]: https://github.com/eijex/factorforge-cds/compare/v3.1.7...v3.1.8
 [3.1.7]: https://github.com/eijex/factorforge-cds/compare/v3.1.6...v3.1.7
 [3.1.6]: https://github.com/eijex/factorforge-cds/compare/v3.1.5...v3.1.6

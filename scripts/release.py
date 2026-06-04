@@ -211,7 +211,7 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     print(f"\n{'[DRY RUN] ' if dry_run else ''}{'─' * 40}")
     print(f"Files modified: {total_changes}")
 
-    # Workspace targets (PlantFormOrg or other tracking repo)
+    # Workspace targets (eijex-workspace or other tracking repo)
     if workspace is not None:
         if not workspace.is_dir():
             print(f"  WARN: --workspace path not found: {workspace}")
@@ -329,9 +329,9 @@ def main() -> None:
     parser.add_argument("--strict", action="store_true",
                         help="Exit with error if any required pattern is not found")
     parser.add_argument("--workspace", default=None,
-                        help="Path to eijex-workspace to also bump cross-repo docs (default: C:\\Work\\eijex\\eijex-workspace)")
+                        help="Path to the internal planning/tracking workspace repo to also bump cross-repo docs")
     parser.add_argument("--mcp", default=None,
-                        help="Path to eijex-mcp repo to also bump MCP tool version strings (e.g. C:\\Work\\eijex\\eijex-mcp)")
+                        help="Path to the eijex-mcp repo to also bump MCP tool version strings")
     args = parser.parse_args()
 
     new = args.new_version
