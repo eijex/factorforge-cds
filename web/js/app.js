@@ -361,6 +361,10 @@ function updateInputStats(seq, isProtein = false) {
 }
 
 async function runOptimization() {
+    // Flush the debounced input handler so an immediate click after paste/type
+    // optimizes the current textarea value instead of stale state.
+    handleSequenceChange({ target: elements.sequenceInput });
+
     if (!state.sequence || state.sequence.length < 3) {
         showToast('Please enter a valid DNA sequence', 'error');
         return;
