@@ -39,12 +39,6 @@ def build_workspace_targets(old: str, new: str, workspace: Path) -> list[tuple[P
         (workspace / "CLAUDE.md", [
             (f"pyproject.toml: 현재 v{old}", f"pyproject.toml: 현재 v{new}"),
         ], False),
-        (workspace / "refs/papers/SUBMISSION_STRATEGY.md", [
-            (f"v{old} 공개", f"v{new} 공개"),
-        ], False),
-        (workspace / "refs/papers/factorforge-joss/README.md", [
-            (f"(v{old})", f"(v{new})"),
-        ], False),
     ]
 
 

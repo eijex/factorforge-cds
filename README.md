@@ -80,8 +80,6 @@ FactorForge v3.1.9 (2026). Open-source constraint-based CDS design engine.
 Eijex. https://github.com/eijex/factorforge-cds
 ```
 
-*A citable publication is in preparation.*
-
 ---
 
 ## Contributors
