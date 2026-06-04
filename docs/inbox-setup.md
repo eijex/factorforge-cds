@@ -36,7 +36,6 @@ The workflow creates these labels if they do not already exist:
 - `bug-report`
 - `docs-feedback`
 - `wet-lab`
-- `joss-review`
 
 Deploy failures also receive `urgent`.
 

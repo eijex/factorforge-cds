@@ -19,7 +19,6 @@ structured fields before creating an issue.
 - `feature-request`: requested capability
 - `docs-feedback`: documentation issue or suggestion
 - `wet-lab`: experimental feedback requiring careful review
-- `joss-review`: publication review follow-up
 - `needs-triage`: maintainer triage needed
 
 ## Wet-Lab Collaborator Data Schema
