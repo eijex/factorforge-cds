@@ -7,7 +7,20 @@ on:
     branches: [main]
 
 jobs:
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   test:
+    needs: secrets
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
