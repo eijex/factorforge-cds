@@ -29,7 +29,7 @@ Or use the **[web app](https://factorforge.eijex.com)** — no installation requ
 |--------|-------------|
 | **[Web App](https://factorforge.eijex.com)** | No installation, demo & light use |
 | **CLI / Python** | Local use, batch processing, data privacy |
-| **Docker** | Full web interface locally, no data leaves your machine |
+| **Docker** | Full web interface locally, no data leaves your machine (`docker pull ghcr.io/eijex/factorforge-cds:latest`) |
 | **[Eijex MCP](https://mcp.eijex.com)** | AI agent access via Claude Code, Cursor, and other MCP clients |
 
 ---
