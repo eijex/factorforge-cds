@@ -41,11 +41,12 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 10. Verify Docker: `docker run ghcr.io/eijex/factorforge-cds:vX.Y.Z factorforge --help` (smoke test)
 11. Confirm Zenodo DOI: https://zenodo.org/doi/10.5281/zenodo.20407331
 12. **Bioconda** — update `recipes/meta.yaml` (version + SHA256 via `curl -s https://pypi.org/pypi/factorforge-cds/X.Y.Z/json | python -c "import sys,json; d=json.load(sys.stdin); [print(f['digests']['sha256']) for f in d['urls'] if f['packagetype']=='sdist']"`), push to fork branch `add-factorforge-cds`. Once PR is merged by Bioconda maintainers, autobump handles subsequent releases automatically.
-13. **GitHub house maintenance:**
-    - [ ] Close issues completed in this release; close milestone if all items are done (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
-    - [ ] Close stale auto-generated CI failure issues (`gh issue list --label ci-failure` → close any that are no longer active)
-    - [ ] Scan open issues for policy violations (paper/JOSS references, unpublished roadmap items) → close any found
-    - [ ] Version label consistency — if any milestone was renamed (e.g. v3.7→v4.0): update `ROADMAP.md` section headers, `README.md` Development History table, `docs/changelog.md` roadmap description lines, GitHub milestone titles/descriptions, and any open issue titles referencing the old label
+13. **GitHub house maintenance (every release):**
+    - [ ] Close issues completed in this release; close milestone if all done (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
+    - [ ] Close stale CI failure issues: `gh issue list --label ci-failure`
+    - [ ] Scan open issues for policy violations (paper/JOSS references, unpublished roadmap items)
+    - [ ] Public surface scan: `grep -r "PlantForm\|Don Stewart\|plantform.org\|munkyukim86" --include="*.md" --include="*.py" --include="*.yml" --include="*.html" --include="*.js" .`
+    - [ ] Version label consistency — if any milestone was renamed: update `ROADMAP.md`, `README.md` Development History, `CHANGELOG.md` Development History, `docs/changelog.md`, GitHub milestone titles/descriptions, open issue titles
 14. **eijex-mcp sync** — check the eijex-mcp repo for required updates:
     - [ ] Version string in `factorforge_cds_optimize` description → bump to new version
     - [ ] New profiles added? → add to `profile` enum in route.ts and mcp-tools.ts
@@ -113,6 +114,35 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - [ ] Documentation sync (internal) — add Bioconda distribution note
 
 </details>
+
+---
+
+## Repo Health Checklist *(run quarterly or after major structural changes)*
+
+These checks are too broad for every release but catch drift that accumulates over time.
+
+**GitHub repo metadata:**
+- [ ] `factorforge-cds` description still accurate (hosts supported)?
+- [ ] Topics current (`codon-optimization`, `synthetic-biology`, etc.)?
+- [ ] `eijex-mcp` description / topics current?
+- [ ] Eijex org profile: description + website set?
+- [ ] Wiki and Projects disabled on both repos?
+
+**Labels:**
+- [ ] Duplicate or policy-violating labels? (`gh api repos/eijex/factorforge-cds/labels --jq '.[].name'`)
+- [ ] Issue template labels exist in repo? (`wet_lab_result.yml` → `wet-lab`)
+
+**Form ↔ template sync:**
+- [ ] GitHub Issue template `wet_lab_result.yml` fields match Google Form fields?
+- [ ] `VALIDATION.md` "How to Contribute" fields list matches Google Form?
+
+**Milestone descriptions:**
+- [ ] No paper/JOSS/internal references in public milestone descriptions?
+
+**Public files:**
+- [ ] `examples/sample_protein.fasta` — meaningful example (not a placeholder)?
+- [ ] `scripts/` — no untracked internal output files (e.g. benchmark CSVs, run logs)?
+- [ ] `.gitignore` comments — no overly revealing "internal/private" language?
 
 ---
 
