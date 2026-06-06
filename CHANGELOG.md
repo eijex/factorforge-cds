@@ -41,7 +41,11 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 10. Verify Docker: `docker run ghcr.io/eijex/factorforge-cds:vX.Y.Z factorforge --help` (smoke test)
 11. Confirm Zenodo DOI: https://zenodo.org/doi/10.5281/zenodo.20407331
 12. **Bioconda** — update `recipes/meta.yaml` (version + SHA256 via `curl -s https://pypi.org/pypi/factorforge-cds/X.Y.Z/json | python -c "import sys,json; d=json.load(sys.stdin); [print(f['digests']['sha256']) for f in d['urls'] if f['packagetype']=='sdist']"`), push to fork branch `add-factorforge-cds`. Once PR is merged by Bioconda maintainers, autobump handles subsequent releases automatically.
-13. **GitHub Issues** — close all issues completed in this release; if a full milestone is done, close the milestone too (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
+13. **GitHub house maintenance:**
+    - [ ] Close issues completed in this release; close milestone if all items are done (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
+    - [ ] Close stale auto-generated CI failure issues (`gh issue list --label ci-failure` → close any that are no longer active)
+    - [ ] Scan open issues for policy violations (paper/JOSS references, unpublished roadmap items) → close any found
+    - [ ] ROADMAP.md version numbers up to date (check if any milestone version labels changed)
 14. **eijex-mcp sync** — check the eijex-mcp repo for required updates:
     - [ ] Version string in `factorforge_cds_optimize` description → bump to new version
     - [ ] New profiles added? → add to `profile` enum in route.ts and mcp-tools.ts
