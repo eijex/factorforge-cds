@@ -37,6 +37,17 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: protein_class
+    attributes:
+      label: Protein class (optional)
+      options:
+        - Antibody / VHH
+        - Enzyme
+        - Membrane protein
+        - Fluorescent protein
+        - Other
+
   - type: input
     id: host
     attributes:
@@ -86,6 +97,15 @@ body:
         - Not tested
 
   - type: dropdown
+    id: replicates
+    attributes:
+      label: Replicates done (optional)
+      options:
+        - "1"
+        - "2"
+        - "3+"
+
+  - type: dropdown
     id: result
     attributes:
       label: Expression result
@@ -97,12 +117,28 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: comparison_result
+    attributes:
+      label: Comparison vs native / unoptimized (optional)
+      options:
+        - Improved
+        - Similar
+        - Worse
+        - No native control
+
+  - type: input
+    id: approximate_yield
+    attributes:
+      label: Approximate yield (optional)
+      placeholder: "e.g. ~5 mg/L, ~0.1% TSP"
+
   - type: textarea
     id: details
     attributes:
       label: Details
-      description: Quantitative data, comparison with native sequence, conditions, notes
-      placeholder: "e.g. Western band at expected MW, yield ~5 mg/L, compared with unoptimized sequence..."
+      description: Quantitative data, conditions, notes
+      placeholder: "e.g. Western band at expected MW, compared with unoptimized sequence..."
 
   - type: input
     id: institution
