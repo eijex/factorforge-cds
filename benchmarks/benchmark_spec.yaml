@@ -1,0 +1,58 @@
+benchmark:
+  id: factorforge_v3_2_0_baseline_benchmark
+  factorforge_version: "3.2.0"
+  registry: src/factorforge/registry/current_parameter_registry.yaml
+  status: in_silico_only
+
+dataset:
+  primary:
+    id: nbenthamiana_reference_cds
+    fetch_script: benchmarks/datasets/fetch_dataset.py
+    provenance: benchmarks/datasets/dataset_provenance.md
+    raw_data_committed: false
+
+random:
+  seed: 320
+  replicates: 3
+
+methods:
+  factorforge:
+    - factorforge_balanced
+    - factorforge_high_cai
+    - factorforge_gc_target
+    - factorforge_assembly_friendly
+  baselines:
+    - native_reference
+    - random_synonymous
+    - most_frequent_codon
+    - greedy_cai
+
+hard_gates:
+  biological_validity:
+    amino_acid_identity: {registry_ref: parameters.constraints.biological.aa_identity_target}
+    internal_stop_codons: {registry_ref: parameters.constraints.biological.internal_stop_allowance}
+    invalid_codons: {registry_ref: parameters.constraints.biological.invalid_codons}
+    length_multiple_of_three: {registry_ref: parameters.constraints.biological.length_multiple_of_three}
+  assembly_validity:
+    forbidden_type_iis_sites: {registry_ref: parameters.constraints.assembly.type_iis_enzymes}
+
+soft_targets:
+  cai: {registry_ref: parameters.optimization.cai_target}
+  gc_range: {registry_ref: parameters.optimization.gc_range_nbenthamiana_global}
+
+metrics:
+  primary:
+    - amino_acid_identity
+    - internal_stop_codons
+    - invalid_codons
+    - cai
+    - gc_percent
+    - forbidden_type_iis_site_count
+    - biological_pass
+    - assembly_pass
+    - multi_constraint_pass
+    - runtime_seconds
+
+outputs:
+  results_csv: benchmarks/results/v3.2.0/benchmark_results.csv
+  summary_md: benchmarks/results/v3.2.0/benchmark_summary.md
