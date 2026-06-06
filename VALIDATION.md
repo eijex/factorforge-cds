@@ -38,15 +38,17 @@ If you tested a FactorForge-optimized sequence in the lab, please share your res
 - Or email: eijex.lab@gmail.com
 
 Include:
-- Host organism
-- Protein name / class (e.g. antibody, enzyme, membrane protein)
+- Host organism (e.g. *N. benthamiana*, BY-2)
+- Protein name and class (e.g. antibody/VHH, enzyme, membrane protein, fluorescent protein)
 - FactorForge version and optimization profile used
 - Expression system and assay used
 - Result (qualitative or quantitative)
+- Comparison vs native / unoptimized sequence (if control used)
+- Approximate yield (optional, e.g. mg/g FW)
+- Number of replicates (optional)
 - Promoter used (optional)
 - Subcellular targeting (optional)
 - Harvest timepoint (optional)
-- Whether a native/unoptimized sequence was used as a control
 
 Contributors will be credited below.
 
