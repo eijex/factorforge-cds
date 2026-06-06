@@ -47,6 +47,8 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - [ ] Scan open issues for policy violations (paper/JOSS references, unpublished roadmap items)
     - [ ] Public surface scan: `grep -r "PlantForm\|Don Stewart\|plantform.org\|munkyukim86" --include="*.md" --include="*.py" --include="*.yml" --include="*.html" --include="*.js" .`
     - [ ] Version label consistency — if any milestone was renamed: update `ROADMAP.md`, `README.md` Development History, `CHANGELOG.md` Development History, `docs/changelog.md`, GitHub milestone titles/descriptions, open issue titles
+    - [ ] Issue template (`wet_lab_result.yml`) fields match Google Form? → sync if diverged
+    - [ ] VALIDATION.md current? → update GC% ranges, host list, "How to Contribute" fields if needed
 14. **eijex-mcp sync** — check the eijex-mcp repo for required updates:
     - [ ] Version string in `factorforge_cds_optimize` description → bump to new version
     - [ ] New profiles added? → add to `profile` enum in route.ts and mcp-tools.ts
