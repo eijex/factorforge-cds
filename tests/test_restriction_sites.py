@@ -194,3 +194,20 @@ def test_assembly_friendly_regression() -> None:
     )
 
     assert "custom_restriction_sites" not in api_result
+
+
+# ---------------------------------------------------------------------------
+# Benchmark foundation B — minimal scan_restriction_sites coverage
+# ---------------------------------------------------------------------------
+
+
+def test_benchmark_detects_bsai_site():
+    d = Domesticator()
+    hits = d.scan_restriction_sites("AAAGGTCTCAAA", "golden_gate")  # GGTCTC = BsaI
+    assert len(hits) >= 1
+
+
+def test_benchmark_clean_sequence_has_no_sites():
+    d = Domesticator()
+    hits = d.scan_restriction_sites("ATGAAAACCATG", "golden_gate")
+    assert len(hits) == 0
