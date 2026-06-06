@@ -1,0 +1,172 @@
+registry:
+  name: factorforge_current_parameter_registry
+  version: "3.2.0"
+  status: canonical
+  owner: factorforge-cds
+  last_reviewed: "2026-06-05"
+  note: "Registry is not the evidence source. It is a reviewed parameter state derived from evidence packages, benchmarks, and maintainer decisions."
+
+parameters:
+  constraints:
+    biological:
+      aa_identity_target:
+        value: 1.0
+        unit: fraction
+        claim_level: hard_requirement
+        evidence_status: hard_gate
+        release_status: stable
+        owner_job: "036"
+        source: "src/factorforge/utils/sequence_validator.py"
+        rationale: "Optimized CDS must translate to the input protein exactly."
+        provenance: "Job 036 output validator; molecular biology hard requirement for any CDS optimization."
+        visibility: public
+        permission: publish_allowed
+      internal_stop_allowance:
+        value: 0
+        unit: count
+        claim_level: hard_requirement
+        evidence_status: hard_gate
+        release_status: stable
+        owner_job: "036"
+        source: "src/factorforge/utils/sequence_validator.py"
+        rationale: "Internal stop codons truncate the product."
+        provenance: "Job 036 output validator; any premature stop codon terminates translation."
+        visibility: public
+        permission: publish_allowed
+      invalid_codons:
+        value: 0
+        unit: count
+        claim_level: hard_requirement
+        evidence_status: hard_gate
+        release_status: stable
+        owner_job: "036"
+        source: "src/factorforge/utils/sequence_validator.py"
+        rationale: "Non-ACGT or non-triplet codons are invalid output."
+        provenance: "Job 036 output validator; undefined codons cannot be translated."
+        visibility: public
+        permission: publish_allowed
+      length_multiple_of_three:
+        value: true
+        unit: bool
+        claim_level: hard_requirement
+        evidence_status: hard_gate
+        release_status: stable
+        owner_job: "036"
+        source: "src/factorforge/utils/sequence_validator.py"
+        rationale: "CDS length must be a multiple of 3."
+        provenance: "Job 036 output validator; reading frame integrity hard requirement."
+        visibility: public
+        permission: publish_allowed
+    assembly:
+      type_iis_enzymes:
+        value: ["BsaI", "BsmBI", "BbsI"]
+        unit: list
+        claim_level: hard_requirement
+        evidence_status: hard_gate
+        release_status: stable
+        owner_job: "075"
+        source: "src/factorforge/engines/profile/rules/domesticator.py"
+        rationale: "Type IIS sites interfere with Golden Gate / MoClo assembly."
+        provenance: "NEB Golden Gate Assembly protocol standard enzyme list; Job 041/075 Type IIS handling."
+        visibility: public
+        permission: publish_allowed
+  optimization:
+    cai_target:
+      value: 0.82
+      unit: unitless
+      claim_level: optimization_target
+      evidence_status: literature_supported_internal_benchmark
+      release_status: stable
+      owner_job: "072"
+      source: "Job 072 CAI unification + golden_set; src/factorforge/analysis/feasibility.py"
+      rationale: "Soft optimization target. Not a hard gate or wet-lab predictor."
+      notes: "Production default is a function arg (not exported module constant) — sync test will record 'not exported'."
+      provenance: "Job 072 CAI reference unification; golden_set N. benthamiana CDS distribution (Analysis 004)."
+      visibility: public
+      permission: publish_allowed
+    gc_range_nbenthamiana_global:
+      value: [55.0, 65.0]
+      unit: percent
+      claim_level: optimization_target
+      evidence_status: internal_benchmark
+      release_status: stable
+      owner_job: "042"
+      source: "src/factorforge/engines/profile/scoring.py; analysis 004 n=49 avg GC=60.1%"
+      rationale: "Aligned with host codon-table output distribution. Not a wet-lab validated optimum."
+      provenance: "Analysis 004 N. benthamiana CDS distribution (n=49, avg GC=60.1%); Job 042 GC parameter fix."
+      visibility: public
+      permission: publish_allowed
+    gc_extreme_local_window:
+      value:
+        min_gc_percent: 25.0
+        max_gc_percent: 75.0
+        window_bp: 50
+      unit: percent / bp
+      claim_level: warning_threshold
+      evidence_status: production_default
+      release_status: stable
+      owner_job: "016"
+      source: "src/factorforge/engines/profile/scoring.py"
+      rationale: "Local GC extremes in 50bp windows indicate potential assembly/expression risk."
+      provenance: "Job 016 release-readiness audit; heuristic derived from assembly folding risk literature."
+      visibility: public
+      permission: publish_allowed
+  scoring:
+    mfe:
+      status_policy:
+        value:
+          if_computed: "include_metric"
+          if_unavailable: "report_not_computed"
+          if_failed: "report_error_or_warning"
+        claim_level: warning_threshold
+        evidence_status: production_default
+        release_status: stable
+        owner_job: "074"
+        source: "MFE is optional; null/status/used contract prevents 0.0 placeholder."
+        rationale: "MFE not computed must not be reported as 0.0 — semantically misleading."
+        provenance: "Job 074 pipeline validation hardening; Job 075 MFE null contract fix."
+        visibility: public
+        permission: publish_allowed
+  benchmarks:
+    sgn_cds_count:
+      value: 3876
+      unit: sequences
+      claim_level: documentation_only
+      evidence_status: internal_benchmark
+      release_status: stable
+      owner_job: "004"
+      source: "Sol Genomics Network N. benthamiana CDS (filtered)"
+      rationale: "Reference dataset size for benchmark reproducibility."
+      provenance: "Analysis 004; Sol Genomics Network public CDS download, filtered for valid ORFs."
+      visibility: public
+      permission: publish_allowed
+  host_profiles:
+    nbenthamiana:
+      display_name: "N. benthamiana"
+      scientific_name: "Nicotiana benthamiana"
+      ncbi_taxonomy_id: 4100
+      ncbi_taxonomy_curie: "NCBITaxon:4100"
+      status: stable
+      claim_level: documentation_only
+      evidence_status: production_default
+      release_status: stable
+      owner_job: "004"
+      source: "NCBI Taxonomy Browser NCBITaxon:4100; Sol Genomics Network"
+      rationale: "Primary host for N. benthamiana plant expression; default host profile."
+      provenance: "Job 004 baseline; NCBI taxid confirmed in Job 061 host addition."
+      visibility: public
+      permission: publish_allowed
+    by2:
+      display_name: "BY-2 / N. tabacum"
+      scientific_name: "Nicotiana tabacum"
+      ncbi_taxonomy_id: 4097
+      status: experimental
+      claim_level: experimental_setting
+      evidence_status: experimental
+      release_status: experimental
+      owner_job: "004"
+      source: "NCBI Taxonomy Browser NCBITaxon:4097; Nagata et al. (1992)"
+      rationale: "Tobacco BY-2 experimental host; not validated for production use."
+      provenance: "Job 061 BY-2 host addition; experimental only — Nagata et al. (1992) BY-2 cell line."
+      visibility: public
+      permission: publish_allowed
