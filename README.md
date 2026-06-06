@@ -105,4 +105,4 @@ GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).
 - **GitHub Issues** — bugs, features: [github.com/eijex/factorforge-cds/issues](https://github.com/eijex/factorforge-cds/issues)
 - **Email** — eijex.lab@gmail.com
 - **Web** — [factorforge.eijex.com](https://factorforge.eijex.com)
-- **Company** — [www.eijex.com](https://www.eijex.com)
+- **Lab** — [www.eijex.com](https://www.eijex.com)
