@@ -46,6 +46,8 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - [ ] Close stale auto-generated CI failure issues (`gh issue list --label ci-failure` → close any that are no longer active)
     - [ ] Scan open issues for policy violations (paper/JOSS references, unpublished roadmap items) → close any found
     - [ ] ROADMAP.md version numbers up to date (check if any milestone version labels changed)
+    - [ ] Issue template (`wet_lab_result.yml`) fields match Google Form? → sync if diverged
+    - [ ] VALIDATION.md current? → update GC% ranges, host list, "How to Contribute" fields if needed
 14. **eijex-mcp sync** — check the eijex-mcp repo for required updates:
     - [ ] Version string in `factorforge_cds_optimize` description → bump to new version
     - [ ] New profiles added? → add to `profile` enum in route.ts and mcp-tools.ts
