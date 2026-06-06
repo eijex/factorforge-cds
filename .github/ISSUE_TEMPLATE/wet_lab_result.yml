@@ -1,6 +1,6 @@
 name: Wet-lab Result
 description: Share experimental validation results — credited in VALIDATION.md
-labels: ["wet-lab-result"]
+labels: ["wet-lab"]
 body:
   - type: markdown
     attributes:
