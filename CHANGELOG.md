@@ -45,7 +45,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - [ ] Close issues completed in this release; close milestone if all items are done (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
     - [ ] Close stale auto-generated CI failure issues (`gh issue list --label ci-failure` → close any that are no longer active)
     - [ ] Scan open issues for policy violations (paper/JOSS references, unpublished roadmap items) → close any found
-    - [ ] ROADMAP.md version numbers up to date (check if any milestone version labels changed)
+    - [ ] Version label consistency — if any milestone was renamed (e.g. v3.7→v4.0): update `ROADMAP.md` section headers, `README.md` Development History table, `docs/changelog.md` roadmap description lines, GitHub milestone titles/descriptions, and any open issue titles referencing the old label
 14. **eijex-mcp sync** — check the eijex-mcp repo for required updates:
     - [ ] Version string in `factorforge_cds_optimize` description → bump to new version
     - [ ] New profiles added? → add to `profile` enum in route.ts and mcp-tools.ts
