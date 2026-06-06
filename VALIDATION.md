@@ -19,7 +19,7 @@ This file tracks community wet-lab results to build a shared evidence base over 
 | GC% range | ✅ | Host-dependent; default *N. benthamiana*: 55–65% |
 | Forbidden restriction sites | ✅ | BsaI, BsmBI, BpII (Golden Gate) |
 | Invalid codons | ✅ | Hard fail |
-| Protein folding | ❌ | Requires wet-lab or AlphaFold |
+| Protein folding | ❌ | Requires wet-lab validation |
 | Actual expression level | ❌ | Requires wet-lab |
 | Yield / solubility | ❌ | Requires wet-lab |
 | Signal peptide behavior | ❌ | Requires wet-lab |
