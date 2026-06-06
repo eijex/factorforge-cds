@@ -61,7 +61,7 @@ FactorForge has gone through several implementation generations before the curre
 | **v2** — Rule-Based Engine | Internal → Production | Deterministic, constraint-aware design engine; became the foundation for the public release |
 | **v3-alpha** — ML Prototype | Archived | ML-based design attempt; performance was insufficient for production use; preserved under `archive/v3-ml-prototype/` |
 | **v3.0+** — Current release | Public | Open-source release of the matured v2 engine under `factorforge.engines.profile` |
-| **v3.7+** — ML Engine | Planned | ML-based design as `--engine ml`; added once sufficient wet-lab data is available |
+| **v4.0** — ML Engine | Planned | ML-based design as `--engine ml`; added once sufficient wet-lab data is available |
 
 The `archive/` directory preserves all three earlier tracks for provenance. None are installed or exposed by the current package.
 
