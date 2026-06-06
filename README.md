@@ -104,5 +104,5 @@ GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).
 - **Wet-lab Results** — [Submit via Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header) (recommended) or [GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml)
 - **GitHub Issues** — bugs, features: [github.com/eijex/factorforge-cds/issues](https://github.com/eijex/factorforge-cds/issues)
 - **Email** — eijex.lab@gmail.com
-- **Web** — [factorforge.eijex.com](https://factorforge.eijex.com)
+- **FactorForge** — [factorforge.eijex.com](https://factorforge.eijex.com)
 - **Lab** — [www.eijex.com](https://www.eijex.com)
