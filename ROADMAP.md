@@ -74,18 +74,7 @@ Wet-lab validation and stability. The core engine is feature-complete; this trac
 
 ---
 
-## v3.7 — ML Engine *(data-conditional)*
-
-A ML-based CDS design engine added as `--engine ml` once sufficient wet-lab validation data is available. The v3-alpha ML prototype (archived under `archive/v3-ml-prototype/`) informs the architecture.
-
-- ML engine exposed as `--engine ml` alongside the existing rule-based engine
-- Training pipeline based on accumulated wet-lab validation data
-- Rule-based vs ML benchmark comparison
-- No committed timeline — depends on wet-lab data accumulation
-
----
-
-## v3.8 — Release Readiness
+## v3.7 — Release Readiness
 
 - Full API docstring coverage
 - Reproducible benchmark scripts
@@ -94,11 +83,22 @@ A ML-based CDS design engine added as `--engine ml` once sufficient wet-lab vali
 
 ---
 
-## v3.9 — Stable Release
+## v3.8 — Stable Release
 
 - All profiles wet-lab validated and active
 - Full documentation audit
 - Final polish
+
+---
+
+## v4.0 — ML Engine *(data-conditional)*
+
+A ML-based CDS design engine added as `--engine ml` once sufficient wet-lab validation data is available. The v3-alpha ML prototype (archived under `archive/v3-ml-prototype/`) informs the architecture.
+
+- ML engine exposed as `--engine ml` alongside the existing rule-based engine
+- Training pipeline based on accumulated wet-lab validation data
+- Rule-based vs ML benchmark comparison
+- No committed timeline — depends on wet-lab data accumulation
 
 ---
 
