@@ -20,6 +20,18 @@ class Domesticator:
     - BioBricks (EcoRI, XbaI, SpeI, PstI)
     """
 
+    # Canonical Golden Gate Type IIS enzyme set, exported as GOLDEN_GATE_ENZYMES
+    # so tests/test_registry_production_sync.py::test_type_iis_sync can strictly
+    # compare it against the registry (single source of truth) instead of warning.
+    #
+    # BpiI and BbsI share the same GAAGAC Type IIS recognition/cut behavior in
+    # FactorForge's Golden Gate scanning context. The existing FactorForge
+    # production code and documentation consistently use BpiI as the canonical
+    # label; BbsI is a common synonym/vendor naming convention for the same
+    # scanning target. This is a naming normalization, not a biological
+    # threshold change. Order matches the registry value for stable comparison.
+    GOLDEN_GATE_ENZYMES: tuple[str, ...] = ("BsaI", "BpiI", "BsmBI")
+
     # Assembly standard definitions
     ASSEMBLY_STANDARDS: dict[str, dict[str, Any]] = {
         "golden_gate": {

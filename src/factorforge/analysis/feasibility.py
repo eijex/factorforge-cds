@@ -14,6 +14,16 @@ from factorforge.analysis.metrics import (
 )
 
 
+# Defaults calibrated to nbenthamiana profile engine output distribution
+# (analysis 004, n=49): avg CAI=0.76, avg GC=60.1% (range 55-71%).
+# DEFAULT_CAI_TARGET=0.82 aligns with industry practice (>0.8) and is achievable.
+# Exported as named constants so tests/test_registry_production_sync.py can
+# strictly compare them against the registry (single source of truth).
+DEFAULT_CAI_TARGET: float = 0.82
+DEFAULT_GC_LOW: float = 55.0
+DEFAULT_GC_HIGH: float = 65.0
+
+
 AA_TO_CODONS: dict[str, list[str]] = {}
 for _codon, _aa in STANDARD_GENETIC_CODE.items():
     if _aa == "*":
@@ -88,9 +98,9 @@ def _reconstruct_sequence(
 def analyze_feasibility(
     protein_sequence: str,
     codon_weights: dict[str, float],
-    target_cai: float = 0.82,
-    target_gc_low: float = 55.0,
-    target_gc_high: float = 65.0,
+    target_cai: float = DEFAULT_CAI_TARGET,
+    target_gc_low: float = DEFAULT_GC_LOW,
+    target_gc_high: float = DEFAULT_GC_HIGH,
     gc_ranges: list[tuple[float, float]] | None = None,
 ) -> dict[str, Any]:
     """Compute exact CAI/GC feasibility over synonymous codon choices.
@@ -99,9 +109,8 @@ def analyze_feasibility(
     global GC count. This is exact for global GC and CAI under the supplied
     codon weights.
 
-    Defaults calibrated to nbenthamiana profile engine output distribution
-    (analysis 004, n=49): avg CAI=0.76, avg GC=60.1% (range 55-71%).
-    target_cai=0.82 aligns with industry practice (>0.8) and is achievable.
+    See module-level DEFAULT_CAI_TARGET / DEFAULT_GC_LOW / DEFAULT_GC_HIGH for
+    the calibration rationale (analysis 004, n=49).
     """
     protein = "".join(protein_sequence.upper().split()).rstrip("*")
     if not protein:
