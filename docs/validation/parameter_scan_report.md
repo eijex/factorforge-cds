@@ -1,6 +1,6 @@
 # Parameter Scan Report
 
-**Total hits:** 108  **Unregistered:** 103
+**Total hits:** 109  **Unregistered:** 104
 
 ## Unregistered Public-Biological Numbers
 
@@ -68,6 +68,7 @@
 | `tests\test_restriction_sites.py` | 193 | gc_global | `55.0` | `constraints={"gc_min": 40.0, "gc_max": 55.0},` |
 | `tests\test_restriction_sites.py` | 114 | type_iis | `BsaI` | `{"name": "BsaI", "sequence": "GGTCTC"},` |
 | `tests\test_restriction_sites.py` | 182 | type_iis | `BsaI` | `assert result["removed_sites"][0]["enzyme"] == "BsaI"` |
+| `tests\test_restriction_sites.py` | 206 | type_iis | `BsaI` | `hits = d.scan_restriction_sites("AAAGGTCTCAAA", "golden_gate")  # GGTCTC = BsaI` |
 | `tests\api\test_optimize_contract.py` | 55 | gc_global | `55.0` | `constraints={"gc_min": 40.0, "gc_max": 55.0},` |
 | `tests\api\test_optimize_contract.py` | 85 | gc_global | `55.0` | `constraints={"gc_min": 40.0, "gc_max": 55.0},` |
 | `tests\api\test_optimize_contract.py` | 111 | gc_global | `55.0` | `constraints={"gc_min": 40.0, "gc_max": 55.0},` |
