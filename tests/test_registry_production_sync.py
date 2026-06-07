@@ -1,11 +1,9 @@
 """Registry-production sync test (Brief §8).
 Compares registry values against actual production code constants/function defaults.
-If a production constant is not cleanly exported, the test records the gap and passes
-with a warning — it does NOT use hardcoded literals as the assertion target.
+Production constants are exported as named module/class attributes (Job 091),
+so these checks are strict assertions against the registry (single source of truth).
 """
 from __future__ import annotations
-import warnings
-import pytest
 from factorforge.registry.registry_loader import load_registry, resolve_ref
 
 _REG = load_registry()
@@ -18,65 +16,35 @@ def _resolve(dotted: str):
 # ── CAI target ────────────────────────────────────────────────────────────────
 
 def test_cai_target_sync():
-    """CAI target: production default is a function arg in feasibility.py, not an exported constant."""
+    """CAI target: registry value must match the exported production default."""
     registry_val = _resolve("parameters.optimization.cai_target.value")
-    try:
-        from factorforge.analysis.feasibility import DEFAULT_CAI_TARGET  # type: ignore[attr-defined]
-        assert registry_val == DEFAULT_CAI_TARGET, (
-            f"CAI registry {registry_val} != production {DEFAULT_CAI_TARGET}"
-        )
-    except ImportError:
-        warnings.warn(
-            "production constant NOT exported: factorforge.analysis.feasibility.DEFAULT_CAI_TARGET. "
-            f"Registry value={registry_val}. Follow-up job required to export production default.",
-            stacklevel=2,
-        )
+    from factorforge.analysis.feasibility import DEFAULT_CAI_TARGET
+    assert registry_val == DEFAULT_CAI_TARGET, (
+        f"CAI registry {registry_val} != production {DEFAULT_CAI_TARGET}"
+    )
 
 
 # ── GC range ──────────────────────────────────────────────────────────────────
 
 def test_gc_range_sync():
-    """GC global range: production defaults are function args in feasibility.py."""
+    """GC global range: registry value must match the exported production defaults."""
     gc = _resolve("parameters.optimization.gc_range_nbenthamiana_global.value")
-    try:
-        from factorforge.analysis.feasibility import DEFAULT_GC_LOW, DEFAULT_GC_HIGH  # type: ignore[attr-defined]
-        assert gc[0] == DEFAULT_GC_LOW and gc[1] == DEFAULT_GC_HIGH, (
-            f"GC registry {gc} != production [{DEFAULT_GC_LOW}, {DEFAULT_GC_HIGH}]"
-        )
-    except ImportError:
-        warnings.warn(
-            "production constants NOT exported: DEFAULT_GC_LOW / DEFAULT_GC_HIGH. "
-            f"Registry value={gc}. Follow-up job required.",
-            stacklevel=2,
-        )
+    from factorforge.analysis.feasibility import DEFAULT_GC_LOW, DEFAULT_GC_HIGH
+    assert gc[0] == DEFAULT_GC_LOW and gc[1] == DEFAULT_GC_HIGH, (
+        f"GC registry {gc} != production [{DEFAULT_GC_LOW}, {DEFAULT_GC_HIGH}]"
+    )
 
 
 # ── Type IIS enzymes ──────────────────────────────────────────────────────────
 
 def test_type_iis_sync():
-    """Type IIS list: compare against production Domesticator golden_gate enzyme set."""
+    """Type IIS list: registry value must match the exported Domesticator enzyme set."""
     registry_enzymes = set(_resolve("parameters.constraints.assembly.type_iis_enzymes.value"))
-    try:
-        from factorforge.engines.profile.rules.domesticator import Domesticator
-        d = Domesticator()
-        # Try common attribute patterns for the enzyme list
-        prod_enzymes = None
-        for attr in ("GOLDEN_GATE_ENZYMES", "TYPE_IIS_ENZYMES", "_golden_gate_enzymes"):
-            if hasattr(d, attr):
-                prod_enzymes = set(getattr(d, attr))
-                break
-        if prod_enzymes is None:
-            warnings.warn(
-                "production Type IIS enzyme list NOT exported as class attribute. "
-                f"Registry value={sorted(registry_enzymes)}. Follow-up job required.",
-                stacklevel=2,
-            )
-        else:
-            assert registry_enzymes == prod_enzymes, (
-                f"Type IIS registry {sorted(registry_enzymes)} != production {sorted(prod_enzymes)}"
-            )
-    except Exception as e:
-        warnings.warn(f"Type IIS sync check failed: {e}. Follow-up job required.", stacklevel=2)
+    from factorforge.engines.profile.rules.domesticator import Domesticator
+    prod_enzymes = set(Domesticator.GOLDEN_GATE_ENZYMES)
+    assert registry_enzymes == prod_enzymes, (
+        f"Type IIS registry {sorted(registry_enzymes)} != production {sorted(prod_enzymes)}"
+    )
 
 
 # ── AA identity / internal stop ───────────────────────────────────────────────

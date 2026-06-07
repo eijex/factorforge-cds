@@ -19,7 +19,7 @@ REGISTRY_TARGETS = {
     "cai": [r"\b0\.82\b"],
     "gc_global": [r"\b55\.0\b", r"\b65\.0\b"],
     "gc_local": [r"\b25\.0\b", r"\b75\.0\b"],
-    "type_iis": [r"\bBsaI\b", r"\bBsmBI\b", r"\bBbsI\b"],
+    "type_iis": [r"\bBsaI\b", r"\bBsmBI\b", r"\bBpiI\b"],
     "sgn_n": [r"\b3876\b"],
 }
 

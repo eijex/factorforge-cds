@@ -59,15 +59,15 @@ parameters:
         permission: publish_allowed
     assembly:
       type_iis_enzymes:
-        value: ["BsaI", "BsmBI", "BbsI"]
+        value: ["BsaI", "BpiI", "BsmBI"]
         unit: list
         claim_level: hard_requirement
         evidence_status: hard_gate
         release_status: stable
         owner_job: "075"
         source: "src/factorforge/engines/profile/rules/domesticator.py"
-        rationale: "Type IIS sites interfere with Golden Gate / MoClo assembly."
-        provenance: "NEB Golden Gate Assembly protocol standard enzyme list; Job 041/075 Type IIS handling."
+        rationale: "Type IIS sites interfere with Golden Gate / MoClo assembly. BpiI is the canonical FactorForge label for the GAAGAC Type IIS scanning target (see ASSEMBLY_STANDARDS in domesticator.py); BbsI is a common synonym/vendor naming convention for the same recognition target and may appear in external literature."
+        provenance: "NEB Golden Gate Assembly protocol standard enzyme list; Job 041/075 Type IIS handling. Job 091: aligned canonical label to existing FactorForge production convention (BpiI) — naming normalization, not a change to the biological scanning target."
         visibility: public
         permission: publish_allowed
   optimization:
