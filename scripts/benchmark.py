@@ -1,4 +1,8 @@
-"""Run a reproducible FactorForge benchmark."""
+"""Run a reproducible FactorForge benchmark.
+
+Legacy synthetic quick-smoke benchmark. Canonical formal benchmark:
+  python benchmarks/run_benchmark.py --dataset nbenthamiana_full --mode formal
+"""
 
 from __future__ import annotations
 
