@@ -3,8 +3,10 @@ formal mode uses the fetched dataset."""
 from __future__ import annotations
 import argparse
 import csv
+import hashlib
+import json
 import time
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from benchmarks.config import load_benchmark_config
@@ -116,8 +118,6 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg) -> None:
     out_md.parent.mkdir(parents=True, exist_ok=True)
     out_md.write_text("\n".join(lines), encoding="utf-8")
     # JSON observability record (Brief §9)
-    import hashlib, json
-    from datetime import datetime, timezone
     all_rows = rows
     def _pr(key):
         sub = [r for r in all_rows if r["method"].startswith("factorforge")]
