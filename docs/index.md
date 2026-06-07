@@ -1,6 +1,6 @@
 # FactorForge
 
-**Open-source constraint-based CDS design engine for plant expression workflows, with initial focus on *Nicotiana benthamiana* and Tobacco BY-2.**
+**Open-source constraint-based CDS design engine for sequence-level CDS design, with primary support for *Nicotiana benthamiana* (Tobacco BY-2: experimental).**
 
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](https://github.com/eijex/factorforge-cds/blob/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/factorforge-cds.svg)](https://pypi.org/project/factorforge-cds/)
@@ -8,7 +8,7 @@
 [![codecov](https://codecov.io/gh/eijex/factorforge-cds/branch/main/graph/badge.svg)](https://codecov.io/gh/eijex/factorforge-cds)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20407331.svg)](https://doi.org/10.5281/zenodo.20407331)
 
-FactorForge optimizes protein sequences into host-compatible CDS by maximizing CAI, controlling GC content, eliminating PolyA signals, and producing MoClo/Golden Gate-ready constructs. Supports *N. benthamiana* (agroinfiltration) and Tobacco BY-2 (`--host by2`, bioreactor/cGMP).
+FactorForge performs profile-guided CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
 
 ---
 
@@ -44,6 +44,8 @@ Benchmarked on *N. benthamiana* SGN CDS (v3.1.4, balanced profile, N=3,876 seque
 | GC% (mean) | 59.77% | 55–65% |
 | AA identity | 100% | 100% |
 | Validator pass rate | 100% | 100% |
+
+> **Note**: The figures above are an *engineering reference benchmark* — a reproducible measurement against a specific version, profile, and dataset. A *formal comparative benchmark* against other CDS design tools is not yet available.
 
 Reproduce the benchmark:
 
