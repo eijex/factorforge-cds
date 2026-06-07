@@ -52,6 +52,8 @@ python scripts/benchmark.py --n 100  # quick validation (~30s)
 python scripts/benchmark.py          # full benchmark (N. benthamiana SGN CDS)
 ```
 
+Reproducible benchmark foundation: see `benchmarks/README.md`.
+
 ---
 
 ## Supported Hosts
