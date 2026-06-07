@@ -1,43 +1,58 @@
-spec:
-  name: factorforge_benchmark_spec
-  version: "3.2.0"
-  status: canonical
-  owner: factorforge-cds
-  last_reviewed: "2026-06-05"
-  note: "Benchmark specification derived from the canonical parameter registry. Hard gates must be satisfied by all outputs; soft targets guide optimization quality."
+benchmark:
+  id: factorforge_v3_2_0_baseline_benchmark
+  factorforge_version: "3.2.0"
+  registry: src/factorforge/registry/current_parameter_registry.yaml
+  status: in_silico_only
+
+dataset:
+  primary:
+    id: nbenthamiana_reference_cds
+    fetch_script: benchmarks/datasets/fetch_dataset.py
+    provenance: benchmarks/datasets/dataset_provenance.md
+    raw_data_committed: false
+
+random:
+  seed: 320
+  replicates: 3
+
+methods:
+  factorforge:
+    - factorforge_balanced
+    - factorforge_high_cai
+    - factorforge_gc_target
+    - factorforge_assembly_friendly
+  baselines:
+    - native_reference
+    - random_synonymous
+    - most_frequent_codon
+    - greedy_cai
 
 hard_gates:
   biological_validity:
-    aa_identity:
-      registry_ref: "parameters.constraints.biological.aa_identity_target"
-      description: "Optimized CDS must translate to the input protein exactly (aa identity = 1.0)."
-      pass_condition: "translated_sequence == input_protein"
-    no_internal_stops:
-      registry_ref: "parameters.constraints.biological.internal_stop_allowance"
-      description: "No internal stop codons in the optimized CDS."
-      pass_condition: "internal_stop_count == 0"
-    no_invalid_codons:
-      registry_ref: "parameters.constraints.biological.invalid_codons"
-      description: "All codons must be valid ACGT triplets."
-      pass_condition: "invalid_codon_count == 0"
-    length_multiple_of_three:
-      registry_ref: "parameters.constraints.biological.length_multiple_of_three"
-      description: "CDS length must be a multiple of 3."
-      pass_condition: "len(cds) % 3 == 0"
+    amino_acid_identity: {registry_ref: parameters.constraints.biological.aa_identity_target}
+    internal_stop_codons: {registry_ref: parameters.constraints.biological.internal_stop_allowance}
+    invalid_codons: {registry_ref: parameters.constraints.biological.invalid_codons}
+    length_multiple_of_three: {registry_ref: parameters.constraints.biological.length_multiple_of_three}
   assembly_validity:
-    no_type_iis_sites:
-      registry_ref: "parameters.constraints.assembly.type_iis_enzymes"
-      description: "Optimized CDS must not contain BsaI, BsmBI, or BbsI recognition sites."
-      pass_condition: "type_iis_site_count == 0"
+    forbidden_type_iis_sites: {registry_ref: parameters.constraints.assembly.type_iis_enzymes}
 
 soft_targets:
-  cai_target:
-    registry_ref: "parameters.optimization.cai_target"
-    description: "CAI should reach or exceed 0.82 for N. benthamiana optimized sequences."
-    target_direction: "maximize"
-    threshold: 0.82
-  gc_range_global:
-    registry_ref: "parameters.optimization.gc_range_nbenthamiana_global"
-    description: "Global GC content should fall within 55–65% for N. benthamiana."
-    target_direction: "in_range"
-    threshold: [55.0, 65.0]
+  cai: {registry_ref: parameters.optimization.cai_target}
+  gc_range: {registry_ref: parameters.optimization.gc_range_nbenthamiana_global}
+
+metrics:
+  primary:
+    - amino_acid_identity
+    - internal_stop_codons
+    - invalid_codons
+    - cai
+    - gc_percent
+    - forbidden_type_iis_site_count
+    - biological_pass
+    - assembly_pass
+    - multi_constraint_pass
+    - runtime_seconds
+
+outputs:
+  results_csv: benchmarks/results/v3.2.0/benchmark_results.csv
+  summary_md: benchmarks/results/v3.2.0/benchmark_summary.md
