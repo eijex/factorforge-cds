@@ -14,6 +14,8 @@ Only the latest patch release of the current minor version receives security fix
 
 **Please do not report security vulnerabilities through public GitHub Issues.**
 
+Do not submit wet-lab validation data, proprietary sequences, unpublished constructs, patient data, confidential partner/customer data, private contact information, internal batch IDs, or exact confidential process parameters through public security reports or public GitHub Issues.
+
 ### Option 1 — GitHub Private Vulnerability Reporting (preferred)
 
 Use GitHub's built-in private reporting:  

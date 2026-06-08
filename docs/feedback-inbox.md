@@ -1,16 +1,14 @@
 # Feedback Inbox
 
-This document describes the planned v0.2 feedback path. It is documentation
-only; no Google Form, Make scenario, or GitHub automation is implemented here.
+This document describes a planned feedback path. It is documentation only; no Google Form, Make scenario, or GitHub automation is implemented here.
 
 ## Pipeline
 
 ```text
-Google Form -> Make -> GitHub Issue -> Label triage -> Maintainer review
+Google Form -> maintainer review -> public-safe GitHub Issue or documentation update
 ```
 
-The form is the preferred entry point for user feedback because it can collect
-structured fields before creating an issue.
+The form may collect structured public-safe summary fields before maintainer review. Public GitHub Issues must not contain private or sensitive wet-lab data.
 
 ## Issue Labels
 
@@ -18,40 +16,37 @@ structured fields before creating an issue.
 - `bug-report`: reported unexpected behavior
 - `feature-request`: requested capability
 - `docs-feedback`: documentation issue or suggestion
-- `wet-lab`: experimental feedback requiring careful review
+- `wet-lab`: public-safe experimental feedback requiring careful review
 - `needs-triage`: maintainer triage needed
 
-## Wet-Lab Collaborator Data Schema
+## Public-Safe Wet-Lab Summary Fields
 
-Use this schema for structured experimental feedback. Keep private or unpublished
-details out of public issues unless the submitter has explicitly approved
-publication.
+Use this shape for public experimental feedback. Keep private, unpublished, identifying, or confidential details out of public issues.
 
 | Field | Purpose |
 | --- | --- |
-| `submitter_name` | Person submitting the result |
-| `submitter_contact` | Email or preferred contact path |
-| `construct_id` | Internal or public construct identifier |
-| `host_system` | Host organism or expression system |
-| `target_protein` | Protein or construct target |
 | `factorforge_version` | Version used to generate the CDS |
-| `input_sequence_hash` | Hash or non-sensitive reference to input sequence |
-| `output_sequence_hash` | Hash or non-sensitive reference to output sequence |
-| `assay_type` | Assay or measurement type |
-| `observed_result` | Structured observation, not a broad performance claim |
-| `controls` | Control construct or baseline notes |
-| `replicate_count` | Number of replicates |
-| `raw_data_location` | Private storage pointer when data cannot be public |
-| `publication_permission` | Whether public issue details are allowed |
-| `notes` | Additional non-sensitive context |
+| `optimization_profile` | Public optimization profile name |
+| `host_organism` | Host organism or expression system |
+| `protein_class` | Coarse non-confidential protein class |
+| `expression_system_assay_type` | Assay or measurement type |
+| `harvest_timepoint` | Coarse harvest timepoint |
+| `replicate_category` | Coarse replicate category |
+| `comparison_result` | Improved, equivalent, reduced, inconclusive, no control, or not reported |
+| `expression_result` | Detected, not detected, weak, strong, inconclusive, or not reported |
+| `approximate_yield_range` | Coarse yield range, not exact confidential process data |
+| `institution_disclosure` | Anonymous, disclosed, or not provided |
+| `non_confidential_notes` | Additional non-sensitive context |
+
+Do not include submitter identity, private contact information, raw sequences, sequence hashes, internal batch IDs, confidential construct identifiers, private customer names, patient data, exact confidential process parameters, or unpublished construct-identifying labels.
 
 ## Google Opal UI
 
 Google Opal can be used as an optional front-end for guided feedback capture:
 
 - Step users through category selection.
-- Collect only the fields needed for the selected category.
+- Collect only public-safe fields needed for the selected category.
 - Show a privacy reminder before submission.
-- Send the final structured payload to the Make scenario.
+- Send the final structured payload to maintainer review.
 
-GitHub issues remain the tracking system after submission.
+GitHub issues remain public and should contain only reviewed public-safe summaries.

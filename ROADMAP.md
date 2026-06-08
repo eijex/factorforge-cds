@@ -9,9 +9,9 @@ FactorForge development direction and planned work.
 
 ## Current Focus (v3.1.x)
 
-Wet-lab validation and stability. The core engine is feature-complete; this track collects experimental results and applies targeted fixes based on real expression data.
+Wet-lab validation and stability. The core engine is feature-complete; this track collects manually reviewed, public-safe experimental summaries and applies targeted fixes based on non-confidential feedback.
 
-- Wet-lab feedback integration (Google Form → GitHub Issues)
+- Wet-lab feedback review and public-safe validation summaries
 - Bug fixes and metric corrections based on community reports
 - Documentation improvements
 
@@ -57,8 +57,8 @@ Wet-lab validation and stability. The core engine is feature-complete; this trac
 
 | Feature | Description |
 |---------|-------------|
-| **5' Ramp activation** | Enable once wet-lab data confirms N-terminal ramp benefit |
-| **Viral Delivery activation** | Enable once wet-lab data confirms scoring validity |
+| **5' Ramp activation** | Enable only if reviewed wet-lab feedback supports N-terminal ramp benefit |
+| **Viral Delivery activation** | Enable only if reviewed wet-lab feedback supports scoring validity |
 | **Tissue-specific optimization** | Leaf vs seed vs root codon preference tuning |
 | **Documentation audit** | Comprehensive docs and capability review |
 
@@ -85,7 +85,7 @@ Wet-lab validation and stability. The core engine is feature-complete; this trac
 
 ## v3.8 — Stable Release
 
-- All profiles wet-lab validated and active
+- All profiles have documented validation status; experimental profiles remain gated unless reviewed evidence supports activation
 - Full documentation audit
 - Final polish
 
@@ -96,7 +96,7 @@ Wet-lab validation and stability. The core engine is feature-complete; this trac
 A ML-based CDS design engine added as `--engine ml` once sufficient wet-lab validation data is available. The v3-alpha ML prototype (archived under `archive/v3-ml-prototype/`) informs the architecture.
 
 - ML engine exposed as `--engine ml` alongside the existing rule-based engine
-- Training pipeline based on accumulated wet-lab validation data
+- Training pipeline based on curated, non-confidential wet-lab validation summaries
 - Rule-based vs ML benchmark comparison
 - No committed timeline — depends on wet-lab data accumulation
 
@@ -105,9 +105,9 @@ A ML-based CDS design engine added as `--engine ml` once sufficient wet-lab vali
 ## Wet-lab Validation *(ongoing — not version-bound)*
 
 Wet-lab validation is an ongoing, open-ended process independent of software versioning.
-Results are tracked as GitHub Issues under the [Wet-lab Validation](https://github.com/eijex/factorforge-cds/milestone/9) milestone.
+Public-safe summaries may be tracked as GitHub Issues under the [Wet-lab Validation](https://github.com/eijex/factorforge-cds/milestone/9) milestone. Private or sensitive feedback should not be submitted through public GitHub Issues.
 
-- Submit results via [Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header) or [GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml)
+- Submit only public-safe, non-confidential summaries via [Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header) or public [GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml)
 - See [VALIDATION.md](VALIDATION.md) for submission format and current status
 
 ---
