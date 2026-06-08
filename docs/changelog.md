@@ -2,7 +2,7 @@
 
 Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cds/blob/main/CHANGELOG.md)
 
-FactorForge v3.0+ is the public release of an internal deterministic rule-based engine (v2) that succeeded an earlier thesis-derived prototype (v1) and a later ML prototype (v3-alpha, archived). See [README](https://github.com/eijex/factorforge-cds#development-history) for the full version lineage.
+FactorForge v3.0+ is the current public release line.
 
 ## v3.1.9 — 2026-06-04
 
@@ -29,7 +29,7 @@ FactorForge v3.0+ is the public release of an internal deterministic rule-based 
 ### Added
 - **Host selector UI** — N. benthamiana / BY-2 Experimental toggle; BY-2 disables Feasibility Best
 - **E2E smoke tests** — 5 Playwright tests auto-run after each deployment
-- **Eijex MCP** — AI agent access via mcp.eijex.com
+- **Eijex MCP** — MCP-compatible access via mcp.eijex.com
 
 ## v3.1.6 — 2026-05-30
 
@@ -38,7 +38,7 @@ FactorForge v3.0+ is the public release of an internal deterministic rule-based 
 - **Profile comparison** — `--compare-profiles` CLI + `POST /api/optimize/compare`
 - **Batch API** — `POST /api/optimize/batch` (최대 20개 서열)
 - **Structure links** — AlphaFold DB + ESM Atlas 링크 결과 화면에 추가
-- **SynCodonLM scoring** — 선택적 5번째 스코어 (`pip install factorforge-cds[ml]`)
+- **Experimental scoring hooks** — non-public optional scoring hooks; public profiles unchanged
 - **GFP Tutorial** — `docs/tutorials/gfp-nbenthamiana.md`
 
 ### Fixed
@@ -56,9 +56,8 @@ FactorForge v3.0+ is the public release of an internal deterministic rule-based 
 ### Added
 - **CITATION.cff** — GitHub "Cite this repository" button; version-bumped automatically
 - **SECURITY.md** — vulnerability reporting policy
-- **ROADMAP.md** — public development direction (v3.2–v3.8, ML engine v4.0, wet-lab scope)
-- **scripts/release.py** — automates version string updates across 14 files
-- **Development history** — v1→v2→v3-alpha→v3.x→v4.0 (ML) lineage documented across README, CHANGELOG, archive READMEs
+- **ROADMAP.md** — public development direction, validation scope, and planned host/profile work
+- **scripts/release.py** — automates version string updates
 
 ### Changed
 - **Public engine naming** — `factorforge.engines.profile` / CLI `--engine profile` formalized
@@ -83,12 +82,12 @@ FactorForge v3.0+ is the public release of an internal deterministic rule-based 
 ## v3.1.1 — 2026-05-24
 
 ### Added
-- **Wet-lab feedback modal** — Submit result button opens embedded Google Form with version and profile pre-filled
+- **Wet-lab feedback link** — Submit result button opens a public-safe feedback path
 - **JSON Copy button** — one-click copy of full optimization JSON output
 
 ### Changed
 - **Design Objective order** — reordered to match recommended wet-lab testing sequence
-- **Validation fields** — Issue template updated with promoter, subcellular targeting, harvest timepoint, native control
+- **Validation fields** — Issue template updated for structured public-safe feedback
 
 ### Fixed
 - **Vercel deployment** — resolved /api/optimize 404 caused by incorrect Root Directory setting

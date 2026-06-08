@@ -30,11 +30,11 @@ Or use the **[web app](https://factorforge.eijex.com)** — no installation requ
 | **[Web App](https://factorforge.eijex.com)** | No installation, demo & light use |
 | **CLI / Python** | Local use, batch processing, data privacy |
 | **Docker** | Full web interface locally, no data leaves your machine (`docker pull ghcr.io/eijex/factorforge-cds:latest`) |
-| **[Eijex MCP](https://mcp.eijex.com)** | AI agent access via Claude Code, Cursor, and other MCP clients |
+| **[Eijex MCP](https://mcp.eijex.com)** | MCP-compatible agent access |
 
 ---
 
-## Performance
+## Engineering Benchmark
 
 Benchmarked on *N. benthamiana* SGN CDS (v3.1.4, balanced profile, N=3,876 sequences):
 
@@ -70,4 +70,4 @@ Reproducible benchmark foundation: see `benchmarks/README.md`.
 ---
 
 !!! warning "Validation Status"
-    FactorForge predictions are **in-silico only** and have not been experimentally validated in wet-lab conditions. See [Validation](validation.md) for details.
+    FactorForge outputs are **in-silico only** and have not been experimentally validated in wet-lab conditions. See [Validation](validation.md) for details.

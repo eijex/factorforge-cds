@@ -1,6 +1,6 @@
 # FactorForge Web Interface
 
-Plant CDS Design — N. benthamiana & Tobacco BY-2
+Plant CDS Design — N. benthamiana & Tobacco BY-2 experimental
 
 ## 🌐 Live Demo
 
@@ -60,7 +60,7 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 - ✅ File upload (FASTA)
 - ✅ Text input (paste sequence)
 - ✅ Host selector (N. benthamiana / Tobacco BY-2)
-- ✅ 4 optimization profiles
+- ✅ 4 public CDS design profiles
 - ✅ Real-time results
 - ✅ Custom restriction site input and removal report
 - ✅ Download (FASTA, GenBank)

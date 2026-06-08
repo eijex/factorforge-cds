@@ -6,7 +6,7 @@ Profiles apply to the profile engine (`--engine profile`).
 
 | Host flag | Species | Codon table | Notes |
 |-----------|---------|-------------|-------|
-| `nbenthamiana` (default) | *Nicotiana benthamiana* | 3,876 SGN CDS | Stable. Recommended for agroinfiltration |
+| `nbenthamiana` (default) | *Nicotiana benthamiana* | 3,876 SGN CDS | Stable sequence-level design profile for agroinfiltration workflows |
 | `by2` ⚠️ Experimental | *N. tabacum* BY-2 | 1,534 Kazusa CDS (2007) | **Experimental.** Uses *N. tabacum* codon usage as proxy. Not wet-lab validated for BY-2 expression. |
 
 !!! warning "BY-2 host is experimental"
@@ -18,8 +18,8 @@ These four profiles are fully supported and available via CLI, Python API, web a
 
 | Profile | Description |
 |---------|-------------|
-| `balanced` | CAI + GC balance — default for most use cases |
-| `high_cai` | Maximum codon adaptation index |
+| `balanced` | CAI + GC balance — default for most sequence-design reviews |
+| `high_cai` | CAI-focused synonymous CDS candidate |
 | `gc_target` | Targets a configurable GC percentage, defaulting to the host-profile midpoint (60% for *N. benthamiana*). Pass an explicit target to drive GC higher or lower. |
 | `assembly_friendly` | Golden Gate / MoClo workflows — avoids BsaI/BpiI Type IIS restriction sites via synonymous substitution. Does not yet score local GC uniformity or repeat patterns. |
 
@@ -44,17 +44,16 @@ result = pipeline.run("MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG...")
 
 ## Profile Selection Guide
 
-- **General expression** → `balanced`
-- **Maximizing CAI** → `high_cai`
+- **Default *N. benthamiana* CDS design** → `balanced`
+- **CAI-focused comparison** → `high_cai`
 - **GC-sensitive downstream processes** → `gc_target` (pass an explicit GC target if you need a value other than the host midpoint)
 - **Golden Gate / MoClo assembly** → `assembly_friendly`
 
-## Internal / Not Public API
+## Not Public API
 
-The following profiles exist in the codebase but are **not part of the public API or MCP interface** and are not supported for general use. They may change or be removed without notice.
+The following profiles are **not part of the public API or MCP interface** and are not supported for general use. They may change or be removed without notice.
 
 | Profile | Status | Notes |
 |---------|--------|-------|
-| `viral_delivery` | Internal | Adjusted for TRV viral vector delivery. Not validated. |
-| `ramp` | Internal | 5′ ramp optimization. Under development. |
-| `ml_enhanced` | Internal | SynCodonLM-augmented scoring. Requires `pip install factorforge-cds[ml]`. Not stable. |
+| `viral_delivery` | Not public | Adjusted for TRV viral vector delivery. Not validated. |
+| `ramp` | Not public | 5′ ramp design heuristic. Under development. |

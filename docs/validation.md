@@ -32,7 +32,7 @@ Public-safe validation summaries are welcome. Positive, negative, equivalent, re
 
 Public GitHub Issues are public. Use them only for public-safe summaries. Do not submit private or sensitive wet-lab feedback through public GitHub Issues.
 
-Default public fields should use protein class rather than protein name. Contributor or institution credit is optional and requires explicit approval.
+Default public fields should use protein class rather than protein name. Public credit requires explicit approval and maintainer review.
 
 Do not submit:
 
@@ -58,13 +58,12 @@ Public-safe summaries may include:
 - Comparison result.
 - Expression result.
 - Approximate yield range.
-- Institution disclosure status: anonymous / disclosed / not provided.
 - Non-confidential notes only.
 
 Submission links:
 
-- [Submit via Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header)
 - [Open a public GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) only for public-safe summaries
+- Email `eijex.lab@gmail.com` for private or sensitive summaries
 - See [VALIDATION.md](https://github.com/eijex/factorforge-cds/blob/main/VALIDATION.md) for the current public validation log.
 
 All public entries require manual review before publication.

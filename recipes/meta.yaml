@@ -45,12 +45,12 @@ about:
   license: AGPL-3.0-only
   license_family: AGPL
   license_file: LICENSE
-  summary: Constraint-aware coding sequence design engine for plant expression workflows
+  summary: Constraint-aware coding sequence design engine for plant CDS design workflows
   description: |
-    FactorForge is an open-source CDS design engine for plant expression workflows,
+    FactorForge is an open-source CDS design engine for plant CDS design workflows,
     with an initial focus on Nicotiana benthamiana. It provides deterministic,
-    constraint-aware optimization via a dynamic-programming feasibility engine,
-    profile-based rule optimization, and MoClo/Golden Gate-compatible output.
+    constraint-aware synonymous CDS design via a dynamic-programming feasibility
+    engine, profile-based rule checks, and MoClo/Golden Gate-oriented output.
     Distributed as a Python package, CLI, REST API, and Docker-deployable web app.
 
 extra:

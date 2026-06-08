@@ -1,14 +1,14 @@
 # Feedback Inbox
 
-This document describes a planned feedback path. It is documentation only; no Google Form, Make scenario, or GitHub automation is implemented here.
+This document describes a planned feedback path. It is documentation only; no external form automation is implemented here.
 
 ## Pipeline
 
 ```text
-Google Form -> maintainer review -> public-safe GitHub Issue or documentation update
+Public-safe GitHub Issue or email -> maintainer review -> public-safe documentation update
 ```
 
-The form may collect structured public-safe summary fields before maintainer review. Public GitHub Issues must not contain private or sensitive wet-lab data.
+Public GitHub Issues must not contain private or sensitive wet-lab data.
 
 ## Issue Labels
 
@@ -40,13 +40,4 @@ Use this shape for public experimental feedback. Keep private, unpublished, iden
 
 Do not include submitter identity, private contact information, raw sequences, sequence hashes, internal batch IDs, confidential construct identifiers, private customer names, patient data, exact confidential process parameters, or unpublished construct-identifying labels.
 
-## Google Opal UI
-
-Google Opal can be used as an optional front-end for guided feedback capture:
-
-- Step users through category selection.
-- Collect only public-safe fields needed for the selected category.
-- Show a privacy reminder before submission.
-- Send the final structured payload to maintainer review.
-
-GitHub issues remain public and should contain only reviewed public-safe summaries.
+GitHub issues remain public and should contain only public-safe summaries.

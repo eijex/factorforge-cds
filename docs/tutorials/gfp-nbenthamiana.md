@@ -1,6 +1,6 @@
-# Tutorial: Optimizing GFP for *N. benthamiana* Expression
+# Tutorial: Designing a GFP CDS for *N. benthamiana*
 
-This tutorial walks through a complete codon optimization workflow using Green Fluorescent Protein (GFP) as an example target, showing how to go from an amino acid sequence to a *Nicotiana benthamiana*-ready CDS.
+This tutorial walks through a complete synonymous CDS design workflow using Green Fluorescent Protein (GFP) as an example target, showing how to go from an amino acid sequence to a *Nicotiana benthamiana*-oriented CDS candidate.
 
 ## Prerequisites
 
@@ -28,13 +28,13 @@ ADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITLGMDELYK
 
 ## Step 1: Run Optimization (CLI)
 
-Optimize with the `balanced` profile — the recommended starting point for *N. benthamiana* expression:
+Run the `balanced` profile — the recommended starting point for *N. benthamiana* CDS design:
 
 ```bash
 factorforge optimize gfp.fasta --engine profile --profile balanced -o gfp_optimized.fasta
 ```
 
-For BY-2 bioreactor production:
+For exploratory Tobacco BY-2 sequence-context review:
 
 ```bash
 factorforge optimize gfp.fasta --engine profile --profile balanced --host by2
@@ -51,7 +51,7 @@ Metrics:
   - score: 0.856
 ```
 
-The optimized CDS begins with `ATGGTGAGCAAGGGCGAGGAA...` — ready for synthesis or downstream assembly. (Reverse translation is stochastic, so exact codons and metrics vary slightly between runs.)
+The designed CDS begins with `ATGGTGAGCAAGGGCGAGGAA...` and can be reviewed for synthesis or downstream assembly. Reverse translation is stochastic, so exact codons and metrics vary slightly between runs.
 
 **What happened:**
 
@@ -64,7 +64,7 @@ The optimized CDS begins with `ATGGTGAGCAAGGGCGAGGAA...` — ready for synthesis
 
 ## Step 2: Compare Profiles
 
-Different expression goals call for different profiles. Use `--compare-profiles` to evaluate all options at once:
+Different design goals call for different profiles. Use `--compare-profiles` to evaluate all options at once:
 
 ```bash
 factorforge optimize gfp.fasta --engine profile \
@@ -90,12 +90,12 @@ assembly_friendly   0.779   57.18    0.905
 
 | Profile | Best for |
 |---------|----------|
-| `balanced` | General *N. benthamiana* expression; good CAI with GC% in target range |
-| `high_cai` | Maximum translation speed; note GC% may fall outside 55–65% range |
+| `balanced` | General *N. benthamiana* CDS design review; good CAI with GC% in target range |
+| `high_cai` | CAI-focused comparison; note GC% may fall outside 55–65% range |
 | `gc_target` | When GC% must hit a specific value (defaults to the host midpoint of 60%; pass `--target-gc` for other values, e.g. specific vector requirements) |
 | `assembly_friendly` | MoClo / Golden Gate workflows; avoids problematic restriction sites |
 
-For most *N. benthamiana* agroinfiltration experiments, `balanced` is the recommended starting profile.
+For most *N. benthamiana* sequence-design tasks, `balanced` is the recommended starting profile.
 
 ## Step 3: Python API
 
@@ -149,14 +149,14 @@ The engine performs synonymous substitutions to eliminate recognition sequences 
 
 ## Step 5: Downstream Use
 
-The output FASTA is ready for:
+The output FASTA can be reviewed for:
 
-- **Gene synthesis** — submit directly to IDT, Twist, or Genscript
+- **Gene synthesis** — review against vendor and project constraints before ordering
 - **MoClo Level 0** — use with the `assembly_friendly` profile; check for BsaI/BpiI site removal
 - **Agroinfiltration** — clone into a binary vector (e.g. pEAQ-HT, pK7WG2) for *A. tumefaciens*-mediated delivery
 
 !!! note "Wet-lab validation"
-    The `5' Ramp` and `Viral Delivery` profiles are currently **pending wet-lab validation** and are disabled by default. Submit your expression results via the [feedback form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform) to help validate these profiles.
+    The `5' Ramp` and `Viral Delivery` profiles are currently **pending wet-lab validation** and are disabled by default. Submit only public-safe, non-confidential feedback summaries via the public GitHub issue template; use email for private or sensitive summaries.
 
 ## Summary
 
@@ -165,7 +165,7 @@ The output FASTA is ready for:
 | Install | `pip install factorforge-cds` |
 | Optimize (balanced) | `factorforge optimize gfp.fasta --engine profile --profile balanced -o out.fasta` |
 | Compare profiles | `factorforge optimize gfp.fasta --engine profile --compare-profiles balanced,high_cai,gc_target` |
-| Assembly-ready | `factorforge optimize gfp.fasta --engine profile --profile assembly_friendly -o out.fasta` |
+| Assembly-oriented | `factorforge optimize gfp.fasta --engine profile --profile assembly_friendly -o out.fasta` |
 
 **GFP optimization results (balanced profile, N=1):**
 

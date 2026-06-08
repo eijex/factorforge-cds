@@ -1,147 +1,144 @@
-name: Wet-lab Result
-description: Share experimental validation results — credited in VALIDATION.md
-labels: ["wet-lab"]
+name: Public-safe Wet-lab Summary
+description: Share a non-confidential experimental outcome summary for maintainer review
+labels: ["wet-lab", "needs-triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for testing FactorForge in the lab!
-        Results (positive or negative) will be credited in [VALIDATION.md](https://github.com/eijex/factorforge-cds/blob/main/VALIDATION.md).
+        Thank you for sharing experimental feedback.
+
+        GitHub Issues are public. Submit only a coarse, non-confidential summary.
+        Do not include raw sequences, construct IDs, protein or target identities,
+        unpublished construct details, internal batch IDs, patient data, private
+        contact information, institution names, exact process parameters, or
+        confidential partner/customer information.
+
+        Submissions are user-provided feedback summaries, not controlled validation
+        studies or guarantees of FactorForge performance.
 
   - type: input
     id: version
     attributes:
       label: FactorForge version
-      placeholder: "e.g. 3.1.0 (pip show factorforge-cds)"
+      placeholder: "e.g. 3.1.9"
     validations:
       required: true
 
-  - type: input
-    id: construct_id
-    attributes:
-      label: Construct ID
-      description: Found in the optimization result (construct_id field)
-      placeholder: "e.g. a3f7b2c1"
-
-  - type: input
+  - type: dropdown
     id: profile
     attributes:
-      label: Optimization profile used
-      placeholder: "e.g. balanced, high_cai, gc_target, viral_delivery"
+      label: Public profile used
+      options:
+        - balanced
+        - high_cai
+        - gc_target
+        - assembly_friendly
+        - Not reported
+    validations:
+      required: true
 
-  - type: input
-    id: protein
+  - type: dropdown
+    id: host
     attributes:
-      label: Protein
-      placeholder: "e.g. GFP, CD47, CD9, custom antigen"
+      label: Host context
+      options:
+        - N. benthamiana agroinfiltration
+        - Tobacco BY-2 experimental
+        - Other public-safe host category
+        - Not reported
     validations:
       required: true
 
   - type: dropdown
     id: protein_class
     attributes:
-      label: Protein class (optional)
+      label: Coarse protein class
       options:
         - Antibody / VHH
         - Enzyme
         - Membrane protein
         - Fluorescent protein
-        - Other
-
-  - type: input
-    id: host
-    attributes:
-      label: Host organism
-      placeholder: "e.g. Nicotiana benthamiana"
+        - Other non-identifying class
+        - Not reported
     validations:
       required: true
 
-  - type: input
-    id: system
-    attributes:
-      label: Expression system / assay
-      placeholder: "e.g. Agrobacterium infiltration, Western blot, ELISA"
-    validations:
-      required: true
-
-  - type: input
-    id: promoter
-    attributes:
-      label: Promoter (optional)
-      placeholder: "e.g. 35S, AtUBQ10, custom"
-
   - type: dropdown
-    id: subcellular_targeting
+    id: assay_category
     attributes:
-      label: Subcellular targeting (optional)
+      label: Coarse assay category
       options:
-        - Cytosol
-        - ER
-        - Apoplast
-        - Membrane
-        - Other
-
-  - type: input
-    id: harvest_timepoint
-    attributes:
-      label: Harvest timepoint (optional)
-      placeholder: "e.g. 4 dpi, 6 dpi"
-
-  - type: dropdown
-    id: native_control
-    attributes:
-      label: Native / unoptimized sequence used as control?
-      options:
-        - "Yes"
-        - "No"
-        - Not tested
-
-  - type: dropdown
-    id: replicates
-    attributes:
-      label: Replicates done (optional)
-      options:
-        - "1"
-        - "2"
-        - "3+"
-
-  - type: dropdown
-    id: result
-    attributes:
-      label: Expression result
-      options:
-        - Expressed (confirmed)
-        - Expressed (improved vs native)
-        - No expression
-        - Partial / inconclusive
+        - Western blot
+        - ELISA
+        - Functional assay
+        - Other non-identifying assay category
+        - Not reported
     validations:
       required: true
 
   - type: dropdown
     id: comparison_result
     attributes:
-      label: Comparison vs native / unoptimized (optional)
+      label: Comparison with control
       options:
         - Improved
-        - Similar
-        - Worse
-        - No native control
+        - Equivalent
+        - Reduced
+        - Inconclusive
+        - No control
+        - Not reported
+    validations:
+      required: true
 
-  - type: input
-    id: approximate_yield
+  - type: dropdown
+    id: expression_result
     attributes:
-      label: Approximate yield (optional)
-      placeholder: "e.g. ~5 mg/L, ~0.1% TSP"
+      label: Coarse observed outcome
+      options:
+        - Detected
+        - Not detected
+        - Weak
+        - Strong
+        - Inconclusive
+        - Not reported
+    validations:
+      required: true
+
+  - type: dropdown
+    id: replicate_category
+    attributes:
+      label: Replicate category
+      options:
+        - Single experiment
+        - 2-3 replicates
+        - 4+ replicates
+        - Not reported
+
+  - type: dropdown
+    id: approximate_yield_range
+    attributes:
+      label: Coarse yield range
+      description: Select only if this range is non-confidential.
+      options:
+        - Low
+        - Medium
+        - High
+        - Not measured
+        - Not reported
 
   - type: textarea
-    id: details
+    id: non_confidential_notes
     attributes:
-      label: Details
-      description: Quantitative data, conditions, notes
-      placeholder: "e.g. Western band at expected MW, compared with unoptimized sequence..."
+      label: Non-confidential notes
+      description: Do not include sequence, construct, target, institution, or exact process details.
+      placeholder: "Optional coarse context only."
 
-  - type: input
-    id: institution
+  - type: checkboxes
+    id: public_safe_confirmation
     attributes:
-      label: Institution (optional)
-      placeholder: "e.g. University of X"
+      label: Public-safe confirmation
+      options:
+        - label: I confirm that this public issue contains no raw sequence, construct ID, target identity, unpublished construct detail, internal batch ID, patient data, private contact information, institution name, exact process parameter, or confidential partner/customer information.
+          required: true
+        - label: I understand that maintainers may edit, summarize, or decline this submission before referencing it in public documentation.
+          required: true

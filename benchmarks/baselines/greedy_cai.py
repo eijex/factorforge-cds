@@ -1,4 +1,4 @@
-"""Greedy CAI-maximizing baseline: maximizes CAI, ignoring GC/assembly constraints.
+"""Greedy CAI-focused baseline: favors CAI, ignoring GC/assembly constraints.
 Expected to score highest on CAI but fail multi-constraint pass rate."""
 from __future__ import annotations
 from factorforge.analysis.metrics import translate_dna, load_codon_usage_table
