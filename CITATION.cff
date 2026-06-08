@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use FactorForge in your research, please cite it using the metadata below."
-title: "FactorForge: constraint-based CDS design engine for plant expression workflows"
+title: "FactorForge: constraint-based CDS design engine for plant CDS design workflows"
 version: 3.1.9
 date-released: "2026-06-02"
 license: AGPL-3.0
@@ -12,7 +12,6 @@ authors:
     given-names: Mun-Kyu
     orcid: "https://orcid.org/0009-0004-1413-7726"
     alias: eijex
-    affiliation: PlantForm Corporation
 keywords:
   - codon optimization
   - CDS design
@@ -20,15 +19,15 @@ keywords:
   - Nicotiana benthamiana
   - Nicotiana tabacum
   - Tobacco BY-2
-  - plant expression
+  - plant CDS design
   - MoClo
   - Golden Gate
   - constraint satisfaction
 abstract: >
   FactorForge is an open-source constraint-based coding sequence (CDS) design
-  engine for plant expression workflows, with initial support for Nicotiana
+  engine for plant CDS design workflows, with initial support for Nicotiana
   benthamiana (agroinfiltration) and Tobacco BY-2 suspension culture cells
-  (--host by2). It maximizes the Codon Adaptation Index (CAI) under simultaneous
-  GC content, PolyA signal, rare codon, and restriction site constraints using a
-  dynamic programming feasibility engine, producing MoClo/Golden Gate-ready
-  constructs with full provenance tracking.
+  (--host by2). It scores and ranks synonymous CDS candidates with Codon
+  Adaptation Index (CAI), GC content, PolyA signal, rare codon, and restriction
+  site checks using a dynamic programming feasibility engine, producing
+  sequence-level design outputs with provenance tracking.

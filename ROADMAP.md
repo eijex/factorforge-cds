@@ -9,9 +9,12 @@ FactorForge development direction and planned work.
 
 ## Current Focus (v3.1.x)
 
-Wet-lab validation and stability. The core engine is feature-complete; this track collects manually reviewed, public-safe experimental summaries and applies targeted fixes based on non-confidential feedback.
+Public-claim alignment, wet-lab feedback intake, and stability. The core engine is feature-complete for the current public scope; this track keeps public documentation, package metadata, web UI, Docker/GHCR references, and citation archives aligned with the same in-silico CDS design boundary.
 
+- Public surface wording audit across README, docs, web UI, package metadata, Docker/GHCR references, and citation archives
 - Wet-lab feedback review and public-safe validation summaries
+- Raw-sequence logging and benchmark-summary leakage checks
+- Codon-usage table provenance notes and checksums for public datasets
 - Bug fixes and metric corrections based on community reports
 - Documentation improvements
 
@@ -24,9 +27,10 @@ Wet-lab validation and stability. The core engine is feature-complete; this trac
 | **Bioconda package** | Conda install support for bioinformatics users |
 | **Batch optimization API** | Multi-sequence input for pipeline use cases |
 | **Profile comparison mode** | Side-by-side results across multiple profiles for the same input |
-| **Additional plant hosts** | BY-2 cells + further host additions based on expression system research |
+| **Additional plant hosts** | BY-2 cells + further host additions based on host-context and codon-source research |
 | **Tutorial / worked example** | At least one end-to-end worked example in documentation |
 | **CODE_OF_CONDUCT.md** | Community guidelines |
+| **Pre-submission hardening checklist** | Version-aligned public surfaces, benchmark reproducibility, security wording, and codon-table provenance |
 
 ---
 
@@ -35,7 +39,7 @@ Wet-lab validation and stability. The core engine is feature-complete; this trac
 | Feature | Description |
 |---------|-------------|
 | **tAI support** | tRNA Adaptation Index as alternative/complement to CAI |
-| **5' UTR mRNA folding** | Active optimization of secondary structure around start codon |
+| **5' UTR mRNA folding** | Optional MFE-aware review around the start codon when dependencies are available |
 | **Codon pair bias** | Detection and adjustment of unfavorable adjacent codon pairs |
 | **Kozak context** | Optimization of nucleotides flanking the ATG (-3, +4 positions) |
 | **Extended DP engine** | Expose DP feasibility parameters via CLI and API |
@@ -46,7 +50,7 @@ Wet-lab validation and stability. The core engine is feature-complete; this trac
 
 | Feature | Description |
 |---------|-------------|
-| **Membrane protein profile** | TMD detection; reduced translation speed at transmembrane domains |
+| **Membrane protein profile** | TMD detection; local codon-usage review around transmembrane domains |
 | **Secreted protein profile** | Signal peptide recognition; separate optimization of SP region |
 | **Chloroplast-targeted profile** | Transit peptide-aware optimization |
 | **PTGS silencing risk** | Flag sequences with similarity to plant endogenous genes |
@@ -59,7 +63,7 @@ Wet-lab validation and stability. The core engine is feature-complete; this trac
 |---------|-------------|
 | **5' Ramp activation** | Enable only if reviewed wet-lab feedback supports N-terminal ramp benefit |
 | **Viral Delivery activation** | Enable only if reviewed wet-lab feedback supports scoring validity |
-| **Tissue-specific optimization** | Leaf vs seed vs root codon preference tuning |
+| **Tissue-specific design profiles** | Leaf vs seed vs root codon-source review and profile gating |
 | **Documentation audit** | Comprehensive docs and capability review |
 
 ---
@@ -68,7 +72,7 @@ Wet-lab validation and stability. The core engine is feature-complete; this trac
 
 | Feature | Description |
 |---------|-------------|
-| **Insect expression (Sf9, Tni)** | Baculovirus/BEVS codon optimization |
+| **Insect host profiles (Sf9, Tni)** | Baculovirus/BEVS host-context research and codon-source review |
 | **Additional plant hosts** | Arabidopsis, tomato, Lemna, Wolffia globosa |
 | **Documentation finalized** | Final docs pass |
 
@@ -79,7 +83,7 @@ Wet-lab validation and stability. The core engine is feature-complete; this trac
 - Full API docstring coverage
 - Reproducible benchmark scripts
 - Extended tutorial
-- State of the field comparison (JCat, OPTIMIZER, Codon Harmonizer, IDT)
+- State-of-the-field comparison plan (JCat, OPTIMIZER, Codon Harmonizer, IDT) using documented, reproducible metrics only
 
 ---
 
@@ -93,11 +97,11 @@ Wet-lab validation and stability. The core engine is feature-complete; this trac
 
 ## v4.0 — ML Engine *(data-conditional)*
 
-A ML-based CDS design engine added as `--engine ml` once sufficient wet-lab validation data is available. The v3-alpha ML prototype (archived under `archive/v3-ml-prototype/`) informs the architecture.
+No public ML engine is scheduled until sufficient, non-confidential validation data and benchmark evidence are available.
 
-- ML engine exposed as `--engine ml` alongside the existing rule-based engine
+- ML engine exposed only after compatibility, cost, reproducibility, and claim-boundary review
 - Training pipeline based on curated, non-confidential wet-lab validation summaries
-- Rule-based vs ML benchmark comparison
+- Rule-based vs ML benchmark comparison using documented public metrics
 - No committed timeline — depends on wet-lab data accumulation
 
 ---
@@ -107,7 +111,7 @@ A ML-based CDS design engine added as `--engine ml` once sufficient wet-lab vali
 Wet-lab validation is an ongoing, open-ended process independent of software versioning.
 Public-safe summaries may be tracked as GitHub Issues under the [Wet-lab Validation](https://github.com/eijex/factorforge-cds/milestone/9) milestone. Private or sensitive feedback should not be submitted through public GitHub Issues.
 
-- Submit only public-safe, non-confidential summaries via [Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header) or public [GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml)
+- Submit only public-safe, non-confidential summaries via public [GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml). Send sensitive or private summaries by email instead.
 - See [VALIDATION.md](VALIDATION.md) for submission format and current status
 
 ---
@@ -116,4 +120,4 @@ Public-safe summaries may be tracked as GitHub Issues under the [Wet-lab Validat
 
 - Animal or clinical expression systems
 - Protein structure prediction (use AlphaFold / ESMFold directly)
-- Codon optimization for microbial hosts (E. coli, yeast)
+- CDS design for microbial hosts (E. coli, yeast)

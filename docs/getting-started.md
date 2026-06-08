@@ -56,9 +56,9 @@ print(result.sequence)   # optimized CDS
 print(result.metadata)   # CAI, GC%, scan results, domestication edits
 ```
 
-## Eijex MCP (AI agent access)
+## Eijex MCP
 
-Use FactorForge directly from Claude Code, Cursor, or any MCP-compatible client:
+Use FactorForge from any MCP-compatible client:
 
 ```json
 {
@@ -79,7 +79,7 @@ Available tools:
 | `factorforge_cds_compare` | Compare multiple profiles side-by-side |
 | `factorforge_cds_batch` | Optimize up to 20 sequences at once |
 
-See [mcp.eijex.com](https://mcp.eijex.com) for the full tool list.
+See [mcp.eijex.com](https://mcp.eijex.com) for the current public tool list.
 
 ## Updating
 

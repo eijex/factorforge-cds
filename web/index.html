@@ -154,9 +154,9 @@
                         <div id="dnaInputWarning"
                             class="hidden p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-xs">
                             <span class="font-bold">ℹ️ DNA sequence detected.</span>
-                            FactorForge optimizes <strong>protein sequences</strong> (amino acids, e.g. MAST...).
+                            FactorForge designs CDS candidates from <strong>protein sequences</strong> (amino acids, e.g. MAST...).
                             DNA input will be returned <strong>unchanged</strong> — no codon substitution applied.
-                            For optimization, please enter an amino acid sequence.
+                            For CDS design, please enter an amino acid sequence.
                         </div>
 
                         <!-- Preview Section -->
@@ -243,10 +243,10 @@
                                         class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">Experimental</span>
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Uses rare codons at positions 1–50 to slow ribosome speed and promote efficient co-translational folding. Recommended for membrane proteins.</span>
+                                        <span class="tooltip-text">Experimental N-terminal codon-ramp heuristic for design review. Disabled until reviewed evidence supports public use.</span>
                                     </span>
                                 </span>
-                                <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">Optimized N-terminal translation ramp</span>
+                                <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">Experimental N-terminal ramp heuristic</span>
                                 <span class="block text-[10px] text-amber-600 dark:text-amber-400 mt-1">Pending wet-lab validation before enabling</span>
                                 <div
                                     class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
@@ -319,10 +319,10 @@
                                         class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">Experimental</span>
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
-                                        <span class="tooltip-text">TRV-based viral vector optimization for transient expression in N. benthamiana. GC target ~47.5% based on TRV genome composition (Peccoud et al. 2024).</span>
+                                        <span class="tooltip-text">Experimental TRV-oriented sequence-context profile. GC target ~47.5% based on TRV genome composition (Peccoud et al. 2024).</span>
                                     </span>
                                 </span>
-                                <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">TRV viral vector delivery optimized</span>
+                                <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">TRV-oriented sequence-context review</span>
                                 <span class="block text-[10px] text-amber-600 dark:text-amber-400 mt-1">Pending wet-lab validation before enabling</span>
                                 <div
                                     class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
@@ -343,7 +343,7 @@
                                 <div
                                     class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
                                     <span class="block text-sm font-bold text-slate-800">N. benthamiana</span>
-                                    <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Leaf transient expression host</span>
+                                    <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Leaf agroinfiltration design host</span>
                                     <div
                                         class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
                                         ✓</div>
@@ -711,13 +711,13 @@
                                 <span>Copy to Clipboard</span>
                             </button>
                             <button id="submitValidationBtn"
-                                title="Open Google Form to report your experimental result"
+                                title="Open public-safe GitHub issue template"
                                 class="w-full py-3 px-4 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold rounded-xl flex items-center justify-center space-x-2 transition-all active:scale-95">
                                 <span>🧪</span>
                                 <span>Share Wet-Lab Result</span>
                                 <span class="tooltip-container">
                                     <span class="info-icon">i</span>
-                                    <span class="tooltip-text">Tested this sequence in the lab? Share your result — version &amp; profile are auto-filled.</span>
+                                    <span class="tooltip-text">Tested this sequence in the lab? Share only a public-safe, non-confidential summary.</span>
                                 </span>
                             </button>
                         </div>
@@ -782,14 +782,14 @@
                 <span>⚠ This tool produces computational predictions only. Wet-lab validation is always required before experimental use.</span>
                 <span>⚠ In-silico metrics do not guarantee protein expression, yield, solubility, or purification performance.</span>
                 <span>⚠ Users are responsible for verifying intellectual property rights and regulatory compliance for their sequences.</span>
-                <span>ℹ Anonymous usage statistics (optimization options, result quality metrics) are collected to improve this tool. Submitted sequences are not logged or stored.</span>
-                <span>ℹ Wet-lab results submitted via feedback form may be used in aggregate to improve FactorForge. No personally identifying information is collected.</span>
+                <span>ℹ Anonymous usage statistics (design options and aggregate result metrics) are collected to improve this tool. Submitted sequences are not logged or stored.</span>
+                <span>ℹ Public wet-lab feedback must be coarse and non-confidential. Use email for private or sensitive summaries.</span>
             </div>
         </div>
         <div class="flex flex-wrap justify-center gap-4 text-xs text-slate-400 mt-3">
             <a href="https://github.com/eijex/factorforge-cds" target="_blank" rel="noopener"
                 class="hover:text-slate-200 transition-colors">GitHub</a>
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform"
+            <a href="https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml"
                 target="_blank" rel="noopener" class="hover:text-slate-200 transition-colors">Validation Feedback</a>
             <a href="https://github.com/eijex/factorforge-cds/releases" target="_blank" rel="noopener"
                 class="hover:text-slate-200 transition-colors">Release Notes</a>
@@ -854,7 +854,7 @@
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
                         <li><b>Host Selector:</b> N. benthamiana / BY-2 Experimental toggle in the UI.</li>
                         <li><b>E2E Smoke Tests:</b> 5 Playwright tests auto-run after each deployment.</li>
-                        <li><b>Eijex MCP:</b> AI agent access via mcp.eijex.com.</li>
+                        <li><b>Eijex MCP:</b> MCP-compatible access via mcp.eijex.com.</li>
                     </ul>
                 </div>
 
@@ -872,7 +872,7 @@
                         <li><b>Profile Comparison:</b> <code>--compare-profiles</code> side-by-side table.</li>
                         <li><b>Batch API:</b> <code>POST /api/optimize/batch</code> — up to 20 sequences.</li>
                         <li><b>Structure Links:</b> AlphaFold DB + ESM Atlas links in result panel.</li>
-                        <li><b>SynCodonLM Scoring:</b> Optional 5th scoring dimension.</li>
+                        <li><b>Experimental Scoring Hooks:</b> Internal optional scoring hooks; public profiles unchanged.</li>
                     </ul>
                 </div>
 
@@ -903,7 +903,7 @@
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
                         <li><b>Citation & Release Infrastructure:</b> CITATION.cff, SECURITY.md, ROADMAP.md, bump_version.py added.</li>
-                        <li><b>Development History:</b> v1→v2→v3-alpha→v3.x→v3.7+(ML) lineage documented across README and CHANGELOG.</li>
+                        <li><b>Public Documentation:</b> README and changelog aligned with the supported public engine.</li>
                         <li><b>Benchmark Corrected:</b> CAI 0.76, GC% 59.77%, target 55–65% (N=3,876 SGN CDS, balanced profile).</li>
                     </ul>
                 </div>
@@ -950,10 +950,10 @@
                         <span class="text-slate-400 text-[10px]">2026-05-24</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
-                        <li><b>Wet-lab Feedback:</b> Submit result button opens an embedded Google Form with version and profile pre-filled.</li>
+                        <li><b>Wet-lab Feedback:</b> Submit result button opens the public-safe feedback path.</li>
                         <li><b>JSON Copy:</b> One-click copy of the full optimization JSON output.</li>
                         <li><b>Design Objective Order:</b> Reordered to match recommended wet-lab testing sequence.</li>
-                        <li><b>Validation Fields:</b> Issue template updated with promoter, subcellular targeting, harvest timepoint, and native control.</li>
+                        <li><b>Validation Fields:</b> Issue template updated for structured public-safe feedback.</li>
                         <li><b>Deployment Fix:</b> Resolved Vercel /api/optimize 404 caused by incorrect Root Directory setting.</li>
                     </ul>
                 </div>
@@ -1083,8 +1083,8 @@
                         <span class="text-slate-400 text-[10px]">2026-02-05</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
-                        <li><b>Golden Set Table:</b> Scientific baseline from high-expression gene data.</li>
-                        <li><b>RAMP Optimization:</b> N-terminal deoptimization for folding.</li>
+                        <li><b>Golden Set Table:</b> Codon-usage reference table for CAI scoring.</li>
+                        <li><b>Ramp Heuristic:</b> Experimental N-terminal codon-ramp design mode.</li>
                         <li><b>MoClo Check:</b> Level 0 overhang validation and collision detection.</li>
                     </ul>
                 </div>

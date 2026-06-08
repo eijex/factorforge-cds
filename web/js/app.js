@@ -1098,20 +1098,16 @@ function downloadFile(format) {
 
 function submitValidation() {
     trackEvent('validation_submit', { objective: state.objective });
-    const FORM_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform';
-    const params = new URLSearchParams({ usp: 'pp_url' });
+    const ISSUE_URL = 'https://github.com/eijex/factorforge-cds/issues/new';
+    const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
         const version = state.results.engine_versions?.product || '3.1.9';
         const profile = state.results?.profile || state.objective || '';
-        params.set('entry.543712242', version);
-        params.set('entry.1499442935', profile);
-
-        if (state.results?.construct_id) params.set('entry.1775159786', state.results.construct_id);
-        if (state.results?.host_profile) params.set('entry.1092797153', state.results.host_profile);
+        params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }
 
-    window.open(`${FORM_BASE}?${params.toString()}`, '_blank', 'noopener,noreferrer');
+    window.open(`${ISSUE_URL}?${params.toString()}`, '_blank', 'noopener,noreferrer');
 }
 
 async function copyJson() {

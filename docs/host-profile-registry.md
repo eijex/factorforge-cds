@@ -1,16 +1,17 @@
 # Host Profile Registry
 
-The host profile registry defines explicit expression contexts for sequence
-design. The central principle is:
+The host profile registry defines explicit host contexts for sequence design.
+The central principle is:
 
 > Same species does not mean same profile. Species, cell line, tissue/cell type,
-> expression platform, data source, confidence, and validation status must all
+> delivery or assay context, data source, confidence, and validation status must all
 > be specified separately.
 
-A profile should describe the host context that the optimizer is targeting, not
-just the taxonomic species. This avoids treating whole plants, suspension cells,
-stable mammalian production lines, research cell types, and insect systems as
-interchangeable.
+A profile should describe the host context that the design engine is targeting,
+not just the taxonomic species. This avoids treating whole plants, suspension
+cells, research cell types, and insect systems as interchangeable. Planned
+non-plant examples below are schema examples only; they are not supported
+FactorForge public runtime targets.
 
 ## Required Profile Fields
 
@@ -44,7 +45,7 @@ validation_status:
 
 `profile_status` should use values such as `supported`, `experimental`, or
 `planned`. `validation_status` should separately describe what has and has not
-been validated for the expression context.
+been validated for the host context.
 
 ## Example Profiles
 
@@ -52,7 +53,7 @@ been validated for the expression context.
 
 ```yaml
 id: nicotiana_benthamiana
-display_name: Nicotiana benthamiana transient expression
+display_name: Nicotiana benthamiana agroinfiltration design
 species: Nicotiana benthamiana
 strain_or_cell_line: whole plant
 tissue_or_cell_type: leaf tissue
@@ -72,12 +73,12 @@ rules:
   homopolymer_expression_warn_nt: 6
   homopolymer_synthesis_warn_nt: 8
 recommended_use:
-  - Whole-plant transient expression design.
-  - Default plant expression profile.
+  - Whole-plant agroinfiltration CDS design review.
+  - Default plant CDS design profile.
 not_recommended_for:
-  - Mammalian expression design.
-  - Insect or microbial expression design.
-validation_status: Supported for current plant-first optimization workflows.
+  - Mammalian CDS design.
+  - Insect or microbial CDS design.
+validation_status: Supported for current plant-first sequence-design workflows.
 ```
 
 ### Nicotiana tabacum BY-2
@@ -104,11 +105,11 @@ rules:
   homopolymer_expression_warn_nt: 6
   homopolymer_synthesis_warn_nt: 8
 recommended_use:
-  - Experimental planning for BY-2 suspension expression.
-  - Comparison against plant transient-expression defaults.
+  - Exploratory planning for BY-2 suspension-cell sequence design.
+  - Comparison against plant agroinfiltration defaults.
 not_recommended_for:
   - Claiming BY-2 expression performance validation.
-  - Production release without profile-specific validation.
+  - Public activation without profile-specific validation.
 validation_status: Uses the N. tabacum codon table as a proxy; not wet-lab validated in FactorForge for BY-2 expression performance.
 ```
 
@@ -136,11 +137,11 @@ rules:
   homopolymer_expression_warn_nt: 6
   homopolymer_synthesis_warn_nt: 8
 recommended_use:
-  - Future mammalian stable-expression design.
+  - Future mammalian cell-line CDS design review.
   - Host-profile schema testing.
 not_recommended_for:
-  - Current production optimization.
-  - Plant expression defaults.
+  - Current supported use.
+  - Plant CDS design defaults.
 validation_status: Planned; not implemented or validated.
 ```
 
@@ -172,7 +173,7 @@ recommended_use:
   - Profile schema planning.
 not_recommended_for:
   - Clinical, diagnostic, or regulatory claims.
-  - Current production optimization.
+  - Current supported use.
 validation_status: Research/planned; not implemented or validated.
 ```
 
@@ -180,7 +181,7 @@ validation_status: Research/planned; not implemented or validated.
 
 ```yaml
 id: apis_mellifera
-display_name: Apis mellifera expression design
+display_name: Apis mellifera CDS design
 species: Apis mellifera
 strain_or_cell_line: unspecified
 tissue_or_cell_type: unspecified insect expression context
@@ -203,7 +204,7 @@ recommended_use:
   - Future insect host-profile planning.
   - Codon source audit design.
 not_recommended_for:
-  - Current production optimization.
+  - Current supported use.
   - Treating all insect systems as equivalent.
 validation_status: Planned; not implemented or validated.
 ```

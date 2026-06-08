@@ -1,6 +1,6 @@
 # FactorForge Architecture
 
-FactorForge is a multi-host sequence, codon, and expression-design engine. Its
+FactorForge is a sequence-level CDS design engine with explicit host-context metadata. Its
 core responsibility is to turn protein or coding-sequence inputs into candidate
 coding sequences that are host-aware, rule-audited, score-calibrated, and ready
 for downstream design review.
@@ -16,7 +16,7 @@ agent tooling can evolve independently.
 The sequence design engine handles the direct sequence-design workflow:
 
 - Reverse translation from amino-acid sequence to CDS candidates.
-- Codon optimization against the selected host codon table.
+- Synonymous codon selection against the selected host codon table.
 - CAI scoring against codon adaptiveness weights.
 - GC band scoring against profile-specific acceptable GC ranges.
 - MFE and mRNA structure scoring when ViennaRNA is available.
@@ -39,8 +39,8 @@ usage table.
 
 ### 3. Rule Engine
 
-The rule engine scans and, where supported, repairs sequence features that can
-affect expression, synthesis, cloning, or downstream handling:
+The rule engine scans and, where supported, repairs sequence features relevant
+to expression-context review, synthesis, cloning, or downstream handling:
 
 - Homopolymer runs.
 - Local GC windows.
@@ -76,7 +76,7 @@ signals into reviewable engineering tasks:
 
 - GitHub Actions failure inbox.
 - Issue templates for reproducible implementation requests.
-- Claude Code handoff documents with relevant files, scope, and commands.
+- Maintainer handoff documents with relevant files, scope, and commands.
 
 The inbox is not an auto-fix system. Its role is to package context for human
 review and implementation.
@@ -97,7 +97,7 @@ rule semantics, and keep documentation synchronized after code changes.
 ```text
                         +-----------------------------+
                         |       AI Agent Clients      |
-                        | Claude Code, IDE assistants |
+                        | MCP-compatible clients      |
                         +--------------+--------------+
                                        |
                          planned MCP / skills boundary

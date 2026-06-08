@@ -47,7 +47,7 @@ jobs:
 
             const labelDefinitions = {
               'ci-failure': { color: 'd73a4a', description: 'CI workflow failure captured automatically' },
-              'claude-review': { color: '5319e7', description: 'Needs Claude Code review' },
+              'maintainer-review': { color: '5319e7', description: 'Needs maintainer review' },
               'docker': { color: '0e8a16', description: 'Docker, build, container, or image failure' },
               'tests': { color: '1d76db', description: 'Test, pytest, or unit failure' },
               'lint': { color: 'fbca04', description: 'Lint, ruff, or format failure' },
@@ -85,7 +85,7 @@ jobs:
             const branch = run.head_branch || 'unknown-branch';
             const sha = run.head_sha || 'unknown-sha';
             const shortSha = sha.slice(0, 7);
-            const labels = ['ci-failure', 'claude-review', 'github-actions', category];
+            const labels = ['ci-failure', 'maintainer-review', 'github-actions', category];
             if (category === 'deploy') {
               labels.push('urgent');
             }
@@ -101,7 +101,7 @@ jobs:
               `- Commit SHA: ${sha}`,
               `- Run URL: ${run.html_url}`,
               '',
-              '## Claude Code Review Prompt',
+              '## Maintainer Review Prompt',
               '',
               'Review this GitHub Actions failure and identify the smallest safe fix.',
               '',

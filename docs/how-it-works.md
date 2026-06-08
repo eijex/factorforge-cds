@@ -7,7 +7,7 @@ Protein sequence (FASTA or plain text)
         │
         ▼
 1. Reverse Translation
-   Selects synonymous codons to maximize CAI
+   Selects synonymous codons to favor CAI
    against the selected host codon usage table
    (N. benthamiana by default; --host by2 for Tobacco BY-2)
         │
@@ -27,7 +27,7 @@ Protein sequence (FASTA or plain text)
         │
         ▼
 4. Output
-   Optimized CDS — FASTA or GenBank
+   Designed CDS — FASTA or GenBank
    with full metrics and scan report
 ```
 

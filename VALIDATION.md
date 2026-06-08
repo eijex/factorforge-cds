@@ -33,7 +33,7 @@ Public-safe validation summaries are welcome. Positive, negative, equivalent, re
 
 Public GitHub Issues are public. Use them only for public-safe summaries. Do not submit private or sensitive wet-lab feedback through public GitHub Issues.
 
-If using the Google Form or email, submit only non-confidential information and do not include raw sequences or private identifiers.
+If using email, submit only information you have permission to share and do not include raw sequences or private identifiers unless there is an explicit private review agreement.
 
 ## Do Not Submit
 
@@ -60,15 +60,14 @@ If using the Google Form or email, submit only non-confidential information and 
 - Comparison result.
 - Expression result.
 - Approximate yield range.
-- Institution disclosure status: anonymous / disclosed / not provided.
 - Non-confidential notes only.
 
-Contributor identity and institution are not listed by default. Contributor or institution credit may be included only when explicitly approved and non-confidential.
+Contributor identity is not listed in public summaries by default. Public credit requires explicit approval and additional maintainer review.
 
 Submission links:
 
-- [Submit via Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header)
 - [Open a public GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) only for public-safe summaries
+- Email `eijex.lab@gmail.com` for private or sensitive summaries
 - Email: eijex.lab@gmail.com
 
 ---
@@ -83,8 +82,7 @@ Submission links:
 - No patient or clinical subject data is present.
 - No submitter name, respondent email, phone number, or contact information is present.
 - No exact confidential process parameter is present.
-- Protein name is removed or coarse-grained unless explicitly approved.
-- Institution is anonymous or explicitly approved.
+- Protein name is removed or coarse-grained unless explicitly approved after maintainer review.
 - Yield is expressed as a coarse range.
 - Text does not imply controlled validation, regulatory approval, or guaranteed performance.
 - Disclaimer language is preserved.

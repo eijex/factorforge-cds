@@ -34,7 +34,7 @@ Or use the **[web app](https://factorforge.eijex.com)** — no installation requ
 | **Web App** | No installation, demo & light use | [factorforge.eijex.com](https://factorforge.eijex.com) |
 | **CLI / Python** | Local use, batch processing, data privacy | `pip install factorforge-cds` |
 | **Docker** | Full web interface locally | `docker pull ghcr.io/eijex/factorforge-cds:latest` |
-| **Eijex MCP** | AI agent access (Claude Code, Cursor) | [mcp.eijex.com](https://mcp.eijex.com) |
+| **Eijex MCP** | MCP-compatible agent access | [mcp.eijex.com](https://mcp.eijex.com) |
 
 ---
 
@@ -51,25 +51,9 @@ and are not imported by the installed package or exposed as supported engines.
 
 ---
 
-## Development History
-
-FactorForge has gone through several implementation generations before the current public release:
-
-| Generation | Status | Description |
-|-----------|--------|-------------|
-| **v1** — NBent_OptiCodon | Internal | Thesis-derived codon optimization baseline for *N. benthamiana* |
-| **v2** — Rule-Based Engine | Internal → Production | Deterministic, constraint-aware design engine; became the foundation for the public release |
-| **v3-alpha** — ML Prototype | Archived | ML-based design attempt; performance was insufficient for production use; preserved under `archive/v3-ml-prototype/` |
-| **v3.0+** — Current release | Public | Open-source release of the matured v2 engine under `factorforge.engines.profile` |
-| **v4.0** — ML Engine | Planned | ML-based design as `--engine ml`; added once sufficient wet-lab data is available |
-
-The `archive/` directory preserves all three earlier tracks for provenance. None are installed or exposed by the current package.
-
----
-
 ## ⚠️ Validation Status
 
-FactorForge predictions are **in-silico only** and have not been experimentally validated in wet-lab conditions. See [Validation](https://eijex.github.io/factorforge-cds/validation/) and [VALIDATION.md](VALIDATION.md).
+FactorForge outputs are **in-silico only** and have not been experimentally validated in wet-lab conditions. See [Validation](https://eijex.github.io/factorforge-cds/validation/) and [VALIDATION.md](VALIDATION.md).
 
 ---
 
@@ -82,19 +66,15 @@ Eijex. https://github.com/eijex/factorforge-cds
 
 ---
 
-## Contributors
+## Maintainer
 
-| | Name | Role |
-|--|------|------|
-| 👤 | Mun-Kyu Kim ([@eijex](https://github.com/eijex)) | Author & maintainer |
-| 🤖 | Claude (Anthropic) | Design, analysis, planning |
-| 🤖 | Codex (OpenAI) | Implementation |
+Mun-Kyu Kim ([@eijex](https://github.com/eijex))
 
 ## License
 
 GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).
 
-**Disclaimer:** FactorForge is provided for research purposes only. Predictions are computational and have not been experimentally validated.
+**Disclaimer:** FactorForge is provided for research purposes only. Outputs are computational and have not been experimentally validated.
 
 ---
 

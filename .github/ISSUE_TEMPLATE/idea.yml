@@ -1,6 +1,6 @@
 name: Idea
 description: Capture a development or product idea for later triage
-labels: ["idea", "later", "claude-review"]
+labels: ["idea", "later", "maintainer-review"]
 body:
   - type: textarea
     id: idea

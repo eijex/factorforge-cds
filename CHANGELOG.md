@@ -9,8 +9,9 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Docs: aligned public wet-lab validation contribution language with manual-review, public-safe submission rules.
 - Docs: clarified that public GitHub Issues must not contain raw sequences, confidential construct details, internal batch IDs, patient data, private contact information, exact process parameters, or confidential partner/customer data.
+- Docs: aligned public README, docs, web, citation, packaging, roadmap, and benchmark wording with the in-silico CDS design claim boundary.
 
-### Versioning Policy
+### Release Policy
 
 | Bump | When to use |
 |------|-------------|
@@ -18,152 +19,9 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 | **Minor** (`3.X.0`) | New rule, scan feature, optimization mode, new profile, new CLI flag |
 | **Patch** (`3.1.X`) | Bug fix, metric correction, documentation update, dependency patch |
 
-**Release checklist:**
-
-**Pre-release gate (before bumping):**
-0. `git status --short` — working tree must be clean
-0. `python -m ruff check .` — no lint errors
-0. `python -m pytest tests/ -v --tb=short` — all tests pass
-0. Verify `Dockerfile` references match current file locations (especially after any script/file moves)
-0. `python scripts/release.py X.Y.Z --dry-run` — verify 16 files
-0. `python scripts/release.py X.Y.Z --dry-run` — verify cross-repo docs + MCP tool strings
-
-**Version bump & manual updates:**
-1. Move `[Unreleased]` entries to `[X.Y.Z] — YYYY-MM-DD` in this file; update comparison links at bottom
-2. Run `python scripts/release.py X.Y.Z` — updates all version-bearing files + cross-repo docs + MCP tool strings + residual check
-3. Add changelog entry to `web/index.html` (version panel HTML — manual; set new block to emerald/Current, demote previous to gray)
-4. Add summary entry to `docs/changelog.md`
-5. Review internal workspace docs (roadmap, job catalog, memory) for any updates needed
-
-**Commit & CI gate (tag AFTER CI passes):**
-5. `git commit -m "chore: release vX.Y.Z"` → `git push`
-6. Wait for CI to pass: https://github.com/eijex/factorforge-cds/actions
-7. `git tag -a vX.Y.Z -m "Release vX.Y.Z"` → `git push --tags`
-8. GitHub Actions publishes to PyPI + Docker; creates GitHub Release → Zenodo DOI issued automatically
-
-**Post-release verification:**
-9. Verify PyPI: `pip install factorforge-cds==X.Y.Z && factorforge --help` (smoke test)
-10. Verify Docker: `docker run ghcr.io/eijex/factorforge-cds:vX.Y.Z factorforge --help` (smoke test)
-11. Confirm Zenodo DOI: https://zenodo.org/doi/10.5281/zenodo.20407331
-12. **Bioconda** — update `recipes/meta.yaml` (version + SHA256 via `curl -s https://pypi.org/pypi/factorforge-cds/X.Y.Z/json | python -c "import sys,json; d=json.load(sys.stdin); [print(f['digests']['sha256']) for f in d['urls'] if f['packagetype']=='sdist']"`), push to fork branch `add-factorforge-cds`. Once PR is merged by Bioconda maintainers, autobump handles subsequent releases automatically.
-13. **GitHub house maintenance (every release):**
-    - [ ] Close issues completed in this release; close milestone if all done (`gh api repos/eijex/factorforge-cds/milestones/{N} --method PATCH --field state=closed`)
-    - [ ] Close stale CI failure issues: `gh issue list --label ci-failure`
-    - [ ] Scan open issues for policy violations (paper/JOSS references, unpublished roadmap items)
-    - [ ] Public surface scan: `grep -r "PlantForm\|Don Stewart\|plantform.org\|munkyukim86" --include="*.md" --include="*.py" --include="*.yml" --include="*.html" --include="*.js" .`
-    - [ ] Version label consistency — if any milestone was renamed: update `ROADMAP.md`, `README.md` Development History, `CHANGELOG.md` Development History, `docs/changelog.md`, GitHub milestone titles/descriptions, open issue titles
-    - [ ] Issue template (`wet_lab_result.yml`) fields match the public-safe Google Form summary fields? → sync if diverged
-    - [ ] VALIDATION.md current? → update GC% ranges, host list, public-safe contribution fields, and sensitive-data warnings if needed
-14. **eijex-mcp sync** — check the eijex-mcp repo for required updates:
-    - [ ] Version string in `factorforge_cds_optimize` description → bump to new version
-    - [ ] New profiles added? → add to `profile` enum in route.ts and mcp-tools.ts
-    - [ ] New API endpoints added? → expose as new MCP tools
-    - [ ] New `--host` options? → update tool description
-    - [ ] `CHANGELOG.md` — add entry for any tool additions or interface changes
-    - [ ] `README.md` tool table still accurate?
-    - [ ] `skills/bio-research.md` workflow steps still accurate?
-    - [ ] `src/app/page.tsx` section labels/descriptions + safety disclaimer still accurate?
-    - [ ] `src/app/_lib/mcp-tools.ts` tool descriptions, tags, keyFeatures still accurate?
-    - [ ] `.claude-plugin/plugin.json` description still accurate?
-    - [ ] `package.json` version — bump eijex-mcp if interface changed
-    - [ ] `CHANGELOG.md` — add entry for FactorForge version bump and any breaking changes affecting MCP tools
-15. **eijex-web** — update version display (when repo is active):
-    - [ ] `src/app/components/StatsBar.tsx` — `latest release` value
-    - [ ] `src/app/components/Footer.tsx` — `factorforge-cds vX.Y.Z` string
-16. **Bioconda PR** — update PR title to new version: `gh pr edit 65834 --repo bioconda/bioconda-recipes --title "Add factorforge-cds X.Y.Z"` + add comment with new SHA256
-16. **Wet-lab survey** — check if Google Form host/profile fields need updating when a new host or profile is added
-17. **www.eijex.com sync (eijex-web)** — **conditional**, only when the release changes something the company site shows. The site links to FactorForge (factorforge.eijex.com, `pip install`, Docker, Bioconda) without pinning a version, so routine version bumps need **no** update. Update `C:\Work\eijex\eijex-web` only when:
-    - [ ] New capability/claim worth showcasing on the product/landing copy
-    - [ ] New install channel (e.g. Bioconda first becomes available) → add to install links
-    - [ ] A hard-coded FactorForge version string was introduced anywhere on the site
-    - [ ] Vercel auto-deploys eijex-web on push to its repo — no tag needed
-
-**Conditional checklists — apply only when relevant:**
-
-<details>
-<summary>New expression host added (e.g. BY-2, Arabidopsis)</summary>
-
-- [ ] `src/factorforge/data/{host}_codons.json` — new codon table
-- [ ] `src/factorforge/engines/profile/rules/` — host param plumbing
-- [ ] `pyproject.toml` keywords — add new species names
-- [ ] `CITATION.cff` title, abstract, keywords
-- [ ] `web/index.html` `<title>` and `<meta description>`
-- [ ] `README.md` tagline
-- [ ] `docs/index.md` tagline + Supported Hosts table row
-- [ ] `docs/how-it-works.md` — host-agnostic description
-- [ ] `docs/cli.md` — `--host` option choices
-- [ ] `docs/output.md` — CAI description
-- [ ] `docs/validation.md` — GC% range note
-- [ ] `docs/profiles.md` — Supported Hosts section
-- [ ] `mkdocs.yml` `site_description`
-- [ ] Documentation sync (internal) — update capability descriptions
-- [ ] Internal codon table validation analysis (prerequisite)
-- [ ] **Google Form** — add new host to "Host organism" field options
-
-</details>
-
-<details>
-<summary>New algorithm added (tAI, codon pair bias, 5' UTR MFE, etc.)</summary>
-
-- [ ] `CHANGELOG.md` [Unreleased] entry
-- [ ] Documentation sync (internal) — update differentiators
-- [ ] `docs/how-it-works.md` — pipeline stage description
-- [ ] `docs/profiles.md` — new scan/feature description
-
-</details>
-
-<details>
-<summary>Bioconda PR merged (first time only)</summary>
-
-- [ ] `docs/index.md` Access Options table — add conda install
-- [ ] `docs/getting-started.md` — add `conda install -c bioconda factorforge-cds`
-- [ ] `README.md` — add Bioconda badge + install instructions
-- [ ] Documentation sync (internal) — add Bioconda distribution note
-
-</details>
-
----
-
-## Repo Health Checklist *(run quarterly or after major structural changes)*
-
-These checks are too broad for every release but catch drift that accumulates over time.
-
-**GitHub repo metadata:**
-- [ ] `factorforge-cds` description still accurate (hosts supported)?
-- [ ] Topics current (`codon-optimization`, `synthetic-biology`, etc.)?
-- [ ] `eijex-mcp` description / topics current?
-- [ ] Eijex org profile: description + website set?
-- [ ] Wiki and Projects disabled on both repos?
-
-**Labels:**
-- [ ] Duplicate or policy-violating labels? (`gh api repos/eijex/factorforge-cds/labels --jq '.[].name'`)
-- [ ] Issue template labels exist in repo? (`wet_lab_result.yml` → `wet-lab`)
-
-**Form ↔ template sync:**
-- [ ] GitHub Issue template `wet_lab_result.yml` fields match Google Form fields?
-- [ ] `VALIDATION.md` public-safe contribution fields list matches Google Form?
-
-**Milestone descriptions:**
-- [ ] No paper/JOSS/internal references in public milestone descriptions?
-
-**Public files:**
-- [ ] `examples/sample_protein.fasta` — meaningful example (not a placeholder)?
-- [ ] `scripts/` — no untracked internal output files (e.g. benchmark CSVs, run logs)?
-- [ ] `.gitignore` comments — no overly revealing "internal/private" language?
-
----
-
-## Development History
-
-FactorForge's public release history (v3.0+) builds on earlier internal implementation generations. Archived tracks are preserved under `archive/` for provenance and are not part of the installed package.
-
-| Generation | Status | Description |
-|-----------|--------|-------------|
-| v1 — NBent_OptiCodon | Internal | Thesis-derived codon optimization baseline for *N. benthamiana* |
-| v2 — Rule-Based Engine | Internal → Production | Deterministic constraint-aware engine; matured into `factorforge.engines.profile` |
-| v3-alpha — ML Prototype | Archived | ML-based design attempt; performance insufficient; see `archive/v3-ml-prototype/` |
-| v3.0+ — Current release | Public | Open-source release of the v2 engine; development continues here |
-| v4.0 — ML Engine | Planned | ML-based design as `--engine ml`; added once sufficient wet-lab data is available |
+Before each release, maintainers run lint/tests, update version-bearing files,
+verify package and Docker smoke tests, and check public documentation for
+version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
@@ -221,8 +79,7 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 - **Eijex MCP access** — added Eijex MCP as access option in `README.md` and `docs/index.md`
 - **API endpoints** — added `POST /api/optimize`, `/compare`, `/batch` endpoints section to `docs/cli.md`
 - **MCP getting started** — added Eijex MCP connection guide to `docs/getting-started.md`
-- **ml_enhanced profile** — `docs/profiles.md`에 ml_enhanced 프로파일 문서화
-- **AGENTS.md** — 새 API 엔드포인트 추가 시 eijex-mcp 동기화 항목 명시
+- **Profile documentation** — public profile table clarified supported and internal profile boundaries
 
 ---
 
@@ -230,10 +87,7 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 
 ### Added
 
-- **SynCodonLM scoring dimension** — optional 5th composite score component (`w_syncodonlm`, default `0.0`). Integrates Boehringer-Ingelheim's BERT-based codon language model ([SynCodonLM, NAR 2025](https://github.com/Boehringer-Ingelheim/SynCodonLM); HuggingFace: `jheuschkel/SynCodonLM-V2`). Graceful fallback (score 0.5, WARNING) when `transformers` is not installed. No change to existing scoring behavior.
-- **`ml_enhanced` scoring profile** — `w_cai=0.35, w_gc=0.25, w_mfe=0.15, w_syncodonlm=0.25`. Opt-in; existing four profiles unchanged.
-- **`[ml]` optional dependency group** — `pip install factorforge-cds[ml]` installs `transformers>=4.40` and `torch>=2.0` for SynCodonLM inference.
-- **`scoring_ml.py`** — `SynCodonLMScorer` class with lazy model loading; `calculate_syncodonlm_score(sequence, organism)`.
+- **Experimental scoring hooks** — optional internal scoring hooks were added without changing existing public profile behavior.
 - **Profile comparison mode** — `factorforge optimize input.fasta --engine profile --compare-profiles balanced,high_cai,gc_target` outputs a side-by-side CAI / GC% / score table. First profile result saved to `--output` when specified. `POST /api/optimize/compare` endpoint added with same functionality via JSON API.
 - **Tutorial: GFP N. benthamiana** — end-to-end worked example at `docs/tutorials/gfp-nbenthamiana.md`. Covers CLI, Python API, profile comparison, and MoClo assembly preparation.
 - **Batch optimization API** — `POST /api/optimize/batch` accepts up to 20 sequences in a single request. Returns per-sequence CAI, GC%, score, and optimized CDS. Auto-generates IDs (`seq_1`, `seq_2`, ...) when omitted. CLI multi-FASTA was already supported.
@@ -257,9 +111,9 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 
 - **CITATION.cff** — GitHub "Cite this repository" button; updated at every version bump.
 - **SECURITY.md** — vulnerability reporting policy (GitHub Private Vulnerability Reporting + email).
-- **ROADMAP.md** — public development direction: v3.2 planned features, ML Research Track (v4), wet-lab scope.
+- **ROADMAP.md** — public development direction, validation scope, and planned host/profile work.
 - **bump_version.py** — automates version string updates across 14 files (`python scripts/release.py X.Y.Z`).
-- **Development history narrative** — README, CHANGELOG, archive READMEs, and docs/changelog.md now document the v1→v2→v3-alpha→v3.x→v4 version lineage.
+- **Public history cleanup** — archive references kept outside the primary user docs.
 
 ### Changed
 
@@ -303,7 +157,7 @@ FactorForge's public release history (v3.0+) builds on earlier internal implemen
 ### Changed
 
 - **Design Objective order** — reordered to match recommended wet-lab testing sequence: Feasibility Best → 5' Ramp → High CAI → GC Target → Assembly Friendly → Viral Delivery.
-- **Wet-lab feedback fields** — GitHub Issue Template updated with promoter, subcellular targeting, harvest timepoint, and native control fields.
+- **Wet-lab feedback fields** — GitHub Issue Template updated for structured public-safe feedback.
 - **VALIDATION.md / docs/validation.md** — "Include" section updated with new experimental metadata fields.
 
 ### Fixed
