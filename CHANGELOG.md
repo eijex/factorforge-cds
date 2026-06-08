@@ -5,6 +5,11 @@ All notable changes to FactorForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+- Docs: aligned public wet-lab validation contribution language with manual-review, public-safe submission rules.
+- Docs: clarified that public GitHub Issues must not contain raw sequences, confidential construct details, internal batch IDs, patient data, private contact information, exact process parameters, or confidential partner/customer data.
+
 ### Versioning Policy
 
 | Bump | When to use |
@@ -47,8 +52,8 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - [ ] Scan open issues for policy violations (paper/JOSS references, unpublished roadmap items)
     - [ ] Public surface scan: `grep -r "PlantForm\|Don Stewart\|plantform.org\|munkyukim86" --include="*.md" --include="*.py" --include="*.yml" --include="*.html" --include="*.js" .`
     - [ ] Version label consistency — if any milestone was renamed: update `ROADMAP.md`, `README.md` Development History, `CHANGELOG.md` Development History, `docs/changelog.md`, GitHub milestone titles/descriptions, open issue titles
-    - [ ] Issue template (`wet_lab_result.yml`) fields match Google Form? → sync if diverged
-    - [ ] VALIDATION.md current? → update GC% ranges, host list, "How to Contribute" fields if needed
+    - [ ] Issue template (`wet_lab_result.yml`) fields match the public-safe Google Form summary fields? → sync if diverged
+    - [ ] VALIDATION.md current? → update GC% ranges, host list, public-safe contribution fields, and sensitive-data warnings if needed
 14. **eijex-mcp sync** — check the eijex-mcp repo for required updates:
     - [ ] Version string in `factorforge_cds_optimize` description → bump to new version
     - [ ] New profiles added? → add to `profile` enum in route.ts and mcp-tools.ts
@@ -136,7 +141,7 @@ These checks are too broad for every release but catch drift that accumulates ov
 
 **Form ↔ template sync:**
 - [ ] GitHub Issue template `wet_lab_result.yml` fields match Google Form fields?
-- [ ] `VALIDATION.md` "How to Contribute" fields list matches Google Form?
+- [ ] `VALIDATION.md` public-safe contribution fields list matches Google Form?
 
 **Milestone descriptions:**
 - [ ] No paper/JOSS/internal references in public milestone descriptions?

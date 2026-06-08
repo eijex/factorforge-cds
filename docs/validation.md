@@ -2,43 +2,69 @@
 
 ## Status
 
-FactorForge is an **in-silico only** tool. It optimizes codon usage, GC content, and sequence constraints — but it cannot guarantee protein expression, yield, solubility, or folding in your specific system.
+FactorForge is an **in-silico only** CDS design tool. It optimizes codon usage, GC content, and sequence constraints, but it cannot guarantee protein expression, yield, solubility, folding, secretion, or biological activity in any specific system.
 
 !!! warning
     Wet-lab validation is always required before use in production workflows.
+
+Public validation entries are manually reviewed, non-confidential wet-lab feedback summaries. They are not controlled validation studies, regulatory claims, or guarantees of FactorForge performance.
 
 ## What FactorForge Checks
 
 | Check | Covered | Notes |
 |-------|---------|-------|
-| Internal stop codons | ✅ | Hard fail |
-| Amino acid identity | ✅ | Hard fail |
-| GC% range | ✅ | Host-dependent; default *N. benthamiana*: 55–65% |
-| Forbidden restriction sites | ✅ | BsaI, BsmBI, BpII (Golden Gate) |
-| Invalid codons | ✅ | Hard fail |
-| Rare codon runs | ✅ | Ribosome stalling risk detection |
-| CpG/TpA dinucleotides | ✅ | CAI-budgeted reduction |
-| Protein folding | ❌ | Requires wet-lab or AlphaFold |
-| Actual expression level | ❌ | Requires wet-lab |
-| Yield / solubility | ❌ | Requires wet-lab |
-| Signal peptide behavior | ❌ | Requires wet-lab |
-| Membrane protein topology | ❌ | Requires wet-lab |
+| Internal stop codons | Yes | Hard fail |
+| Amino acid identity | Yes | Hard fail |
+| GC% range | Yes | Host-dependent; default *N. benthamiana*: 55-65% |
+| Forbidden restriction sites | Yes | BsaI, BsmBI, BpiI (Golden Gate) |
+| Invalid codons | Yes | Hard fail |
+| Rare codon runs | Yes | Ribosome stalling risk detection |
+| CpG/TpA dinucleotides | Yes | CAI-budgeted reduction |
+| Protein folding | No | Requires wet-lab validation |
+| Actual expression level | No | Requires wet-lab validation |
+| Yield / solubility | No | Requires wet-lab validation |
+| Signal peptide behavior | No | Requires wet-lab validation |
+| Membrane protein topology | No | Requires wet-lab validation |
 
 ## Contribute Wet-Lab Results
 
-If you tested a FactorForge-optimized sequence in the lab, please share your result — positive or negative. Failed experiments are just as valuable.
+Public-safe validation summaries are welcome. Positive, negative, equivalent, reduced, failed-expression, and inconclusive outcomes are all useful.
 
-**→ [Submit via Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header)** (recommended)
+Public GitHub Issues are public. Use them only for public-safe summaries. Do not submit private or sensitive wet-lab feedback through public GitHub Issues.
 
-Or open a [GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) with the label `wet-lab-result`.
+Default public fields should use protein class rather than protein name. Contributor or institution credit is optional and requires explicit approval.
 
-Please include:
+Do not submit:
 
-- Host organism and protein
-- FactorForge version and optimization profile
-- Expression system and assay
-- Result (qualitative or quantitative)
-- Promoter, subcellular targeting, harvest timepoint (optional)
-- Whether a native/unoptimized sequence was used as a control
+- Raw DNA, RNA, or protein sequences.
+- Proprietary or unpublished construct sequences.
+- Internal batch IDs.
+- Confidential partner/customer information.
+- Patient or clinical subject data.
+- Private contact information.
+- Exact confidential process parameters.
+- Confidential assay protocols.
+- Unpublished construct-identifying labels.
 
-Contributors will be credited in [VALIDATION.md](https://github.com/eijex/factorforge-cds/blob/main/VALIDATION.md) and future releases.
+Public-safe summaries may include:
+
+- FactorForge version.
+- Host organism.
+- Optimization profile.
+- Protein class.
+- Expression system / assay type.
+- Harvest timepoint.
+- Replicate category.
+- Comparison result.
+- Expression result.
+- Approximate yield range.
+- Institution disclosure status: anonymous / disclosed / not provided.
+- Non-confidential notes only.
+
+Submission links:
+
+- [Submit via Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header)
+- [Open a public GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) only for public-safe summaries
+- See [VALIDATION.md](https://github.com/eijex/factorforge-cds/blob/main/VALIDATION.md) for the current public validation log.
+
+All public entries require manual review before publication.

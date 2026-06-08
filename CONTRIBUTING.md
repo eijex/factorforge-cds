@@ -90,17 +90,19 @@ When reporting a bug, please include:
 
 ### Wet-lab Validation Data
 
-If you have wet-lab validation data (expression levels, yield measurements), we especially welcome:
+Wet-lab validation data contributions are welcome only as non-confidential public summaries. If you have wet-lab validation data, we especially welcome:
 - Comparisons of FactorForge-optimized vs native sequences
 - Multi-host validation results
 - Edge case sequences (very long proteins, transmembrane regions, etc.)
 
 Preferred submission paths:
-1. **Google Form** (recommended): [Submit wet-lab result](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header)
-2. **GitHub Issue**: use the `wet_lab_result` issue template
+1. **Google Form**: [Submit public-safe wet-lab summary](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform?usp=header)
+2. **GitHub Issue**: use the `wet_lab_result` issue template only for public-safe summaries
 3. See [VALIDATION.md](VALIDATION.md) for the full submission format
 
-Please open an issue to discuss before submitting large datasets.
+Do not include raw sequences, proprietary construct details, internal batch IDs, patient data, confidential partner/customer information, private contact information, exact confidential process parameters, or large/sensitive datasets in public GitHub submissions.
+
+Contributor or institution credit is optional and requires explicit approval. Please open an issue to discuss public-safe summary structure before submitting large datasets.
 
 ### Codon Usage Tables
 
