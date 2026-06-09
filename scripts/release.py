@@ -309,6 +309,12 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     print(" 11.  Confirm Zenodo DOI: https://zenodo.org/doi/10.5281/zenodo.20407331")
     print(" 12.  Update Bioconda recipes/meta.yaml (version + SHA256) → push fork branch")
     print(" 13.  Close completed GitHub Issues; close milestone if all done")
+    print()
+    print("  --- Public surface audit ---")
+    print(f" 14.  python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_surface.py \\")
+    print(f"        --workspace C:\\Work\\eijex --live --external \\")
+    print(f"        --url https://pypi.org/project/factorforge-cds/{new}/")
+    print("       → fix any findings before announcing the release")
 
     return errors
 
