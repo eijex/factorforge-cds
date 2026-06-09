@@ -1,6 +1,6 @@
 # Parameter Scan Report
 
-**Total hits:** 127  **Unregistered:** 122
+**Total hits:** 131  **Unregistered:** 126
 
 ## Unregistered Public-Biological Numbers
 
@@ -49,25 +49,28 @@
 | `src\factorforge\engines\profile\rules\reverse_translator.py` | 122 | type_iis | `BpiI` | `"BpiI": ["GAAGAC", "GTCTTC"],` |
 | `src\factorforge\engines\profile\rules\reverse_translator.py` | 492 | type_iis | `BpiI` | `- Retries up to max_attempts times until no BsaI/BpiI Type IIS` |
 | `src\factorforge\engines\profile\rules\reverse_translator.py` | 497 | type_iis | `BpiI` | `- Supported: BsaI/BpiI site avoidance via stochastic retry` |
+| `src\factorforge\registry\CHANGELOG.md` | 8 | type_iis | `BsaI` | `- before: `["BsaI", "BsmBI", "BbsI"]` -> after: `["BsaI", "BpiI", "BsmBI"]`` |
+| `src\factorforge\registry\CHANGELOG.md` | 8 | type_iis | `BsmBI` | `- before: `["BsaI", "BsmBI", "BbsI"]` -> after: `["BsaI", "BpiI", "BsmBI"]`` |
+| `src\factorforge\registry\CHANGELOG.md` | 8 | type_iis | `BpiI` | `- before: `["BsaI", "BsmBI", "BbsI"]` -> after: `["BsaI", "BpiI", "BsmBI"]`` |
 | `src\factorforge\utils\restriction_sites.py` | 15 | type_iis | `BsaI` | `{"name": "BsaI", "sequence": "GGTCTC", "scan_rc": True},` |
 | `src\factorforge\utils\restriction_sites.py` | 17 | type_iis | `BsmBI` | `{"name": "BsmBI", "sequence": "CGTCTC", "scan_rc": True},` |
 | `src\factorforge\utils\restriction_sites.py` | 16 | type_iis | `BpiI` | `{"name": "BpiI", "sequence": "GAAGAC", "scan_rc": True},` |
 | `docs\assembly-friendly.md` | 11 | type_iis | `BsaI` | `- BsaI and BpiI Type IIS restriction site avoidance through synonymous` |
 | `docs\assembly-friendly.md` | 11 | type_iis | `BpiI` | `- BsaI and BpiI Type IIS restriction site avoidance through synonymous` |
-| `docs\host-profile-registry.md` | 70 | cai | `0.82` | `min_feasible_cai: 0.82` |
-| `docs\host-profile-registry.md` | 102 | cai | `0.82` | `min_feasible_cai: 0.82` |
-| `docs\host-profile-registry.md` | 134 | cai | `0.82` | `min_feasible_cai: 0.82` |
-| `docs\host-profile-registry.md` | 166 | cai | `0.82` | `min_feasible_cai: 0.82` |
-| `docs\host-profile-registry.md` | 198 | cai | `0.82` | `min_feasible_cai: 0.82` |
-| `docs\host-profile-registry.md` | 66 | gc_global | `55.0` | `ideal_band: [55.0, 65.0]` |
-| `docs\host-profile-registry.md` | 98 | gc_global | `55.0` | `ideal_band: [55.0, 65.0]` |
-| `docs\host-profile-registry.md` | 194 | gc_global | `55.0` | `ideal_band: [35.0, 55.0]` |
-| `docs\host-profile-registry.md` | 66 | gc_global | `65.0` | `ideal_band: [55.0, 65.0]` |
-| `docs\host-profile-registry.md` | 98 | gc_global | `65.0` | `ideal_band: [55.0, 65.0]` |
-| `docs\host-profile-registry.md` | 130 | gc_global | `65.0` | `ideal_band: [45.0, 65.0]` |
-| `docs\host-profile-registry.md` | 162 | gc_global | `65.0` | `ideal_band: [45.0, 65.0]` |
-| `docs\host-profile-registry.md` | 67 | gc_local | `75.0` | `soft_band: [45.0, 75.0]` |
-| `docs\host-profile-registry.md` | 99 | gc_local | `75.0` | `soft_band: [45.0, 75.0]` |
+| `docs\host-profile-registry.md` | 71 | cai | `0.82` | `min_feasible_cai: 0.82` |
+| `docs\host-profile-registry.md` | 103 | cai | `0.82` | `min_feasible_cai: 0.82` |
+| `docs\host-profile-registry.md` | 135 | cai | `0.82` | `min_feasible_cai: 0.82` |
+| `docs\host-profile-registry.md` | 167 | cai | `0.82` | `min_feasible_cai: 0.82` |
+| `docs\host-profile-registry.md` | 199 | cai | `0.82` | `min_feasible_cai: 0.82` |
+| `docs\host-profile-registry.md` | 67 | gc_global | `55.0` | `ideal_band: [55.0, 65.0]` |
+| `docs\host-profile-registry.md` | 99 | gc_global | `55.0` | `ideal_band: [55.0, 65.0]` |
+| `docs\host-profile-registry.md` | 195 | gc_global | `55.0` | `ideal_band: [35.0, 55.0]` |
+| `docs\host-profile-registry.md` | 67 | gc_global | `65.0` | `ideal_band: [55.0, 65.0]` |
+| `docs\host-profile-registry.md` | 99 | gc_global | `65.0` | `ideal_band: [55.0, 65.0]` |
+| `docs\host-profile-registry.md` | 131 | gc_global | `65.0` | `ideal_band: [45.0, 65.0]` |
+| `docs\host-profile-registry.md` | 163 | gc_global | `65.0` | `ideal_band: [45.0, 65.0]` |
+| `docs\host-profile-registry.md` | 68 | gc_local | `75.0` | `soft_band: [45.0, 75.0]` |
+| `docs\host-profile-registry.md` | 100 | gc_local | `75.0` | `soft_band: [45.0, 75.0]` |
 | `docs\how-it-works.md` | 24 | type_iis | `BsaI` | `BsaI / BsmBI recognition sites via silent edits` |
 | `docs\how-it-works.md` | 24 | type_iis | `BsmBI` | `BsaI / BsmBI recognition sites via silent edits` |
 | `docs\output.md` | 11 | type_iis | `BsaI` | `| **Domestication report** | BsaI/BsmBI and custom restriction sites removed, ed` |
@@ -77,8 +80,9 @@
 | `docs\scoring-calibration.md` | 11 | cai | `0.82` | `A typical lower bound is `0.82`.` |
 | `docs\scoring-calibration.md` | 44 | gc_global | `55.0` | `current plant default, the accepted band is `55.0` to `65.0` GC with a` |
 | `docs\scoring-calibration.md` | 44 | gc_global | `65.0` | `current plant default, the accepted band is `55.0` to `65.0` GC with a` |
-| `docs\validation.md` | 17 | type_iis | `BsaI` | `| Forbidden restriction sites | ✅ | BsaI, BsmBI, BpII (Golden Gate) |` |
-| `docs\validation.md` | 17 | type_iis | `BsmBI` | `| Forbidden restriction sites | ✅ | BsaI, BsmBI, BpII (Golden Gate) |` |
+| `docs\validation.md` | 19 | type_iis | `BsaI` | `| Forbidden restriction sites | Yes | BsaI, BsmBI, BpiI (Golden Gate) |` |
+| `docs\validation.md` | 19 | type_iis | `BsmBI` | `| Forbidden restriction sites | Yes | BsaI, BsmBI, BpiI (Golden Gate) |` |
+| `docs\validation.md` | 19 | type_iis | `BpiI` | `| Forbidden restriction sites | Yes | BsaI, BsmBI, BpiI (Golden Gate) |` |
 | `docs\tutorials\gfp-nbenthamiana.md` | 155 | type_iis | `BsaI` | `- **MoClo Level 0** — use with the `assembly_friendly` profile; check for BsaI/B` |
 | `docs\tutorials\gfp-nbenthamiana.md` | 155 | type_iis | `BpiI` | `- **MoClo Level 0** — use with the `assembly_friendly` profile; check for BsaI/B` |
 | `tests\test_database.py` | 33 | cai | `0.82` | `"cai": 0.82,` |
