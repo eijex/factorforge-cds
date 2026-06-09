@@ -14,7 +14,7 @@ Each optimized sequence includes:
 ## FASTA Output
 
 ```
->CD47_optimized | CAI=0.81 | GC=52.4% | construct_id=a3f7b2
+>target_optimized | CAI=0.81 | GC=52.4% | construct_id=a3f7b2
 ATGAAACAGTTGGTCCTGGGG...
 ```
 

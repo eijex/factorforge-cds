@@ -1,6 +1,6 @@
 # Parameter Scan Report
 
-**Total hits:** 131  **Unregistered:** 126
+**Total hits:** 137  **Unregistered:** 132
 
 ## Unregistered Public-Biological Numbers
 
@@ -85,6 +85,12 @@
 | `docs\validation.md` | 19 | type_iis | `BpiI` | `| Forbidden restriction sites | Yes | BsaI, BsmBI, BpiI (Golden Gate) |` |
 | `docs\tutorials\gfp-nbenthamiana.md` | 155 | type_iis | `BsaI` | `- **MoClo Level 0** — use with the `assembly_friendly` profile; check for BsaI/B` |
 | `docs\tutorials\gfp-nbenthamiana.md` | 155 | type_iis | `BpiI` | `- **MoClo Level 0** — use with the `assembly_friendly` profile; check for BsaI/B` |
+| `docs\validation\RELEASE_GATE.md` | 34 | type_iis | `BsaI` | ``("BsaI", "BpiI", "BsmBI")`.` |
+| `docs\validation\RELEASE_GATE.md` | 34 | type_iis | `BsmBI` | ``("BsaI", "BpiI", "BsmBI")`.` |
+| `docs\validation\RELEASE_GATE.md` | 34 | type_iis | `BpiI` | ``("BsaI", "BpiI", "BsmBI")`.` |
+| `tests\test_benchmark_regression.py` | 81 | type_iis | `BsaI` | `canonical = {"BsaI", "BpiI", "BsmBI"}` |
+| `tests\test_benchmark_regression.py` | 81 | type_iis | `BsmBI` | `canonical = {"BsaI", "BpiI", "BsmBI"}` |
+| `tests\test_benchmark_regression.py` | 81 | type_iis | `BpiI` | `canonical = {"BsaI", "BpiI", "BsmBI"}` |
 | `tests\test_database.py` | 33 | cai | `0.82` | `"cai": 0.82,` |
 | `tests\test_restriction_sites.py` | 193 | gc_global | `55.0` | `constraints={"gc_min": 40.0, "gc_max": 55.0},` |
 | `tests\test_restriction_sites.py` | 114 | type_iis | `BsaI` | `{"name": "BsaI", "sequence": "GGTCTC"},` |
