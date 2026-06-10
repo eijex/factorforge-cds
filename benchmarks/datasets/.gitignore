@@ -1,4 +1,8 @@
 *.fasta
 *.fa
+*.fa.gz
+*.fasta.gz
+*.gz
 *.csv
+checksums.txt
 !.gitkeep
