@@ -3,7 +3,11 @@ registry:
   version: "3.2.0"
   status: canonical
   owner: factorforge-cds
-  last_reviewed: "2026-06-05"
+  last_reviewed: "2026-06-10"
+  review_context:
+    - "Job 084: benchmark foundation — registry schema, parameter_audit, production sync contract"
+    - "Job 091: registry-production constant export (DEFAULT_CAI_TARGET, DEFAULT_GC_LOW/HIGH, BpiI canonical label)"
+    - "Job 090: Design Package + Open Bio I/O contracts (MFE null invariant, FASTA/IUPAC privacy)"
   note: "Registry is not the evidence source. It is a reviewed parameter state derived from evidence packages, benchmarks, and maintainer decisions."
 
 parameters:
@@ -80,7 +84,7 @@ parameters:
       owner_job: "072"
       source: "Job 072 CAI unification + golden_set; src/factorforge/analysis/feasibility.py"
       rationale: "Soft optimization target. Not a hard gate or wet-lab predictor."
-      notes: "Production default is a function arg (not exported module constant) — sync test will record 'not exported'."
+      notes: "Production default is exported as DEFAULT_CAI_TARGET (Job 091) and verified by test_registry_production_sync.py."
       provenance: "Job 072 CAI reference unification; golden_set N. benthamiana CDS distribution (Analysis 004)."
       visibility: public
       permission: publish_allowed
