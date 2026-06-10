@@ -43,6 +43,8 @@ def _filter(raw: dict[str, str]) -> dict[str, str]:
         prot = translate_dna(seq)
         if "*" in prot[:-1]:                 # 3. no internal stop
             continue
+        if not prot.rstrip("*"):             # 4. non-empty protein after stop removal
+            continue
         h = hashlib.sha256(seq.encode()).hexdigest()
         if h in seen:                        # 4. dedupe by sequence hash
             continue
@@ -57,7 +59,7 @@ def _write_fasta(path: Path, seqs: dict[str, str]) -> str:
     with tempfile.NamedTemporaryFile(dir=path.parent, delete=False, suffix=".tmp") as tmp:
         tmp.write(content)
         tmp_path = Path(tmp.name)
-    tmp_path.rename(path)  # atomic replace — prevents partial-file reads on failure
+    tmp_path.replace(path)  # atomic replace — prevents partial-file reads on failure
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
