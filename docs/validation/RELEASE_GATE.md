@@ -34,7 +34,6 @@ unregistered findings remain; strict mode is a future hard gate.
   `("BsaI", "BpiI", "BsmBI")`.
 - `BbsI` appears as a registry value, production enzyme list item, active audit
   target, strict sync expected value, or benchmark expected active enzyme.
-- `docs/validation.md` contains the `BpII` typo.
 - Missing MFE is encoded as `0.0` or a string placeholder.
 - Raw sequence appears in logs, exceptions, FASTA headers, public Design Package
   metadata, or benchmark CSV/JSON.
