@@ -40,9 +40,9 @@ def validate_sequence(sequence: str, mode: str = "dna_strict") -> str:
 
     invalid = sorted(set(normalized) - VALIDATION_ALPHABETS[mode])
     if invalid:
-        preview = normalized[:20]
+        preview = normalized[:8] + ("[truncated]" if len(normalized) > 8 else "")
         raise SequenceValidationError(
             f"Invalid symbols for {mode}: {invalid}; preview={preview!r}; "
-            f"sha256-prefix={_fingerprint(normalized)}"
+            f"length={len(normalized)}; sha256-prefix={_fingerprint(normalized)}"
         )
     return normalized

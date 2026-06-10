@@ -1,4 +1,21 @@
-"""Shared design package schema for FactorForge CDS artifacts."""
+"""Internal API response format for FactorForge CDS artifacts.
+
+This module defines the *internal* Pydantic model used by the optimize API
+handler (``api.optimize.handler``). It is NOT the public Open Bio Design
+Package contract.
+
+Public contract:
+    ``src/factorforge/schemas/design_package.schema.json`` (JSON Schema Draft
+    2020-12) is the public output specification. It defines the canonical field
+    set (``design_id``, ``claim_boundary``, ``evidence``, etc.) and is tested
+    by ``tests/test_design_package_schema.py`` and related files.
+
+Separation rationale:
+    The internal model uses API-convenient field names (``construct_id``,
+    ``cds_design``) with ``extra="allow"`` for handler flexibility. The public
+    schema enforces claim boundary fields and must be validated with jsonschema
+    before any output is published or shared externally.
+"""
 
 from typing import Any, Optional
 

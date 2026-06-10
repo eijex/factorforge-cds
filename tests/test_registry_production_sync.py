@@ -47,6 +47,21 @@ def test_type_iis_sync():
     )
 
 
+# ── BbsI exclusion ───────────────────────────────────────────────────────────
+
+def test_bbsi_not_in_canonical_enzyme_set():
+    """BbsI must not appear in the active Type IIS enzyme list.
+
+    BpiI is the canonical FactorForge label for the GAAGAC target.
+    BbsI is an isoschizomer alias and must never re-enter as an active scan
+    target — it was explicitly removed in Job 091 to prevent duplicate scanning.
+    """
+    from factorforge.engines.profile.rules.domesticator import Domesticator
+    assert "BbsI" not in set(Domesticator.GOLDEN_GATE_ENZYMES), (
+        "BbsI must not be in GOLDEN_GATE_ENZYMES — use BpiI (canonical label)"
+    )
+
+
 # ── AA identity / internal stop ───────────────────────────────────────────────
 
 def test_aa_identity_policy_sync():
