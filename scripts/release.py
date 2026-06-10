@@ -299,6 +299,11 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     print("  5. git push")
     print("  6. Wait for CI to pass (github.com/eijex/factorforge-cds/actions)")
     print()
+    print("  --- Public surface audit (before tagging) ---")
+    print(f"  6a. python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_surface.py \\")
+    print(f"        --workspace C:\\Work\\eijex --live")
+    print("        → fix any findings before tagging")
+    print()
     print("  --- Tag & publish ---")
     print(f"  7. git tag -a v{new} -m 'Release v{new}' && git push --tags")
     print("  8. GitHub Actions publishes PyPI + Docker + GitHub Release + Zenodo automatically")
@@ -310,11 +315,11 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     print(" 12.  Update Bioconda recipes/meta.yaml (version + SHA256) → push fork branch")
     print(" 13.  Close completed GitHub Issues; close milestone if all done")
     print()
-    print("  --- Public surface audit ---")
+    print("  --- Post-release external audit ---")
     print(f" 14.  python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_surface.py \\")
-    print(f"        --workspace C:\\Work\\eijex --live --external \\")
+    print(f"        --workspace C:\\Work\\eijex --external \\")
     print(f"        --url https://pypi.org/project/factorforge-cds/{new}/")
-    print("       → fix any findings before announcing the release")
+    print("        → confirms no policy violations leaked into published surfaces")
 
     return errors
 
