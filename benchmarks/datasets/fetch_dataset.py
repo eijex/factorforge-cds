@@ -1,6 +1,11 @@
 """Fetch + filter the N. benthamiana reference CDS dataset.
 Produces nbenthamiana_reference_cds.fasta + nbenthamiana_reference_proteins.fasta.
-Run manually (network required); raw data is NOT committed (.gitignore)."""
+Run manually (network required); raw data is NOT committed (.gitignore).
+
+Usage:
+    python fetch_dataset.py --url <verified_url>   # download from URL
+    python fetch_dataset.py --file <local_path>    # use already-downloaded file
+"""
 from __future__ import annotations
 import argparse
 import hashlib
@@ -58,15 +63,30 @@ def _write_fasta(path: Path, seqs: dict[str, str]) -> str:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--url", default=SOURCE_URL, required=False)
+    ap.add_argument("--url", default=SOURCE_URL, required=False,
+                    help="URL to a verified, redistributable N. benthamiana CDS FASTA.")
+    ap.add_argument("--file", default=None, required=False,
+                    help="Path to a locally downloaded CDS FASTA (plain text or .gz).")
     args = ap.parse_args()
-    if not args.url:
-        raise SystemExit("Provide --url to a verified, redistributable N. benthamiana CDS FASTA.")
-    import urllib.request
-    resp = urllib.request.urlopen(args.url)  # noqa: S310
-    if resp.status != 200:
-        raise SystemExit(f"HTTP {resp.status} fetching dataset URL. Aborting.")
-    raw_text = resp.read().decode("utf-8")
+
+    if args.file:
+        p = Path(args.file)
+        if not p.exists():
+            raise SystemExit(f"File not found: {p}")
+        if p.suffix == ".gz":
+            import gzip
+            raw_text = gzip.open(p, "rt", encoding="utf-8").read()
+        else:
+            raw_text = p.read_text(encoding="utf-8")
+    elif args.url:
+        import urllib.request
+        resp = urllib.request.urlopen(args.url)  # noqa: S310
+        if resp.status != 200:
+            raise SystemExit(f"HTTP {resp.status} fetching dataset URL. Aborting.")
+        raw_text = resp.read().decode("utf-8")
+    else:
+        raise SystemExit("Provide --url or --file. See module docstring for usage.")
+
     cds = _filter(_read_fasta(raw_text))                 # 5. CDS set
     proteins = {n: translate_dna(s).rstrip("*") for n, s in cds.items()}  # 6. protein set
     cds_hash = _write_fasta(CDS_OUT, cds)
