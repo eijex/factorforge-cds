@@ -56,3 +56,4 @@ metrics:
 outputs:
   results_csv: benchmarks/results/v3.2.0/benchmark_results.csv
   summary_md: benchmarks/results/v3.2.0/benchmark_summary.md
+  summary_json: benchmarks/results/v3.2.0/benchmark_summary.json
