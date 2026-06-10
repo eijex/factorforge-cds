@@ -1,373 +1,337 @@
 {
-  "$defs": {
-    "CdsDesign": {
-      "additionalProperties": true,
-      "properties": {
-        "engine": {
-          "title": "Engine",
-          "type": "string"
-        },
-        "product_version": {
-          "title": "Product Version",
-          "type": "string"
-        },
-        "host_profile": {
-          "title": "Host Profile",
-          "type": "string"
-        },
-        "objective": {
-          "title": "Objective",
-          "type": "string"
-        },
-        "profile": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Profile"
-        },
-        "input_length_aa": {
-          "anyOf": [
-            {
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Input Length Aa"
-        },
-        "output_length_nt": {
-          "anyOf": [
-            {
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Output Length Nt"
-        },
-        "cai": {
-          "title": "Cai",
-          "type": "number"
-        },
-        "gc_percent": {
-          "title": "Gc Percent",
-          "type": "number"
-        }
-      },
-      "required": [
-        "engine",
-        "product_version",
-        "host_profile",
-        "objective",
-        "cai",
-        "gc_percent"
-      ],
-      "title": "CdsDesign",
-      "type": "object"
-    },
-    "ConstraintReport": {
-      "additionalProperties": true,
-      "properties": {
-        "restriction_sites_removed": {
-          "items": {
-            "type": "string"
-          },
-          "title": "Restriction Sites Removed",
-          "type": "array"
-        },
-        "restriction_sites_unresolved": {
-          "items": {
-            "type": "string"
-          },
-          "title": "Restriction Sites Unresolved",
-          "type": "array"
-        },
-        "polya_warnings": {
-          "default": 0,
-          "title": "Polya Warnings",
-          "type": "integer"
-        },
-        "internal_stop_count": {
-          "default": 0,
-          "title": "Internal Stop Count",
-          "type": "integer"
-        },
-        "codon_rarity_clusters": {
-          "default": 0,
-          "title": "Codon Rarity Clusters",
-          "type": "integer"
-        },
-        "aa_identity": {
-          "default": 1.0,
-          "title": "Aa Identity",
-          "type": "number"
-        }
-      },
-      "title": "ConstraintReport",
-      "type": "object"
-    },
-    "ConstructPlan": {
-      "additionalProperties": true,
-      "properties": {
-        "construct_type": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Construct Type"
-        },
-        "tag": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Tag"
-        },
-        "signal_peptide": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Signal Peptide"
-        },
-        "kozak": {
-          "default": true,
-          "title": "Kozak",
-          "type": "boolean"
-        }
-      },
-      "title": "ConstructPlan",
-      "type": "object"
-    },
-    "Provenance": {
-      "additionalProperties": true,
-      "properties": {
-        "input_sequence_hash": {
-          "title": "Input Sequence Hash",
-          "type": "string"
-        },
-        "output_cds_hash": {
-          "title": "Output Cds Hash",
-          "type": "string"
-        },
-        "parameter_hash": {
-          "title": "Parameter Hash",
-          "type": "string"
-        }
-      },
-      "required": [
-        "input_sequence_hash",
-        "output_cds_hash",
-        "parameter_hash"
-      ],
-      "title": "Provenance",
-      "type": "object"
-    },
-    "TargetInfo": {
-      "additionalProperties": true,
-      "properties": {
-        "name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Name"
-        },
-        "uniprot_id": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Uniprot Id"
-        },
-        "species": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Species"
-        },
-        "protein_class": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Protein Class"
-        }
-      },
-      "title": "TargetInfo",
-      "type": "object"
-    },
-    "ValidationStatus": {
-      "additionalProperties": true,
-      "properties": {
-        "in_silico": {
-          "default": "unchecked",
-          "title": "In Silico",
-          "type": "string"
-        },
-        "aa_identity_check": {
-          "default": "unchecked",
-          "title": "Aa Identity Check",
-          "type": "string"
-        },
-        "gc_check": {
-          "default": "unchecked",
-          "title": "Gc Check",
-          "type": "string"
-        },
-        "polya_check": {
-          "default": "unchecked",
-          "title": "Polya Check",
-          "type": "string"
-        },
-        "moclo_check": {
-          "default": "unchecked",
-          "title": "Moclo Check",
-          "type": "string"
-        }
-      },
-      "title": "ValidationStatus",
-      "type": "object"
-    },
-    "WetLabFeedback": {
-      "additionalProperties": true,
-      "properties": {
-        "status": {
-          "default": "pending",
-          "title": "Status",
-          "type": "string"
-        },
-        "submissions": {
-          "items": {},
-          "title": "Submissions",
-          "type": "array"
-        }
-      },
-      "title": "WetLabFeedback",
-      "type": "object"
-    }
-  },
-  "additionalProperties": true,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://factorforge.eijex.com/schemas/design_package.schema.json",
+  "title": "FactorForge Open Bio Design Package",
+  "description": "Public, in-silico-only CDS design output contract. Raw sequences are intentionally excluded.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "design_package_version",
+    "design_id",
+    "sequence_type",
+    "input_type",
+    "host_profile",
+    "optimization",
+    "metrics",
+    "validation",
+    "evidence",
+    "claim_boundary"
+  ],
   "properties": {
     "design_package_version": {
-      "default": "1.0",
-      "title": "Design Package Version",
-      "type": "string"
+      "type": "string",
+      "const": "1.0"
     },
-    "construct_id": {
-      "title": "Construct Id",
-      "type": "string"
+    "design_id": {
+      "type": "string",
+      "minLength": 1
     },
-    "created_at": {
-      "title": "Created At",
-      "type": "string"
+    "sequence_type": {
+      "type": "string",
+      "enum": ["cds"]
     },
-    "target": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/TargetInfo"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
+    "input_type": {
+      "type": "string",
+      "enum": ["protein", "cds"]
     },
-    "construct_plan": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/ConstructPlan"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
+    "host_profile": {
+      "$ref": "#/$defs/hostProfile"
     },
-    "cds_design": {
-      "$ref": "#/$defs/CdsDesign"
+    "optimization": {
+      "$ref": "#/$defs/optimization"
     },
-    "constraint_report": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/ConstraintReport"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
+    "metrics": {
+      "$ref": "#/$defs/metrics"
     },
-    "validation_status": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/ValidationStatus"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
+    "validation": {
+      "$ref": "#/$defs/validation"
     },
-    "provenance": {
-      "$ref": "#/$defs/Provenance"
+    "evidence": {
+      "$ref": "#/$defs/evidence"
     },
-    "wet_lab_feedback": {
-      "$ref": "#/$defs/WetLabFeedback"
+    "claim_boundary": {
+      "$ref": "#/$defs/claimBoundary"
     }
   },
-  "required": [
-    "construct_id",
-    "created_at",
-    "cds_design",
-    "provenance"
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "validation": {
+            "properties": {
+              "biological_pass": {
+                "const": true
+              }
+            },
+            "required": ["biological_pass"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "validation": {
+            "properties": {
+              "aa_identity": {
+                "const": 1.0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "validation": {
+            "properties": {
+              "assembly_pass": {
+                "const": true
+              }
+            },
+            "required": ["assembly_pass"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "validation": {
+            "properties": {
+              "forbidden_type_iis_site_count": {
+                "const": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "metrics": {
+            "properties": {
+              "mfe_status": {
+                "enum": ["not_computed", "unavailable", "failed"]
+              }
+            },
+            "required": ["mfe_status"]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "metrics": {
+            "properties": {
+              "mfe_kcal_mol": {
+                "type": "null"
+              },
+              "mfe_used": {
+                "const": false
+              }
+            }
+          }
+        }
+      }
+    }
   ],
-  "title": "DesignPackage",
-  "type": "object"
+  "$defs": {
+    "hostProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "display_name",
+        "scientific_name",
+        "ncbi_taxonomy_id",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "enum": ["nbenthamiana", "by2"]
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "scientific_name": {
+          "type": "string"
+        },
+        "ncbi_taxonomy_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": ["stable", "experimental", "draft", "future"]
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "id": {
+              "const": "nbenthamiana"
+            },
+            "display_name": {
+              "const": "N. benthamiana"
+            },
+            "scientific_name": {
+              "const": "Nicotiana benthamiana"
+            },
+            "ncbi_taxonomy_id": {
+              "const": 4100
+            },
+            "status": {
+              "const": "stable"
+            }
+          }
+        },
+        {
+          "properties": {
+            "id": {
+              "const": "by2"
+            },
+            "display_name": {
+              "const": "BY-2 / N. tabacum"
+            },
+            "scientific_name": {
+              "const": "Nicotiana tabacum"
+            },
+            "ncbi_taxonomy_id": {
+              "const": 4097
+            },
+            "status": {
+              "const": "experimental"
+            }
+          }
+        }
+      ]
+    },
+    "optimization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engine", "profile"],
+      "properties": {
+        "engine": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profile": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cai",
+        "gc_percent",
+        "mfe_kcal_mol",
+        "mfe_status",
+        "mfe_used"
+      ],
+      "properties": {
+        "cai": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "gc_percent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "mfe_kcal_mol": {
+          "oneOf": [
+            {
+              "type": "number",
+              "not": {
+                "const": 0.0
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mfe_status": {
+          "type": "string",
+          "enum": ["computed", "not_computed", "unavailable", "failed"]
+        },
+        "mfe_used": {
+          "type": "boolean"
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "biological_pass",
+        "assembly_pass",
+        "aa_identity",
+        "forbidden_type_iis_site_count"
+      ],
+      "properties": {
+        "biological_pass": {
+          "type": "boolean"
+        },
+        "assembly_pass": {
+          "type": "boolean"
+        },
+        "aa_identity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "forbidden_type_iis_site_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence_hash", "registry_version", "registry_hash"],
+      "properties": {
+        "sequence_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "registry_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "registry_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "claimBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "in_silico_only",
+        "no_yield_claim",
+        "no_wet_lab_claim",
+        "no_clinical_claim"
+      ],
+      "properties": {
+        "in_silico_only": {
+          "const": true
+        },
+        "no_yield_claim": {
+          "const": true
+        },
+        "no_wet_lab_claim": {
+          "const": true
+        },
+        "no_clinical_claim": {
+          "const": true
+        }
+      }
+    }
+  }
 }

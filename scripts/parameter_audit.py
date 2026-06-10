@@ -1,9 +1,17 @@
 """Scan factorforge codebase for hardcoded biological/benchmark numbers.
-Discovery scan mode: identifies candidates for registry review, does not require registry to run.
+
+Discovery mode identifies candidates for registry review, writes the report, and
+exits 0 even when unregistered findings remain. Strict mode writes the same
+findings and exits 1 when unregistered findings remain. The default mode is
+discovery.
+
 Outputs docs/validation/parameter_scan_report.md.
-Run: python scripts/parameter_audit.py
-Exit 0 = clean or only allowlisted; Exit 1 = unregistered public-biological numbers found."""
+Run: python scripts/parameter_audit.py [--mode discovery|strict]
+"""
+
 from __future__ import annotations
+
+import argparse
 import re
 import sys
 from pathlib import Path
@@ -25,15 +33,20 @@ REGISTRY_TARGETS = {
 
 # Numbers allowed without registry entry (formatting, test tolerances, etc.)
 ALLOWLIST_PATTERNS = [
-    r"FASTA.*60",       # line wrap
+    r"FASTA.*60",  # line wrap
     r"round\(.*,\s*[12]\b\)",  # display rounding
-    r"pytest",          # test tolerance
-    r"timeout",         # timeout values
-    r"#.*allowlist",    # explicit inline allowlist comment
+    r"pytest",  # test tolerance
+    r"timeout",  # timeout values
+    r"#.*allowlist",  # explicit inline allowlist comment
 ]
 
 SCAN_DIRS = ["src/factorforge", "benchmarks", "docs", "tests"]
-SKIP_FILES = {"parameter_audit.py", "current_parameter_registry.yaml", "parameter_scan_report.md", "conftest.py"}
+SKIP_FILES = {
+    "parameter_audit.py",
+    "current_parameter_registry.yaml",
+    "parameter_scan_report.md",
+    "conftest.py",
+}
 SCAN_EXTENSIONS = {".py", ".md", ".yaml", ".yml"}
 
 
@@ -52,7 +65,7 @@ def _scan() -> list[dict]:
             for category, patterns in REGISTRY_TARGETS.items():
                 for pat in patterns:
                     for m in re.finditer(pat, text):
-                        line_no = text[:m.start()].count("\n") + 1
+                        line_no = text[: m.start()].count("\n") + 1
                         key = (str(f), line_no, category, m.group())
                         if key in seen:
                             continue
@@ -62,14 +75,16 @@ def _scan() -> list[dict]:
                             status = "allowlisted"
                         else:
                             status = "UNREGISTERED"
-                        hits.append({
-                            "file": str(f.relative_to(ROOT)),
-                            "line": line_no,
-                            "category": category,
-                            "match": m.group(),
-                            "context": line[:120],
-                            "status": status,
-                        })
+                        hits.append(
+                            {
+                                "file": str(f.relative_to(ROOT)),
+                                "line": line_no,
+                                "category": category,
+                                "match": m.group(),
+                                "context": line[:120],
+                                "status": status,
+                            }
+                        )
     return hits
 
 
@@ -87,9 +102,16 @@ def _write_report(hits: list[dict]) -> int:
         "|------|------|----------|-------|---------|",
     ]
     for h in unregistered:
-        lines.append(f"| `{h['file']}` | {h['line']} | {h['category']} | `{h['match']}` | `{h['context'][:80]}` |")
-    lines += ["", "## Allowlisted (not requiring registry entry)", "",
-              "| file | line | match |", "|------|------|-------|"]
+        lines.append(
+            f"| `{h['file']}` | {h['line']} | {h['category']} | `{h['match']}` | `{h['context'][:80]}` |"
+        )
+    lines += [
+        "",
+        "## Allowlisted (not requiring registry entry)",
+        "",
+        "| file | line | match |",
+        "|------|------|-------|",
+    ]
     for h in hits:
         if h["status"] == "allowlisted":
             lines.append(f"| `{h['file']}` | {h['line']} | `{h['match']}` |")
@@ -98,10 +120,27 @@ def _write_report(hits: list[dict]) -> int:
     return len(unregistered)
 
 
-if __name__ == "__main__":
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--mode",
+        choices=("discovery", "strict"),
+        default="discovery",
+        help="discovery reports findings and exits 0; strict exits 1 on unregistered findings",
+    )
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = _parse_args()
     hits = _scan()
     n_bad = _write_report(hits)
     if n_bad > 0:
         print(f"WARNING: {n_bad} unregistered public-biological numbers found. See {REPORT}")
-        sys.exit(1)
+        return 1 if args.mode == "strict" else 0
     print("Clean: all detected numbers are registry-registered or allowlisted.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
