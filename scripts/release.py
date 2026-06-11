@@ -51,6 +51,9 @@ def build_mcp_targets(old: str, new: str, mcp: Path) -> list[tuple[Path, list[tu
             (f"FactorForge v{old} stable design path", f"FactorForge v{new} stable design path"),
             (f"DP feasibility design (v{old})", f"DP feasibility design (v{new})"),
         ], False),
+        (mcp / "src/app/api/mcp/route.ts", [
+            (f"FactorForge CDS v{old}", f"FactorForge CDS v{new}"),
+        ], False),
     ]
 
 

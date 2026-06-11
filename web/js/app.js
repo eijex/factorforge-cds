@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
     updateHostUI();
     renderHistory();
-    console.log('FactorForge v3.1.9 Engaged');
+    console.log('FactorForge v3.2.0 Engaged');
 });
 
 function initEventListeners() {
@@ -1102,7 +1102,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.1.9';
+        const version = state.results.engine_versions?.product || '3.2.0';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }
