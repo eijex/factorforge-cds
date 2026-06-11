@@ -18,6 +18,8 @@ Publication sync (keep documentation in sync with feature changes):
 import argparse
 import re
 import sys
+import urllib.request
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
@@ -107,7 +109,27 @@ def build_targets(old: str, new: str) -> list[tuple[str, list[tuple[str, str]], 
         ("tests/test_schemas/test_design_package.py", [
             (f'"product_version": "{old}"', f'"product_version": "{new}"'),
         ], True),
+        (".github/ISSUE_TEMPLATE/wet_lab_result.yml", [
+            (f'"e.g. {old}"', f'"e.g. {new}"'),
+        ], True),
+        ("recipes/meta.yaml", [
+            (f'{{% set version = "{old}" %}}', f'{{% set version = "{new}" %}}'),
+        ], True),
     ]
+
+
+def _fetch_pypi_sha256(package: str, version: str) -> str | None:
+    """Fetch the sdist sha256 for a given PyPI package version."""
+    url = f"https://pypi.org/pypi/{package}/{version}/json"
+    try:
+        with urllib.request.urlopen(url, timeout=10) as resp:
+            data = json.loads(resp.read())
+        for entry in data.get("urls", []):
+            if entry.get("packagetype") == "sdist":
+                return entry["digests"]["sha256"]
+        return None
+    except Exception:
+        return None
 
 
 def _today() -> str:
@@ -185,6 +207,26 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
                         errors += 1
                 else:
                     print(f"  WARN: pattern not found in {rel_path}: {old_str!r}")
+
+        # Update recipes/meta.yaml sha256 via PyPI fetch
+        if rel_path == "recipes/meta.yaml" and not dry_run:
+            print(f"  Fetching sha256 for factorforge-cds {new} from PyPI...")
+            sha256 = _fetch_pypi_sha256("factorforge-cds", new)
+            if sha256:
+                old_sha_pattern = re.compile(r'(sha256:\s*)[0-9a-f]{64}')
+                updated = old_sha_pattern.sub(lambda m: f"{m.group(1)}{sha256}", content)
+                if updated != content:
+                    content = updated
+                    changes.append(f"  sha256 → {sha256}")
+                    print(f"  sha256 updated: {sha256}")
+            else:
+                placeholder = "FIXME-fetch-failed"
+                old_sha_pattern = re.compile(r'(sha256:\s*)[0-9a-f]{64}')
+                updated = old_sha_pattern.sub(lambda m: f"{m.group(1)}{placeholder}", content)
+                if updated != content:
+                    content = updated
+                    changes.append(f"  sha256 → {placeholder} (fetch failed — update manually)")
+                print(f"  WARN: could not fetch sha256 from PyPI for factorforge-cds {new} — set placeholder")
 
         # Update CITATION.cff date-released
         if rel_path == "CITATION.cff":
@@ -312,7 +354,8 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     print(f"  9.  pip install factorforge-cds=={new} && factorforge --help  (PyPI smoke test)")
     print(f" 10.  docker run ghcr.io/eijex/factorforge-cds:v{new} factorforge --help  (Docker smoke test)")
     print(" 11.  Confirm Zenodo DOI: https://zenodo.org/doi/10.5281/zenodo.20407331")
-    print(" 12.  Update Bioconda recipes/meta.yaml (version + SHA256) → push fork branch")
+    print(" 12.  Push Bioconda fork branch (recipes/meta.yaml already bumped by this script)")
+    print("       → git push origin add-factorforge-cds  (or open/update PR on bioconda/bioconda-recipes)")
     print(" 13.  Close completed GitHub Issues; close milestone if all done")
     print()
     print("  --- Post-release external audit ---")
