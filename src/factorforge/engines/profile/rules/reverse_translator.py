@@ -671,6 +671,7 @@ class ReverseTranslator:
         protein_seq: str,
         profile: OptimizationProfile = OptimizationProfile.BALANCED,
         n: int = 5,
+        seed: int | None = None,
         **kwargs: Any,
     ) -> list[dict[str, Any]]:
         """
@@ -697,6 +698,9 @@ class ReverseTranslator:
         if n < 1:
             raise ValueError("n must be >= 1")
 
+        # Seed before any candidate generation (covers both n=1 fast path and n>1).
+        random.seed(seed if seed is not None else secrets.randbits(32))
+
         def _build_candidate() -> dict[str, Any]:
             dna_seq = self.reverse_translate(protein_seq, profile, **kwargs)
             cai = self.calculate_cai(dna_seq)
@@ -720,7 +724,6 @@ class ReverseTranslator:
 
         candidates: list[dict[str, Any]] = []
         last_error: Exception | None = None
-        random.seed(secrets.randbits(32))
 
         for attempt in range(n):
             try:

@@ -30,6 +30,7 @@ class RuleBasedOptimizer(OptimizerEngine):
         sequence: str,
         profile: str | None = "balanced",
         host: str = "nbenthamiana",
+        seed: int | None = None,
         **kwargs: Any,
     ) -> OptimizationResult:
         """
@@ -91,7 +92,7 @@ class RuleBasedOptimizer(OptimizerEngine):
             candidates = [{"sequence": optimized_dna, "cai": cai, "gc": gc, "score": score}]
         else:
             candidates = translator.generate_candidates(
-                processed_seq, profile=opt_profile, n=1
+                processed_seq, profile=opt_profile, n=1, seed=seed
             )
             if not candidates:
                 raise ValueError("No candidates generated for input sequence.")
