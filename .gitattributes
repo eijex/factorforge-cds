@@ -1,4 +1,2 @@
 * text=auto
-src/factorforge/data/*.json text eol=lf
-data/reference/*.json text eol=lf
-schemas/*.json text eol=lf
+*.json text eol=lf
