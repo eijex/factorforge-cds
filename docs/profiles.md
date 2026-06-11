@@ -6,7 +6,7 @@ Profiles apply to the profile engine (`--engine profile`).
 
 | Host flag | Species | Codon table | Notes |
 |-----------|---------|-------------|-------|
-| `nbenthamiana` (default) | *Nicotiana benthamiana* | 3,876 SGN CDS | Stable sequence-level design profile for agroinfiltration workflows |
+| `nbenthamiana` (default) | *Nicotiana benthamiana* | 49,257 SGN CDS (QLD183 v103) | Stable sequence-level design profile for agroinfiltration workflows |
 | `by2` ⚠️ Experimental | *N. tabacum* BY-2 | 1,534 Kazusa CDS (2007) | **Experimental.** Uses *N. tabacum* codon usage as proxy. Not wet-lab validated for BY-2 expression. |
 
 !!! warning "BY-2 host is experimental"
