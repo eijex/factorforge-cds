@@ -41,7 +41,7 @@ Benchmarked on *N. benthamiana* SGN CDS (v3.2.0, balanced profile, N=49,257 sequ
 | Metric | Value | Target |
 |--------|-------|--------|
 | CAI (mean) | 0.94 | ≥ 0.75 |
-| GC in target range | 98.2% | 40–55% |
+| GC in target range | 98.2% | 55–65% |
 | AA identity | 100% | 100% |
 | Validator pass rate | 100% | 100% |
 

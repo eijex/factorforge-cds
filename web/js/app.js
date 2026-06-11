@@ -823,8 +823,8 @@ function renderGCGraph(seq) {
             labels: labels,
             datasets: [
                 {
-                    label: 'Target Max (55%)',
-                    data: Array(n).fill(55),
+                    label: 'Target Max (65%)',
+                    data: Array(n).fill(65),
                     borderColor: 'rgba(16, 185, 129, 0.35)',
                     borderWidth: 1,
                     borderDash: [4, 4],
@@ -833,8 +833,8 @@ function renderGCGraph(seq) {
                     tension: 0
                 },
                 {
-                    label: 'Target Min (40%)',
-                    data: Array(n).fill(40),
+                    label: 'Target Min (55%)',
+                    data: Array(n).fill(55),
                     borderColor: 'rgba(16, 185, 129, 0.35)',
                     borderWidth: 1,
                     borderDash: [4, 4],
