@@ -90,13 +90,22 @@ class InputValidator:
         # Analyze character set
         unique_chars = set(clean_seq)
 
-        # DNA: only ATGC or ATGC + IUPAC codes
-        if unique_chars <= (self.DNA_BASES | self.AMBIGUOUS_DNA):
+        # 1. Pure ATGC → unambiguously DNA
+        if unique_chars <= self.DNA_BASES:
             return SequenceType.DNA
 
-        # Protein: amino acid characters
+        # 2. Protein check BEFORE ambiguous DNA.
+        #    IUPAC ambiguous codes (N/R/Y/S/W/K/M/B/D/H/V) overlap with amino acid
+        #    single-letter codes. When a sequence contains only overlapping characters,
+        #    protein interpretation takes priority — the optimizer's primary input is
+        #    protein → CDS. Users passing ambiguous DNA for re-domestication should
+        #    use FASTA format with a header line.
         if unique_chars <= (self.STANDARD_AA | set(self.AMBIGUOUS_AA.keys())):
             return SequenceType.PROTEIN
+
+        # 3. DNA with IUPAC ambiguous bases (only reached if non-protein chars present)
+        if unique_chars <= (self.DNA_BASES | self.AMBIGUOUS_DNA):
+            return SequenceType.DNA
 
         return SequenceType.UNKNOWN
 

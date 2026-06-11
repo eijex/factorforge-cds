@@ -75,3 +75,21 @@ def test_optimize_batch(optimizer, sample_protein):
     assert results[0].metadata["input_id"] == "a"
     assert results[1].metadata["input_id"] == "b"
     assert len(results[0].sequence) == len(sample_protein) * 3
+
+
+@pytest.mark.parametrize("seq,expected_len", [
+    ("MSCSNYRRC", 27),   # 9 AA — chars overlap with IUPAC ambiguous DNA
+    ("MMCWCKMMMS", 30),  # 10 AA
+    ("MDSARNNKD", 27),   # 9 AA
+])
+def test_optimize_short_iupac_overlap_proteins(optimizer, seq, expected_len):
+    """Proteins whose AA codes overlap with IUPAC ambiguous DNA must produce a valid CDS.
+
+    Before the fix these sequences were misclassified as DNA and returned unchanged,
+    producing invalid_codon_count > 0 and aa_identity = 0.0 in the benchmark.
+    (Analysis 017-F1)
+    """
+    result = optimizer.optimize(seq, profile="balanced")
+    assert len(result.sequence) == expected_len, (
+        f"Expected CDS length {expected_len} for {seq}, got {len(result.sequence)}"
+    )

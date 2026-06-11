@@ -45,6 +45,22 @@ class TestSequenceTypeDetection:
         assert validator.detect_sequence_type("12345") == SequenceType.UNKNOWN
         assert validator.detect_sequence_type("ATG123") == SequenceType.UNKNOWN
 
+    @pytest.mark.parametrize("seq", ["MSCSNYRRC", "MMCWCKMMMS", "MDSARNNKD"])
+    def test_short_protein_not_misclassified_as_dna(self, validator, seq):
+        """Proteins whose AA codes overlap with IUPAC ambiguous DNA must be detected as protein.
+
+        Root cause: M/S/N/Y/R/D/W/K are valid both as amino acid single-letter codes
+        and as IUPAC ambiguous nucleotide codes. The validator now checks protein before
+        ambiguous DNA to prevent optimizer returning the protein string as CDS.
+        (Analysis 017-F1, benchmark NbQ00g03920.1 / NbQ00g14770.1 / NbQ00g19220.1)
+        """
+        assert validator.detect_sequence_type(seq) == SequenceType.PROTEIN
+
+    def test_pure_dna_unaffected_by_protein_priority(self, validator):
+        """Pure ATGC sequences must still be detected as DNA after the fix."""
+        assert validator.detect_sequence_type("ATGCATGCAT") == SequenceType.DNA
+        assert validator.detect_sequence_type("ATGCGATCGATCG") == SequenceType.DNA
+
 
 class TestDNAValidation:
     """Test DNA sequence validation"""
@@ -99,13 +115,20 @@ class TestDNAValidation:
         result = validator.validate("GCGCGCGCGCGC")
         assert any(w["code"] == "EXTREME_GC" for w in result["warnings"])
 
-    def test_dna_ambiguous_bases(self, validator):
-        """Test DNA with ambiguous bases"""
-        result = validator.validate("ATGNCCTAA")
+    def test_dna_ambiguous_bases_unambiguous_fasta(self, validator):
+        """DNA with only pure ATGC in FASTA format is validated as DNA with no warnings."""
+        result = validator.validate(">my_cds\nATGCCATAA")
+        assert result["type"] == "fasta"
 
-        assert result["level"] == "warning"
-        assert any(w["code"] == "AMBIGUOUS_DNA" for w in result["warnings"])
-        assert "N" in result["metadata"]["ambiguous_bases"]
+    def test_dna_ambiguous_bases_plain_reclassified_as_protein(self, validator):
+        """Plain ambiguous sequence (ATGC + IUPAC codes) is now protein, not DNA.
+
+        The disambiguation policy (protein-first) means 'ATGNCCTAA' chars {A,T,G,N,C}
+        are all valid amino acid codes, so the sequence is treated as a 9AA protein.
+        Users who need DNA interpretation must use FASTA format.
+        """
+        result = validator.validate("ATGNCCTAA")
+        assert result["type"] == "protein"
 
     def test_dna_invalid_chars(self, validator):
         """Test DNA with invalid characters"""
