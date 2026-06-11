@@ -94,8 +94,8 @@ git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push --tags
 ## Step 6 — Post-release Verification
 
 - [ ] `pip install factorforge-cds==X.Y.Z && factorforge --help` (PyPI smoke)
-- [ ] `docker run ghcr.io/eijex/factorforge-cds:vX.Y.Z factorforge --help` (Docker smoke)
-- [ ] Zenodo DOI: https://zenodo.org/doi/10.5281/zenodo.20407331
+- [ ] `docker run ghcr.io/eijex/factorforge-cds:X.Y.Z factorforge --help` (Docker smoke)
+- [ ] Zenodo DOI: https://zenodo.org/doi/10.5281/zenodo.20640931
 - [ ] Bioconda PR: push fork branch `add-factorforge-cds`
   ```bash
   cd <bioconda-recipes-fork> && git push origin add-factorforge-cds
