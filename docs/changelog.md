@@ -4,6 +4,28 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.2.0 — 2026-06-11
+
+### Benchmark
+- **Formal benchmark** — N. benthamiana SGN CDS dataset (N=49,257 sequences), seed=320 for deterministic reproduction. All metrics are in-silico; no wet-lab validation is claimed.
+- **Seed injection** — benchmark runner now accepts `--seed` for fully deterministic reruns; `most_frequent_codon` tie-breaking deduplication included (099)
+
+### Data / Provenance
+- **Codon table provenance disclosure** — `nbenthamiana_codons.json` origin documented as a legacy Kazusa + SGN v1.0.1-era reference; `codon_table_manifest.json` added with sha256 pin, `build_path_status: incomplete`, and known limitations recorded (097)
+
+### API / Schema
+- **Design Package schema v1.0.0** — formal IUPAC/FASTA I/O contracts and MFE null invariant established (090)
+- **Registry constants export** — `DEFAULT_CAI_TARGET`, `DEFAULT_GC_LOW`, `DEFAULT_GC_HIGH` importable as public production constants (091)
+
+### Fixed
+- **Input validator** — IUPAC ambiguous DNA/AA sequence misclassification corrected (098)
+
+### Documentation
+- **Benchmark Trust Pack** — registry/spec integrity tests, metric correctness tests, and deterministic baseline runner added (084)
+- **Claim wording alignment** — public-facing API and CLI output wording unified; no expression-level or yield improvement claims (092)
+
+---
+
 ## v3.1.9 — 2026-06-04
 
 ### Documentation
