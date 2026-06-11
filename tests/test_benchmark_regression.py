@@ -48,9 +48,7 @@ SUMMARY_REQUIRED_FIELDS = {
     "runtime_seconds",
     "dataset_id",
     "dataset_n",
-    "pass_rate_biological",
-    "pass_rate_assembly",
-    "pass_rate_multi_constraint",
+    "methods",  # per-method breakdown; pass_rate_* are now nested under methods.<name>
 }
 RAW_SEQUENCE_FIELDS = {"sequence", "raw_sequence", "protein", "cds", "output_cds", "input_sequence"}
 
