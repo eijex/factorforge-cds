@@ -24,7 +24,6 @@ methods:
   baselines:
     - native_reference
     - random_synonymous
-    - most_frequent_codon
     - greedy_cai
 
 hard_gates:

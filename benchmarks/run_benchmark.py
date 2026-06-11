@@ -12,7 +12,6 @@ from pathlib import Path
 from benchmarks.config import load_benchmark_config
 from benchmarks.scoring import score_cds
 from benchmarks.baselines.random_synonymous import random_synonymous_cds
-from benchmarks.baselines.most_frequent_codon import most_frequent_codon_cds
 from benchmarks.baselines.greedy_cai import greedy_cai_cds
 from benchmarks.baselines.native_reference import native_reference_cds
 from factorforge.engines.profile.optimizer import RuleBasedOptimizer
@@ -53,7 +52,8 @@ def _ok(row: dict) -> dict:
 
 def run(dataset: str, mode: str, out_csv: Path, out_md: Path,
         proteins_fasta: Path, native_fasta: Path,
-        limit: int | None = None, progress_every: int = 500) -> None:
+        limit: int | None = None, progress_every: int = 500,
+        seed: int | None = None) -> None:
     cfg = load_benchmark_config()
     proteins = _read_fasta(proteins_fasta)
     natives = _read_fasta(native_fasta)
@@ -73,12 +73,10 @@ def run(dataset: str, mode: str, out_csv: Path, out_md: Path,
             row = _ok(score_cds("random_synonymous", "baseline", sid, protein, cds, cfg, rt))
             row["replicate"], row["seed"] = r + 1, seed
             rows.append(row)
-        for name, fn in (("most_frequent_codon", most_frequent_codon_cds),
-                         ("greedy_cai", greedy_cai_cds)):
-            cds, rt = _timed(fn, protein)
-            row = _ok(score_cds(name, "baseline", sid, protein, cds, cfg, rt))
-            row["replicate"], row["seed"] = 1, ""
-            rows.append(row)
+        cds, rt = _timed(greedy_cai_cds, protein)
+        row = _ok(score_cds("greedy_cai", "baseline", sid, protein, cds, cfg, rt))
+        row["replicate"], row["seed"] = 1, ""
+        rows.append(row)
         if sid in natives:
             cds, rt = _timed(native_reference_cds, natives[sid])
             row = _ok(score_cds("native_reference", "reference", sid, protein, cds, cfg, rt))
@@ -87,7 +85,7 @@ def run(dataset: str, mode: str, out_csv: Path, out_md: Path,
         for prof in FACTORFORGE_PROFILES:
             try:
                 t0 = time.perf_counter()
-                res = opt.optimize(protein, profile=prof)
+                res = opt.optimize(protein, profile=prof, seed=seed)
                 rt = time.perf_counter() - t0
                 row = _ok(score_cds(f"factorforge_{prof}", "optimizer", sid, protein, res.sequence, cfg, rt))
             except Exception as exc:
@@ -120,7 +118,7 @@ def run(dataset: str, mode: str, out_csv: Path, out_md: Path,
     prot_sha256 = hashlib.sha256(proteins_fasta.read_bytes()).hexdigest() if proteins_fasta.exists() else None
     cds_sha256 = hashlib.sha256(native_fasta.read_bytes()).hexdigest() if native_fasta.exists() else None
     _write_summary(rows, out_md, dataset, mode, cfg,
-                   prot_sha256=prot_sha256, cds_sha256=cds_sha256)
+                   prot_sha256=prot_sha256, cds_sha256=cds_sha256, seed=seed)
 
 
 def _pass_rate(rows, key, method):
@@ -135,7 +133,8 @@ def _mean(rows, key, method):
 
 def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
                    prot_sha256: str | None = None,
-                   cds_sha256: str | None = None) -> None:
+                   cds_sha256: str | None = None,
+                   seed: int | None = None) -> None:
     methods = sorted({r["method"] for r in rows})
     lines = [
         f"# Benchmark Summary (dataset={dataset}, mode={mode})", "",
@@ -206,6 +205,7 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
         "spec_hash": f"sha256:{cfg.spec_sha256}",
         "dataset_id": dataset,
         "dataset_n": len({r["sequence_id"] for r in rows}),
+        "random_seed": seed,
         "input_protein_fasta_sha256": prot_sha256,
         "dataset_cds_fasta_sha256": cds_sha256,
         "runtime_seconds": round(sum(r["runtime_seconds"] for r in rows), 4),
@@ -221,6 +221,9 @@ def main(default_mode: str = "formal") -> None:
                     help="Cap number of sequences (for quick validation runs).")
     ap.add_argument("--progress-every", type=int, default=500,
                     help="Print progress every N sequences (default: 500).")
+    ap.add_argument("--seed", type=int, default=None,
+                    help="Random seed for FactorForge profiles (default: non-deterministic). "
+                         "Use --seed 320 for reproducible formal runs.")
     args = ap.parse_args()
     root = Path(__file__).resolve().parents[1]
     if args.dataset == "synthetic":
@@ -233,7 +236,7 @@ def main(default_mode: str = "formal") -> None:
         out_csv=root / "benchmarks" / "results" / "v3.2.0" / "benchmark_results.csv",
         out_md=root / "benchmarks" / "results" / "v3.2.0" / "benchmark_summary.md",
         proteins_fasta=proteins, native_fasta=native,
-        limit=args.limit, progress_every=args.progress_every)
+        limit=args.limit, progress_every=args.progress_every, seed=args.seed)
 
 
 if __name__ == "__main__":

@@ -15,7 +15,6 @@ from factorforge.registry.registry_loader import load_registry, resolve_ref
 ROOT = Path(__file__).resolve().parents[1]
 BASELINE_METHODS = {
     "random_synonymous",
-    "most_frequent_codon",
     "greedy_cai",
     "native_reference",
 }

@@ -1,4 +1,9 @@
-"""Most-frequent-codon baseline: pick the highest-weight synonymous codon."""
+"""Most-frequent-codon baseline: pick the highest-weight synonymous codon.
+
+Note: mathematically identical to greedy_cai for the N. benthamiana codon table
+(CAI weight = relative frequency, so argmax CAI == most frequent codon).
+This module is retained for reference but is not included in the benchmark runner.
+"""
 from __future__ import annotations
 from factorforge.analysis.metrics import translate_dna, load_codon_usage_table
 
