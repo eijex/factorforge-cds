@@ -129,3 +129,26 @@ python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_sur
 - [ ] Close completed GitHub Issues / milestone
 - [ ] Verify factorforge.eijex.com shows new CURRENT version in "What's New" modal
 - [ ] Verify mcp.eijex.com tool descriptions show new version
+
+---
+
+## Step 10 — Registry/UI Consistency Check
+
+Prevent parameter drift: verify that hardcoded values in docs and UI match the registry source of truth.
+
+```bash
+python -c "
+import yaml, pathlib
+r = yaml.safe_load(pathlib.Path('src/factorforge/registry/current_parameter_registry.yaml').read_text())
+gc = r['parameters']['optimization']['gc_range_nbenthamiana_global']['value']
+print(f'Registry GC range: {gc[0]}–{gc[1]}%')
+print('Verify this matches:')
+print('  docs/index.md — GC in target range Target column')
+print('  web/index.html — Target Zone label (line ~593)')
+print('  web/js/app.js — Target Max/Min chart lines')
+"
+```
+
+- [ ] `docs/index.md` benchmark table GC target = registry value
+- [ ] `web/index.html` "Target Zone X–Y%" = registry value
+- [ ] `web/js/app.js` `Array(n).fill(X)` Target Max/Min = registry value
