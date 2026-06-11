@@ -68,10 +68,10 @@ def run(dataset: str, mode: str, out_csv: Path, out_md: Path,
             errors = sum(1 for r in rows if r.get("status") == "error")
             print(f"[benchmark] {i + 1}/{total} sequences, errors={errors}", flush=True)
         for r in range(cfg.random_replicates):
-            seed = cfg.random_seed + r
-            cds, rt = _timed(random_synonymous_cds, protein, seed)
+            rs_seed = cfg.random_seed + r
+            cds, rt = _timed(random_synonymous_cds, protein, rs_seed)
             row = _ok(score_cds("random_synonymous", "baseline", sid, protein, cds, cfg, rt))
-            row["replicate"], row["seed"] = r + 1, seed
+            row["replicate"], row["seed"] = r + 1, rs_seed
             rows.append(row)
         cds, rt = _timed(greedy_cai_cds, protein)
         row = _ok(score_cds("greedy_cai", "baseline", sid, protein, cds, cfg, rt))

@@ -1,67 +1,58 @@
 {
   "run_id": "c8641f5bbc32",
-  "timestamp": "2026-06-10T15:49:46.165384+00:00",
+  "timestamp": "2026-06-11T04:08:33.523062+00:00",
   "factorforge_version": "3.1.9",
   "registry_version": "3.2.0",
   "registry_hash": "sha256:17bf44d4c0217ec158a8bbf8e8d78c0e7264ab748f4642a42412a5f24a7e78e3",
-  "spec_hash": "sha256:973b08cce1bcf3ecdf95f693d23afd70c2ff7d52d7e11b302d745a780fce20df",
+  "spec_hash": "sha256:70adc5fcd681ad3451bc6bd8f685932448e137ec65d49d304b92807e22dca3fe",
   "dataset_id": "formal",
   "dataset_n": 49257,
+  "random_seed": 320,
   "input_protein_fasta_sha256": "35dc8ec1f2adaea2be02ad843dd18ca62053595328fe35e38c04bfa596f188e2",
   "dataset_cds_fasta_sha256": "714a7155c50fff4240c196389ade1860550eb5b949f3cbbd44406ddd6d6cdb53",
-  "runtime_seconds": 1896.7369,
+  "runtime_seconds": 1672.9692,
   "methods": {
     "factorforge_assembly_friendly": {
       "n_ok": 49257,
       "n_error": 0,
       "error_rate": 0.0,
-      "pass_rate_biological": 0.9999,
-      "pass_rate_assembly": 0.6553,
-      "pass_rate_multi_constraint": 0.6552,
-      "gc_in_range_rate": 0.9707,
-      "mean_cai": 0.9092
+      "pass_rate_biological": 1.0,
+      "pass_rate_assembly": 0.6578,
+      "pass_rate_multi_constraint": 0.6578,
+      "gc_in_range_rate": 0.9709,
+      "mean_cai": 0.9112
     },
     "factorforge_balanced": {
       "n_ok": 49257,
       "n_error": 0,
       "error_rate": 0.0,
-      "pass_rate_biological": 0.9999,
-      "pass_rate_assembly": 0.2965,
-      "pass_rate_multi_constraint": 0.2965,
-      "gc_in_range_rate": 0.9821,
-      "mean_cai": 0.9305
+      "pass_rate_biological": 1.0,
+      "pass_rate_assembly": 0.279,
+      "pass_rate_multi_constraint": 0.279,
+      "gc_in_range_rate": 0.9819,
+      "mean_cai": 0.9388
     },
     "factorforge_gc_target": {
       "n_ok": 49257,
       "n_error": 0,
       "error_rate": 0.0,
-      "pass_rate_biological": 0.9999,
+      "pass_rate_biological": 1.0,
       "pass_rate_assembly": 0.2619,
-      "pass_rate_multi_constraint": 0.2618,
+      "pass_rate_multi_constraint": 0.2619,
       "gc_in_range_rate": 0.9976,
-      "mean_cai": 0.9505
+      "mean_cai": 0.9506
     },
     "factorforge_high_cai": {
       "n_ok": 49257,
       "n_error": 0,
       "error_rate": 0.0,
-      "pass_rate_biological": 0.9999,
+      "pass_rate_biological": 1.0,
       "pass_rate_assembly": 0.4158,
-      "pass_rate_multi_constraint": 0.4157,
+      "pass_rate_multi_constraint": 0.4158,
       "gc_in_range_rate": 0.0,
       "mean_cai": 0.7343
     },
     "greedy_cai": {
-      "n_ok": 49257,
-      "n_error": 0,
-      "error_rate": 0.0,
-      "pass_rate_biological": 1.0,
-      "pass_rate_assembly": 0.3107,
-      "pass_rate_multi_constraint": 0.3107,
-      "gc_in_range_rate": 0.7289,
-      "mean_cai": 1.0
-    },
-    "most_frequent_codon": {
       "n_ok": 49257,
       "n_error": 0,
       "error_rate": 0.0,

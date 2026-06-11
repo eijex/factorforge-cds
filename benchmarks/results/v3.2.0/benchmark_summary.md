@@ -3,7 +3,7 @@
 ## Provenance (reproducibility)
 - FactorForge version: 3.1.9
 - registry sha256: 17bf44d4c0217ec158a8bbf8e8d78c0e7264ab748f4642a42412a5f24a7e78e3
-- benchmark_spec sha256: 973b08cce1bcf3ecdf95f693d23afd70c2ff7d52d7e11b302d745a780fce20df
+- benchmark_spec sha256: 70adc5fcd681ad3451bc6bd8f685932448e137ec65d49d304b92807e22dca3fe
 - input protein fasta sha256: 35dc8ec1f2adaea2be02ad843dd18ca62053595328fe35e38c04bfa596f188e2
 - dataset cds fasta sha256: 714a7155c50fff4240c196389ade1860550eb5b949f3cbbd44406ddd6d6cdb53
 - run date: 2026-06-11
@@ -12,12 +12,11 @@
 
 | method | multi_constraint_pass_rate | biological_pass_rate | assembly_pass_rate | gc_in_range_rate | mean_cai |
 |---|---|---|---|---|---|
-| factorforge_assembly_friendly | 0.66 | 1.00 | 0.66 | 0.97 | 0.9092 |
-| factorforge_balanced | 0.30 | 1.00 | 0.30 | 0.98 | 0.9305 |
-| factorforge_gc_target | 0.26 | 1.00 | 0.26 | 1.00 | 0.9505 |
+| factorforge_assembly_friendly | 0.66 | 1.00 | 0.66 | 0.97 | 0.9112 |
+| factorforge_balanced | 0.28 | 1.00 | 0.28 | 0.98 | 0.9388 |
+| factorforge_gc_target | 0.26 | 1.00 | 0.26 | 1.00 | 0.9506 |
 | factorforge_high_cai | 0.42 | 1.00 | 0.42 | 0.00 | 0.7343 |
 | greedy_cai | 0.31 | 1.00 | 0.31 | 0.73 | 1.0000 |
-| most_frequent_codon | 0.31 | 1.00 | 0.31 | 0.73 | 1.0000 |
 | native_reference | 0.37 | 1.00 | 0.37 | 0.00 | 0.7249 |
 | random_synonymous | 0.26 | 1.00 | 0.26 | 0.01 | 0.7279 |
 
