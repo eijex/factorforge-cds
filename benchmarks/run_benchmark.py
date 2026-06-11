@@ -5,6 +5,7 @@ import argparse
 import csv
 import hashlib
 import json
+import subprocess
 import time
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -236,11 +237,19 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
         ct_source_status = "legacy_metadata_only"
         ct_build_path_status = "incomplete"
 
+    try:
+        _git_commit = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.DEVNULL
+        ).decode().strip()
+    except Exception:
+        _git_commit = None
+
     summary_json = out_md.parent / "benchmark_summary.json"
     summary_json.write_text(json.dumps({
         "run_id": hashlib.sha256(f"{dataset}{mode}{date.today().isoformat()}".encode()).hexdigest()[:12],
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "factorforge_version": FF_VERSION,
+        "git_commit": _git_commit,
         "registry_version": cfg.registry_version,
         "registry_hash": f"sha256:{cfg.registry_sha256}",
         "spec_hash": f"sha256:{cfg.spec_sha256}",

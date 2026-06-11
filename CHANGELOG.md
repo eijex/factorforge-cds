@@ -27,16 +27,27 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
+---
+
+## [3.2.0] — 2026-06-11
+
 ### Added
 - **MFE metadata fields** — Design Package and API response now include `mfe_used` (bool), `mfe_status` (`computed` / `not_computed`), and `mfe_warning` (string when ViennaRNA unavailable). `score_components` added to expose per-term weights used in composite score calculation.
+- **Design Package schema v1.0.0** — Formal IUPAC/FASTA I/O contracts and MFE null invariant established (090).
+- **Registry production constants export** — `DEFAULT_CAI_TARGET`, `DEFAULT_GC_LOW`, `DEFAULT_GC_HIGH` importable as public production constants (091).
+- **Benchmark seed injection** — `--seed` flag for deterministic reruns; `most_frequent_codon` tie-breaking deduplication (099).
+- **Codon table provenance disclosure** — `codon_table_manifest.json` with sha256 pin, `build_path_status: incomplete`, and known limitations for `nbenthamiana_codons.json` (097).
 
 ### Fixed
 - **Domestication Silence Fail** — `pipeline.py` now raises `ValueError` when restriction-site domestication fails (previously returned the undomesticated sequence silently as success).
-- **Pipeline Output Validator** — `validate_cds_output()` is now called in `pipeline.py` before final sequence return, catching AA identity violations and internal stops at the pipeline level (previously only enforced at the API layer since job 067).
-- **MFE not-computed value** — `mfe_kcal_mol` is now `null` (not `0.0`) when ViennaRNA is unavailable (e.g. production Vercel). Composite score is unchanged; this corrects misleading metadata only.
+- **Pipeline Output Validator** — `validate_cds_output()` is now called in `pipeline.py` before final sequence return, catching AA identity violations and internal stops at the pipeline level.
+- **MFE not-computed value** — `mfe_kcal_mol` is now `null` (not `0.0`) when ViennaRNA is unavailable. Composite score is unchanged; this corrects misleading metadata only.
+- **Input validator** — IUPAC ambiguous DNA/AA sequence misclassification corrected (098).
 
 ### Documentation
-- **Stale constant corrections** — 5 doc/comment locations corrected to match live code: `target_cai` 0.92 → 0.82; GC feasibility range 41–44% → 55–65%; 5′ ramp docstring bottom 50% → 25%; `scan_gc_extremes` local-guard behaviour documented; feasibility fallback path description corrected.
+- **Stale constant corrections** — 5 doc/comment locations corrected to match live code.
+- **Claim wording alignment** — Public-facing API and CLI output wording unified; no expression-level or yield improvement claims (092).
+- **Formal benchmark** — N. benthamiana SGN CDS (N=49,257, seed=320). All metrics are in-silico; no wet-lab validation claimed.
 
 ---
 
@@ -208,7 +219,8 @@ First official release of FactorForge.
 
 ---
 
-[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.1.9...HEAD
+[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/eijex/factorforge-cds/compare/v3.1.9...v3.2.0
 [3.1.9]: https://github.com/eijex/factorforge-cds/compare/v3.1.8...v3.1.9
 [3.1.8]: https://github.com/eijex/factorforge-cds/compare/v3.1.7...v3.1.8
 [3.1.7]: https://github.com/eijex/factorforge-cds/compare/v3.1.6...v3.1.7

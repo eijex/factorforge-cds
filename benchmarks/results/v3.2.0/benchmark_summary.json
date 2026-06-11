@@ -2,6 +2,7 @@
   "run_id": "c8641f5bbc32",
   "timestamp": "2026-06-11T09:16:15.091126+00:00",
   "factorforge_version": "3.2.0",
+  "git_commit": "6f236ea",
   "registry_version": "3.2.0",
   "registry_hash": "sha256:8838408157e3e2913c2eb2de2168b369d89cd8ddff9a8c85c4bbced29532cc06",
   "spec_hash": "sha256:70adc5fcd681ad3451bc6bd8f685932448e137ec65d49d304b92807e22dca3fe",
