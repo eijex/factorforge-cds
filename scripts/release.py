@@ -44,6 +44,39 @@ def build_workspace_targets(old: str, new: str, workspace: Path) -> list[tuple[P
     ]
 
 
+def build_web_targets(old: str, new: str, web: Path) -> list[tuple[Path, list[tuple[str, str]], bool]]:
+    """Optional cross-repo targets in the eijex-web repo."""
+    return [
+        (web / "src/app/components/StatsBar.tsx", [
+            (f'"v{old}"', f'"v{new}"'),
+        ], False),
+    ]
+
+
+def _update_changelog_current(root: Path, old: str, new: str, dry_run: bool) -> list[str]:
+    """Toggle the CURRENT badge in web/index.html changelog panel."""
+    path = root / "web/index.html"
+    if not path.exists():
+        return []
+    today = _today()
+    content = path.read_text(encoding="utf-8")
+    original = content
+    h3_old = f'<h3 class="font-bold text-slate-800 dark:text-white">v{old}</h3>'
+    h3_new = f'<h3 class="font-bold text-slate-800 dark:text-white">v{new}</h3>'
+    content = content.replace(h3_old, h3_new)
+    date_pattern = re.compile(
+        r'(<h3 class="font-bold text-slate-800 dark:text-white">v' + re.escape(new) + r'</h3>\s*'
+        r'<span class="text-slate-400 text-\[10px\]">)(\d{4}-\d{2}-\d{2})(</span>)'
+    )
+    content = date_pattern.sub(lambda m: f"{m.group(1)}{today}{m.group(3)}", content)
+    if content == original:
+        return []
+    changes = [f"  web/index.html: CURRENT v{old} → v{new}, date → {today}"]
+    if not dry_run:
+        path.write_text(content, encoding="utf-8")
+    return changes
+
+
 def build_mcp_targets(old: str, new: str, mcp: Path) -> list[tuple[Path, list[tuple[str, str]], bool]]:
     """Optional cross-repo targets in the eijex-mcp repo."""
     return [
@@ -179,7 +212,7 @@ def _check_residual(old: str, dry_run: bool) -> int:
     return residual_errors
 
 
-def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, workspace: Path | None = None, mcp: Path | None = None) -> int:
+def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, workspace: Path | None = None, mcp: Path | None = None, web: Path | None = None) -> int:
     targets = build_targets(old, new)
     errors = 0
     total_changes = 0
@@ -247,6 +280,14 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
             if not dry_run:
                 path.write_text(content, encoding="utf-8")
 
+    # Update web/index.html changelog CURRENT version/date
+    changelog_changes = _update_changelog_current(ROOT, old, new, dry_run=dry_run)
+    if changelog_changes:
+        total_changes += 1
+        print(f"\n{'[DRY RUN] ' if dry_run else ''}Updated: web/index.html (changelog CURRENT)")
+        for c in changelog_changes:
+            print(c)
+
     print(f"\n{'[DRY RUN] ' if dry_run else ''}{'─' * 40}")
     print(f"Files modified: {total_changes}")
 
@@ -274,6 +315,35 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
                 if content != original:
                     total_changes += 1
                     print(f"\n{'[DRY RUN] ' if dry_run else ''}Updated: {abs_path.relative_to(workspace)}")
+                    for c in changes:
+                        print(c)
+                    if not dry_run:
+                        abs_path.write_text(content, encoding="utf-8")
+
+    # Web targets (eijex-web repo)
+    if web is not None:
+        if not web.is_dir():
+            print(f"  WARN: --web path not found: {web}")
+        else:
+            print(f"\n{'[DRY RUN] ' if dry_run else ''}Web: {web}")
+            for abs_path, replacements, required in build_web_targets(old, new, web):
+                if not abs_path.exists():
+                    print(f"  {'ERROR' if required else 'SKIP'} (not found): {abs_path.name}")
+                    if required:
+                        errors += 1
+                    continue
+                content = abs_path.read_text(encoding="utf-8")
+                original = content
+                changes = []
+                for old_str, new_str in replacements:
+                    if old_str in content:
+                        content = content.replace(old_str, new_str)
+                        changes.append(f"  {old_str!r} → {new_str!r}")
+                    else:
+                        print(f"  WARN: pattern not found in {abs_path.name}: {old_str!r}")
+                if content != original:
+                    total_changes += 1
+                    print(f"\n{'[DRY RUN] ' if dry_run else ''}Updated: {abs_path.relative_to(web)}")
                     for c in changes:
                         print(c)
                     if not dry_run:
@@ -333,10 +403,11 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     print()
     print("  --- Changelog & docs (manual) ---")
     print("  1. Move [Unreleased] entries to a new [X.Y.Z] block in CHANGELOG.md; update comparison links")
-    print(f"  2. Add v{new} entry to web/index.html changelog panel")
-    print("     → Copy the previous version block, update version/date/bullet points")
-    print("     → Set previous 'Current' block: remove emerald classes, remove Current badge")
-    print("     → Set new block: border-emerald-500, dot bg-emerald-500, add Current badge")
+    print(f"  2. Add v{new} entry to web/index.html changelog panel  ← NEW block with bullet points (manual)")
+    print("     → Copy the v{old} block above it; write v{new} bullet points")
+    print("     → New block: border-emerald-500, dot bg-emerald-500, Current badge")
+    print("     → Old block: border-slate-200, dot bg-slate-300, no Current badge")
+    print("     (Version number + date in the existing CURRENT block are auto-bumped by this script)")
     print("  3. Add a summary entry in docs/changelog.md")
     print()
     print("  --- Commit & CI gate (before tagging) ---")
@@ -383,6 +454,8 @@ def main() -> None:
                         help="Path to the internal planning/tracking workspace repo to also bump cross-repo docs")
     parser.add_argument("--mcp", default=None,
                         help="Path to the eijex-mcp repo to also bump MCP tool version strings")
+    parser.add_argument("--web", default=None,
+                        help="Path to the eijex-web repo to also bump StatsBar version string")
     args = parser.parse_args()
 
     new = args.new_version
@@ -405,8 +478,9 @@ def main() -> None:
 
     workspace = Path(args.workspace) if args.workspace else None
     mcp = Path(args.mcp) if args.mcp else None
+    web = Path(args.web) if args.web else None
     print(f"Bumping {old} → {new}{' (dry run)' if args.dry_run else ''}{' [strict]' if args.strict else ''}\n")
-    errors = bump(old, new, dry_run=args.dry_run, strict=args.strict, workspace=workspace, mcp=mcp)
+    errors = bump(old, new, dry_run=args.dry_run, strict=args.strict, workspace=workspace, mcp=mcp, web=web)
     sys.exit(errors)
 
 
