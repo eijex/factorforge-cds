@@ -174,3 +174,17 @@ parameters:
       provenance: "Job 061 BY-2 host addition; experimental only — Nagata et al. (1992) BY-2 cell line."
       visibility: public
       permission: publish_allowed
+
+codon_reference:
+  id: nbenthamiana_legacy_kazusa_sgn_v101
+  species: Nicotiana benthamiana
+  ncbi_taxid: 4100
+  source_label: "Kazusa CodonUsage Database + SGN genome v1.0.1"
+  source_status: legacy_metadata_only
+  build_path_status: incomplete
+  authoritative_build_script_available: false
+  sha256: "ddbd0a41da88109a709bca0304581e29bd0a756e4db1c51809d5002e9b2d5e8c"
+  planned_rebuild: v3.3.0_sgn_qld183_v103
+  claim_boundary: "Configured in-silico codon reference only; not wet-lab validation or yield prediction."
+  owner_job: "097"
+  note: "The original authoritative build path for the current JSON codon table is incomplete/not verified. See docs/reference/CODON_TABLE_PROVENANCE.md for full disclosure."

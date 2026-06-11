@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "codon_table_manifest.schema.json",
+  "title": "Codon Table Manifest",
+  "description": "Schema for FactorForge codon table provenance manifest files.",
+  "type": "object",
+  "required": [
+    "codon_table_id",
+    "species",
+    "ncbi_taxid",
+    "file",
+    "sha256",
+    "source_label",
+    "source_status",
+    "build_path_status",
+    "authoritative_build_script_available",
+    "known_limitations",
+    "claim_boundary"
+  ],
+  "properties": {
+    "codon_table_id": {
+      "type": "string",
+      "description": "Unique identifier for this codon table version.",
+      "minLength": 1
+    },
+    "species": {
+      "type": "string",
+      "description": "Full scientific name of the organism.",
+      "minLength": 1
+    },
+    "ncbi_taxid": {
+      "type": "integer",
+      "description": "NCBI Taxonomy ID for the organism. N. benthamiana = 4100.",
+      "minimum": 1
+    },
+    "file": {
+      "type": "string",
+      "description": "Relative path (from repo root) to the codon table JSON file.",
+      "minLength": 1
+    },
+    "sha256": {
+      "type": "string",
+      "description": "SHA-256 hex digest of the codon table file.",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_label": {
+      "type": "string",
+      "description": "Human-readable description of the data source.",
+      "minLength": 1
+    },
+    "source_status": {
+      "type": "string",
+      "description": "Provenance confidence level.",
+      "enum": [
+        "verified",
+        "legacy_metadata_only",
+        "unknown"
+      ]
+    },
+    "build_path_status": {
+      "type": "string",
+      "description": "Whether the authoritative build path (script + inputs) is available and verified.",
+      "enum": [
+        "complete",
+        "incomplete",
+        "unknown"
+      ]
+    },
+    "authoritative_build_script_available": {
+      "type": "boolean",
+      "description": "Whether an authoritative, verified build script exists for reproducing this codon table."
+    },
+    "known_limitations": {
+      "type": "array",
+      "description": "List of known limitations or caveats about this codon table.",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "not_authoritative_build_scripts": {
+      "type": "array",
+      "description": "Scripts that exist in the repo but are NOT the authoritative builder for this codon table.",
+      "items": {
+        "type": "object",
+        "required": ["path", "reason"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Relative path to the script.",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why this script is not the authoritative builder.",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "planned_rebuild": {
+      "type": "object",
+      "description": "Planned future rebuild of this codon table.",
+      "required": ["target_version", "target_reference", "expected_effect"],
+      "properties": {
+        "target_version": {
+          "type": "string",
+          "description": "Target FactorForge version for the rebuild."
+        },
+        "target_reference": {
+          "type": "string",
+          "description": "Target genome/database reference for the rebuild."
+        },
+        "expected_effect": {
+          "type": "string",
+          "description": "Expected impact of the rebuild on scores and results."
+        }
+      },
+      "additionalProperties": false
+    },
+    "claim_boundary": {
+      "type": "string",
+      "description": "Explicit statement of what this codon table can and cannot claim.",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

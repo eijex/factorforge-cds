@@ -1,0 +1,28 @@
+{
+  "codon_table_id": "nbenthamiana_legacy_kazusa_sgn_v101",
+  "species": "Nicotiana benthamiana",
+  "ncbi_taxid": 4100,
+  "file": "src/factorforge/data/nbenthamiana_codons.json",
+  "sha256": "ddbd0a41da88109a709bca0304581e29bd0a756e4db1c51809d5002e9b2d5e8c",
+  "source_label": "Kazusa CodonUsage Database + SGN genome v1.0.1",
+  "source_status": "legacy_metadata_only",
+  "build_path_status": "incomplete",
+  "authoritative_build_script_available": false,
+  "known_limitations": [
+    "The original script or exact command used to generate the current JSON codon table is not available or not verified.",
+    "The current codon table is not a freshly rebuilt SGN QLD183 v103 codon table.",
+    "Benchmark CAI scores should be interpreted against the configured FactorForge codon reference."
+  ],
+  "not_authoritative_build_scripts": [
+    {
+      "path": "archive/v3-ml-prototype/scripts/1_data_preparation/build_codon_table.py",
+      "reason": "Expression-weighted ML prototype script; requires expression input (quant.sf/TPM) and produces CSV output, not the current production JSON format."
+    }
+  ],
+  "planned_rebuild": {
+    "target_version": "v3.3.0",
+    "target_reference": "SGN QLD183 v103",
+    "expected_effect": "Codon weights, CAI scores, profile rankings, and benchmark results may change."
+  },
+  "claim_boundary": "This codon table is a configured in-silico FactorForge reference for codon-usage scoring and optimization. It is not wet-lab validation, yield prediction, or expression-success evidence."
+}

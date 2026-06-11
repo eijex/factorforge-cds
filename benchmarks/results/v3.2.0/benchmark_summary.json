@@ -82,5 +82,10 @@
       "gc_in_range_rate": 0.0134,
       "mean_cai": 0.7279
     }
-  }
+  },
+  "codon_table_id": "nbenthamiana_legacy_kazusa_sgn_v101",
+  "codon_table_sha256": "ddbd0a41da88109a709bca0304581e29bd0a756e4db1c51809d5002e9b2d5e8c",
+  "codon_table_source_status": "legacy_metadata_only",
+  "codon_table_build_path_status": "incomplete",
+  "codon_table_reference_note": "CAI and codon-usage metrics are computed against the configured FactorForge codon reference. The current codon table is not a freshly rebuilt SGN QLD183 v103 codon table."
 }
