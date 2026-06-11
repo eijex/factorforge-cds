@@ -2,10 +2,20 @@
 
 import hashlib
 import json
+import os
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+_SRC_PATH = str(_REPO_ROOT / "src")
+
+# Derive factorforge source path from the currently-imported module so that
+# subprocess calls work regardless of which Python executable is used.
+import factorforge as _ff
+_FF_SRC_PATH = str(Path(_ff.__file__).resolve().parent.parent)
 
 from factorforge.validation import ValidationPackageGenerator
 from factorforge.validation.package_generator import WetLabResult
@@ -16,7 +26,7 @@ def sample_result():
     seq = "ATGAAACCC"
     return WetLabResult(
         construct_id="CF-20260525-000000",
-        factorforge_version="3.1.9",
+        factorforge_version="3.2.0",
         host_profile="nbenthamiana",
         profile="balanced",
         sequence_hash="sha256:" + hashlib.sha256(seq.encode()).hexdigest(),
@@ -81,6 +91,10 @@ def test_summary_readable(sample_result, tmp_path):
 def test_cli_generates_package_without_raw_sequence(tmp_path):
     output_dir = tmp_path / "validation_package"
 
+    env = os.environ.copy()
+    existing_pp = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = _FF_SRC_PATH + (os.pathsep + existing_pp if existing_pp else "")
+
     completed = subprocess.run(
         [
             sys.executable,
@@ -89,7 +103,7 @@ def test_cli_generates_package_without_raw_sequence(tmp_path):
             "--construct-id",
             "CF-20260525-000001",
             "--version",
-            "3.1.9",
+            "3.2.0",
             "--profile",
             "balanced",
             "--sequence",
@@ -108,6 +122,7 @@ def test_cli_generates_package_without_raw_sequence(tmp_path):
         check=True,
         capture_output=True,
         text=True,
+        env=env,
     )
 
     combined_output = "\n".join(

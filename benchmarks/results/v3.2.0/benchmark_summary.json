@@ -1,16 +1,16 @@
 {
   "run_id": "c8641f5bbc32",
-  "timestamp": "2026-06-11T04:08:33.523062+00:00",
-  "factorforge_version": "3.1.9",
+  "timestamp": "2026-06-11T09:16:15.091126+00:00",
+  "factorforge_version": "3.2.0",
   "registry_version": "3.2.0",
-  "registry_hash": "sha256:17bf44d4c0217ec158a8bbf8e8d78c0e7264ab748f4642a42412a5f24a7e78e3",
+  "registry_hash": "sha256:8838408157e3e2913c2eb2de2168b369d89cd8ddff9a8c85c4bbced29532cc06",
   "spec_hash": "sha256:70adc5fcd681ad3451bc6bd8f685932448e137ec65d49d304b92807e22dca3fe",
   "dataset_id": "formal",
   "dataset_n": 49257,
   "random_seed": 320,
   "input_protein_fasta_sha256": "35dc8ec1f2adaea2be02ad843dd18ca62053595328fe35e38c04bfa596f188e2",
   "dataset_cds_fasta_sha256": "714a7155c50fff4240c196389ade1860550eb5b949f3cbbd44406ddd6d6cdb53",
-  "runtime_seconds": 1672.9692,
+  "runtime_seconds": 1664.7518,
   "methods": {
     "factorforge_assembly_friendly": {
       "n_ok": 49257,

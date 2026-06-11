@@ -1,8 +1,8 @@
 # Benchmark Summary (dataset=formal, mode=formal)
 
 ## Provenance (reproducibility)
-- FactorForge version: 3.1.9
-- registry sha256: 17bf44d4c0217ec158a8bbf8e8d78c0e7264ab748f4642a42412a5f24a7e78e3
+- FactorForge version: 3.2.0
+- registry sha256: 8838408157e3e2913c2eb2de2168b369d89cd8ddff9a8c85c4bbced29532cc06
 - benchmark_spec sha256: 70adc5fcd681ad3451bc6bd8f685932448e137ec65d49d304b92807e22dca3fe
 - input protein fasta sha256: 35dc8ec1f2adaea2be02ad843dd18ca62053595328fe35e38c04bfa596f188e2
 - dataset cds fasta sha256: 714a7155c50fff4240c196389ade1860550eb5b949f3cbbd44406ddd6d6cdb53
