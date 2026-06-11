@@ -7,6 +7,12 @@
 - input protein fasta sha256: 35dc8ec1f2adaea2be02ad843dd18ca62053595328fe35e38c04bfa596f188e2
 - dataset cds fasta sha256: 714a7155c50fff4240c196389ade1860550eb5b949f3cbbd44406ddd6d6cdb53
 - run date: 2026-06-11
+- codon_table_id: nbenthamiana_legacy_kazusa_sgn_v101
+- codon_table_sha256: ddbd0a41da88109a709bca0304581e29bd0a756e4db1c51809d5002e9b2d5e8c
+- codon_table_source_status: legacy_metadata_only
+- codon_table_build_path_status: incomplete
+
+> **Codon table note:** The current N. benthamiana codon table is a legacy FactorForge reference labeled as derived from Kazusa CodonUsage Database and SGN genome v1.0.1-era resources. The original authoritative build path for the current JSON codon table is incomplete/not verified. The formal benchmark dataset uses SGN QLD183 v103 records; therefore CAI and codon-usage metrics should be interpreted as scores against the configured FactorForge codon reference, not as a de novo SGN QLD183 v103 codon-usage reconstruction.
 
 > This benchmark evaluates in-silico CDS design quality only. It does not demonstrate improved protein expression, yield, folding, or wet-lab performance.
 

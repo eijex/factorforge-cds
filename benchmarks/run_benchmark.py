@@ -136,6 +136,20 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
                    cds_sha256: str | None = None,
                    seed: int | None = None) -> None:
     methods = sorted({r["method"] for r in rows})
+    # Compute codon table metadata for MD
+    _repo_root_md = out_md.parent.parent.parent.parent
+    _manifest_path_md = _repo_root_md / "data" / "reference" / "codon_table_manifest.json"
+    if _manifest_path_md.exists():
+        _m = json.loads(_manifest_path_md.read_text(encoding="utf-8"))
+        _ct_id_md = _m.get("codon_table_id", "nbenthamiana_legacy_kazusa_sgn_v101")
+        _ct_ss_md = _m.get("source_status", "legacy_metadata_only")
+        _ct_bp_md = _m.get("build_path_status", "incomplete")
+        _ct_sha_md = _m.get("sha256", "")
+    else:
+        _ct_id_md, _ct_ss_md, _ct_bp_md, _ct_sha_md = (
+            "nbenthamiana_legacy_kazusa_sgn_v101", "legacy_metadata_only", "incomplete", ""
+        )
+
     lines = [
         f"# Benchmark Summary (dataset={dataset}, mode={mode})", "",
         "## Provenance (reproducibility)",
@@ -149,6 +163,17 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
         lines.append(f"- dataset cds fasta sha256: {cds_sha256}")
     lines += [
         f"- run date: {date.today().isoformat()}",
+        f"- codon_table_id: {_ct_id_md}",
+        f"- codon_table_sha256: {_ct_sha_md}",
+        f"- codon_table_source_status: {_ct_ss_md}",
+        f"- codon_table_build_path_status: {_ct_bp_md}",
+        "",
+        "> **Codon table note:** The current N. benthamiana codon table is a legacy FactorForge reference "
+        "labeled as derived from Kazusa CodonUsage Database and SGN genome v1.0.1-era resources. "
+        "The original authoritative build path for the current JSON codon table is incomplete/not verified. "
+        "The formal benchmark dataset uses SGN QLD183 v103 records; therefore CAI and codon-usage metrics "
+        "should be interpreted as scores against the configured FactorForge codon reference, "
+        "not as a de novo SGN QLD183 v103 codon-usage reconstruction.",
         "", f"> {CLAIM}", "",
         "| method | multi_constraint_pass_rate | biological_pass_rate | assembly_pass_rate | gc_in_range_rate | mean_cai |",
         "|---|---|---|---|---|---|",
@@ -195,6 +220,22 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
             "mean_cai": round(sum(r["cai"] for r in ok if r["cai"] is not None) / max(1, sum(1 for r in ok if r["cai"] is not None)), 4),
         }
 
+    # Compute codon table sha256 and read manifest at runtime
+    # out_md is benchmarks/results/v3.2.0/benchmark_summary.md → 4 levels up = repo root
+    repo_root = out_md.parent.parent.parent.parent
+    codon_table_path = repo_root / "src" / "factorforge" / "data" / "nbenthamiana_codons.json"
+    manifest_path = repo_root / "data" / "reference" / "codon_table_manifest.json"
+    ct_sha256 = hashlib.sha256(codon_table_path.read_bytes()).hexdigest() if codon_table_path.exists() else None
+    if manifest_path.exists():
+        _manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        ct_id = _manifest.get("codon_table_id", "nbenthamiana_legacy_kazusa_sgn_v101")
+        ct_source_status = _manifest.get("source_status", "legacy_metadata_only")
+        ct_build_path_status = _manifest.get("build_path_status", "incomplete")
+    else:
+        ct_id = "nbenthamiana_legacy_kazusa_sgn_v101"
+        ct_source_status = "legacy_metadata_only"
+        ct_build_path_status = "incomplete"
+
     summary_json = out_md.parent / "benchmark_summary.json"
     summary_json.write_text(json.dumps({
         "run_id": hashlib.sha256(f"{dataset}{mode}{date.today().isoformat()}".encode()).hexdigest()[:12],
@@ -210,6 +251,14 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
         "dataset_cds_fasta_sha256": cds_sha256,
         "runtime_seconds": round(sum(r["runtime_seconds"] for r in rows), 4),
         "methods": {m: _per_method(m) for m in methods},
+        "codon_table_id": ct_id,
+        "codon_table_sha256": ct_sha256,
+        "codon_table_source_status": ct_source_status,
+        "codon_table_build_path_status": ct_build_path_status,
+        "codon_table_reference_note": (
+            "CAI and codon-usage metrics are computed against the configured FactorForge codon reference. "
+            "The current codon table is not a freshly rebuilt SGN QLD183 v103 codon table."
+        ),
     }, indent=2), encoding="utf-8")
 
 
