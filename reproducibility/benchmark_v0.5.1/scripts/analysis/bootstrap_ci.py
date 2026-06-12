@@ -43,8 +43,8 @@ def build_sequence_pass_matrix(df: pd.DataFrame) -> dict[str, np.ndarray]:
             for seq, val in means.items():
                 arr[seq_index[seq]] = float(val)
         else:
-            for _, row in grp.iterrows():
-                arr[seq_index[row["sequence_id"]]] = float(row["multi_constraint_pass"])
+            idxs = grp["sequence_id"].map(seq_index).values
+            arr[idxs] = grp["multi_constraint_pass"].astype(float).values
         result[method] = arr
 
     return result
