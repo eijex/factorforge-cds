@@ -21,7 +21,7 @@ def _cai_weighted_cds(protein: str, rng: random.Random) -> str:
     out = []
     for aa in protein:
         codons = _AA_TO_CODONS[aa]
-        weights = [_WEIGHTS.get(c, 1e-9) for c in codons]
+        weights = [_WEIGHTS.get(c, 1e-9) for c in codons]  # 1e-9 fallback keeps total > 0
         total = sum(weights)
         r = rng.random() * total
         acc = 0.0
