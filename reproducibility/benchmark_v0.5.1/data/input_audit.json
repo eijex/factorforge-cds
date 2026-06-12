@@ -1,0 +1,24 @@
+{
+  "total_rows": 443313,
+  "methods": [
+    "factorforge_assembly_friendly",
+    "factorforge_balanced",
+    "factorforge_gc_target",
+    "factorforge_high_cai",
+    "greedy_cai",
+    "native_reference",
+    "random_synonymous"
+  ],
+  "has_status_column": true,
+  "row_counts_per_method": {
+    "factorforge_assembly_friendly": 49257,
+    "factorforge_balanced": 49257,
+    "factorforge_gc_target": 49257,
+    "factorforge_high_cai": 49257,
+    "greedy_cai": 49257,
+    "native_reference": 49257,
+    "random_synonymous": 147771
+  },
+  "unique_sequences": 49257,
+  "dataset_n": 49257
+}

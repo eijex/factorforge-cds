@@ -1,0 +1,8 @@
+method,n_sequence_equivalents,gc_fail_only,iis_fail_only,gc_and_iis_fail,neither_fail
+factorforge_assembly_friendly,49257.0,1188.0,16608.0,246.0,31215.0
+factorforge_balanced,49257.0,492.0,35114.0,399.0,13252.0
+factorforge_gc_target,49257.0,101.0,36342.0,16.0,12798.0
+factorforge_high_cai,49257.0,20479.0,0.0,28778.0,0.0
+greedy_cai,49257.0,4584.0,25180.0,8772.0,10721.0
+native_reference,49257.0,18259.0,66.0,30791.0,141.0
+random_synonymous,49257.0,12756.666666666666,393.3333333333333,35840.33333333333,266.66666666666663
