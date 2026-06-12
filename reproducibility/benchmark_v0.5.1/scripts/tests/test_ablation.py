@@ -31,3 +31,31 @@ def test_ablation_spec_all_layers_have_enabled_constraints():
     spec = yaml.safe_load(SPEC_PATH.read_text(encoding="utf-8"))
     for layer_name, layer in spec["layers"].items():
         assert "enabled_constraints" in layer, f"{layer_name} missing enabled_constraints"
+
+
+import sys as _sys
+_sys.path.insert(0, str(REPO_ROOT))
+
+from benchmarks.ablation.conditions.cai_gc import ablation_cai_gc_cds
+from benchmarks.scoring import score_cds
+from benchmarks.config import load_benchmark_config
+
+_CFG = load_benchmark_config()
+_TEST_PROTEIN = "MARNKV"  # 6 AAs
+
+
+def test_cai_gc_returns_correct_length():
+    cds = ablation_cai_gc_cds(_TEST_PROTEIN)
+    assert len(cds) == len(_TEST_PROTEIN) * 3
+
+
+def test_cai_gc_aa_identity():
+    cds = ablation_cai_gc_cds(_TEST_PROTEIN)
+    scores = score_cds("ablation_cai_gc", "ablation", "t0", _TEST_PROTEIN, cds, _CFG, 0.0)
+    assert scores["aa_identity"] == 1.0
+
+
+def test_cai_gc_is_deterministic():
+    cds1 = ablation_cai_gc_cds(_TEST_PROTEIN)
+    cds2 = ablation_cai_gc_cds(_TEST_PROTEIN)
+    assert cds1 == cds2
