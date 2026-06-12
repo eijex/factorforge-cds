@@ -1,0 +1,77 @@
+# benchmarks/ablation/ablation_spec.yaml
+ablation:
+  id: factorforge_v3_2_0_constraint_ablation
+  factorforge_version: "3.2.0"
+  random_seed: 320
+  dataset_n: 49257
+  input_fasta: benchmarks/datasets/nbenthamiana_reference_proteins.fasta
+  source_formal_results_csv: benchmarks/results/v3.2.0/benchmark_results.csv
+  source_formal_summary: reproducibility/benchmark_v0.5.1/data/benchmark_summary.frozen.json
+  max_attempts_type_iis: 50
+
+layers:
+  L0:
+    name: random_synonymous
+    source: existing_csv
+    enabled_constraints:
+      cai: false
+      gc_target: false
+      type_iis_clean: false
+    note: "Stochastic baseline. All 3 replicates (seed=320 run) extracted from formal benchmark CSV. Replicate-averaged rate used as primary comparison value in ablation_summary."
+
+  L1:
+    name: greedy_cai
+    source: existing_csv
+    enabled_constraints:
+      cai: true
+      gc_target: false
+      type_iis_clean: false
+    note: "Deterministic CAI-only baseline. Single-pass algorithm; no candidate search or retry budget. This is a distinct generation condition from FactorForge profile-based layers."
+
+  L2:
+    name: ablation_cai_gc
+    source: new_run
+    condition_module: benchmarks.ablation.conditions.cai_gc
+    condition_fn: ablation_cai_gc_cds
+    enabled_constraints:
+      cai: true
+      gc_target: true
+      type_iis_clean: false
+    note: "GC-targeted (60%) deterministic codon selection. Uses production gc_target profile internally. No Type IIS constraint."
+
+  L3:
+    name: ablation_cai_type_iis
+    source: new_run
+    condition_module: benchmarks.ablation.conditions.cai_type_iis
+    condition_fn: ablation_cai_type_iis_cds
+    enabled_constraints:
+      cai: true
+      gc_target: false
+      type_iis_clean: true
+    max_attempts: 50
+    note: "CAI-weighted stochastic codon selection with Type IIS site avoidance retry. max_attempts=50."
+
+  L4:
+    name: ablation_cai_gc_type_iis
+    source: new_run
+    condition_module: benchmarks.ablation.conditions.cai_gc_type_iis
+    condition_fn: ablation_cai_gc_type_iis_cds
+    enabled_constraints:
+      cai: true
+      gc_target: true
+      type_iis_clean: true
+    max_attempts: 50
+    note: "CAI×GC-biased stochastic codon selection (weight = cai_weight × gc_proximity_weight) with Type IIS site avoidance retry. max_attempts=50."
+
+  L5:
+    name: factorforge_assembly_friendly
+    source: existing_csv
+    enabled_constraints:
+      cai: true
+      gc_target: implicit_via_balanced_base
+      type_iis_clean: true
+    note: "Full configured assembly-friendly profile. GC balance via balanced translation base (no explicit GC target). Explicit Type IIS avoidance retry (max_attempts=10). Extracted from formal benchmark CSV."
+
+evaluation:
+  scoring_fn: benchmarks.scoring.score_cds
+  note: "All L0-L5 outputs evaluated with the same full metric set regardless of generation constraints. scoring rule does not change per layer."
