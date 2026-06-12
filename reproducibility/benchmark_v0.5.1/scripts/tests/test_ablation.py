@@ -9,6 +9,7 @@ SPEC_PATH = REPO_ROOT / "benchmarks" / "ablation" / "ablation_spec.yaml"
 sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.ablation.conditions.cai_gc import ablation_cai_gc_cds
+from benchmarks.ablation.conditions.cai_type_iis import ablation_cai_type_iis_cds
 from benchmarks.scoring import score_cds
 from benchmarks.config import load_benchmark_config
 
@@ -57,4 +58,30 @@ def test_cai_gc_aa_identity():
 def test_cai_gc_is_deterministic():
     cds1 = ablation_cai_gc_cds(_TEST_PROTEIN)
     cds2 = ablation_cai_gc_cds(_TEST_PROTEIN)
+    assert cds1 == cds2
+
+
+FORBIDDEN_PATTERNS = ["GGTCTC", "GAGACC", "GAAGAC", "GTCTTC", "CGTCTC", "GAGACG"]
+
+
+def test_cai_type_iis_returns_correct_length():
+    cds = ablation_cai_type_iis_cds(_TEST_PROTEIN)
+    assert len(cds) == len(_TEST_PROTEIN) * 3
+
+
+def test_cai_type_iis_aa_identity():
+    cds = ablation_cai_type_iis_cds(_TEST_PROTEIN)
+    scores = score_cds("ablation_cai_type_iis", "ablation", "t0", _TEST_PROTEIN, cds, _CFG, 0.0)
+    assert scores["aa_identity"] == 1.0
+
+
+def test_cai_type_iis_no_forbidden_sites_short_protein():
+    cds = ablation_cai_type_iis_cds(_TEST_PROTEIN, seed=320, max_attempts=50)
+    for pat in FORBIDDEN_PATTERNS:
+        assert pat not in cds, f"Found forbidden pattern {pat} in {cds}"
+
+
+def test_cai_type_iis_seed_reproducibility():
+    cds1 = ablation_cai_type_iis_cds(_TEST_PROTEIN, seed=42)
+    cds2 = ablation_cai_type_iis_cds(_TEST_PROTEIN, seed=42)
     assert cds1 == cds2
