@@ -1,0 +1,64 @@
+{
+  "bootstrap_unit": "sequence_id",
+  "paired_across_methods": true,
+  "random_synonymous_aggregation": "mean_across_replicates_per_sequence",
+  "n_resamples": 1000,
+  "random_seed": 320,
+  "metrics": [
+    "multi_constraint_pass_rate"
+  ],
+  "per_method": {
+    "random_synonymous": {
+      "observed_rate": 0.2643955850606682,
+      "ci_lower_2_5": 0.26166822312903076,
+      "ci_upper_97_5": 0.2671775923557396
+    },
+    "greedy_cai": {
+      "observed_rate": 0.3107172584607264,
+      "ci_lower_2_5": 0.30675843027386973,
+      "ci_upper_97_5": 0.3146765941896583
+    },
+    "native_reference": {
+      "observed_rate": 0.3735509673751954,
+      "ci_lower_2_5": 0.3690840895710254,
+      "ci_upper_97_5": 0.3779366384473273
+    },
+    "factorforge_balanced": {
+      "observed_rate": 0.27902633128286336,
+      "ci_lower_2_5": 0.2753720283411495,
+      "ci_upper_97_5": 0.28292425442069147
+    },
+    "factorforge_gc_target": {
+      "observed_rate": 0.2618714091398177,
+      "ci_lower_2_5": 0.25793237509389527,
+      "ci_upper_97_5": 0.265931745741722
+    },
+    "factorforge_high_cai": {
+      "observed_rate": 0.4157581663519906,
+      "ci_lower_2_5": 0.4112907810057454,
+      "ci_upper_97_5": 0.42018545587429196
+    },
+    "factorforge_assembly_friendly": {
+      "observed_rate": 0.6578354345575248,
+      "ci_lower_2_5": 0.6540385122926691,
+      "ci_upper_97_5": 0.66228150313661
+    }
+  },
+  "difference_cis": {
+    "factorforge_assembly_friendly - greedy_cai": {
+      "observed_difference": 0.3471181760967984,
+      "ci_lower_2_5": 0.34287461680573317,
+      "ci_upper_97_5": 0.35140284629595786
+    },
+    "factorforge_assembly_friendly - random_synonymous": {
+      "observed_difference": 0.3934398494968566,
+      "ci_lower_2_5": 0.38975797010238816,
+      "ci_upper_97_5": 0.39752116450453745
+    },
+    "factorforge_assembly_friendly - native_reference": {
+      "observed_difference": 0.2842844671823294,
+      "ci_lower_2_5": 0.27938820878250803,
+      "ci_upper_97_5": 0.2896238098138335
+    }
+  }
+}
