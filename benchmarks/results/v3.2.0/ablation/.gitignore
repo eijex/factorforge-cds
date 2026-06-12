@@ -1,0 +1,8 @@
+# Large data files — excluded from git
+ablation_results.csv
+
+# JSON summary and figures — committed
+!ablation_summary.json
+!figures/
+!figures/*.png
+!figures/*.svg
