@@ -1,9 +1,19 @@
+import sys
 from pathlib import Path
 import yaml
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SPEC_PATH = REPO_ROOT / "benchmarks" / "ablation" / "ablation_spec.yaml"
+
+sys.path.insert(0, str(REPO_ROOT))
+
+from benchmarks.ablation.conditions.cai_gc import ablation_cai_gc_cds
+from benchmarks.scoring import score_cds
+from benchmarks.config import load_benchmark_config
+
+_CFG = load_benchmark_config()
+_TEST_PROTEIN = "MARNKV"  # 6 AAs
 
 
 def test_ablation_spec_parses():
@@ -31,17 +41,6 @@ def test_ablation_spec_all_layers_have_enabled_constraints():
     spec = yaml.safe_load(SPEC_PATH.read_text(encoding="utf-8"))
     for layer_name, layer in spec["layers"].items():
         assert "enabled_constraints" in layer, f"{layer_name} missing enabled_constraints"
-
-
-import sys as _sys
-_sys.path.insert(0, str(REPO_ROOT))
-
-from benchmarks.ablation.conditions.cai_gc import ablation_cai_gc_cds
-from benchmarks.scoring import score_cds
-from benchmarks.config import load_benchmark_config
-
-_CFG = load_benchmark_config()
-_TEST_PROTEIN = "MARNKV"  # 6 AAs
 
 
 def test_cai_gc_returns_correct_length():

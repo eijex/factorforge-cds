@@ -7,7 +7,7 @@ produces the same CDS. No Type IIS constraint active.
 from __future__ import annotations
 from factorforge.engines.profile.optimizer import RuleBasedOptimizer as _Opt
 
-_opt = _Opt()
+_opt = _Opt()  # shared instance; construction is expensive (loads codon tables)
 
 
 def ablation_cai_gc_cds(protein: str, seed: int = 320) -> str:
