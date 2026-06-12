@@ -1,7 +1,9 @@
 import sys
+import json
 from pathlib import Path
 import yaml
 import pytest
+import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SPEC_PATH = REPO_ROOT / "benchmarks" / "ablation" / "ablation_spec.yaml"
@@ -16,6 +18,7 @@ from benchmarks.config import load_benchmark_config
 
 _CFG = load_benchmark_config()
 _TEST_PROTEIN = "MARNKV"  # 6 AAs
+FORBIDDEN_PATTERNS = ["GGTCTC", "GAGACC", "GAAGAC", "GTCTTC", "CGTCTC", "GAGACG"]
 
 
 def test_ablation_spec_parses():
@@ -60,9 +63,6 @@ def test_cai_gc_is_deterministic():
     cds1 = ablation_cai_gc_cds(_TEST_PROTEIN)
     cds2 = ablation_cai_gc_cds(_TEST_PROTEIN)
     assert cds1 == cds2
-
-
-FORBIDDEN_PATTERNS = ["GGTCTC", "GAGACC", "GAAGAC", "GTCTTC", "CGTCTC", "GAGACG"]
 
 
 def test_cai_type_iis_returns_correct_length():
@@ -118,13 +118,8 @@ def test_cai_gc_type_iis_uses_codon_weights():
     assert hasattr(m, "_WEIGHTS"), "L4 module must import and use _WEIGHTS for CAI weighting"
 
 
-import pandas as pd
-import json
-import tempfile
-
-
 # --- Fixture mini CSV ---
-def _make_mini_formal_csv(tmp_dir) -> "Path":
+def _make_mini_formal_csv(tmp_dir) -> Path:
     """Create a minimal benchmark_results.csv fixture with 3 methods × 3 sequences."""
     rows = []
     for sid in ["seq001", "seq002", "seq003"]:
