@@ -13,6 +13,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from benchmarks.ablation.conditions.cai_gc import ablation_cai_gc_cds
 from benchmarks.ablation.conditions.cai_type_iis import ablation_cai_type_iis_cds
 from benchmarks.ablation.conditions.cai_gc_type_iis import ablation_cai_gc_type_iis_cds
+from benchmarks.ablation.make_ablation_figures import make_ablation_pass_rate_figure, make_ablation_heatmap_figure
 from benchmarks.scoring import score_cds
 from benchmarks.config import load_benchmark_config
 
@@ -217,3 +218,40 @@ def test_ablation_summary_has_required_fields(tmp_path):
     assert "layers" in summary
     for layer in ["L0", "L1", "L5"]:
         assert layer in summary["layers"]
+
+
+_MINIMAL_ABLATION_SUMMARY = {
+    "analysis_type": "constraint_ablation",
+    "layers": {
+        "L0": {"method_name": "random_synonymous", "multi_constraint_pass_rate": 0.20,
+               "mean_cai": 0.50, "gc_in_range_rate": 0.60, "assembly_pass_rate": 0.80,
+               "enabled_constraints": {"cai": False, "gc_target": False, "type_iis_clean": False}},
+        "L1": {"method_name": "greedy_cai", "multi_constraint_pass_rate": 0.55,
+               "mean_cai": 0.82, "gc_in_range_rate": 0.55, "assembly_pass_rate": 0.70,
+               "enabled_constraints": {"cai": True, "gc_target": False, "type_iis_clean": False}},
+        "L2": {"method_name": "ablation_cai_gc", "multi_constraint_pass_rate": 0.60,
+               "mean_cai": 0.72, "gc_in_range_rate": 0.88, "assembly_pass_rate": 0.72,
+               "enabled_constraints": {"cai": True, "gc_target": True, "type_iis_clean": False}},
+        "L3": {"method_name": "ablation_cai_type_iis", "multi_constraint_pass_rate": 0.62,
+               "mean_cai": 0.78, "gc_in_range_rate": 0.56, "assembly_pass_rate": 0.92,
+               "enabled_constraints": {"cai": True, "gc_target": False, "type_iis_clean": True}},
+        "L4": {"method_name": "ablation_cai_gc_type_iis", "multi_constraint_pass_rate": 0.64,
+               "mean_cai": 0.71, "gc_in_range_rate": 0.87, "assembly_pass_rate": 0.93,
+               "enabled_constraints": {"cai": True, "gc_target": True, "type_iis_clean": True}},
+        "L5": {"method_name": "factorforge_assembly_friendly", "multi_constraint_pass_rate": 0.66,
+               "mean_cai": 0.73, "gc_in_range_rate": 0.78, "assembly_pass_rate": 0.95,
+               "enabled_constraints": {"cai": True, "gc_target": "implicit_via_balanced_base", "type_iis_clean": True}},
+    }
+}
+
+
+def test_ablation_pass_rate_figure_produces_files(tmp_path):
+    make_ablation_pass_rate_figure(_MINIMAL_ABLATION_SUMMARY, tmp_path)
+    assert (tmp_path / "figure_ablation_pass_rate.png").exists()
+    assert (tmp_path / "figure_ablation_pass_rate.svg").exists()
+
+
+def test_ablation_heatmap_figure_produces_files(tmp_path):
+    make_ablation_heatmap_figure(_MINIMAL_ABLATION_SUMMARY, tmp_path)
+    assert (tmp_path / "figure_ablation_tradeoff_heatmap.png").exists()
+    assert (tmp_path / "figure_ablation_tradeoff_heatmap.svg").exists()
