@@ -1,0 +1,102 @@
+{
+  "analysis_type": "constraint_ablation",
+  "source_formal_run_id": "c8641f5bbc32",
+  "source_formal_summary_sha256": "51aecac78ca3945aea977a62ac436b06400ddacc94e12bbe8486111c56728c21",
+  "ablation_spec_sha256": "f0a6432405af7e39d69c3b425a409529755c2eab1e5416c4c94eea6d0c4818a9",
+  "input_fasta_sha256": "35dc8ec1f2adaea2be02ad843dd18ca62053595328fe35e38c04bfa596f188e2",
+  "dataset_n": 49257,
+  "seed": 320,
+  "layers": {
+    "L0": {
+      "method_name": "random_synonymous",
+      "source": "existing_csv",
+      "enabled_constraints": {
+        "cai": false,
+        "gc_target": false,
+        "type_iis_clean": false
+      },
+      "n_sequences": 20,
+      "multi_constraint_pass_rate": 0.5167,
+      "biological_pass_rate": 1.0,
+      "assembly_pass_rate": 0.5167,
+      "gc_in_range_rate": 0.0333,
+      "mean_cai": 0.7355
+    },
+    "L1": {
+      "method_name": "greedy_cai",
+      "source": "existing_csv",
+      "enabled_constraints": {
+        "cai": true,
+        "gc_target": false,
+        "type_iis_clean": false
+      },
+      "n_sequences": 20,
+      "multi_constraint_pass_rate": 0.55,
+      "biological_pass_rate": 1.0,
+      "assembly_pass_rate": 0.55,
+      "gc_in_range_rate": 0.65,
+      "mean_cai": 1.0
+    },
+    "L2": {
+      "method_name": "ablation_cai_gc",
+      "source": "new_run",
+      "enabled_constraints": {
+        "cai": true,
+        "gc_target": true,
+        "type_iis_clean": false
+      },
+      "n_sequences": 20,
+      "multi_constraint_pass_rate": 0.55,
+      "biological_pass_rate": 1.0,
+      "assembly_pass_rate": 0.55,
+      "gc_in_range_rate": 1.0,
+      "mean_cai": 0.9466
+    },
+    "L3": {
+      "method_name": "ablation_cai_type_iis",
+      "source": "new_run",
+      "enabled_constraints": {
+        "cai": true,
+        "gc_target": false,
+        "type_iis_clean": true
+      },
+      "n_sequences": 20,
+      "multi_constraint_pass_rate": 0.9,
+      "biological_pass_rate": 1.0,
+      "assembly_pass_rate": 0.9,
+      "gc_in_range_rate": 0.1,
+      "mean_cai": 0.7985
+    },
+    "L4": {
+      "method_name": "ablation_cai_gc_type_iis",
+      "source": "new_run",
+      "enabled_constraints": {
+        "cai": true,
+        "gc_target": true,
+        "type_iis_clean": true
+      },
+      "n_sequences": 20,
+      "multi_constraint_pass_rate": 0.9,
+      "biological_pass_rate": 1.0,
+      "assembly_pass_rate": 0.9,
+      "gc_in_range_rate": 0.1,
+      "mean_cai": 0.7975
+    },
+    "L5": {
+      "method_name": "factorforge_assembly_friendly",
+      "source": "existing_csv",
+      "enabled_constraints": {
+        "cai": true,
+        "gc_target": "implicit_via_balanced_base",
+        "type_iis_clean": true
+      },
+      "n_sequences": 20,
+      "multi_constraint_pass_rate": 0.75,
+      "biological_pass_rate": 1.0,
+      "assembly_pass_rate": 0.75,
+      "gc_in_range_rate": 0.95,
+      "mean_cai": 0.914
+    }
+  },
+  "git_commit": "efbf51e"
+}
