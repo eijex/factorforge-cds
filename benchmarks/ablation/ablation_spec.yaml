@@ -7,7 +7,6 @@ ablation:
   input_fasta: benchmarks/datasets/nbenthamiana_reference_proteins.fasta
   source_formal_results_csv: benchmarks/results/v3.2.0/benchmark_results.csv
   source_formal_summary: reproducibility/benchmark_v0.5.1/data/benchmark_summary.frozen.json
-  max_attempts_type_iis: 50
 
 layers:
   L0:
