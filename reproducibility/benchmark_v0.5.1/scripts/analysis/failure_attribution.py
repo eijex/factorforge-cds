@@ -102,10 +102,10 @@ def compute_overlap_matrix(df: pd.DataFrame) -> pd.DataFrame:
             rows.append({
                 "method": method,
                 "n_sequence_equivalents": float(len(grp)),
-                "gc_fail_only": int((gc_fail & ~iis_fail).sum()),
-                "iis_fail_only": int((~gc_fail & iis_fail).sum()),
-                "gc_and_iis_fail": int((gc_fail & iis_fail).sum()),
-                "neither_fail": int((~gc_fail & ~iis_fail).sum()),
+                "gc_fail_only": float((gc_fail & ~iis_fail).sum()),
+                "iis_fail_only": float((~gc_fail & iis_fail).sum()),
+                "gc_and_iis_fail": float((gc_fail & iis_fail).sum()),
+                "neither_fail": float((~gc_fail & ~iis_fail).sum()),
             })
     return pd.DataFrame(rows)
 
