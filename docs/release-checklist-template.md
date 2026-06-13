@@ -95,7 +95,8 @@ git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push --tags
 
 - [ ] `pip install factorforge-cds==X.Y.Z && factorforge --help` (PyPI smoke)
 - [ ] `docker run ghcr.io/eijex/factorforge-cds:X.Y.Z factorforge --help` (Docker smoke)
-- [ ] Zenodo DOI: https://zenodo.org/doi/10.5281/zenodo.20640931
+- [ ] Zenodo software DOI: https://zenodo.org/doi/10.5281/zenodo.20407330 (concept DOI, auto-updated on release)
+- [ ] Zenodo benchmark data DOI: https://zenodo.org/doi/10.5281/zenodo.20676276 (benchmark_results.csv v2, scoring_contract v1.1)
 - [ ] Bioconda PR: push fork branch `add-factorforge-cds`
   ```bash
   cd <bioconda-recipes-fork> && git push origin add-factorforge-cds
