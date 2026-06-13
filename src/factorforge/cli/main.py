@@ -16,7 +16,12 @@ from factorforge import __version__
 from factorforge.engines.registry import EngineRegistry
 from factorforge.engines.profile.utils import parse_fasta_records
 
-HOST_MAP = {"nbenthamiana": "nbenthamiana", "by2": "ntabacum"}
+HOST_MAP = {
+    "nbenthamiana": "nbenthamiana",
+    "by2": "ntabacum",
+    "sf9": "spodoptera_frugiperda",
+    "tni": "trichoplusia_ni",
+}
 
 
 def _configure_stdio() -> None:
@@ -154,8 +159,12 @@ def list_engines():
 @click.option(
     "--host",
     default="nbenthamiana",
-    type=click.Choice(["nbenthamiana", "by2"], case_sensitive=False),
-    help="Expression host: nbenthamiana (default) or by2 (Tobacco BY-2 / N. tabacum)",
+    type=click.Choice(["nbenthamiana", "by2", "sf9", "tni"], case_sensitive=False),
+    help=(
+        "Expression host: nbenthamiana (default), by2 (N. tabacum), "
+        "sf9 (S. frugiperda / Sf9), tni (T. ni / High Five). "
+        "Insect hosts (sf9, tni) are experimental with placeholder codon tables."
+    ),
 )
 @click.option("--profile", "-p", default="balanced", help="Optimization profile")
 @click.option(

@@ -1,0 +1,449 @@
+{
+    "organism": "Trichoplusia ni",
+    "source": "PLACEHOLDER — awaiting verified CDS dataset. Frequencies are estimates derived from Lepidoptera genome surveys (Kazusa CodonUsage Database, Trichoplusia ni Tnms42 genome NCBI GCF_003590095.1). Do not use for production optimization until data is validated and source is updated.",
+    "description": "PLACEHOLDER codon usage table for Trichoplusia ni (cabbage looper). Tni (High Five / BTI-Tn5B1-4) cells are widely used in BEVS for high-yield secreted protein production. Shows strong AT-bias characteristic of Lepidoptera, with pronounced AGA preference for Arg.",
+    "total_cds": 0,
+    "total_codons": 0,
+    "codons": {
+        "TTT": {
+            "aa": "F",
+            "frequency": 0.52,
+            "per_thousand": 18.7
+        },
+        "TTC": {
+            "aa": "F",
+            "frequency": 0.48,
+            "per_thousand": 17.3
+        },
+        "TTA": {
+            "aa": "L",
+            "frequency": 0.13,
+            "per_thousand": 8.1
+        },
+        "TTG": {
+            "aa": "L",
+            "frequency": 0.23,
+            "per_thousand": 14.3
+        },
+        "CTT": {
+            "aa": "L",
+            "frequency": 0.24,
+            "per_thousand": 14.9
+        },
+        "CTC": {
+            "aa": "L",
+            "frequency": 0.12,
+            "per_thousand": 7.4
+        },
+        "CTA": {
+            "aa": "L",
+            "frequency": 0.17,
+            "per_thousand": 10.5
+        },
+        "CTG": {
+            "aa": "L",
+            "frequency": 0.11,
+            "per_thousand": 6.8
+        },
+        "ATT": {
+            "aa": "I",
+            "frequency": 0.44,
+            "per_thousand": 18.5
+        },
+        "ATC": {
+            "aa": "I",
+            "frequency": 0.22,
+            "per_thousand": 9.2
+        },
+        "ATA": {
+            "aa": "I",
+            "frequency": 0.34,
+            "per_thousand": 14.3
+        },
+        "ATG": {
+            "aa": "M",
+            "frequency": 1.00,
+            "per_thousand": 22.0
+        },
+        "GTT": {
+            "aa": "V",
+            "frequency": 0.30,
+            "per_thousand": 13.5
+        },
+        "GTC": {
+            "aa": "V",
+            "frequency": 0.16,
+            "per_thousand": 7.2
+        },
+        "GTA": {
+            "aa": "V",
+            "frequency": 0.23,
+            "per_thousand": 10.4
+        },
+        "GTG": {
+            "aa": "V",
+            "frequency": 0.31,
+            "per_thousand": 14.0
+        },
+        "TCT": {
+            "aa": "S",
+            "frequency": 0.23,
+            "per_thousand": 13.8
+        },
+        "TCC": {
+            "aa": "S",
+            "frequency": 0.12,
+            "per_thousand": 7.2
+        },
+        "TCA": {
+            "aa": "S",
+            "frequency": 0.25,
+            "per_thousand": 15.0
+        },
+        "TCG": {
+            "aa": "S",
+            "frequency": 0.06,
+            "per_thousand": 3.6
+        },
+        "AGT": {
+            "aa": "S",
+            "frequency": 0.22,
+            "per_thousand": 13.2
+        },
+        "AGC": {
+            "aa": "S",
+            "frequency": 0.12,
+            "per_thousand": 7.2
+        },
+        "CCT": {
+            "aa": "P",
+            "frequency": 0.30,
+            "per_thousand": 10.8
+        },
+        "CCC": {
+            "aa": "P",
+            "frequency": 0.14,
+            "per_thousand": 5.0
+        },
+        "CCA": {
+            "aa": "P",
+            "frequency": 0.40,
+            "per_thousand": 14.4
+        },
+        "CCG": {
+            "aa": "P",
+            "frequency": 0.16,
+            "per_thousand": 5.8
+        },
+        "ACT": {
+            "aa": "T",
+            "frequency": 0.30,
+            "per_thousand": 12.0
+        },
+        "ACC": {
+            "aa": "T",
+            "frequency": 0.17,
+            "per_thousand": 6.8
+        },
+        "ACA": {
+            "aa": "T",
+            "frequency": 0.38,
+            "per_thousand": 15.2
+        },
+        "ACG": {
+            "aa": "T",
+            "frequency": 0.15,
+            "per_thousand": 6.0
+        },
+        "GCT": {
+            "aa": "A",
+            "frequency": 0.35,
+            "per_thousand": 19.3
+        },
+        "GCC": {
+            "aa": "A",
+            "frequency": 0.19,
+            "per_thousand": 10.5
+        },
+        "GCA": {
+            "aa": "A",
+            "frequency": 0.32,
+            "per_thousand": 17.6
+        },
+        "GCG": {
+            "aa": "A",
+            "frequency": 0.14,
+            "per_thousand": 7.7
+        },
+        "TAT": {
+            "aa": "Y",
+            "frequency": 0.55,
+            "per_thousand": 14.3
+        },
+        "TAC": {
+            "aa": "Y",
+            "frequency": 0.45,
+            "per_thousand": 11.7
+        },
+        "TAA": {
+            "aa": "*",
+            "frequency": 0.50,
+            "per_thousand": 1.25
+        },
+        "TAG": {
+            "aa": "*",
+            "frequency": 0.20,
+            "per_thousand": 0.50
+        },
+        "CAT": {
+            "aa": "H",
+            "frequency": 0.58,
+            "per_thousand": 11.6
+        },
+        "CAC": {
+            "aa": "H",
+            "frequency": 0.42,
+            "per_thousand": 8.4
+        },
+        "CAA": {
+            "aa": "Q",
+            "frequency": 0.53,
+            "per_thousand": 15.9
+        },
+        "CAG": {
+            "aa": "Q",
+            "frequency": 0.47,
+            "per_thousand": 14.1
+        },
+        "AAT": {
+            "aa": "N",
+            "frequency": 0.57,
+            "per_thousand": 23.9
+        },
+        "AAC": {
+            "aa": "N",
+            "frequency": 0.43,
+            "per_thousand": 18.1
+        },
+        "AAA": {
+            "aa": "K",
+            "frequency": 0.55,
+            "per_thousand": 23.7
+        },
+        "AAG": {
+            "aa": "K",
+            "frequency": 0.45,
+            "per_thousand": 19.4
+        },
+        "GAT": {
+            "aa": "D",
+            "frequency": 0.56,
+            "per_thousand": 24.6
+        },
+        "GAC": {
+            "aa": "D",
+            "frequency": 0.44,
+            "per_thousand": 19.4
+        },
+        "GAA": {
+            "aa": "E",
+            "frequency": 0.54,
+            "per_thousand": 25.9
+        },
+        "GAG": {
+            "aa": "E",
+            "frequency": 0.46,
+            "per_thousand": 22.1
+        },
+        "TGT": {
+            "aa": "C",
+            "frequency": 0.57,
+            "per_thousand": 5.7
+        },
+        "TGC": {
+            "aa": "C",
+            "frequency": 0.43,
+            "per_thousand": 4.3
+        },
+        "TGA": {
+            "aa": "*",
+            "frequency": 0.30,
+            "per_thousand": 0.75
+        },
+        "TGG": {
+            "aa": "W",
+            "frequency": 1.00,
+            "per_thousand": 12.0
+        },
+        "CGT": {
+            "aa": "R",
+            "frequency": 0.12,
+            "per_thousand": 5.0
+        },
+        "CGC": {
+            "aa": "R",
+            "frequency": 0.07,
+            "per_thousand": 2.9
+        },
+        "CGA": {
+            "aa": "R",
+            "frequency": 0.13,
+            "per_thousand": 5.5
+        },
+        "CGG": {
+            "aa": "R",
+            "frequency": 0.08,
+            "per_thousand": 3.4
+        },
+        "AGA": {
+            "aa": "R",
+            "frequency": 0.40,
+            "per_thousand": 16.8
+        },
+        "AGG": {
+            "aa": "R",
+            "frequency": 0.20,
+            "per_thousand": 8.4
+        },
+        "GGT": {
+            "aa": "G",
+            "frequency": 0.28,
+            "per_thousand": 14.6
+        },
+        "GGC": {
+            "aa": "G",
+            "frequency": 0.15,
+            "per_thousand": 7.8
+        },
+        "GGA": {
+            "aa": "G",
+            "frequency": 0.42,
+            "per_thousand": 21.8
+        },
+        "GGG": {
+            "aa": "G",
+            "frequency": 0.15,
+            "per_thousand": 7.8
+        }
+    },
+    "amino_acids": {
+        "A": {
+            "name": "Alanine",
+            "codons": ["GCT", "GCC", "GCA", "GCG"],
+            "preferred": "GCT"
+        },
+        "C": {
+            "name": "Cysteine",
+            "codons": ["TGT", "TGC"],
+            "preferred": "TGT"
+        },
+        "D": {
+            "name": "Aspartic acid",
+            "codons": ["GAT", "GAC"],
+            "preferred": "GAT"
+        },
+        "E": {
+            "name": "Glutamic acid",
+            "codons": ["GAA", "GAG"],
+            "preferred": "GAA"
+        },
+        "F": {
+            "name": "Phenylalanine",
+            "codons": ["TTT", "TTC"],
+            "preferred": "TTT"
+        },
+        "G": {
+            "name": "Glycine",
+            "codons": ["GGT", "GGC", "GGA", "GGG"],
+            "preferred": "GGA"
+        },
+        "H": {
+            "name": "Histidine",
+            "codons": ["CAT", "CAC"],
+            "preferred": "CAT"
+        },
+        "I": {
+            "name": "Isoleucine",
+            "codons": ["ATT", "ATC", "ATA"],
+            "preferred": "ATT"
+        },
+        "K": {
+            "name": "Lysine",
+            "codons": ["AAA", "AAG"],
+            "preferred": "AAA"
+        },
+        "L": {
+            "name": "Leucine",
+            "codons": ["TTA", "TTG", "CTT", "CTC", "CTA", "CTG"],
+            "preferred": "CTT"
+        },
+        "M": {
+            "name": "Methionine",
+            "codons": ["ATG"],
+            "preferred": "ATG"
+        },
+        "N": {
+            "name": "Asparagine",
+            "codons": ["AAT", "AAC"],
+            "preferred": "AAT"
+        },
+        "P": {
+            "name": "Proline",
+            "codons": ["CCT", "CCC", "CCA", "CCG"],
+            "preferred": "CCA"
+        },
+        "Q": {
+            "name": "Glutamine",
+            "codons": ["CAA", "CAG"],
+            "preferred": "CAA"
+        },
+        "R": {
+            "name": "Arginine",
+            "codons": ["CGT", "CGC", "CGA", "CGG", "AGA", "AGG"],
+            "preferred": "AGA"
+        },
+        "S": {
+            "name": "Serine",
+            "codons": ["TCT", "TCC", "TCA", "TCG", "AGT", "AGC"],
+            "preferred": "TCA"
+        },
+        "T": {
+            "name": "Threonine",
+            "codons": ["ACT", "ACC", "ACA", "ACG"],
+            "preferred": "ACA"
+        },
+        "V": {
+            "name": "Valine",
+            "codons": ["GTT", "GTC", "GTA", "GTG"],
+            "preferred": "GTG"
+        },
+        "W": {
+            "name": "Tryptophan",
+            "codons": ["TGG"],
+            "preferred": "TGG"
+        },
+        "Y": {
+            "name": "Tyrosine",
+            "codons": ["TAT", "TAC"],
+            "preferred": "TAT"
+        },
+        "*": {
+            "name": "Stop",
+            "codons": ["TAA", "TAG", "TGA"],
+            "preferred": "TAA"
+        }
+    },
+    "gc_content": {
+        "overall": 0.39,
+        "description": "PLACEHOLDER estimate for T. ni CDS-based GC content: ~39% (strong Lepidoptera AT-bias)"
+    },
+    "notes": [
+        "PLACEHOLDER — frequencies are estimates based on Lepidoptera genome surveys, not a verified T. ni CDS build",
+        "total_cds and total_codons set to 0 to signal placeholder status; update when authoritative dataset is available",
+        "Frequencies are normalized within each amino acid family",
+        "T. ni shows stronger AT-bias than S. frugiperda; preferred codons reflect this",
+        "Strong AGA preference for Arg is a hallmark of insect (Lepidoptera) codon usage",
+        "High Five cells (BTI-Tn5B1-4) are derived from T. ni egg cell homogenate (Wickham et al., 1992)",
+        "Do not use for production optimization until data is validated and source field is updated"
+    ]
+}
