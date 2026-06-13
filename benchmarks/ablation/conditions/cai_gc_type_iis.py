@@ -27,18 +27,27 @@ _FORBIDDEN = ["GGTCTC", "GAGACC", "GAAGAC", "GTCTTC", "CGTCTC", "GAGACG"]
 _GC_TARGET = 60.0
 
 
+_CODON_GC: dict[str, int] = {
+    c: sum(1 for b in c if b in "GC")
+    for aa_codons in _AA_TO_CODONS.values()
+    for c in aa_codons
+}
+
+
 def _cai_gc_biased_cds(protein: str, rng: random.Random) -> str:
     out: list[str] = []
+    gc_count = 0  # running GC base count in partial CDS (O(n) instead of O(n²))
     for aa in protein:
         codons = _AA_TO_CODONS[aa]
-        current = "".join(out)
+        current_len = len(out) * 3
         weights = []
         for c in codons:
-            cai_w = _WEIGHTS.get(c, 1e-9)          # CAI component
-            test = current + c
-            gc = sum(1 for b in test if b in "GC") / len(test) * 100.0
-            gc_w = 1.0 / (1.0 + abs(gc - _GC_TARGET))  # GC proximity component
-            weights.append(cai_w * gc_w)            # combined weight
+            cai_w = _WEIGHTS.get(c, 1e-9)
+            test_gc = gc_count + _CODON_GC[c]
+            test_len = current_len + 3
+            gc = test_gc / test_len * 100.0
+            gc_w = 1.0 / (1.0 + abs(gc - _GC_TARGET))
+            weights.append(cai_w * gc_w)
         total = sum(weights)
         r = rng.random() * total
         acc = 0.0
@@ -49,6 +58,7 @@ def _cai_gc_biased_cds(protein: str, rng: random.Random) -> str:
                 chosen = c
                 break
         out.append(chosen)
+        gc_count += _CODON_GC[chosen]
     return "".join(out)
 
 

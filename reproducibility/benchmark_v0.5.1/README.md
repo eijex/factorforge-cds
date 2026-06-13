@@ -47,6 +47,72 @@ synthesis acceptance likelihood, or cloning-success claims.**
 `manuscript_reproducibility_v0.4/` (parent repo) contains the v0.4 smoke-test artifacts.
 Do not delete. The v0.5.1 package supersedes it for manuscript evidence but does not replace it.
 
+## P2 Generation-Layer Ablation (Job 106)
+
+### What the ablation measures
+
+The ablation isolates the contribution of each constraint layer to the overall
+multi-constraint pass rate, using the same `score_cds()` function applied uniformly
+across all layers. Layers are defined by which constraints are active:
+
+| Layer | Constraints active | Method name | Multi-constraint pass rate |
+|-------|--------------------|-------------|---------------------------|
+| L0 | None (random) | `random_synonymous` | 26.4% |
+| L1 | CAI only (greedy) | `greedy_cai` | 31.1% |
+| L2 | CAI + GC target | `ablation_cai_gc` | 26.2% |
+| L3 | CAI + TypeIIS avoidance | `ablation_cai_type_iis` | 89.0% |
+| L4 | CAI + GC + TypeIIS | `ablation_cai_gc_type_iis` | 88.6% |
+| L5 | FactorForge full (assembly-friendly) | `factorforge_assembly_friendly` | 65.8% |
+
+Dataset: N=49,257 *N. benthamiana* reference proteins. Seed: 320.
+
+### Key finding
+
+TypeIIS restriction site avoidance (L3: 89.0%) is the dominant driver of assembly
+compatibility in this dataset. Adding GC targeting on top of TypeIIS (L4: 88.6%) does
+not further improve multi-constraint pass rate at default max_attempts=50; GC targeting
+alone (L2: 26.2%) provides no assembly pass rate benefit over random synonymous
+substitution (L0: 26.4%).
+
+The L5 (FactorForge full) result (65.8%) is lower than L3/L4 because `factorforge_assembly_friendly`
+uses implicit GC steering via balanced base composition alongside TypeIIS avoidance,
+trading some assembly pass rate for balanced GC profile, whereas L3/L4 ablation conditions
+use up to 50 attempts vs. the production optimizer's default of 10.
+
+### Evidence boundary
+
+These results are **in-silico constraint ablation outcomes** on a single reference proteome
+(*N. benthamiana*). They quantify which constraint layers drive the computational
+multi-constraint pass rate metric. They do not constitute:
+
+- wet-lab expression or assembly validation
+- synthesis success rate prediction
+- claims about other host organisms
+
+### Artifacts
+
+| File | Description |
+|------|-------------|
+| `benchmarks/results/v3.2.0/ablation/ablation_summary.json` | Layer-by-layer metric summary (git-tracked) |
+| `benchmarks/results/v3.2.0/ablation/figures/figure_ablation_pass_rate.{png,svg}` | Pass rate by layer bar chart |
+| `benchmarks/results/v3.2.0/ablation/figures/figure_ablation_tradeoff_heatmap.{png,svg}` | Metric heatmap across layers |
+| `benchmarks/results/v3.2.0/ablation/ablation_results.csv` | Full row-level results (74 MB — gitignored; regenerate via `run_ablation.py`) |
+
+### Reproducing the ablation
+
+```bash
+# From repo root:
+python benchmarks/ablation/run_ablation.py \
+  --fasta benchmarks/data/nb_proteome_uniprot_2024_49257.fasta \
+  --output benchmarks/results/v3.2.0/ablation/ablation_results.csv \
+  --seed 320 --max-attempts 50
+```
+
+`ablation_results.csv` is excluded from git (74 MB). The summary JSON and figures
+are the canonical reproducibility artifacts for this layer.
+
+---
+
 ## Generating Figures
 
 ```bash
@@ -58,4 +124,3 @@ Requires only `benchmarks/results/v3.2.0/benchmark_summary.json`. The 47 MB
 `benchmark_results.csv` is not required for Figures 2–3.
 If `benchmark_results.csv` is unavailable locally, reference it via Zenodo DOI
 `10.5281/zenodo.20640931`.
-```
