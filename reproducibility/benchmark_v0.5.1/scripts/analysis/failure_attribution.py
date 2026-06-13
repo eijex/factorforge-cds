@@ -15,6 +15,11 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from common import METHOD_ORDER, FAILURE_CATEGORIES, REPLICATED_METHOD
 
+# Root for importing benchmarks package
+sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
+from benchmarks.config import load_benchmark_config
+from benchmarks.scoring import canonical_multi_constraint_pass
+
 
 def categorize_row(row) -> str:
     """Assign failure category to one benchmark result row."""
@@ -113,6 +118,12 @@ def compute_overlap_matrix(df: pd.DataFrame) -> pd.DataFrame:
 def run(csv_path: Path, out_dir: Path) -> None:
     print(f"Loading {csv_path} ...")
     df = pd.read_csv(csv_path)
+
+    # Recompute multi_constraint_pass from primitive columns (scoring_contract v1.1).
+    cfg = load_benchmark_config()
+    df["multi_constraint_pass"] = canonical_multi_constraint_pass(
+        df, gc_min=cfg.gc_min, gc_max=cfg.gc_max
+    )
 
     # Input audit
     has_status = "status" in df.columns

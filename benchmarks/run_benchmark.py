@@ -248,6 +248,8 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
     summary_json.write_text(json.dumps({
         "run_id": hashlib.sha256(f"{dataset}{mode}{date.today().isoformat()}".encode()).hexdigest()[:12],
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "scoring_contract_version": "v1.1",
+        "multi_constraint_pass_definition": "biological_pass AND assembly_pass AND gc_in_target_range",
         "factorforge_version": FF_VERSION,
         "git_commit": _git_commit,
         "registry_version": cfg.registry_version,

@@ -18,7 +18,7 @@ import pandas as pd
 import yaml
 
 from benchmarks.config import load_benchmark_config
-from benchmarks.scoring import score_cds
+from benchmarks.scoring import score_cds, canonical_multi_constraint_pass
 
 ROOT = Path(__file__).resolve().parents[2]
 SPEC_PATH = ROOT / "benchmarks" / "ablation" / "ablation_spec.yaml"
@@ -149,6 +149,8 @@ def build_ablation_summary(
         }
     return {
         "analysis_type": "constraint_ablation",
+        "scoring_contract_version": "v1.1",
+        "multi_constraint_pass_definition": "biological_pass AND assembly_pass AND gc_in_target_range",
         "source_formal_run_id": formal_run_id,
         "source_formal_summary_sha256": formal_summary_sha256,
         "ablation_spec_sha256": spec_sha256,
@@ -194,6 +196,11 @@ def main(limit: int | None = None, skip_run: bool = False) -> None:
         l4 = run_new_layer(proteins, "L4", spec["layers"]["L4"], cfg)
 
     merged = pd.concat([l0, l1, l2, l3, l4, l5], ignore_index=True)
+    # Recompute multi_constraint_pass from primitive columns (scoring_contract v1.1).
+    # This corrects stale values in CSVs produced before the gc_in_target_range fix.
+    merged["multi_constraint_pass"] = canonical_multi_constraint_pass(
+        merged, gc_min=cfg.gc_min, gc_max=cfg.gc_max
+    )
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     merged.to_csv(OUT_CSV, index=False)
     print(f"[ablation] wrote {len(merged)} rows → {OUT_CSV}", flush=True)
