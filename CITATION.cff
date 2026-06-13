@@ -4,7 +4,7 @@ title: "FactorForge: constraint-based CDS design engine for plant CDS design wor
 version: 3.2.0
 date-released: "2026-06-11"
 license: AGPL-3.0
-doi: "10.5281/zenodo.20407331"
+doi: "10.5281/zenodo.20640931"
 repository-code: "https://github.com/eijex/factorforge-cds"
 url: "https://factorforge.eijex.com"
 authors:
