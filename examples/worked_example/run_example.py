@@ -19,10 +19,10 @@ HERE = Path(__file__).parent
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-import factorforge as _ff
-from factorforge.engines.profile.optimizer import RuleBasedOptimizer
-from factorforge.engines.profile.rules.domesticator import Domesticator
-from factorforge.utils.sequence_validator import validate_cds_output
+import factorforge as _ff  # noqa: E402
+from factorforge.engines.profile.optimizer import RuleBasedOptimizer  # noqa: E402
+from factorforge.engines.profile.rules.domesticator import Domesticator  # noqa: E402
+from factorforge.utils.sequence_validator import validate_cds_output  # noqa: E402
 
 PROFILE = "assembly_friendly"
 SEED = 320
@@ -30,12 +30,13 @@ GC_MIN = 55.0  # N. benthamiana benchmark config (scoring_contract v1.1)
 GC_MAX = 65.0
 
 _DOM = Domesticator()
+REGISTRY_PATH = ROOT / "src" / "factorforge" / "registry" / "current_parameter_registry.yaml"
 
 
 def load_sfgfp_aa() -> str:
     faa = HERE / "input_sequence.faa"
     lines = faa.read_text(encoding="utf-8").strip().split("\n")
-    return "".join(l for l in lines if not l.startswith(">")).replace(" ", "")
+    return "".join(line for line in lines if not line.startswith(">")).replace(" ", "")
 
 
 def compute_validation_metrics(aa_seq: str, dna_seq: str, gc_percent: float) -> dict:
@@ -68,7 +69,8 @@ def compute_validation_metrics(aa_seq: str, dna_seq: str, gc_percent: float) -> 
 
 def build_design_package(result, aa_seq: str) -> dict:
     """Build design_package.json conforming to design_package.schema.json v1.0."""
-    seq_hash = hashlib.sha256(result.sequence.encode()).hexdigest()
+    seq_hash = "sha256:" + hashlib.sha256(result.sequence.encode()).hexdigest()
+    registry_hash = "sha256:" + hashlib.sha256(REGISTRY_PATH.read_bytes()).hexdigest()
     gc = result.metrics.get("gc_percent", 0.0)
     cai = result.metrics.get("cai", 0.0)
     v = compute_validation_metrics(aa_seq, result.sequence, gc)
@@ -79,9 +81,9 @@ def build_design_package(result, aa_seq: str) -> dict:
         "input_type": "protein",
         "host_profile": {
             "id": "nbenthamiana",
-            "display_name": "Tobacco (N. benthamiana)",
+            "display_name": "N. benthamiana",
             "scientific_name": "Nicotiana benthamiana",
-            "ncbi_taxonomy_id": "4100",
+            "ncbi_taxonomy_id": 4100,
             "status": "stable",
         },
         "optimization": {"engine": "profile", "profile": PROFILE},
@@ -101,7 +103,7 @@ def build_design_package(result, aa_seq: str) -> dict:
         "evidence": {
             "sequence_hash": seq_hash,
             "registry_version": getattr(_ff, "__version__", "3.2.0"),
-            "registry_hash": "N/A",
+            "registry_hash": registry_hash,
         },
         "claim_boundary": {
             "in_silico_only": True,
@@ -179,7 +181,7 @@ def main() -> None:
         )
         print(f"Frozen: {dp_path}")
         print(f"Frozen: {vs_path}")
-        print(f"\nKey results:")
+        print("\nKey results:")
         print(f"  CAI:                 {design_pkg['metrics']['cai']}")
         print(f"  GC%:                 {design_pkg['metrics']['gc_percent']}")
         print(f"  gc_in_target_range:  {val_summary['computational']['gc_in_target_range']}")

@@ -25,6 +25,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 # Try to import FactorForge
 try:
     from factorforge.engines import EngineRegistry
+    from factorforge.engines.profile.rules.domesticator import Domesticator
     from factorforge.engines.profile.rules.rule_engine import RuleEngine
     from factorforge.engines.profile.utils import get_data_path, load_codon_table
     from factorforge.analysis.metrics import load_codon_usage_table
@@ -573,6 +574,8 @@ class handler(BaseHTTPRequestHandler):
             cai = float(result.metrics.get("cai", 0.0))
             gc_percent = float(result.metrics.get("gc_percent", 0.0))
             polya_warnings = int(result.metrics.get("polya_warnings", 0))
+            table = load_codon_usage_table()
+            general_cai = calculate_cai(result.sequence, table.codon_weights)
             # MFE provenance (016 audit): surface whether MFE was actually
             # computed. ViennaRNA is not installed on Vercel, so MFE is normally
             # not_computed in production — never report it as a misleading 0.0.
@@ -584,7 +587,8 @@ class handler(BaseHTTPRequestHandler):
             # Validation checks
             polya_check = "PASS" if polya_warnings == 0 else "WARNING"
             gc_check = self.gc_check(gc_percent, constraints)
-            moclo_check = "UNCHECKED"  # MoClo site validation requires explicit restriction-site analysis via custom_restriction_sites
+            type_iis_sites = Domesticator().scan_restriction_sites(result.sequence, "golden_gate")
+            moclo_check = "PASS" if not type_iis_sites else "WARNING"
 
             logger.info(
                 f"Optimization metrics: CAI={cai:.3f}, GC={gc_percent:.1f}%, PolyA={polya_warnings}"
@@ -598,6 +602,8 @@ class handler(BaseHTTPRequestHandler):
                 "optimized_length": len(optimized_sequence),
                 "metrics": {
                     "cai": round(cai, 3),
+                    "cai_reference": "profile_golden_set",
+                    "general_cai": round(general_cai, 3),
                     "gc_percent": round(gc_percent, 1),
                     "polya_signals": polya_warnings,
                     "length": len(optimized_sequence),
@@ -614,12 +620,12 @@ class handler(BaseHTTPRequestHandler):
                 "engine": {"name": optimizer.name, "version": optimizer.version},
             }
             if return_candidates:
-                table = load_codon_usage_table()
                 response["recommended_candidate"] = self.build_candidate(
                     candidate_id=profile,
                     label=self.candidate_label(profile),
                     dna_sequence=result.sequence,
                     codon_weights=table.codon_weights,
+                    profile_cai=cai,
                     recommendation_reason=f"Profile engine {profile} result",
                 )
                 response["candidates"] = [response["recommended_candidate"]]
@@ -677,6 +683,7 @@ class handler(BaseHTTPRequestHandler):
                 label="Feasibility Best",
                 dna_sequence=best["dna_sequence"],
                 codon_weights=table.codon_weights,
+                profile_cai=float(best["cai"]),
                 recommendation_reason=(
                     f"Maximum CAI under GC {constraints['gc_min']:g}-{constraints['gc_max']:g}%"
                     if feasibility["target"]["best_candidate"]
@@ -699,6 +706,7 @@ class handler(BaseHTTPRequestHandler):
                     label=self.candidate_label(candidate_profile),
                     dna_sequence=result.sequence,
                     codon_weights=table.codon_weights,
+                    profile_cai=float(result.metrics.get("cai", 0.0)),
                     recommendation_reason=f"Profile engine {candidate_profile} comparison candidate",
                 )
             )
@@ -965,6 +973,7 @@ class handler(BaseHTTPRequestHandler):
         dna_sequence: str,
         codon_weights: dict[str, float],
         recommendation_reason: str,
+        profile_cai: float | None = None,
     ) -> dict[str, Any]:
         """Build a v1 candidate payload with evidence metrics."""
         windows = calculate_gc_windows(dna_sequence)
@@ -972,12 +981,19 @@ class handler(BaseHTTPRequestHandler):
         first_region = calculate_first_region_gc(dna_sequence, region_sizes=[30])
         internal_stop_count = count_internal_stops(dna_sequence)
         invalid_codon_count = len(detect_invalid_codons(dna_sequence))
+        general_cai = round(calculate_cai(dna_sequence, codon_weights), 3)
+        type_iis_sites = Domesticator().scan_restriction_sites(dna_sequence, "golden_gate")
+        assembly_pass = len(type_iis_sites) == 0
 
         return {
             "id": candidate_id,
             "label": label,
             "dna_sequence": dna_sequence,
-            "cai": round(calculate_cai(dna_sequence, codon_weights), 3),
+            "cai": round(profile_cai, 3) if profile_cai is not None else general_cai,
+            "cai_reference": (
+                "profile_golden_set" if profile_cai is not None else "configured_codon_table"
+            ),
+            "general_cai": general_cai,
             "gc_percent": round(calculate_gc(dna_sequence), 1),
             "gc_window_min": round(min(window_values), 1) if window_values else 0.0,
             "gc_window_max": round(max(window_values), 1) if window_values else 0.0,
@@ -987,8 +1003,12 @@ class handler(BaseHTTPRequestHandler):
             "repeat_count": len(detect_repeats(dna_sequence)),
             "homopolymer_count": len(detect_homopolymers(dna_sequence)),
             "forbidden_motif_count": len(detect_forbidden_motifs(dna_sequence, [])),
+            "forbidden_type_iis_site_count": len(type_iis_sites),
+            "assembly_pass": assembly_pass,
             "validator_status": (
-                "pass" if internal_stop_count == 0 and invalid_codon_count == 0 else "fail"
+                "pass"
+                if internal_stop_count == 0 and invalid_codon_count == 0 and assembly_pass
+                else "warning"
             ),
             "recommendation_reason": recommendation_reason,
         }

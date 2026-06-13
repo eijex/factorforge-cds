@@ -4,6 +4,23 @@
   "dataset_n": 49257,
   "random_seed": 320,
   "scoring_contract": "v1.1",
+  "archives": {
+    "software_release": {
+      "version": "3.2.0",
+      "doi": "10.5281/zenodo.20640931"
+    },
+    "corrected_benchmark_dataset": {
+      "scoring_contract": "v1.1",
+      "doi": "10.5281/zenodo.20676276"
+    }
+  },
+  "lineage": {
+    "formal_summary_run_id": "3451bd347dcd",
+    "formal_summary_git_commit": "e57341c",
+    "ablation_source_formal_run_id": "c8641f5bbc32",
+    "ablation_source_formal_summary_sha256": "51aecac78ca3945aea977a62ac436b06400ddacc94e12bbe8486111c56728c21",
+    "note": "The ablation retains its historical source formal-run identifiers. The frozen formal summary in this evidence pack is the corrected scoring_contract v1.1 aggregate."
+  },
   "inputs": {
     "benchmark_summary_frozen": {
       "path": "reproducibility/benchmark_v0.5.1/data/benchmark_summary.frozen.json",
@@ -36,7 +53,9 @@
     "figure_gc_distribution": "reproducibility/benchmark_v0.5.1/figures/figure_gc_distribution.png"
   },
   "commands": [
-    "python scripts/benchmark.py",
+    "python benchmarks/datasets/fetch_dataset.py --file benchmarks/datasets/NbQld183.v103.gff3.CDS.fasta.gz",
+    "python -m benchmarks.run_benchmark --dataset nbenthamiana_full --mode formal --seed 320",
+    "python -m benchmarks.ablation.run_ablation",
     "python reproducibility/benchmark_v0.5.1/scripts/figures/make_benchmark_figures.py"
   ]
 }

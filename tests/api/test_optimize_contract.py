@@ -90,6 +90,32 @@ def test_legacy_profile_response_keeps_old_fields_and_adds_candidates() -> None:
     assert "optimized_sequence" in result
     assert result["recommended_candidate"]["id"] == "gc_target"
     assert [candidate["id"] for candidate in result["candidates"]] == ["gc_target"]
+    assert result["recommended_candidate"]["cai"] == result["metrics"]["cai"]
+    assert result["recommended_candidate"]["cai_reference"] == "profile_golden_set"
+    assert result["metrics"]["cai_reference"] == "profile_golden_set"
+    assert result["metrics"]["general_cai"] == result["recommended_candidate"]["general_cai"]
+    assert isinstance(result["recommended_candidate"]["general_cai"], float)
+    assert isinstance(result["recommended_candidate"]["assembly_pass"], bool)
+    assert isinstance(result["recommended_candidate"]["forbidden_type_iis_site_count"], int)
+    expected_moclo = "PASS" if result["recommended_candidate"]["assembly_pass"] else "WARNING"
+    assert result["validation"]["moclo"] == expected_moclo
+
+
+def test_candidate_with_type_iis_conflict_is_not_reported_as_pass() -> None:
+    h = _handler()
+    table = optimize_api.load_codon_usage_table()
+
+    candidate = h.build_candidate(
+        candidate_id="test",
+        label="Test",
+        dna_sequence="ATGGGTCTCGCT",
+        codon_weights=table.codon_weights,
+        recommendation_reason="test fixture",
+    )
+
+    assert candidate["assembly_pass"] is False
+    assert candidate["forbidden_type_iis_site_count"] == 1
+    assert candidate["validator_status"] == "warning"
 
 
 def test_design_package_aa_identity_uses_cds_validator_result() -> None:

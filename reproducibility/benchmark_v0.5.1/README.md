@@ -17,10 +17,19 @@
 | Codon table SHA256 | ddbd0a41da88109a709bca0304581e29bd0a756e4db1c51809d5002e9b2d5e8c |
 | Dataset N | 49257 |
 | Random seed | 320 |
-| Source git commit | 6f236ea |
+| Evidence-pack manifest git commit | 6409108921d538396b67c7edd3434b43e547f666 |
+| Corrected formal summary git commit | e57341c |
+| Corrected formal summary run ID | 3451bd347dcd |
 | benchmark_summary.json SHA256 | f8f5aa8a2b61b04139bb1d77547e6e3887f46ceca350cd834dc306d9a111956a |
 | scoring_contract_version | v1.1 (multi_constraint_pass = bio AND assembly AND gc_in_target_range) |
 | Methods | random_synonymous, greedy_cai, native_reference, factorforge_balanced, factorforge_gc_target, factorforge_high_cai, factorforge_assembly_friendly |
+
+The ablation summary retains its historical source identifiers
+(`source_formal_run_id=c8641f5bbc32`,
+`source_formal_summary_sha256=51aecac78ca3945aea977a62ac436b06400ddacc94e12bbe8486111c56728c21`)
+for lineage. The frozen formal summary in this package is the corrected
+scoring-contract v1.1 aggregate identified above; the two hashes should not be
+treated as interchangeable.
 
 ## Evidence Boundary
 
@@ -113,14 +122,31 @@ multi-constraint pass rate metric. They do not constitute:
 
 ```bash
 # From repo root:
-python benchmarks/ablation/run_ablation.py \
-  --fasta benchmarks/data/nb_proteome_uniprot_2024_49257.fasta \
-  --output benchmarks/results/v3.2.0/ablation/ablation_results.csv \
-  --seed 320 --max-attempts 50
+python -m benchmarks.ablation.run_ablation
 ```
 
 `ablation_results.csv` is excluded from git (74 MB). The summary JSON and figures
 are the canonical reproducibility artifacts for this layer.
+
+---
+
+## Reproducing the Formal Benchmark
+
+The raw SGN archive is not committed. Place the downloaded
+`NbQld183.v103.gff3.CDS.fasta.gz` file under `benchmarks/datasets/`, then run:
+
+```bash
+# From repo root:
+python benchmarks/datasets/fetch_dataset.py \
+  --file benchmarks/datasets/NbQld183.v103.gff3.CDS.fasta.gz
+python -m benchmarks.run_benchmark \
+  --dataset nbenthamiana_full --mode formal --seed 320
+```
+
+The formal benchmark scores amino-acid identity/internal-stop validity, global
+GC target compliance, and forbidden Type IIS site absence. PolyA motifs, local
+GC windows, rare-codon patterns, repeats, and homopolymers are reported by other
+FactorForge surfaces but are not part of this formal benchmark scoring contract.
 
 ---
 

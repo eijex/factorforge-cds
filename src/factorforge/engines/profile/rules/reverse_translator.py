@@ -423,7 +423,7 @@ class ReverseTranslator:
         """
         High-CAI profile: use only preferred codons
 
-        - CAI > 0.85 guaranteed
+        - Selects codons that maximize the profile golden-set CAI reference
         - No GC constraints
         """
         dna_seq: list[str] = []

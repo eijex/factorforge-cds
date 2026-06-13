@@ -5,9 +5,9 @@
   "input_type": "protein",
   "host_profile": {
     "id": "nbenthamiana",
-    "display_name": "Tobacco (N. benthamiana)",
+    "display_name": "N. benthamiana",
     "scientific_name": "Nicotiana benthamiana",
-    "ncbi_taxonomy_id": "4100",
+    "ncbi_taxonomy_id": 4100,
     "status": "stable"
   },
   "optimization": {
@@ -28,9 +28,9 @@
     "forbidden_type_iis_site_count": 0
   },
   "evidence": {
-    "sequence_hash": "9e1e328157668f0cf09fac6f80a07afd9371990f0ef951a4d0129a70571dcd82",
+    "sequence_hash": "sha256:9e1e328157668f0cf09fac6f80a07afd9371990f0ef951a4d0129a70571dcd82",
     "registry_version": "3.2.0",
-    "registry_hash": "N/A"
+    "registry_hash": "sha256:8838408157e3e2913c2eb2de2168b369d89cd8ddff9a8c85c4bbced29532cc06"
   },
   "claim_boundary": {
     "in_silico_only": true,

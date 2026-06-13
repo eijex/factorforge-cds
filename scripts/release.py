@@ -185,6 +185,17 @@ def _update_citation_date(path: Path, dry_run: bool) -> list[str]:
     return [f"  date-released → {today}"]
 
 
+def _update_citation_doi(path: Path, new_doi: str, dry_run: bool) -> list[str]:
+    """Update CITATION.cff doi field to the new Zenodo version DOI."""
+    content = path.read_text(encoding="utf-8")
+    updated = re.sub(r'doi: "10\.5281/zenodo\.\d+"', f'doi: "{new_doi}"', content)
+    if content == updated:
+        return []
+    if not dry_run:
+        path.write_text(updated, encoding="utf-8")
+    return [f"  doi → {new_doi}"]
+
+
 def _check_residual(old: str, dry_run: bool) -> int:
     """Scan for leftover occurrences of old version string after bump."""
     residual_errors = 0
@@ -212,7 +223,7 @@ def _check_residual(old: str, dry_run: bool) -> int:
     return residual_errors
 
 
-def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, workspace: Path | None = None, mcp: Path | None = None, web: Path | None = None) -> int:
+def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, workspace: Path | None = None, mcp: Path | None = None, web: Path | None = None, zenodo_doi: str | None = None) -> int:
     targets = build_targets(old, new)
     errors = 0
     total_changes = 0
@@ -264,13 +275,18 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
                     changes.append(f"  sha256 → {placeholder} (fetch failed — update manually)")
                 print(f"  WARN: could not fetch sha256 from PyPI for factorforge-cds {new} — set placeholder")
 
-        # Update CITATION.cff date-released
+        # Update CITATION.cff date-released and optional doi
         if rel_path == "CITATION.cff":
             date_changes = _update_citation_date(path, dry_run=True)
             if date_changes:
                 today = _today()
                 content = re.sub(r'date-released: "\d{4}-\d{2}-\d{2}"', f'date-released: "{today}"', content)
                 changes.extend(date_changes)
+            if zenodo_doi:
+                doi_changes = _update_citation_doi(path, zenodo_doi, dry_run=True)
+                if doi_changes:
+                    content = re.sub(r'doi: "10\.5281/zenodo\.\d+"', f'doi: "{zenodo_doi}"', content)
+                    changes.extend(doi_changes)
 
         if content != original:
             total_changes += 1
@@ -427,7 +443,9 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     print("  --- Post-release verification ---")
     print(f"  9.  pip install factorforge-cds=={new} && factorforge --help  (PyPI smoke test)")
     print(f" 10.  docker run ghcr.io/eijex/factorforge-cds:v{new} factorforge --help  (Docker smoke test)")
-    print(" 11.  Confirm Zenodo DOI: https://zenodo.org/doi/10.5281/zenodo.20407331")
+    print(" 11.  Wait for Zenodo to mint the new DOI (triggered by GitHub Release)")
+    print("       Then update CITATION.cff doi:")
+    print(f"         python scripts/release.py {new} --zenodo-doi 10.5281/zenodo.<NEW_RECORD_ID>")
     print(" 12.  Push Bioconda fork branch (recipes/meta.yaml already bumped by this script)")
     print("       → git push origin add-factorforge-cds  (or open/update PR on bioconda/bioconda-recipes)")
     print(" 13.  Close completed GitHub Issues; close milestone if all done")
@@ -456,6 +474,9 @@ def main() -> None:
                         help="Path to the eijex-mcp repo to also bump MCP tool version strings")
     parser.add_argument("--web", default=None,
                         help="Path to the eijex-web repo to also bump StatsBar version string")
+    parser.add_argument("--zenodo-doi", dest="zenodo_doi", default=None,
+                        help="Zenodo software version DOI for this release (e.g. 10.5281/zenodo.20640931). "
+                             "Run after Zenodo mints the DOI post-tagging.")
     args = parser.parse_args()
 
     new = args.new_version
@@ -480,7 +501,7 @@ def main() -> None:
     mcp = Path(args.mcp) if args.mcp else None
     web = Path(args.web) if args.web else None
     print(f"Bumping {old} → {new}{' (dry run)' if args.dry_run else ''}{' [strict]' if args.strict else ''}\n")
-    errors = bump(old, new, dry_run=args.dry_run, strict=args.strict, workspace=workspace, mcp=mcp, web=web)
+    errors = bump(old, new, dry_run=args.dry_run, strict=args.strict, workspace=workspace, mcp=mcp, web=web, zenodo_doi=args.zenodo_doi)
     sys.exit(errors)
 
 

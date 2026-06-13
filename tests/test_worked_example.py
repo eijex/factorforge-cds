@@ -45,14 +45,14 @@ def test_sfgfp_sequence_header():
 def test_sfgfp_sequence_length():
     faa = EXAMPLE_DIR / "input_sequence.faa"
     lines = faa.read_text(encoding="utf-8").strip().split("\n")
-    seq = "".join(l for l in lines if not l.startswith(">"))
+    seq = "".join(line for line in lines if not line.startswith(">"))
     assert len(seq) == 236, f"expected 236 aa, got {len(seq)}"
 
 
 def test_sfgfp_sequence_no_x_residues():
     faa = EXAMPLE_DIR / "input_sequence.faa"
     lines = faa.read_text(encoding="utf-8").strip().split("\n")
-    seq = "".join(l for l in lines if not l.startswith(">"))
+    seq = "".join(line for line in lines if not line.startswith(">"))
     assert "X" not in seq, "X (ambiguous) residue must not appear in worked example"
 
 
@@ -91,6 +91,16 @@ def test_design_package_profile():
     dp = _load(OUTPUT_DIR / "design_package.json")
     assert dp["optimization"]["profile"] == "assembly_friendly"
     assert dp["optimization"]["engine"] == "profile"
+
+
+def test_design_package_validates_against_public_schema():
+    jsonschema = pytest.importorskip("jsonschema")
+    schema = _load(ROOT / "src" / "factorforge" / "schemas" / "design_package.schema.json")
+    dp = _load(OUTPUT_DIR / "design_package.json")
+    errors = list(jsonschema.Draft202012Validator(schema).iter_errors(dp))
+    assert not errors, "Design Package schema validation failed:\n" + "\n".join(
+        str(error) for error in errors
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -227,4 +237,4 @@ def test_validation_summary_validates_against_public_schema():
     vs = _load(OUTPUT_DIR / "validation_summary.json")
     validator = jsonschema.Draft202012Validator(schema)
     errors = list(validator.iter_errors(vs))
-    assert not errors, f"Schema validation failed:\n" + "\n".join(str(e) for e in errors)
+    assert not errors, "Schema validation failed:\n" + "\n".join(str(e) for e in errors)
