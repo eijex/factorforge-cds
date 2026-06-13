@@ -1,0 +1,447 @@
+{
+    "organism": "Lemna minor",
+    "source": "Kazusa CodonUsage Database (https://www.kazusa.or.jp/codon/) + NCBI Lemna minor CDS sequences (NCBI taxid 4188)",
+    "description": "Codon usage frequencies for Lemna minor (common duckweed); Lemnaceae family, basal monocot-like aquatic plant",
+    "total_cds": 19507,
+    "total_codons": 7843218,
+    "codons": {
+        "TTT": {
+            "aa": "F",
+            "frequency": 0.4412,
+            "per_thousand": 17.8
+        },
+        "TTC": {
+            "aa": "F",
+            "frequency": 0.5588,
+            "per_thousand": 22.5
+        },
+        "TTA": {
+            "aa": "L",
+            "frequency": 0.0767,
+            "per_thousand": 7.8
+        },
+        "TTG": {
+            "aa": "L",
+            "frequency": 0.1887,
+            "per_thousand": 19.2
+        },
+        "CTT": {
+            "aa": "L",
+            "frequency": 0.1995,
+            "per_thousand": 20.3
+        },
+        "CTC": {
+            "aa": "L",
+            "frequency": 0.2437,
+            "per_thousand": 24.8
+        },
+        "CTA": {
+            "aa": "L",
+            "frequency": 0.0736,
+            "per_thousand": 7.5
+        },
+        "CTG": {
+            "aa": "L",
+            "frequency": 0.2178,
+            "per_thousand": 22.2
+        },
+        "ATT": {
+            "aa": "I",
+            "frequency": 0.3778,
+            "per_thousand": 19.3
+        },
+        "ATC": {
+            "aa": "I",
+            "frequency": 0.4420,
+            "per_thousand": 22.6
+        },
+        "ATA": {
+            "aa": "I",
+            "frequency": 0.1802,
+            "per_thousand": 9.2
+        },
+        "ATG": {
+            "aa": "M",
+            "frequency": 1.0,
+            "per_thousand": 23.0
+        },
+        "GTT": {
+            "aa": "V",
+            "frequency": 0.2829,
+            "per_thousand": 19.1
+        },
+        "GTC": {
+            "aa": "V",
+            "frequency": 0.2918,
+            "per_thousand": 19.7
+        },
+        "GTA": {
+            "aa": "V",
+            "frequency": 0.1035,
+            "per_thousand": 7.0
+        },
+        "GTG": {
+            "aa": "V",
+            "frequency": 0.3218,
+            "per_thousand": 21.8
+        },
+        "TCT": {
+            "aa": "S",
+            "frequency": 0.2325,
+            "per_thousand": 21.5
+        },
+        "TCC": {
+            "aa": "S",
+            "frequency": 0.2140,
+            "per_thousand": 19.8
+        },
+        "TCA": {
+            "aa": "S",
+            "frequency": 0.1459,
+            "per_thousand": 13.5
+        },
+        "TCG": {
+            "aa": "S",
+            "frequency": 0.1297,
+            "per_thousand": 12.0
+        },
+        "AGT": {
+            "aa": "S",
+            "frequency": 0.1049,
+            "per_thousand": 9.7
+        },
+        "AGC": {
+            "aa": "S",
+            "frequency": 0.1730,
+            "per_thousand": 16.0
+        },
+        "CCT": {
+            "aa": "P",
+            "frequency": 0.2775,
+            "per_thousand": 15.4
+        },
+        "CCC": {
+            "aa": "P",
+            "frequency": 0.2541,
+            "per_thousand": 14.1
+        },
+        "CCA": {
+            "aa": "P",
+            "frequency": 0.2216,
+            "per_thousand": 12.3
+        },
+        "CCG": {
+            "aa": "P",
+            "frequency": 0.2468,
+            "per_thousand": 13.7
+        },
+        "ACT": {
+            "aa": "T",
+            "frequency": 0.2784,
+            "per_thousand": 13.5
+        },
+        "ACC": {
+            "aa": "T",
+            "frequency": 0.2701,
+            "per_thousand": 13.1
+        },
+        "ACA": {
+            "aa": "T",
+            "frequency": 0.2103,
+            "per_thousand": 10.2
+        },
+        "ACG": {
+            "aa": "T",
+            "frequency": 0.2412,
+            "per_thousand": 11.7
+        },
+        "GCT": {
+            "aa": "A",
+            "frequency": 0.2599,
+            "per_thousand": 21.7
+        },
+        "GCC": {
+            "aa": "A",
+            "frequency": 0.3246,
+            "per_thousand": 27.1
+        },
+        "GCA": {
+            "aa": "A",
+            "frequency": 0.1832,
+            "per_thousand": 15.3
+        },
+        "GCG": {
+            "aa": "A",
+            "frequency": 0.2323,
+            "per_thousand": 19.4
+        },
+        "TAT": {
+            "aa": "Y",
+            "frequency": 0.4437,
+            "per_thousand": 11.4
+        },
+        "TAC": {
+            "aa": "Y",
+            "frequency": 0.5563,
+            "per_thousand": 14.3
+        },
+        "TAA": {
+            "aa": "*",
+            "frequency": 0.2381,
+            "per_thousand": 0.5
+        },
+        "TAG": {
+            "aa": "*",
+            "frequency": 0.2381,
+            "per_thousand": 0.5
+        },
+        "CAT": {
+            "aa": "H",
+            "frequency": 0.5106,
+            "per_thousand": 12.2
+        },
+        "CAC": {
+            "aa": "H",
+            "frequency": 0.4894,
+            "per_thousand": 11.7
+        },
+        "CAA": {
+            "aa": "Q",
+            "frequency": 0.4063,
+            "per_thousand": 14.8
+        },
+        "CAG": {
+            "aa": "Q",
+            "frequency": 0.5937,
+            "per_thousand": 21.6
+        },
+        "AAT": {
+            "aa": "N",
+            "frequency": 0.4917,
+            "per_thousand": 17.9
+        },
+        "AAC": {
+            "aa": "N",
+            "frequency": 0.5083,
+            "per_thousand": 18.5
+        },
+        "AAA": {
+            "aa": "K",
+            "frequency": 0.3663,
+            "per_thousand": 20.1
+        },
+        "AAG": {
+            "aa": "K",
+            "frequency": 0.6337,
+            "per_thousand": 34.8
+        },
+        "GAT": {
+            "aa": "D",
+            "frequency": 0.5383,
+            "per_thousand": 29.5
+        },
+        "GAC": {
+            "aa": "D",
+            "frequency": 0.4617,
+            "per_thousand": 25.3
+        },
+        "GAA": {
+            "aa": "E",
+            "frequency": 0.4390,
+            "per_thousand": 30.3
+        },
+        "GAG": {
+            "aa": "E",
+            "frequency": 0.5610,
+            "per_thousand": 38.7
+        },
+        "TGT": {
+            "aa": "C",
+            "frequency": 0.3632,
+            "per_thousand": 7.3
+        },
+        "TGC": {
+            "aa": "C",
+            "frequency": 0.6368,
+            "per_thousand": 12.8
+        },
+        "TGA": {
+            "aa": "*",
+            "frequency": 0.5238,
+            "per_thousand": 1.1
+        },
+        "TGG": {
+            "aa": "W",
+            "frequency": 1.0,
+            "per_thousand": 13.4
+        },
+        "CGT": {
+            "aa": "R",
+            "frequency": 0.1073,
+            "per_thousand": 7.5
+        },
+        "CGC": {
+            "aa": "R",
+            "frequency": 0.1631,
+            "per_thousand": 11.4
+        },
+        "CGA": {
+            "aa": "R",
+            "frequency": 0.1116,
+            "per_thousand": 7.8
+        },
+        "CGG": {
+            "aa": "R",
+            "frequency": 0.1631,
+            "per_thousand": 11.4
+        },
+        "AGA": {
+            "aa": "R",
+            "frequency": 0.2317,
+            "per_thousand": 16.2
+        },
+        "AGG": {
+            "aa": "R",
+            "frequency": 0.2232,
+            "per_thousand": 15.6
+        },
+        "GGT": {
+            "aa": "G",
+            "frequency": 0.1860,
+            "per_thousand": 13.8
+        },
+        "GGC": {
+            "aa": "G",
+            "frequency": 0.3034,
+            "per_thousand": 22.5
+        },
+        "GGA": {
+            "aa": "G",
+            "frequency": 0.2508,
+            "per_thousand": 18.6
+        },
+        "GGG": {
+            "aa": "G",
+            "frequency": 0.2598,
+            "per_thousand": 19.3
+        }
+    },
+    "amino_acids": {
+        "A": {
+            "name": "Alanine",
+            "codons": ["GCT", "GCC", "GCA", "GCG"],
+            "preferred": "GCC"
+        },
+        "C": {
+            "name": "Cysteine",
+            "codons": ["TGT", "TGC"],
+            "preferred": "TGC"
+        },
+        "D": {
+            "name": "Aspartic acid",
+            "codons": ["GAT", "GAC"],
+            "preferred": "GAT"
+        },
+        "E": {
+            "name": "Glutamic acid",
+            "codons": ["GAA", "GAG"],
+            "preferred": "GAG"
+        },
+        "F": {
+            "name": "Phenylalanine",
+            "codons": ["TTT", "TTC"],
+            "preferred": "TTC"
+        },
+        "G": {
+            "name": "Glycine",
+            "codons": ["GGT", "GGC", "GGA", "GGG"],
+            "preferred": "GGC"
+        },
+        "H": {
+            "name": "Histidine",
+            "codons": ["CAT", "CAC"],
+            "preferred": "CAT"
+        },
+        "I": {
+            "name": "Isoleucine",
+            "codons": ["ATT", "ATC", "ATA"],
+            "preferred": "ATC"
+        },
+        "K": {
+            "name": "Lysine",
+            "codons": ["AAA", "AAG"],
+            "preferred": "AAG"
+        },
+        "L": {
+            "name": "Leucine",
+            "codons": ["TTA", "TTG", "CTT", "CTC", "CTA", "CTG"],
+            "preferred": "CTC"
+        },
+        "M": {
+            "name": "Methionine",
+            "codons": ["ATG"],
+            "preferred": "ATG"
+        },
+        "N": {
+            "name": "Asparagine",
+            "codons": ["AAT", "AAC"],
+            "preferred": "AAC"
+        },
+        "P": {
+            "name": "Proline",
+            "codons": ["CCT", "CCC", "CCA", "CCG"],
+            "preferred": "CCT"
+        },
+        "Q": {
+            "name": "Glutamine",
+            "codons": ["CAA", "CAG"],
+            "preferred": "CAG"
+        },
+        "R": {
+            "name": "Arginine",
+            "codons": ["CGT", "CGC", "CGA", "CGG", "AGA", "AGG"],
+            "preferred": "AGA"
+        },
+        "S": {
+            "name": "Serine",
+            "codons": ["TCT", "TCC", "TCA", "TCG", "AGT", "AGC"],
+            "preferred": "TCT"
+        },
+        "T": {
+            "name": "Threonine",
+            "codons": ["ACT", "ACC", "ACA", "ACG"],
+            "preferred": "ACT"
+        },
+        "V": {
+            "name": "Valine",
+            "codons": ["GTT", "GTC", "GTA", "GTG"],
+            "preferred": "GTG"
+        },
+        "W": {
+            "name": "Tryptophan",
+            "codons": ["TGG"],
+            "preferred": "TGG"
+        },
+        "Y": {
+            "name": "Tyrosine",
+            "codons": ["TAT", "TAC"],
+            "preferred": "TAC"
+        },
+        "*": {
+            "name": "Stop",
+            "codons": ["TAA", "TAG", "TGA"],
+            "preferred": "TGA"
+        }
+    },
+    "gc_content": {
+        "overall": 0.44,
+        "description": "L. minor CDS-based GC content: ~44%"
+    },
+    "notes": [
+        "Derived from Lemna minor CDS sequences (NCBI taxid 4188)",
+        "Frequencies are normalized within each amino acid family",
+        "Preferred codons are based on highest frequency within synonym group",
+        "Stop codons (TAA, TAG, TGA) included in codons table",
+        "L. minor (Lemnaceae) shows monocot-like codon bias; closely related to Wolffia spp."
+    ]
+}

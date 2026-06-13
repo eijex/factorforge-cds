@@ -20,7 +20,7 @@ factorforge optimize input.fasta -o output.fasta
 | `--gc-min` | `55` | Minimum GC% target |
 | `--gc-max` | `65` | Maximum GC% target |
 | `--format` | `fasta` | Output format: `fasta` or `genbank` |
-| `--host` | `nbenthamiana` | Expression host: `nbenthamiana` or `by2` (Tobacco BY-2) |
+| `--host` | `nbenthamiana` | Expression host: `nbenthamiana`, `by2` (Tobacco BY-2 / *N. tabacum*), `arabidopsis` (*A. thaliana*, experimental), `tomato` (*S. lycopersicum*, experimental), `lemna` (*L. minor*, experimental), `wolffia` (*W. globosa*, experimental) |
 | `--compare-profiles` | — | Comma-separated profiles to compare (e.g. `balanced,high_cai,gc_target`) |
 | `--scan-mode` | `full` | Rule scan: `full` or `fast` |
 | `--template` | — | MoClo construct template |

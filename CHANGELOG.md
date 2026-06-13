@@ -27,6 +27,15 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
+### Added
+- **New plant expression hosts** — Four additional experimental hosts available via `--host`:
+  `arabidopsis` (*Arabidopsis thaliana*, NCBITaxon:3702),
+  `tomato` (*Solanum lycopersicum*, NCBITaxon:4081),
+  `lemna` (*Lemna minor*, NCBITaxon:4188),
+  `wolffia` (*Wolffia globosa*, NCBITaxon:113308).
+  Codon tables derived from Kazusa CodonUsage Database and NCBI RefSeq CDS annotations.
+  All new hosts are `status: experimental`. Closes #24.
+
 ### Fixed
 
 - **`multi_constraint_pass` definition corrected (scoring_contract v1.1)**: `benchmarks/scoring.py`

@@ -147,7 +147,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "enum": ["nbenthamiana", "by2"]
+          "enum": ["nbenthamiana", "by2", "arabidopsis", "tomato", "lemna", "wolffia"]
         },
         "display_name": {
           "type": "string"
@@ -197,6 +197,82 @@
             },
             "ncbi_taxonomy_id": {
               "const": 4097
+            },
+            "status": {
+              "const": "experimental"
+            }
+          }
+        },
+        {
+          "properties": {
+            "id": {
+              "const": "arabidopsis"
+            },
+            "display_name": {
+              "const": "A. thaliana"
+            },
+            "scientific_name": {
+              "const": "Arabidopsis thaliana"
+            },
+            "ncbi_taxonomy_id": {
+              "const": 3702
+            },
+            "status": {
+              "const": "experimental"
+            }
+          }
+        },
+        {
+          "properties": {
+            "id": {
+              "const": "tomato"
+            },
+            "display_name": {
+              "const": "S. lycopersicum"
+            },
+            "scientific_name": {
+              "const": "Solanum lycopersicum"
+            },
+            "ncbi_taxonomy_id": {
+              "const": 4081
+            },
+            "status": {
+              "const": "experimental"
+            }
+          }
+        },
+        {
+          "properties": {
+            "id": {
+              "const": "lemna"
+            },
+            "display_name": {
+              "const": "L. minor"
+            },
+            "scientific_name": {
+              "const": "Lemna minor"
+            },
+            "ncbi_taxonomy_id": {
+              "const": 4188
+            },
+            "status": {
+              "const": "experimental"
+            }
+          }
+        },
+        {
+          "properties": {
+            "id": {
+              "const": "wolffia"
+            },
+            "display_name": {
+              "const": "W. globosa"
+            },
+            "scientific_name": {
+              "const": "Wolffia globosa"
+            },
+            "ncbi_taxonomy_id": {
+              "const": 113308
             },
             "status": {
               "const": "experimental"
