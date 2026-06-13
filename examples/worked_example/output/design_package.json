@@ -1,0 +1,41 @@
+{
+  "design_package_version": "1.0",
+  "design_id": "sfgfp_assembly_friendly_seed320_v1",
+  "sequence_type": "cds",
+  "input_type": "protein",
+  "host_profile": {
+    "id": "nbenthamiana",
+    "display_name": "Tobacco (N. benthamiana)",
+    "scientific_name": "Nicotiana benthamiana",
+    "ncbi_taxonomy_id": "4100",
+    "status": "stable"
+  },
+  "optimization": {
+    "engine": "profile",
+    "profile": "assembly_friendly"
+  },
+  "metrics": {
+    "cai": 0.769,
+    "gc_percent": 56.78,
+    "mfe_kcal_mol": null,
+    "mfe_status": "not_computed",
+    "mfe_used": false
+  },
+  "validation": {
+    "biological_pass": true,
+    "assembly_pass": true,
+    "aa_identity": 1.0,
+    "forbidden_type_iis_site_count": 0
+  },
+  "evidence": {
+    "sequence_hash": "9e1e328157668f0cf09fac6f80a07afd9371990f0ef951a4d0129a70571dcd82",
+    "registry_version": "3.2.0",
+    "registry_hash": "N/A"
+  },
+  "claim_boundary": {
+    "in_silico_only": true,
+    "no_yield_claim": true,
+    "no_wet_lab_claim": true,
+    "no_clinical_claim": true
+  }
+}

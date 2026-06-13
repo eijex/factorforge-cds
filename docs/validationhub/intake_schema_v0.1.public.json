@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ValidationHub Computational Intake Record v0.1 (Public)",
+  "description": "Public schema for FactorForge computational validation records. Links a Design Package to a ValidationHub intake entry. Separates computational results (derived from the optimizer) from experimental outcomes (wet-lab, if available). Does not collect raw sequences, identifiers, or contact information.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "design_package_id",
+    "evidence_type",
+    "host_organism",
+    "computational"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "design_package_id": {
+      "type": "string",
+      "description": "The design_id field from the corresponding FactorForge Design Package (design_package.json)."
+    },
+    "sequence_publication_source": {
+      "type": "string",
+      "description": "Citation for the public amino-acid sequence used as input. Required when the input protein has a known publication. Do not submit private or proprietary sequences."
+    },
+    "public_example_id": {
+      "type": "string",
+      "description": "Stable identifier for a publicly documented example run."
+    },
+    "host_organism": {
+      "type": "string",
+      "description": "Host organism used for optimization (e.g., 'Nicotiana benthamiana')."
+    },
+    "evidence_type": {
+      "type": "string",
+      "enum": ["computational_validation", "wetlab_observation", "benchmark_reference"],
+      "description": "Type of evidence: computational only, wet-lab observation, or benchmark reference."
+    },
+    "computational": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scoring_contract_version",
+        "gc_in_target_range",
+        "multi_constraint_pass",
+        "multi_constraint_pass_definition"
+      ],
+      "properties": {
+        "scoring_contract_version": {
+          "type": "string",
+          "description": "Version of the scoring contract used. Current: 'v1.1'."
+        },
+        "gc_in_target_range": {
+          "type": "boolean",
+          "description": "Primitive: true if gc_percent is within the host-specific target range (e.g., 55–65% for N. benthamiana)."
+        },
+        "multi_constraint_pass": {
+          "type": "boolean",
+          "description": "Derived field: biological_pass AND assembly_pass AND gc_in_target_range. Do not assert manually — always computed from primitives."
+        },
+        "multi_constraint_pass_definition": {
+          "type": "string",
+          "const": "biological_pass AND assembly_pass AND gc_in_target_range",
+          "description": "Canonical definition of multi_constraint_pass (scoring_contract v1.1). Must match exactly."
+        }
+      }
+    },
+    "experimental": {
+      "type": "object",
+      "description": "Wet-lab outcome, if available. Leave outcome_status as 'not_tested' for computational-only records.",
+      "properties": {
+        "assay_type": {
+          "type": "string",
+          "description": "Assay used to evaluate expression (e.g., 'western_blot', 'fluorescence', 'not_provided')."
+        },
+        "outcome_status": {
+          "type": "string",
+          "enum": ["not_tested", "pass", "fail", "partial"],
+          "description": "Outcome of the wet-lab assay, or 'not_tested' if no wet-lab data exists."
+        }
+      }
+    }
+  }
+}

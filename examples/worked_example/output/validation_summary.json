@@ -1,0 +1,18 @@
+{
+  "schema_version": "0.1.0",
+  "design_package_id": "sfgfp_assembly_friendly_seed320_v1",
+  "sequence_publication_source": "Pédelacq et al. 2006, Nat Biotechnol 24:79-88, PMID 16369541",
+  "public_example_id": "sfgfp_assembly_friendly_seed320_nbenthamiana_v1",
+  "host_organism": "Nicotiana benthamiana",
+  "evidence_type": "computational_validation",
+  "computational": {
+    "scoring_contract_version": "v1.1",
+    "gc_in_target_range": true,
+    "multi_constraint_pass": true,
+    "multi_constraint_pass_definition": "biological_pass AND assembly_pass AND gc_in_target_range"
+  },
+  "experimental": {
+    "assay_type": "not_provided",
+    "outcome_status": "not_tested"
+  }
+}
