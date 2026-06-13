@@ -62,7 +62,7 @@
         "multi_constraint_pass_definition": {
           "type": "string",
           "const": "biological_pass AND assembly_pass AND gc_in_target_range",
-          "description": "Canonical definition of multi_constraint_pass (scoring_contract v1.1). Must match exactly."
+          "description": "Canonical 3-primitive definition of multi_constraint_pass (scoring_contract v1.1). Must match exactly. Expanded 5-primitive form: aa_identity==1.0 AND internal_stop_count==0 AND invalid_codon_count==0 AND gc_in_target_range==true AND forbidden_type_iis_site_count==0 (where biological_pass = aa_identity==1.0 AND internal_stop_count==0 AND invalid_codon_count==0; assembly_pass = forbidden_type_iis_site_count==0)."
         }
       }
     },

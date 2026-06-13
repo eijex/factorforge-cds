@@ -25,7 +25,7 @@ ValidationHub intake records are designed to collect only non-confidential, non-
 | `construct_sequence` | Direct sequence disclosure |
 | `customer_sequence` | Direct sequence disclosure |
 | `proprietary_sequence` | Direct sequence disclosure |
-| `sequence_hash` | Indirect sequence proxy — can enable de-anonymization of private sequences in intake context |
+| `sequence_hash` | See **Conditional Prohibition** section below — public unsalted hashes are prohibited; internal salted/HMAC fingerprints are allowed |
 
 ### Identifier Fields
 
@@ -47,11 +47,17 @@ ValidationHub intake records are designed to collect only non-confidential, non-
 | `phone_number` | PII |
 | `personal_identifier` | PII |
 
-## Clarification: sequence_hash in Design Package
+## Conditional Prohibition: sequence_hash
 
-`sequence_hash` is listed above as prohibited in **intake records**.
+`sequence_hash` has context-dependent rules:
 
-It is allowed in the **Design Package** (`design_package.json` → `evidence.sequence_hash`), because the Design Package is a self-contained computational artifact — not an intake record submitted by a user. These are different contexts.
+| Context | Rule |
+|---------|------|
+| **Public intake record** | **Prohibited** — an unsalted hash derived directly from `raw_sequence` functions as a sequence proxy and enables de-anonymization. |
+| **Internal/private artifact** | **Allowed** — a salted HMAC fingerprint is permitted when NOT co-transmitted with `raw_sequence` (e.g., for deduplication in a private pipeline). |
+| **Design Package** (`design_package.json`) | **Allowed** — the Design Package is a self-contained computational artifact, not an intake record. `evidence.sequence_hash` is allowed there for verification. |
+
+**Rule of thumb**: if the hash could be used to identify or reconstruct the input sequence in any public or semi-public context, it is prohibited. Use `design_package_id` as the public linkage key.
 
 ## Using Public Sequences
 

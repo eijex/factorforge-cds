@@ -7,6 +7,7 @@ Covers:
 - Scoring contract v1.1 semantics (AC5, AC6)
 - Public schema validity (AC7, AC8)
 - validation_summary validates against public schema (AC8)
+- Negative schema tests — prohibited fields and missing required fields (TC8)
 - Run example reproducibility (AC2)
 """
 import json
@@ -156,6 +157,64 @@ def test_public_schema_is_valid_json_schema():
     jsonschema = pytest.importorskip("jsonschema")
     schema = _load(SCHEMA_DIR / "intake_schema_v0.1.public.json")
     jsonschema.Draft202012Validator.check_schema(schema)
+
+
+# ---------------------------------------------------------------------------
+# TC8 — negative schema tests (invalid inputs must fail validation)
+# ---------------------------------------------------------------------------
+
+_VALID_INTAKE_RECORD = {
+    "schema_version": "0.1.0",
+    "design_package_id": "test-pkg-001",
+    "evidence_type": "computational_validation",
+    "host_organism": "Nicotiana benthamiana",
+    "computational": {
+        "scoring_contract_version": "v1.1",
+        "gc_in_target_range": True,
+        "multi_constraint_pass": True,
+        "multi_constraint_pass_definition": "biological_pass AND assembly_pass AND gc_in_target_range",
+    },
+}
+
+
+def _schema_errors(instance: dict) -> list:
+    jsonschema = pytest.importorskip("jsonschema")
+    schema = _load(SCHEMA_DIR / "intake_schema_v0.1.public.json")
+    return list(jsonschema.Draft202012Validator(schema).iter_errors(instance))
+
+
+def test_schema_rejects_raw_sequence():
+    record = {**_VALID_INTAKE_RECORD, "raw_sequence": "ATGGCC"}
+    assert _schema_errors(record), "raw_sequence must be rejected (additionalProperties: false)"
+
+
+def test_schema_rejects_submitter_email():
+    record = {**_VALID_INTAKE_RECORD, "submitter_email": "user@example.com"}
+    assert _schema_errors(record), "submitter_email must be rejected (additionalProperties: false)"
+
+
+def test_schema_rejects_missing_gc_in_target_range():
+    computational = {
+        "scoring_contract_version": "v1.1",
+        "multi_constraint_pass": True,
+        "multi_constraint_pass_definition": "biological_pass AND assembly_pass AND gc_in_target_range",
+    }
+    record = {**_VALID_INTAKE_RECORD, "computational": computational}
+    assert _schema_errors(record), "gc_in_target_range is required — omitting must fail"
+
+
+def test_schema_rejects_wrong_definition_const():
+    computational = {
+        **_VALID_INTAKE_RECORD["computational"],
+        "multi_constraint_pass_definition": "biological_pass AND assembly_pass",
+    }
+    record = {**_VALID_INTAKE_RECORD, "computational": computational}
+    assert _schema_errors(record), "multi_constraint_pass_definition must match const exactly"
+
+
+def test_schema_rejects_invalid_evidence_type():
+    record = {**_VALID_INTAKE_RECORD, "evidence_type": "experimental_only"}
+    assert _schema_errors(record), "invalid evidence_type enum value must be rejected"
 
 
 # ---------------------------------------------------------------------------
