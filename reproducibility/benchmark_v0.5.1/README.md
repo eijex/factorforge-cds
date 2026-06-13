@@ -4,7 +4,7 @@
 > Previous definition (v1.0, Job 106): `biological_pass AND assembly_pass` — GC target compliance was omitted.
 > Corrected definition: `biological_pass AND assembly_pass AND gc_in_target_range`.
 > All artifacts in this directory reflect the corrected definition. L3/L4 ablation values were previously inflated.
-> Zenodo `benchmark_results.csv` v1 (DOI: 10.5281/zenodo.20640931) is superseded; corrected v2 to be uploaded.
+> Zenodo `benchmark_results.csv` v1 (DOI: 10.5281/zenodo.20640931) is superseded by v2 (DOI: 10.5281/zenodo.20676276, scoring_contract v1.1 corrected).
 
 ## Artifact Lineage
 
@@ -134,4 +134,4 @@ python reproducibility/benchmark_v0.5.1/scripts/figures/make_benchmark_figures.p
 Requires only `benchmarks/results/v3.2.0/benchmark_summary.json`. The 47 MB
 `benchmark_results.csv` is not required for Figures 2–3.
 If `benchmark_results.csv` is unavailable locally, reference it via Zenodo DOI
-`10.5281/zenodo.20640931`.
+`10.5281/zenodo.20676276` (scoring_contract v1.1, corrected).

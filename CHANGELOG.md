@@ -35,7 +35,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   inflated L3/L4 ablation values (89.0%/88.6%) that were mathematically inconsistent with their GC in range
   rates (3.7%/5.8%). Corrected values: L3=3.5%, L4=5.6%.
   All benchmark artifacts (`benchmark_summary.json`, `ablation_summary.json`, `benchmark_v0.5.1` data/figures)
-  regenerated from full rerun (seed=320, N=49,257). Zenodo `benchmark_results.csv` v2 supersedes v1.
+  regenerated from full rerun (seed=320, N=49,257). Zenodo `benchmark_results.csv` v2 (DOI: 10.5281/zenodo.20676276) supersedes v1.
   A `canonical_multi_constraint_pass()` helper added for recomputing from primitive columns in historical CSVs.
 
 ---
