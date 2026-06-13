@@ -1,5 +1,11 @@
 # FactorForge Benchmark Evidence Pack v0.5.1
 
+> **Correction Notice (2026-06-13)**: `multi_constraint_pass` definition corrected in scoring_contract v1.1.
+> Previous definition (v1.0, Job 106): `biological_pass AND assembly_pass` — GC target compliance was omitted.
+> Corrected definition: `biological_pass AND assembly_pass AND gc_in_target_range`.
+> All artifacts in this directory reflect the corrected definition. L3/L4 ablation values were previously inflated.
+> Zenodo `benchmark_results.csv` v1 (DOI: 10.5281/zenodo.20640931) is superseded; corrected v2 to be uploaded.
+
 ## Artifact Lineage
 
 | Field | Value |
@@ -12,7 +18,8 @@
 | Dataset N | 49257 |
 | Random seed | 320 |
 | Source git commit | 6f236ea |
-| benchmark_summary.json SHA256 | 51aecac78ca3945aea977a62ac436b06400ddacc94e12bbe8486111c56728c21 |
+| benchmark_summary.json SHA256 | f8f5aa8a2b61b04139bb1d77547e6e3887f46ceca350cd834dc306d9a111956a |
+| scoring_contract_version | v1.1 (multi_constraint_pass = bio AND assembly AND gc_in_target_range) |
 | Methods | random_synonymous, greedy_cai, native_reference, factorforge_balanced, factorforge_gc_target, factorforge_high_cai, factorforge_assembly_friendly |
 
 ## Evidence Boundary
@@ -55,29 +62,33 @@ The ablation isolates the contribution of each constraint layer to the overall
 multi-constraint pass rate, using the same `score_cds()` function applied uniformly
 across all layers. Layers are defined by which constraints are active:
 
-| Layer | Constraints active | Method name | Multi-constraint pass rate |
-|-------|--------------------|-------------|---------------------------|
-| L0 | None (random) | `random_synonymous` | 26.4% |
-| L1 | CAI only (greedy) | `greedy_cai` | 31.1% |
-| L2 | CAI + GC target | `ablation_cai_gc` | 26.2% |
-| L3 | CAI + TypeIIS avoidance | `ablation_cai_type_iis` | 89.0% |
-| L4 | CAI + GC + TypeIIS | `ablation_cai_gc_type_iis` | 88.6% |
-| L5 | FactorForge full (assembly-friendly) | `factorforge_assembly_friendly` | 65.8% |
+> **Note**: These values reflect scoring_contract v1.1 (multi_constraint_pass includes gc_in_target_range).
+> Previous v1.0 values (omitting GC) were L3=89.0%, L4=88.6% — mathematically impossible given GC in range rates.
+
+| Layer | Constraints active | Method name | Multi-constraint pass rate | GC in range rate |
+|-------|--------------------|-------------|---------------------------|-----------------|
+| L0 | None (random) | `random_synonymous` | 0.5% | 1.3% |
+| L1 | CAI only (greedy) | `greedy_cai` | 21.8% | 72.9% |
+| L2 | CAI + GC target | `ablation_cai_gc` | 26.0% | 99.8% |
+| L3 | CAI + TypeIIS avoidance | `ablation_cai_type_iis` | 3.5% | 3.7% |
+| L4 | CAI + GC + TypeIIS | `ablation_cai_gc_type_iis` | 5.6% | 5.8% |
+| L5 | FactorForge full (assembly-friendly) | `factorforge_assembly_friendly` | 63.4% | 97.1% |
 
 Dataset: N=49,257 *N. benthamiana* reference proteins. Seed: 320.
 
-### Key finding
+### Key finding (scoring_contract v1.1)
 
-TypeIIS restriction site avoidance (L3: 89.0%) is the dominant driver of assembly
-compatibility in this dataset. Adding GC targeting on top of TypeIIS (L4: 88.6%) does
-not further improve multi-constraint pass rate at default max_attempts=50; GC targeting
-alone (L2: 26.2%) provides no assembly pass rate benefit over random synonymous
-substitution (L0: 26.4%).
+**GC target compliance is the dominant constraint**: multi_constraint_pass requires all three
+conditions (biological_pass, assembly_pass, AND gc_in_target_range). The corrected staircase shows:
 
-The L5 (FactorForge full) result (65.8%) is lower than L3/L4 because `factorforge_assembly_friendly`
-uses implicit GC steering via balanced base composition alongside TypeIIS avoidance,
-trading some assembly pass rate for balanced GC profile, whereas L3/L4 ablation conditions
-use up to 50 attempts vs. the production optimizer's default of 10.
+- L0 (random): 0.5% — baseline, virtually no sequences pass all three constraints by chance
+- L1 (CAI only): 21.8% — CAI optimization increases GC in range rate (72.9%), assembly pass rate improves too
+- L2 (CAI+GC): 26.0% — adding explicit GC steering achieves 99.8% GC compliance, but TypeIIS sites remain (~72% assembly pass) limiting multi-constraint pass
+- L3 (CAI+TypeIIS): 3.5% — TypeIIS avoidance without GC steering: assembly pass is high (~89%) but GC in range is only 3.7%, so multi-constraint pass collapses
+- L4 (CAI+GC+TypeIIS): 5.6% — both GC and TypeIIS attempted simultaneously; marginal improvement over L3 with GC targeting, but max_attempts=50 insufficient to satisfy all constraints simultaneously in most sequences
+- L5 (FactorForge full): 63.4% — the production optimizer achieves the highest multi-constraint pass rate by combining balanced base composition (implicit GC steering) with TypeIIS avoidance
+
+The key insight: **TypeIIS avoidance AND GC compliance are jointly difficult to satisfy**. The production optimizer (L5) achieves ~63% by using a different algorithmic approach (balanced base composition) rather than direct GC minimization + TypeIIS avoidance.
 
 ### Evidence boundary
 

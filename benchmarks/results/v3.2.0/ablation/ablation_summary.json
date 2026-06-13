@@ -1,5 +1,7 @@
 {
   "analysis_type": "constraint_ablation",
+  "scoring_contract_version": "v1.1",
+  "multi_constraint_pass_definition": "biological_pass AND assembly_pass AND gc_in_target_range",
   "source_formal_run_id": "c8641f5bbc32",
   "source_formal_summary_sha256": "51aecac78ca3945aea977a62ac436b06400ddacc94e12bbe8486111c56728c21",
   "ablation_spec_sha256": "f0a6432405af7e39d69c3b425a409529755c2eab1e5416c4c94eea6d0c4818a9",
@@ -16,7 +18,7 @@
         "type_iis_clean": false
       },
       "n_sequences": 49257,
-      "multi_constraint_pass_rate": 0.2644,
+      "multi_constraint_pass_rate": 0.0054,
       "biological_pass_rate": 1.0,
       "assembly_pass_rate": 0.2644,
       "gc_in_range_rate": 0.0134,
@@ -31,7 +33,7 @@
         "type_iis_clean": false
       },
       "n_sequences": 49257,
-      "multi_constraint_pass_rate": 0.3107,
+      "multi_constraint_pass_rate": 0.2177,
       "biological_pass_rate": 1.0,
       "assembly_pass_rate": 0.3107,
       "gc_in_range_rate": 0.7289,
@@ -46,7 +48,7 @@
         "type_iis_clean": false
       },
       "n_sequences": 49257,
-      "multi_constraint_pass_rate": 0.2619,
+      "multi_constraint_pass_rate": 0.2598,
       "biological_pass_rate": 1.0,
       "assembly_pass_rate": 0.2619,
       "gc_in_range_rate": 0.9976,
@@ -61,7 +63,7 @@
         "type_iis_clean": true
       },
       "n_sequences": 49257,
-      "multi_constraint_pass_rate": 0.8897,
+      "multi_constraint_pass_rate": 0.0351,
       "biological_pass_rate": 1.0,
       "assembly_pass_rate": 0.8897,
       "gc_in_range_rate": 0.0369,
@@ -76,7 +78,7 @@
         "type_iis_clean": true
       },
       "n_sequences": 49257,
-      "multi_constraint_pass_rate": 0.8861,
+      "multi_constraint_pass_rate": 0.0558,
       "biological_pass_rate": 1.0,
       "assembly_pass_rate": 0.8861,
       "gc_in_range_rate": 0.0583,
@@ -91,12 +93,12 @@
         "type_iis_clean": true
       },
       "n_sequences": 49257,
-      "multi_constraint_pass_rate": 0.6578,
+      "multi_constraint_pass_rate": 0.6337,
       "biological_pass_rate": 1.0,
       "assembly_pass_rate": 0.6578,
       "gc_in_range_rate": 0.9709,
       "mean_cai": 0.9112
     }
   },
-  "git_commit": "46ca2d0"
+  "git_commit": "e57341c"
 }
