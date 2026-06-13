@@ -5,7 +5,7 @@
   "outputs": {
     "design_package": {
       "file": "design_package.json",
-      "sha256": "4907a78a11bec394276b8e4685a4b03d2385f091a1913484aa42e06587c4ae3b"
+      "sha256": "afcedf075fb0dba0efab4c255f8ea1e606a278ad2b1b94a13b46c0678c105956"
     },
     "validation_summary": {
       "file": "validation_summary.json",

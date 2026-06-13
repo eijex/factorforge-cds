@@ -5,6 +5,7 @@ artifacts. Fails CI if claim wording, ablation layer definitions, or
 reproducibility anchors drift.
 """
 from __future__ import annotations
+import hashlib
 import json
 from pathlib import Path
 
@@ -48,6 +49,29 @@ def test_manifest_inputs_sha256_non_empty():
         assert sha and len(sha) == 64, (
             f"MANIFEST.json inputs[{name!r}].sha256 is missing or invalid"
         )
+
+
+def test_manifest_input_sha256_matches_files():
+    data = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    for name, entry in data["inputs"].items():
+        path = ROOT / entry["path"]
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        assert actual == entry["sha256"], f"MANIFEST.json hash drift for {name}: {path}"
+
+
+def test_manifest_commands_use_reproducible_entrypoints():
+    data = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    commands = "\n".join(data["commands"])
+    assert "python scripts/benchmark.py" not in commands
+    assert "python -m benchmarks.run_benchmark" in commands
+    assert "--dataset nbenthamiana_full --mode formal --seed 320" in commands
+    assert "python -m benchmarks.ablation.run_ablation" in commands
+
+
+def test_manifest_separates_software_and_benchmark_dois():
+    data = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    assert data["archives"]["software_release"]["doi"] == "10.5281/zenodo.20640931"
+    assert data["archives"]["corrected_benchmark_dataset"]["doi"] == "10.5281/zenodo.20676276"
 
 
 # ---------------------------------------------------------------------------

@@ -5,7 +5,7 @@
 
 **Release version**: vX.Y.Z
 **Date**: YYYY-MM-DD
-**Executor**: Claude / user
+**Executor**: Maintainer
 
 ---
 
@@ -22,9 +22,9 @@
 
 ```bash
 python scripts/release.py X.Y.Z \
-  --workspace C:\Work\eijex\eijex-workspace \
-  --mcp C:\Work\eijex\eijex-mcp \
-  --web C:\Work\eijex\eijex-web
+  --workspace <private-workspace-path> \
+  --mcp <mcp-repository-path> \
+  --web <website-repository-path>
 ```
 
 Expected files updated automatically:
@@ -68,11 +68,7 @@ Residual check: confirm `"No residual X.Y.Z-old strings found"` in output.
 
 ## Step 4 — Public Surface Audit (pre-tag)
 
-```bash
-python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_surface.py \
-  --workspace C:\Work\eijex --live
-```
-
+- [ ] Run the maintained public-surface audit against the repository and deployed docs
 - [ ] No new findings (false positives documented and accepted)
 
 ---
@@ -107,12 +103,7 @@ git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push --tags
 
 ## Step 7 — Post-release External Audit
 
-```bash
-python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_surface.py \
-  --workspace C:\Work\eijex --live --external \
-  --url https://pypi.org/project/factorforge-cds/X.Y.Z/
-```
-
+- [ ] Run the maintained public-surface audit against deployed docs, release surfaces, and `https://pypi.org/project/factorforge-cds/X.Y.Z/`
 - [ ] No new findings
 
 ---
@@ -121,7 +112,7 @@ python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_sur
 
 - [ ] eijex-mcp: commit + push (`mcp-tools.ts`, `route.ts`)
 - [ ] eijex-web: commit + push (`StatsBar.tsx`)
-- [ ] eijex-workspace: Done 루틴 (job Done + ROADMAP + done-job.py + commit + push)
+- [ ] Private release tracking: mark the release task complete and commit/push the tracking update
 
 ---
 
