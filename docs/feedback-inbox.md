@@ -6,8 +6,8 @@ This document describes a planned feedback path. It is documentation only; no ex
 
 | Channel | Use |
 | --- | --- |
-| [GitHub Issue (wet_lab_result)](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) | Public-safe coarse summaries only |
-| [Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform) | Structured wet-lab result submission |
+| [Share Wet-lab Results (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) | Public-safe coarse summaries only |
+| [Share Wet-lab Results (Form)](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform) | Structured wet-lab result submission |
 | Email: eijex.lab@gmail.com | Private or sensitive summaries |
 
 Public GitHub Issues must not contain private or sensitive wet-lab data.

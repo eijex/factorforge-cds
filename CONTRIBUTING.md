@@ -96,8 +96,8 @@ Wet-lab validation data contributions are welcome only as non-confidential publi
 - Edge case sequences (very long proteins, transmembrane regions, etc.)
 
 Preferred submission paths:
-1. **GitHub Issue**: use the `wet_lab_result` issue template only for coarse public-safe summaries
-2. **Google Form**: [submit via form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform) for structured wet-lab result submission
+1. [**Share Wet-lab Results (GitHub)**](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) — public-safe coarse summaries only
+2. [**Share Wet-lab Results (Form)**](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform) — structured wet-lab result submission
 3. **Email**: use `eijex.lab@gmail.com` for private or sensitive summaries
 4. See [VALIDATION.md](VALIDATION.md) for the full submission format
 
