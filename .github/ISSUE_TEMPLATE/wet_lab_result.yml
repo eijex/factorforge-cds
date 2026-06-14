@@ -57,7 +57,9 @@ body:
         - Antibody / VHH
         - Enzyme
         - Membrane protein
-        - Fluorescent protein
+        - Fluorescent / Reporter protein
+        - Antigen
+        - Cytokine
         - Other non-identifying class
         - Not reported
     validations:
@@ -139,6 +141,8 @@ body:
       label: Public-safe confirmation
       options:
         - label: I confirm that this public issue contains no raw sequence, construct ID, target identity, unpublished construct detail, internal batch ID, patient data, private contact information, institution name, exact process parameter, or confidential partner/customer information.
+          required: true
+        - label: I understand that this submission does not constitute a validation certificate or clinical endorsement of FactorForge outputs.
           required: true
         - label: I understand that maintainers may edit, summarize, or decline this submission before referencing it in public documentation.
           required: true
