@@ -189,7 +189,7 @@ function reloadPage() {
 function applyStaticLabelPatches() {
     if (!elements.submitValidationBtn) return;
     const label = elements.submitValidationBtn.children[1];
-    if (label) label.textContent = 'Share Wet-Lab Result';
+    if (label) label.textContent = 'Share Wet-lab Results (GitHub)';
 }
 
 function updateHostUI() {

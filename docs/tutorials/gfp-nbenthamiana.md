@@ -156,7 +156,7 @@ The output FASTA can be reviewed for:
 - **Agroinfiltration** — clone into a binary vector (e.g. pEAQ-HT, pK7WG2) for *A. tumefaciens*-mediated delivery
 
 !!! note "Wet-lab validation"
-    The `5' Ramp` and `Viral Delivery` profiles are currently **pending wet-lab validation** and are disabled by default. Submit only public-safe, non-confidential feedback summaries via the public GitHub issue template; use email for private or sensitive summaries.
+    The `5' Ramp` and `Viral Delivery` profiles are currently **pending wet-lab validation** and are disabled by default. Share results via [Share Wet-lab Results (Form)](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform) or [Share Wet-lab Results (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) (public-safe summaries only); use `eijex.lab@gmail.com` for private or sensitive summaries.
 
 ## Summary
 
