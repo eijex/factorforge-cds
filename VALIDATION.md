@@ -67,8 +67,8 @@ Contributor identity is not listed in public summaries by default. Public credit
 Submission links:
 
 - [Open a public GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) only for public-safe summaries
+- [Submit via Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform) for structured wet-lab result submission
 - Email `eijex.lab@gmail.com` for private or sensitive summaries
-- Email: eijex.lab@gmail.com
 
 ---
 
