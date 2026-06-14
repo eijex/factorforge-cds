@@ -119,7 +119,8 @@ After any change, update the relevant public-facing files before pushing:
 |-------------|----------------|
 | New feature / API change | `README.md`, `CHANGELOG.md` |
 | Bug fix | `CHANGELOG.md` |
-| Version bump | Run `python scripts/release.py X.Y.Z` — updates all 16 version-bearing files automatically. Then manually update `web/index.html` changelog panel and `docs/changelog.md`. See `CHANGELOG.md` release checklist. |
+| Version bump | Run `python scripts/release.py X.Y.Z` — updates all 16 version-bearing files automatically. Then manually update `web/index.html` changelog panel and `docs/changelog.md`. **Then run Step 4 public surface audit** (see `docs/release-checklist-template.md`). |
+| Wet-lab submission link change | Update all 8 surfaces: `web/index.html`, `web/js/app.js`, `README.md`, `CONTRIBUTING.md`, `VALIDATION.md`, `docs/index.md`, `docs/validation.md`, `docs/feedback-inbox.md`. Label convention: **Share Wet-lab Results (GitHub)** / **Share Wet-lab Results (Form)**. |
 | New distribution method | `README.md` (Installation), `CHANGELOG.md` |
 | Web UI change | `web/index.html`, `web/README.md` — also run: `npx playwright test` |
 | New engine / model | `docs/model_cards/`, `CHANGELOG.md` |
@@ -137,5 +138,21 @@ user- and paper-facing artifact:
   engines and experiments should stay under `archive/`.
 - `archive/` is public provenance, not an active import surface.
 - Claims must stay aligned with `VALIDATION.md` and `docs/validation.md`.
+
+## 13. Public Surface Coverage (all releases)
+
+Every release must pass Step 4 of `docs/release-checklist-template.md` before tagging.
+The 8 public surfaces and their required checks:
+
+| Surface | URL | Key checks |
+|---------|-----|-----------|
+| Web app | https://factorforge.eijex.com | version, What's New modal, wet-lab links, disclaimer |
+| Corporate site | https://www.eijex.com | StatsBar numbers, Hero copy, Footer Form link |
+| Docs | https://eijex.github.io/factorforge-cds/ | benchmark table, submission links |
+| GitHub repo | https://github.com/eijex/factorforge-cds | README version, wet-lab links |
+| MCP GitHub | https://github.com/eijex/eijex-mcp | version strings in mcp-tools.ts, route.ts |
+| MCP site | https://mcp.eijex.com | tool descriptions version |
+| PyPI | https://pypi.org/project/factorforge-cds/ | version, description |
+| Zenodo | https://zenodo.org/records/20407331 | new version record visible |
 - Run or report proportional checks for CLI, API, package build metadata, and
   untracked-file hygiene before push.
