@@ -1,6 +1,6 @@
 # Worked Example: sfGFP CDS Design for *N. benthamiana*
 
-A fully reproducible end-to-end codon optimization example using Superfolder GFP (sfGFP) as the target protein.
+A fully reproducible end-to-end CDS design example using Superfolder GFP (sfGFP) as the target protein.
 
 ## Overview
 
