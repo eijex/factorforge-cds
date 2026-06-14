@@ -68,8 +68,42 @@ Residual check: confirm `"No residual X.Y.Z-old strings found"` in output.
 
 ## Step 4 — Public Surface Audit (pre-tag)
 
-- [ ] Run the maintained public-surface audit against the repository and deployed docs
+Run the automated audit first, then verify each public surface manually.
+
+```bash
+python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_surface.py \
+  --workspace C:\Work\eijex --live --external
+```
+
 - [ ] No new findings (false positives documented and accepted)
+
+### 4-A. factorforge.eijex.com (web app)
+- [ ] Page title / header shows vX.Y.Z
+- [ ] "What's New" modal: vX.Y.Z block is CURRENT (emerald border), previous version demoted
+- [ ] Disclaimer text: no guarantee/yield/predict-expression claims
+- [ ] Footer links: **Share Wet-lab Results (GitHub)** + **Share Wet-lab Results (Form)** both present
+- [ ] Results panel button label: **Share Wet-lab Results (GitHub)**
+
+### 4-B. www.eijex.com (eijex-web)
+- [ ] StatsBar: mean CAI / AA identity / CDS benchmarked N= / version all reflect new release
+- [ ] Hero copy: scope matches claim boundary (no "expression outcome" language)
+- [ ] Footer Resources: **Share Wet-lab Results (Form)** link present
+
+### 4-C. eijex.github.io/factorforge-cds/ (MkDocs docs)
+- [ ] Homepage benchmark table (CAI, GC%, AA identity, N=) matches new release
+- [ ] Homepage "Share Wet-lab Results" section: Form + GitHub + email all present
+- [ ] Validation page submission links: Form + GitHub + email all present
+- [ ] Tutorials: no outdated claim language ("codon optimization" → "CDS design" where applicable)
+
+### 4-D. github.com/eijex/factorforge-cds (README + repo)
+- [ ] README version badge / citation line reflects vX.Y.Z
+- [ ] README wet-lab section: **Share Wet-lab Results (Form)** + **(GitHub)** both present
+- [ ] CONTRIBUTING.md wet-lab section: Form + GitHub both present
+- [ ] VALIDATION.md submission links: Form + GitHub + email all present
+- [ ] CITATION.cff: version + date-released updated
+
+### 4-E. mcp.eijex.com (Eijex MCP)
+- [ ] Tool descriptions show current FactorForge version
 
 ---
 
@@ -101,10 +135,21 @@ git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push --tags
 
 ---
 
-## Step 7 — Post-release External Audit
+## Step 7 — Post-release External Audit (deployed verification)
 
-- [ ] Run the maintained public-surface audit against deployed docs, release surfaces, and `https://pypi.org/project/factorforge-cds/X.Y.Z/`
-- [ ] No new findings
+Repeat Step 4 checks against live deployed URLs (not local files).
+
+- [ ] `https://factorforge.eijex.com` — version, What's New modal, footer links
+- [ ] `https://www.eijex.com` — StatsBar numbers, Hero copy, Footer Form link
+- [ ] `https://eijex.github.io/factorforge-cds/` — benchmark table, submission links
+- [ ] `https://github.com/eijex/factorforge-cds` — README version, wet-lab links
+- [ ] `https://pypi.org/project/factorforge-cds/X.Y.Z/` — version published, description accurate
+- [ ] `https://mcp.eijex.com` — tool descriptions show vX.Y.Z
+- [ ] Automated audit: no new findings
+  ```bash
+  python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_surface.py \
+    --workspace C:\Work\eijex --live --external
+  ```
 
 ---
 
@@ -121,6 +166,8 @@ git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push --tags
 - [ ] Close completed GitHub Issues / milestone
 - [ ] Verify factorforge.eijex.com shows new CURRENT version in "What's New" modal
 - [ ] Verify mcp.eijex.com tool descriptions show new version
+- [ ] Verify www.eijex.com StatsBar reflects new release numbers
+- [ ] Verify eijex.github.io/factorforge-cds/ benchmark table updated
 
 ---
 
