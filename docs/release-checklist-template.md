@@ -27,24 +27,11 @@ python scripts/release.py X.Y.Z \
   --web <website-repository-path>
 ```
 
-Expected files updated automatically:
-- [ ] `pyproject.toml`
-- [ ] `CITATION.cff` (version + date-released)
-- [ ] `src/factorforge/__init__.py`
-- [ ] `src/factorforge/engines/__init__.py`
-- [ ] `src/factorforge/engines/profile/__init__.py`
-- [ ] `src/factorforge/engines/profile/optimizer.py`
-- [ ] `api/optimize.py`
-- [ ] `web/index.html` (Release Notes heading + changelog CURRENT version/date)
-- [ ] `web/js/app.js`
-- [ ] `ROADMAP.md`
-- [ ] `tests/` (version assertion strings)
-- [ ] `.github/ISSUE_TEMPLATE/wet_lab_result.yml`
-- [ ] `recipes/meta.yaml` (version + PyPI sha256 auto-fetch)
-- [ ] eijex-mcp: `mcp-tools.ts`, `route.ts`
-- [ ] eijex-web: `StatsBar.tsx`
+Script handles 16 version-bearing files automatically (pyproject.toml, CITATION.cff, __init__.py files, api/optimize.py, web/, ROADMAP.md, tests/, issue template, recipes/meta.yaml, eijex-mcp, eijex-web StatsBar.tsx).
 
-Residual check: confirm `"No residual X.Y.Z-old strings found"` in output.
+- [ ] Script ran without errors
+- [ ] Residual check: `"No residual X.Y.Z-old strings found"` in output
+- [ ] `CITATION.cff` version + date-released correct (spot-check)
 
 ---
 
@@ -102,8 +89,9 @@ python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_sur
 - [ ] VALIDATION.md submission links: Form + GitHub + email all present
 - [ ] CITATION.cff: version + date-released updated
 
-### 4-E. mcp.eijex.com (Eijex MCP)
-- [ ] Tool descriptions show current FactorForge version
+### 4-E. mcp.eijex.com / github.com/eijex/eijex-mcp
+- [ ] `mcp-tools.ts`, `route.ts` version strings updated (by release.py)
+- [ ] `https://mcp.eijex.com` tool descriptions show vX.Y.Z
 
 ---
 
@@ -125,8 +113,9 @@ git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push --tags
 
 - [ ] `pip install factorforge-cds==X.Y.Z && factorforge --help` (PyPI smoke)
 - [ ] `docker run ghcr.io/eijex/factorforge-cds:X.Y.Z factorforge --help` (Docker smoke)
-- [ ] Zenodo software DOI: https://zenodo.org/doi/10.5281/zenodo.20407330 (concept DOI, auto-updated on release)
-- [ ] Zenodo benchmark data DOI: https://zenodo.org/doi/10.5281/zenodo.20676276 (benchmark_results.csv v2, scoring_contract v1.1)
+- [ ] Zenodo software — concept DOI auto-updated: https://zenodo.org/doi/10.5281/zenodo.20407330
+- [ ] Zenodo software — new record URL visible: https://zenodo.org/records/20407331 (verify vX.Y.Z)
+- [ ] Zenodo benchmark data — record URL: https://zenodo.org/records/20676276 (benchmark_results.csv v2, scoring_contract v1.1)
 - [ ] Bioconda PR: push fork branch `add-factorforge-cds`
   ```bash
   cd <bioconda-recipes-fork> && git push origin add-factorforge-cds
@@ -139,12 +128,14 @@ git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push --tags
 
 Repeat Step 4 checks against live deployed URLs (not local files).
 
-- [ ] `https://factorforge.eijex.com` — version, What's New modal, footer links
+- [ ] `https://factorforge.eijex.com` — version header, What's New modal, footer links
 - [ ] `https://www.eijex.com` — StatsBar numbers, Hero copy, Footer Form link
 - [ ] `https://eijex.github.io/factorforge-cds/` — benchmark table, submission links
 - [ ] `https://github.com/eijex/factorforge-cds` — README version, wet-lab links
-- [ ] `https://pypi.org/project/factorforge-cds/X.Y.Z/` — version published, description accurate
+- [ ] `https://github.com/eijex/eijex-mcp` — version strings in mcp-tools.ts, route.ts
 - [ ] `https://mcp.eijex.com` — tool descriptions show vX.Y.Z
+- [ ] `https://pypi.org/project/factorforge-cds/X.Y.Z/` — version published, description accurate
+- [ ] `https://zenodo.org/records/20407331` — new version record visible
 - [ ] Automated audit: no new findings
   ```bash
   python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_surface.py \
@@ -164,10 +155,6 @@ Repeat Step 4 checks against live deployed URLs (not local files).
 ## Step 9 — Cleanup
 
 - [ ] Close completed GitHub Issues / milestone
-- [ ] Verify factorforge.eijex.com shows new CURRENT version in "What's New" modal
-- [ ] Verify mcp.eijex.com tool descriptions show new version
-- [ ] Verify www.eijex.com StatsBar reflects new release numbers
-- [ ] Verify eijex.github.io/factorforge-cds/ benchmark table updated
 
 ---
 
