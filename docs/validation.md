@@ -62,8 +62,9 @@ Public-safe summaries may include:
 
 Submission links:
 
-- [Open a public GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) only for public-safe summaries
-- Email `eijex.lab@gmail.com` for private or sensitive summaries
+- [Submit via Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform) — structured wet-lab result submission
+- [Open a public GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) — public-safe coarse summaries only
+- Email `eijex.lab@gmail.com` — private or sensitive summaries
 - See [VALIDATION.md](https://github.com/eijex/factorforge-cds/blob/main/VALIDATION.md) for the current public validation log.
 
 All public entries require manual review before publication.
