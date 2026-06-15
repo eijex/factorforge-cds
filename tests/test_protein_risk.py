@@ -89,8 +89,11 @@ def test_annotate_low_risk_empty_warnings():
 
 
 def test_no_private_sequence_in_fixtures():
+    # Compliance check: ensure internal staging identifiers or placeholder tokens
+    # do not accidentally appear in public test fixtures.
     fixture_material = " ".join(
         [HYDROPHOBIC, SOLUBLE_LINKER, MULTIPASS, SINGLE_PASS, SIGNAL_PEPTIDE_SINGLE_PASS, SOLUBLE]
     )
-    assert "C" + "D" + "9" not in fixture_material
-    assert "C" + "D" + "4" + "7" not in fixture_material
+    forbidden = ["C" + "D" + "9", "C" + "D" + "4" + "7"]
+    for marker in forbidden:
+        assert marker not in fixture_material, f"Private staging identifier found in public fixture: {marker}"
