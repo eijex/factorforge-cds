@@ -32,7 +32,7 @@
     },
     "ablation_spec": {
       "path": "benchmarks/ablation/ablation_spec.yaml",
-      "sha256": "f0a6432405af7e39d69c3b425a409529755c2eab1e5416c4c94eea6d0c4818a9"
+      "sha256": "957097503d27b7180a2cd42952fea684ac588194ca44b9d2c6893422160be5c5"
     },
     "ablation_summary": {
       "path": "benchmarks/results/v3.2.0/ablation/ablation_summary.json",
