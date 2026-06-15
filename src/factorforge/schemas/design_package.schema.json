@@ -51,6 +51,9 @@
     },
     "claim_boundary": {
       "$ref": "#/$defs/claimBoundary"
+    },
+    "protein_risk": {
+      "$ref": "#/$defs/proteinRisk"
     }
   },
   "allOf": [
@@ -134,6 +137,39 @@
     }
   ],
   "$defs": {
+    "proteinRisk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tm_count",
+        "mean_kd_score",
+        "signal_peptide_predicted",
+        "risk_level",
+        "warnings"
+      ],
+      "properties": {
+        "tm_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mean_kd_score": {
+          "type": "number"
+        },
+        "signal_peptide_predicted": {
+          "type": "boolean"
+        },
+        "risk_level": {
+          "type": "string",
+          "enum": ["LOW", "MEDIUM", "HIGH"]
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "hostProfile": {
       "type": "object",
       "additionalProperties": false,
