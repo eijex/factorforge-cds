@@ -17,7 +17,7 @@ Separation rationale:
     before any output is published or shared externally.
 """
 
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -90,6 +90,16 @@ class WetLabFeedback(BaseModel):
     submissions: list[Any] = Field(default_factory=list)
 
 
+class ProteinRisk(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    tm_count: int = Field(ge=0)
+    mean_kd_score: float
+    signal_peptide_predicted: bool
+    risk_level: Literal["LOW", "MEDIUM", "HIGH"]
+    warnings: list[str] = Field(default_factory=list)
+
+
 class DesignPackage(BaseModel):
     model_config = ConfigDict(extra="allow")
 
@@ -103,3 +113,4 @@ class DesignPackage(BaseModel):
     validation_status: Optional[ValidationStatus] = None
     provenance: Provenance
     wet_lab_feedback: WetLabFeedback = Field(default_factory=WetLabFeedback)
+    protein_risk: Optional[ProteinRisk] = None
