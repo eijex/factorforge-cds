@@ -4,6 +4,22 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.2.1 — 2026-06-16
+
+### Added
+- **Protein risk annotation** — transmembrane helix (Kyte-Doolittle, window=19) and signal peptide heuristics flag HIGH / MEDIUM / LOW / UNKNOWN risk sequences before wet-lab submission
+
+### Fixed
+- CAI provenance annotation in benchmark output
+- Type IIS restriction site warning status
+- Manifest SHA-256 reproducibility drift on Windows
+- wet-lab result GitHub template: protein_class options + validation consent checkbox
+
+### Changed
+- Google Form wet-lab submission channel added
+
+---
+
 ## v3.2.0 — 2026-06-11
 
 ### Benchmark
