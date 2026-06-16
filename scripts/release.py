@@ -54,24 +54,66 @@ def build_web_targets(old: str, new: str, web: Path) -> list[tuple[Path, list[tu
 
 
 def _update_changelog_current(root: Path, old: str, new: str, dry_run: bool) -> list[str]:
-    """Toggle the CURRENT badge in web/index.html changelog panel."""
+    """Demote old CURRENT block to history and insert new CURRENT placeholder block."""
     path = root / "web/index.html"
     if not path.exists():
         return []
     today = _today()
     content = path.read_text(encoding="utf-8")
     original = content
-    h3_old = f'<h3 class="font-bold text-slate-800 dark:text-white">v{old}</h3>'
-    h3_new = f'<h3 class="font-bold text-slate-800 dark:text-white">v{new}</h3>'
-    content = content.replace(h3_old, h3_new)
-    date_pattern = re.compile(
-        r'(<h3 class="font-bold text-slate-800 dark:text-white">v' + re.escape(new) + r'</h3>\s*'
-        r'<span class="text-slate-400 text-\[10px\]">)(\d{4}-\d{2}-\d{2})(</span>)'
+    changes = []
+
+    # 1. Navbar button
+    if f"v{old} Release Notes" in content:
+        content = content.replace(f"v{old} Release Notes", f"v{new} Release Notes")
+        changes.append(f"  navbar button: v{old} → v{new}")
+
+    # 2. Demote old CURRENT block: emerald → slate (replace first occurrence only)
+    emerald_outer = 'border-l-2 border-emerald-500">'
+    slate_outer   = 'border-l-2 border-slate-200 dark:border-slate-700">'
+    if emerald_outer in content:
+        content = content.replace(emerald_outer, slate_outer, 1)
+        changes.append("  demoted CURRENT outer border: emerald → slate")
+
+    emerald_dot = 'bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]">'
+    slate_dot   = 'bg-slate-300 dark:bg-slate-600 rounded-full border-4 border-white dark:border-slate-900">'
+    if emerald_dot in content:
+        content = content.replace(emerald_dot, slate_dot, 1)
+        changes.append("  demoted CURRENT dot: emerald → slate")
+
+    badge = re.compile(
+        r'\s*<span\s[^>]*bg-emerald-100[^>]*>Current</span>\s*'
     )
-    content = date_pattern.sub(lambda m: f"{m.group(1)}{today}{m.group(3)}", content)
+    content, n = badge.subn(lambda m: "\n                        ", content, count=1)
+    if n:
+        changes.append("  removed Current badge")
+
+    # 3. Insert new CURRENT block before <!-- Version {old} -->
+    marker = f"<!-- Version {old} -->"
+    if marker in content:
+        new_block = (
+            f"<!-- Version {new} -->\n"
+            f'                <div class="relative pl-8 border-l-2 border-emerald-500">\n'
+            f'                    <div\n'
+            f'                        class="absolute -left-[9px] top-0 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]">\n'
+            f'                    </div>\n'
+            f'                    <div class="flex items-center space-x-2 mb-2">\n'
+            f'                        <span\n'
+            f'                            class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>\n'
+            f'                        <h3 class="font-bold text-slate-800 dark:text-white">v{new}</h3>\n'
+            f'                        <span class="text-slate-400 text-[10px]">{today}</span>\n'
+            f'                    </div>\n'
+            f'                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">\n'
+            f'                        <!-- TODO: add v{new} release notes here -->\n'
+            f'                    </ul>\n'
+            f'                </div>\n'
+            f'                '
+        )
+        content = content.replace(marker, new_block + marker, 1)
+        changes.append(f"  inserted new CURRENT block for v{new} (fill in release notes)")
+
     if content == original:
         return []
-    changes = [f"  web/index.html: CURRENT v{old} → v{new}, date → {today}"]
     if not dry_run:
         path.write_text(content, encoding="utf-8")
     return changes
@@ -137,6 +179,15 @@ def build_targets(old: str, new: str) -> list[tuple[str, list[tuple[str, str]], 
         ], True),
         ("docs/tutorials/gfp-nbenthamiana.md", [
             (f"Profile-based v{old}", f"Profile-based v{new}"),
+        ], True),
+        ("docs/benchmark.md", [
+            (f"FactorForge v{old} provides", f"FactorForge v{new} provides"),
+        ], True),
+        ("docs/index.md", [
+            (f"(v{old}, balanced profile", f"(v{new}, balanced profile"),
+        ], True),
+        ("docs/validation/RELEASE_GATE.md", [
+            (f"# FactorForge v{old} Release Gate", f"# FactorForge v{new} Release Gate"),
         ], True),
         ("tests/test_validation/test_package_generator.py", [
             (f'factorforge_version="{old}"', f'factorforge_version="{new}"'),
@@ -432,8 +483,7 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     print("  6. Wait for CI to pass (github.com/eijex/factorforge-cds/actions)")
     print()
     print("  --- Public surface audit (before tagging) ---")
-    print(f"  6a. python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_surface.py \\")
-    print(f"        --workspace C:\\Work\\eijex --live")
+    print(f"  6a. python scripts/audit_public_surface.py --live")
     print("        → fix any findings before tagging")
     print()
     print("  --- Tag & publish ---")
@@ -451,8 +501,7 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     print(" 13.  Close completed GitHub Issues; close milestone if all done")
     print()
     print("  --- Post-release external audit ---")
-    print(f" 14.  python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_surface.py \\")
-    print(f"        --workspace C:\\Work\\eijex --external \\")
+    print(f" 14.  python scripts/audit_public_surface.py --external \\")
     print(f"        --url https://pypi.org/project/factorforge-cds/{new}/")
     print("        → confirms no policy violations leaked into published surfaces")
 
