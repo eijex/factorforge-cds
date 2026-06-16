@@ -58,8 +58,7 @@ Script handles 16 version-bearing files automatically (pyproject.toml, CITATION.
 Run the automated audit first, then verify each public surface manually.
 
 ```bash
-python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_surface.py \
-  --workspace C:\Work\eijex --live --external
+python scripts/audit_public_surface.py --live --external
 ```
 
 - [ ] No new findings (false positives documented and accepted)
@@ -138,8 +137,7 @@ Repeat Step 4 checks against live deployed URLs (not local files).
 - [ ] `https://zenodo.org/records/20407331` — new version record visible
 - [ ] Automated audit: no new findings
   ```bash
-  python ~/.codex/skills/factorforge-public-surface-audit/scripts/audit_public_surface.py \
-    --workspace C:\Work\eijex --live --external
+  python scripts/audit_public_surface.py --live --external
   ```
 
 ---
