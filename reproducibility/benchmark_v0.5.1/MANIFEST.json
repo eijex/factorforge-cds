@@ -24,23 +24,23 @@
   "inputs": {
     "benchmark_summary_frozen": {
       "path": "reproducibility/benchmark_v0.5.1/data/benchmark_summary.frozen.json",
-      "sha256": "f8f5aa8a2b61b04139bb1d77547e6e3887f46ceca350cd834dc306d9a111956a"
+      "sha256": "465d995d8c6596c87e565027995d37cac34fda1846d26a3b36cd624a74af01cd"
     },
     "failure_attribution": {
       "path": "reproducibility/benchmark_v0.5.1/data/failure_attribution_summary.json",
-      "sha256": "949debd07449bf85c35493a0d1ecc0d6ed919c393fe09047fbc03b3db44029b1"
+      "sha256": "f7766dff6a75d2af40335b3f8f96e59876661763e961a8584a5ec857e1183e8e"
     },
     "ablation_spec": {
       "path": "benchmarks/ablation/ablation_spec.yaml",
-      "sha256": "957097503d27b7180a2cd42952fea684ac588194ca44b9d2c6893422160be5c5"
+      "sha256": "f0a6432405af7e39d69c3b425a409529755c2eab1e5416c4c94eea6d0c4818a9"
     },
     "ablation_summary": {
       "path": "benchmarks/results/v3.2.0/ablation/ablation_summary.json",
-      "sha256": "3024bf91660794cd15db41d947b82f7bb3fd0b26bb887c8a2949d7ba70790aff"
+      "sha256": "3b6f10db4458af1b04761df7737284ccbc8b2bdfc6b7d6f04ed2e334d6b1dee4"
     },
     "parameter_registry": {
       "path": "src/factorforge/registry/current_parameter_registry.yaml",
-      "sha256": "8838408157e3e2913c2eb2de2168b369d89cd8ddff9a8c85c4bbced29532cc06"
+      "sha256": "da95907eced327f90eb463e359f87f316bf2bffbb29b022ee3656b79905e40e2"
     }
   },
   "outputs": {
