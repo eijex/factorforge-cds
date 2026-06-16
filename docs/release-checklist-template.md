@@ -45,6 +45,24 @@ Script handles 16 version-bearing files automatically (pyproject.toml, CITATION.
 
 ---
 
+## Step 2-B — Regenerate Frozen Example
+
+Version bump changes `registry_version` inside `design_package.json`, which invalidates the frozen file.
+
+```bash
+python examples/worked_example/run_example.py --freeze
+```
+
+- [ ] Script ran without errors
+- [ ] `examples/worked_example/output/design_package.json` — `evidence.registry_version` = X.Y.Z
+- [ ] `examples/worked_example/output/validation_summary.json` — updated
+- [ ] Stage both frozen files: `git add examples/worked_example/output/`
+
+> Note: `run_example.py` uses `read_text()` to hash the registry YAML (LF-normalized),
+> so the hash is identical on Windows and Linux.
+
+---
+
 ## Step 3 — Commit & CI
 
 - [ ] `git add -A && git commit -m "chore: release vX.Y.Z"`
