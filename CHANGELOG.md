@@ -25,6 +25,35 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
+## [3.2.1] — 2026-06-16
+
+### Added
+- Protein risk annotation layer for CDS sequences
+  - Transmembrane helix prediction (Kyte-Doolittle, window=19, threshold=1.6)
+  - Signal peptide heuristic (N-terminal 30 aa scan)
+  - Risk classification: HIGH / MEDIUM / LOW / UNKNOWN
+
+### Fixed
+- Correct CAI provenance annotation in benchmark output (Job 110)
+- Correct Type IIS restriction site warning status (Job 110)
+- Pin JSON files to LF line endings for Windows reproducibility
+- Add pandas to dev test dependencies
+- Manifest SHA-256 reproducibility drift on Windows (JSON/EOL normalization)
+- wet-lab result GitHub template: add protein_class options (Reporter / Antigen / Cytokine) and validation consent checkbox
+
+### Changed
+- Add Google Form as wet-lab submission channel alongside GitHub Issue and email
+- Standardize wet-lab submission link labels across README, docs, and web app
+
+### Docs
+- Add public-safe FactorForge agent guidance
+- Expand release checklist with public surface audit steps
+
+### Chore
+- Bump actions/configure-pages, codecov/codecov-action, actions/deploy-pages, actions/setup-python, softprops/action-gh-release (Dependabot)
+
+---
+
 ## [Unreleased]
 
 ### Fixed
