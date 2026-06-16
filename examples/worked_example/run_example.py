@@ -70,7 +70,9 @@ def compute_validation_metrics(aa_seq: str, dna_seq: str, gc_percent: float) -> 
 def build_design_package(result, aa_seq: str) -> dict:
     """Build design_package.json conforming to design_package.schema.json v1.0."""
     seq_hash = "sha256:" + hashlib.sha256(result.sequence.encode()).hexdigest()
-    registry_hash = "sha256:" + hashlib.sha256(REGISTRY_PATH.read_bytes()).hexdigest()
+    registry_hash = "sha256:" + hashlib.sha256(
+        REGISTRY_PATH.read_text(encoding="utf-8").encode("utf-8")
+    ).hexdigest()
     gc = result.metrics.get("gc_percent", 0.0)
     cai = result.metrics.get("cai", 0.0)
     v = compute_validation_metrics(aa_seq, result.sequence, gc)
