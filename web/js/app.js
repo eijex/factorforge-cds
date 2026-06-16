@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
     updateHostUI();
     renderHistory();
-    console.log('FactorForge v3.2.0 Engaged');
+    console.log('FactorForge v3.2.1 Engaged');
 });
 
 function initEventListeners() {
