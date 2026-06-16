@@ -259,7 +259,8 @@ First official release of FactorForge.
 
 ---
 
-[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.2.0...HEAD
+[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.2.1...HEAD
+[3.2.1]: https://github.com/eijex/factorforge-cds/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/eijex/factorforge-cds/compare/v3.1.9...v3.2.0
 [3.1.9]: https://github.com/eijex/factorforge-cds/compare/v3.1.8...v3.1.9
 [3.1.8]: https://github.com/eijex/factorforge-cds/compare/v3.1.7...v3.1.8

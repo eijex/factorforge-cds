@@ -3,9 +3,25 @@
 Bump FactorForge version across all version-bearing files.
 
 Usage:
-    python release.py 3.1.7
-    python release.py 3.2.0 --dry-run
-    python release.py 3.2.0 --strict   # fail on any missing pattern
+    python release.py 3.2.2                    # version bump only (manual release)
+    python release.py 3.2.2 --auto             # full automated release pipeline
+    python release.py 3.2.2 --auto --dry-run   # preview without writing
+    python release.py 3.2.2 --dry-run          # preview bump only
+    python release.py 3.2.2 --strict           # fail on any missing pattern
+    python release.py 3.2.2 --zenodo-doi 10.5281/zenodo.XYZ  # post-tag: update DOI
+
+--auto pipeline (fully automated):
+    [0] Pre-flight  — clean git tree, [Unreleased] has content
+    [1] Version bump — all version-bearing files
+    [2] Freeze      — examples/worked_example/run_example.py --freeze
+    [3] Audit       — scripts/audit_public_surface.py --live (if --audit-script given)
+    [4] Tests       — pytest tests/ -q
+    [5] CHANGELOG   — [Unreleased] → [X.Y.Z] — date + comparison links
+    [6] What's New  — auto-fill web/index.html bullets from CHANGELOG entries
+    [7] Commit      — git add -A && git commit
+    [8] Tag         — git tag -a vX.Y.Z
+    [9] Push        — git push && git push --tags
+    → GitHub Actions publishes PyPI + Docker + GitHub Release + Zenodo
 
 Publication sync (keep documentation in sync with feature changes):
   - Patch release: no update needed unless claims changed
@@ -17,6 +33,7 @@ Publication sync (keep documentation in sync with feature changes):
 
 import argparse
 import re
+import subprocess
 import sys
 import urllib.request
 import json
@@ -525,6 +542,270 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     return errors
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Auto-release helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _run_step(label: str, cmd: list[str]) -> None:
+    """Print step header, run command, abort on non-zero exit."""
+    print(f"  $ {' '.join(str(c) for c in cmd)}")
+    result = subprocess.run(cmd, cwd=str(ROOT))
+    if result.returncode != 0:
+        print(f"  ABORT: '{label}' failed (exit {result.returncode})")
+        sys.exit(result.returncode)
+
+
+def _changelog_move_unreleased(root: Path, old: str, new: str, dry_run: bool) -> list[str]:
+    """
+    In CHANGELOG.md:
+    - Rename '## [Unreleased]' → '## [new] — YYYY-MM-DD'
+    - Update [Unreleased] comparison link: v{old}...HEAD → v{new}...HEAD
+    - Insert new [new]: v{old}...v{new} comparison link
+    """
+    path = root / "CHANGELOG.md"
+    content = path.read_text(encoding="utf-8")
+    today = _today()
+    changes: list[str] = []
+
+    # 1. Rename [Unreleased] header (bracket format only — leaves '## Unreleased' intact)
+    old_header = "## [Unreleased]"
+    new_header = f"## [{new}] — {today}"
+    if old_header in content:
+        content = content.replace(old_header, new_header, 1)
+        changes.append(f"  {old_header} -> {new_header}")
+
+    # 2. Update comparison links
+    #    [Unreleased]: https://.../compare/vX.Y.Z...HEAD
+    link_pat = re.compile(
+        r'(\[Unreleased\]: https://[^\s]+/compare/v)[^\s.]+(\.[^\s.]+\.[^\s]+)(\.\.\.HEAD)'
+    )
+    m = link_pat.search(content)
+    if m:
+        base = m.group(1)
+        suffix = m.group(3)
+        old_link = m.group(0)
+        new_unreleased = f"[Unreleased]: {base.split('[Unreleased]: ')[1]}{new}{suffix}"
+        version_link = f"[{new}]: {base.split('[Unreleased]: ')[1]}{old}...v{new}"
+        # reconstruct properly using the full match
+        full_base_url = re.search(r'https://[^\s]+/compare/', old_link).group(0)
+        new_unreleased = f"[Unreleased]: {full_base_url}v{new}...HEAD"
+        version_link = f"[{new}]: {full_base_url}v{old}...v{new}"
+        content = content.replace(old_link, f"{new_unreleased}\n{version_link}", 1)
+        changes.append(f"  comparison links updated")
+
+    if not changes:
+        return []
+    if not dry_run:
+        path.write_text(content, encoding="utf-8")
+    return changes
+
+
+def _parse_changelog_section(root: Path, version: str) -> list[tuple[str, str]]:
+    """
+    Parse CHANGELOG.md for [version] section.
+    Returns list of (category, item_text) for top-level '- ' bullets only.
+    """
+    path = root / "CHANGELOG.md"
+    content = path.read_text(encoding="utf-8")
+
+    pat = re.compile(
+        rf'^## \[{re.escape(version)}\][^\n]*\n(.*?)(?=^## \[|\Z)',
+        re.MULTILINE | re.DOTALL,
+    )
+    m = pat.search(content)
+    if not m:
+        return []
+
+    entries: list[tuple[str, str]] = []
+    category = "Changed"
+    for line in m.group(1).splitlines():
+        stripped = line.strip()
+        if stripped.startswith("### "):
+            category = stripped[4:].strip()
+        elif stripped.startswith("- ") or stripped.startswith("* "):
+            text = stripped[2:].strip()
+            # Collapse bold markdown: **Foo** → Foo
+            text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
+            # Trim at first colon if the lead looks like a label "Label — detail"
+            if " — " in text:
+                text = text.split(" — ")[0].strip()
+            entries.append((category, text))
+    return entries
+
+
+def _update_web_whats_new_bullets(
+    root: Path, new: str, entries: list[tuple[str, str]], dry_run: bool
+) -> list[str]:
+    """Fill in the <!-- TODO: add v{new} release notes here --> placeholder."""
+    path = root / "web/index.html"
+    if not path.exists():
+        return []
+    content = path.read_text(encoding="utf-8")
+    placeholder = f"<!-- TODO: add v{new} release notes here -->"
+    if placeholder not in content:
+        return []
+
+    indent = "                        "
+    if entries:
+        li_lines = [f"{indent}<li><b>{cat}:</b> {text}</li>" for cat, text in entries]
+        bullets = "\n".join(li_lines)
+    else:
+        bullets = f"{indent}<li>See CHANGELOG.md for details.</li>"
+
+    updated = content.replace(placeholder, bullets)
+    if content == updated:
+        return []
+    if not dry_run:
+        path.write_text(updated, encoding="utf-8")
+    return [f"  web/index.html: inserted {len(entries)} bullet(s) for v{new}"]
+
+
+def auto_release(
+    old: str,
+    new: str,
+    workspace: "Path | None",
+    mcp: "Path | None",
+    web_repo: "Path | None",
+    audit_script: "Path | None" = None,
+    skip_tests: bool = False,
+    dry_run: bool = False,
+) -> int:
+    """Full automated release pipeline. Returns 0 on success."""
+    bar = "=" * 56
+    print(f"\n{bar}")
+    print(f"  AUTO RELEASE  {old} -> {new}{' [DRY RUN]' if dry_run else ''}")
+    print(f"{bar}")
+
+    # ── [0] PRE-FLIGHT ──────────────────────────────────────
+    print("\n[0] Pre-flight checks")
+
+    status = subprocess.run(
+        ["git", "status", "--porcelain"], capture_output=True, text=True, cwd=str(ROOT)
+    )
+    if status.stdout.strip():
+        print(f"  ABORT: working tree is not clean -- commit or stash first\n{status.stdout}")
+        sys.exit(1)
+    print("  git status: clean")
+
+    cl_text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    unrel = re.search(r"## \[Unreleased\](.*?)(?=\n## \[|\Z)", cl_text, re.DOTALL)
+    if not unrel or not unrel.group(1).strip():
+        print("  ABORT: CHANGELOG.md [Unreleased] is empty — write release notes first")
+        sys.exit(1)
+    print("  CHANGELOG [Unreleased]: has content")
+
+    # ── [1] VERSION BUMP ────────────────────────────────────
+    print(f"\n[1] Version bump: {old} -> {new}")
+    if not dry_run:
+        errors = bump(
+            old, new, dry_run=False, strict=False,
+            workspace=workspace, mcp=mcp, web=web_repo,
+        )
+        if errors:
+            print(f"  ABORT: {errors} bump error(s)")
+            sys.exit(1)
+    else:
+        print("  (skipped — dry run)")
+
+    # ── [2] FREEZE EXAMPLE ──────────────────────────────────
+    print("\n[2] Regenerate frozen example")
+    if not dry_run:
+        _run_step("freeze", ["python", "examples/worked_example/run_example.py", "--freeze"])
+    else:
+        print("  (skipped — dry run)")
+
+    # ── [3] PUBLIC SURFACE AUDIT ────────────────────────────
+    print("\n[3] Public surface audit")
+    if audit_script and audit_script.exists():
+        if not dry_run:
+            r = subprocess.run(["python", str(audit_script), "--live"], cwd=str(ROOT))
+            if r.returncode != 0:
+                print("  ABORT: audit found critical issues — fix before releasing")
+                sys.exit(1)
+            print("  audit: passed")
+        else:
+            print(f"  (dry run) would run: python {audit_script} --live")
+    else:
+        print("  SKIP: --audit-script not provided")
+        print("  Reminder: run audit manually before tagging")
+
+    # ── [4] TESTS ───────────────────────────────────────────
+    if not skip_tests:
+        print("\n[4] Test suite")
+        if not dry_run:
+            _run_step("pytest", ["python", "-m", "pytest", "tests/", "-q", "--tb=short"])
+        else:
+            print("  (skipped — dry run)")
+    else:
+        print("\n[4] Tests — skipped (--skip-tests)")
+
+    # ── [5] CHANGELOG ───────────────────────────────────────
+    print("\n[5] CHANGELOG.md: [Unreleased] -> [" + new + "]")
+    if not dry_run:
+        cl_changes = _changelog_move_unreleased(ROOT, old, new, dry_run=False)
+        for c in cl_changes:
+            print(c)
+    else:
+        print(f"  (dry run) would rename and update comparison links")
+
+    # ── [6] WHAT'S NEW AUTO-FILL ────────────────────────────
+    print("\n[6] What's New bullets (web/index.html)")
+    if not dry_run:
+        entries = _parse_changelog_section(ROOT, new)
+        wn = _update_web_whats_new_bullets(ROOT, new, entries, dry_run=False)
+        if wn:
+            for c in wn:
+                print(c)
+        else:
+            print("  NOTE: TODO placeholder not found — bullets may already be written")
+    else:
+        print("  (dry run) would auto-fill from CHANGELOG entries")
+
+    # ── [7] COMMIT ──────────────────────────────────────────
+    print("\n[7] Git commit")
+    if not dry_run:
+        _run_step("git add", ["git", "add", "-A"])
+        _run_step("git commit", ["git", "commit", "-m", f"chore: release v{new}"])
+    else:
+        print(f"  (dry run) git add -A && git commit -m 'chore: release v{new}'")
+
+    # ── [8] TAG ─────────────────────────────────────────────
+    print("\n[8] Git tag")
+    if not dry_run:
+        _run_step("git tag", ["git", "tag", "-a", f"v{new}", "-m", f"Release v{new}"])
+    else:
+        print(f"  (dry run) git tag -a v{new} -m 'Release v{new}'")
+
+    # ── [9] PUSH ────────────────────────────────────────────
+    print("\n[9] Push")
+    if not dry_run:
+        _run_step("git push", ["git", "push"])
+        _run_step("git push tags", ["git", "push", "--tags"])
+    else:
+        print("  (dry run) git push && git push --tags")
+
+    # ── DONE ────────────────────────────────────────────────
+    print(f"\n{bar}")
+    print(f"  Release v{new} {'[DRY RUN — nothing written]' if dry_run else 'COMPLETE'}")
+    print(f"{bar}")
+
+    if not dry_run:
+        print("\nGitHub Actions (automatic): PyPI + Docker + GitHub Release + Zenodo")
+        print("\nPost-release (3 manual items):")
+        print(f"  1. docs/changelog.md — add a one-line summary entry for v{new}")
+        print(f"  2. After Zenodo mints the new DOI:")
+        print(f"       python scripts/release.py {new} --zenodo-doi 10.5281/zenodo.<ID>")
+        print(f"  3. Bioconda: cd <fork> && git push origin add-factorforge-cds")
+        cross = [r for r in [workspace, mcp, web_repo] if r]
+        if cross:
+            print("\nCross-repo commits (bump already applied, need separate push):")
+            for r in cross:
+                print(f"    cd {r}")
+                print(f"    git add -A && git commit -m 'chore: FactorForge v{new}' && git push")
+
+    return 0
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Bump FactorForge version strings.")
     parser.add_argument("new_version", help="New version, e.g. 3.1.7")
@@ -543,6 +824,12 @@ def main() -> None:
     parser.add_argument("--zenodo-doi", dest="zenodo_doi", default=None,
                         help="Zenodo software version DOI for this release (e.g. 10.5281/zenodo.20640931). "
                              "Run after Zenodo mints the DOI post-tagging.")
+    parser.add_argument("--auto", action="store_true",
+                        help="Full automated release pipeline: bump + freeze + audit + test + commit + tag + push")
+    parser.add_argument("--audit-script", dest="audit_script", default=None,
+                        help="Path to audit_public_surface.py (optional; skipped if not provided)")
+    parser.add_argument("--skip-tests", action="store_true",
+                        help="Skip pytest in --auto mode (use only when CI already confirmed green)")
     args = parser.parse_args()
 
     new = args.new_version
@@ -566,7 +853,18 @@ def main() -> None:
     workspace = Path(args.workspace) if args.workspace else None
     mcp = Path(args.mcp) if args.mcp else None
     web = Path(args.web) if args.web else None
-    print(f"Bumping {old} → {new}{' (dry run)' if args.dry_run else ''}{' [strict]' if args.strict else ''}\n")
+    audit = Path(args.audit_script) if args.audit_script else None
+
+    if args.auto:
+        sys.exit(auto_release(
+            old, new,
+            workspace=workspace, mcp=mcp, web_repo=web,
+            audit_script=audit,
+            skip_tests=args.skip_tests,
+            dry_run=args.dry_run,
+        ))
+
+    print(f"Bumping {old} -> {new}{' (dry run)' if args.dry_run else ''}{' [strict]' if args.strict else ''}\n")
     errors = bump(old, new, dry_run=args.dry_run, strict=args.strict, workspace=workspace, mcp=mcp, web=web, zenodo_doi=args.zenodo_doi)
     sys.exit(errors)
 
