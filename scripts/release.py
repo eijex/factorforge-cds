@@ -202,6 +202,12 @@ def build_targets(old: str, new: str) -> list[tuple[str, list[tuple[str, str]], 
         ("recipes/meta.yaml", [
             (f'{{% set version = "{old}" %}}', f'{{% set version = "{new}" %}}'),
         ], True),
+        ("src/factorforge/registry/current_parameter_registry.yaml", [
+            (f'version: "{old}"', f'version: "{new}"'),
+        ], True),
+        ("tests/conftest.py", [
+            (f'"registry_version": "{old}"', f'"registry_version": "{new}"'),
+        ], True),
     ]
 
 
@@ -250,15 +256,21 @@ def _update_citation_doi(path: Path, new_doi: str, dry_run: bool) -> list[str]:
 def _check_residual(old: str, dry_run: bool) -> int:
     """Scan for leftover occurrences of old version string after bump."""
     residual_errors = 0
-    skip_dirs = {'.git', '__pycache__', '.pytest_cache', 'build', 'dist', 'archive', '.venv', 'venv'}
-    skip_files = {'CHANGELOG.md', 'docs/changelog.md'}
+    skip_dirs = {'.git', '__pycache__', '.pytest_cache', 'build', 'dist', 'archive', '.venv', 'venv', 'node_modules'}
+    # skip_names: matched against path.name (filename only)
+    skip_names = {'CHANGELOG.md', 'changelog.md'}
+    # skip_rel: matched against path relative to ROOT (posix form)
+    skip_rel = {'benchmarks/results', 'reproducibility/'}
 
     for path in ROOT.rglob('*'):
         if path.is_dir():
             continue
         if any(p in path.parts for p in skip_dirs):
             continue
-        if path.name in skip_files:
+        if path.name in skip_names:
+            continue
+        rel_posix = path.relative_to(ROOT).as_posix()
+        if any(rel_posix.startswith(s) for s in skip_rel):
             continue
         suffix = path.suffix.lower()
         if suffix not in {'.py', '.toml', '.yml', '.yaml', '.md', '.html', '.js', '.cff', '.json', '.txt'}:
@@ -476,6 +488,11 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     print("     → Old block: border-slate-200, dot bg-slate-300, no Current badge")
     print("     (Version number + date in the existing CURRENT block are auto-bumped by this script)")
     print("  3. Add a summary entry in docs/changelog.md")
+    print()
+    print("  --- Regenerate frozen example (required every release) ---")
+    print("  3a. python examples/worked_example/run_example.py --freeze")
+    print("      → updates evidence.registry_version and evidence.registry_hash in design_package.json")
+    print("      → git add examples/worked_example/output/")
     print()
     print("  --- Commit & CI gate (before tagging) ---")
     print(f"  4. git commit -m 'chore: release v{new}'")
