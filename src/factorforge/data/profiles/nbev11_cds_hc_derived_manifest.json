@@ -17,6 +17,6 @@
     "exclusion_duplicate": 366,
     "exclusion_isoform_shorter": 0,
     "total_sense_codons_counted": 20243009,
-    "codon_profile_sha256": "fdcbee2f630326f6dfd41376cf0d55473d0227db0e8bc84637d0a37267ed61d8",
+    "codon_profile_sha256": "686f12f2881b00a45246670e6c73e10d2254854577c5323ceb19a9ee58ee87dd",
     "build_script": "scripts/build_codon_profile.py"
 }
