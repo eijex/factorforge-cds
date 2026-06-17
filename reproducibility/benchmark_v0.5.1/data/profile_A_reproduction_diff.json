@@ -1,0 +1,286 @@
+{
+  "verdict": "PASS",
+  "diverged_count": 0,
+  "rows": [
+    {
+      "method": "factorforge_assembly_friendly",
+      "metric": "pass_rate_multi_constraint",
+      "frozen": 0.6337,
+      "fresh": 0.6337,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_assembly_friendly",
+      "metric": "pass_rate_biological",
+      "frozen": 1.0,
+      "fresh": 1.0,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_assembly_friendly",
+      "metric": "pass_rate_assembly",
+      "frozen": 0.6578,
+      "fresh": 0.6578,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_assembly_friendly",
+      "metric": "gc_in_range_rate",
+      "frozen": 0.9709,
+      "fresh": 0.9709,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_assembly_friendly",
+      "metric": "mean_cai",
+      "frozen": 0.9112,
+      "fresh": 0.9112,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_balanced",
+      "metric": "pass_rate_multi_constraint",
+      "frozen": 0.269,
+      "fresh": 0.269,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_balanced",
+      "metric": "pass_rate_biological",
+      "frozen": 1.0,
+      "fresh": 1.0,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_balanced",
+      "metric": "pass_rate_assembly",
+      "frozen": 0.279,
+      "fresh": 0.279,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_balanced",
+      "metric": "gc_in_range_rate",
+      "frozen": 0.9819,
+      "fresh": 0.9819,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_balanced",
+      "metric": "mean_cai",
+      "frozen": 0.9388,
+      "fresh": 0.9388,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_gc_target",
+      "metric": "pass_rate_multi_constraint",
+      "frozen": 0.2598,
+      "fresh": 0.2598,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_gc_target",
+      "metric": "pass_rate_biological",
+      "frozen": 1.0,
+      "fresh": 1.0,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_gc_target",
+      "metric": "pass_rate_assembly",
+      "frozen": 0.2619,
+      "fresh": 0.2619,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_gc_target",
+      "metric": "gc_in_range_rate",
+      "frozen": 0.9976,
+      "fresh": 0.9976,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_gc_target",
+      "metric": "mean_cai",
+      "frozen": 0.9506,
+      "fresh": 0.9506,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_high_cai",
+      "metric": "pass_rate_multi_constraint",
+      "frozen": 0.0,
+      "fresh": 0.0,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_high_cai",
+      "metric": "pass_rate_biological",
+      "frozen": 1.0,
+      "fresh": 1.0,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_high_cai",
+      "metric": "pass_rate_assembly",
+      "frozen": 0.4158,
+      "fresh": 0.4158,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_high_cai",
+      "metric": "gc_in_range_rate",
+      "frozen": 0.0,
+      "fresh": 0.0,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "factorforge_high_cai",
+      "metric": "mean_cai",
+      "frozen": 0.7343,
+      "fresh": 0.7343,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "greedy_cai",
+      "metric": "pass_rate_multi_constraint",
+      "frozen": 0.2177,
+      "fresh": 0.2177,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "greedy_cai",
+      "metric": "pass_rate_biological",
+      "frozen": 1.0,
+      "fresh": 1.0,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "greedy_cai",
+      "metric": "pass_rate_assembly",
+      "frozen": 0.3107,
+      "fresh": 0.3107,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "greedy_cai",
+      "metric": "gc_in_range_rate",
+      "frozen": 0.7289,
+      "fresh": 0.7289,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "greedy_cai",
+      "metric": "mean_cai",
+      "frozen": 1.0,
+      "fresh": 1.0,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "native_reference",
+      "metric": "pass_rate_multi_constraint",
+      "frozen": 0.0029,
+      "fresh": 0.0029,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "native_reference",
+      "metric": "pass_rate_biological",
+      "frozen": 1.0,
+      "fresh": 1.0,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "native_reference",
+      "metric": "pass_rate_assembly",
+      "frozen": 0.3736,
+      "fresh": 0.3736,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "native_reference",
+      "metric": "gc_in_range_rate",
+      "frozen": 0.0042,
+      "fresh": 0.0042,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "native_reference",
+      "metric": "mean_cai",
+      "frozen": 0.7249,
+      "fresh": 0.7249,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "random_synonymous",
+      "metric": "pass_rate_multi_constraint",
+      "frozen": 0.0054,
+      "fresh": 0.0054,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "random_synonymous",
+      "metric": "pass_rate_biological",
+      "frozen": 1.0,
+      "fresh": 1.0,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "random_synonymous",
+      "metric": "pass_rate_assembly",
+      "frozen": 0.2644,
+      "fresh": 0.2644,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "random_synonymous",
+      "metric": "gc_in_range_rate",
+      "frozen": 0.0134,
+      "fresh": 0.0134,
+      "diff": 0.0,
+      "match": true
+    },
+    {
+      "method": "random_synonymous",
+      "metric": "mean_cai",
+      "frozen": 0.7279,
+      "fresh": 0.7279,
+      "diff": 0.0,
+      "match": true
+    }
+  ]
+}

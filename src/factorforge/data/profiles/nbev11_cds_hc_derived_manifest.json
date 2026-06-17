@@ -1,0 +1,22 @@
+{
+    "source_profile_id": "nbev11_cds_hc_derived",
+    "source_url": "https://nbenthamiana.jp/data/dl_data?data=transcripts_h",
+    "source_file_name": "Nbe_v1.1_cds_HC.fa.gz",
+    "download_date": "2026-06-16",
+    "build_date": "2026-06-16",
+    "filtering_policy": "strict_nuclear_cds_v1",
+    "pseudocount_policy": "laplace",
+    "genetic_code": "standard",
+    "records_input": 57583,
+    "records_used": 57172,
+    "exclusion_non_atgc": 38,
+    "exclusion_length_mod3": 7,
+    "exclusion_too_short": 0,
+    "exclusion_internal_stop": 0,
+    "exclusion_organellar": 0,
+    "exclusion_duplicate": 366,
+    "exclusion_isoform_shorter": 0,
+    "total_sense_codons_counted": 20243009,
+    "codon_profile_sha256": "fdcbee2f630326f6dfd41376cf0d55473d0227db0e8bc84637d0a37267ed61d8",
+    "build_script": "scripts/build_codon_profile.py"
+}

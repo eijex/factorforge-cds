@@ -19,9 +19,28 @@ class RuleBasedOptimizer(OptimizerEngine):
     name = "Profile-based"
     version = "3.2.1"
 
-    def __init__(self) -> None:
+    def __init__(self, codon_table_path: str | None = None) -> None:
+        """
+        Args:
+            codon_table_path: Optional path to a codon usage table JSON used for
+                design-time reverse translation. When omitted (the default), the
+                bundled host reference table is used — this is the only path the
+                product `optimize` CLI and the registered engine ever take, so
+                their behavior is unchanged. Injection is used by the benchmark
+                harness to drive design with alternative source-profile tables.
+        """
         self.validator = InputValidator()
-        self.translator = ReverseTranslator()  # Data files use default path
+        self._codon_table_path = codon_table_path
+        # When a source-profile table is injected, drive every CAI-dependent
+        # profile from it: it is both the design weight table and the golden set
+        # that high_cai maximizes against. Otherwise high_cai would keep chasing
+        # the bundled golden set and stay invariant to the source profile,
+        # making the injection incomplete. gc_target is GC-driven and remains
+        # legitimately invariant either way.
+        self.translator = ReverseTranslator(
+            codon_table_path=codon_table_path,
+            golden_set_path=codon_table_path,
+        )
         self.rule_engine = RuleEngine()
         self.exporter = SequenceExporter()
 
@@ -74,7 +93,9 @@ class RuleBasedOptimizer(OptimizerEngine):
                 f"Unknown profile: {profile_value}. Supported profiles: {supported}"
             ) from exc
 
-        if host == "nbenthamiana":
+        if self._codon_table_path is not None or host == "nbenthamiana":
+            # An injected design table (benchmark source-profile runs) is
+            # authoritative: it already encodes the host it was derived from.
             translator = self.translator
             rule_engine = self.rule_engine
         else:

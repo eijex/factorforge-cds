@@ -1,0 +1,22 @@
+{
+    "source_profile_id": "qld183_v103_derived",
+    "source_url": "https://solgenomics.net/ftp/genomes/Nicotiana_benthamiana/annotation/NbQld183.v103.gff3.CDS.fasta.gz",
+    "source_file_name": "NbQld183.v103.gff3.CDS.fasta.gz",
+    "download_date": "2026-06-11",
+    "build_date": "2026-06-16",
+    "filtering_policy": "strict_nuclear_cds_v1",
+    "pseudocount_policy": "laplace",
+    "genetic_code": "standard",
+    "records_input": 49639,
+    "records_used": 45295,
+    "exclusion_non_atgc": 0,
+    "exclusion_length_mod3": 1,
+    "exclusion_too_short": 151,
+    "exclusion_internal_stop": 58,
+    "exclusion_organellar": 3844,
+    "exclusion_duplicate": 290,
+    "exclusion_isoform_shorter": 0,
+    "total_sense_codons_counted": 16562553,
+    "codon_profile_sha256": "f6d000128f9064afa79e80078f4f5c3f6832926e8b4a8f7abbf6b09315e703c1",
+    "build_script": "scripts/build_codon_profile.py"
+}

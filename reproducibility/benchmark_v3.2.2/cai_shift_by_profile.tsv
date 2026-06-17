@@ -1,0 +1,8 @@
+method	mean_cai_A	mean_cai_B	mean_cai_C1	mean_cai_C2	shift_B_vs_A	shift_C1_vs_A	shift_C2_vs_A
+factorforge_assembly_friendly	0.9112	0.8824	0.8827	0.8803	-0.0288	-0.0285	-0.0309
+factorforge_balanced	0.9388	0.9087	0.909	0.9074	-0.0301	-0.0298	-0.0314
+factorforge_gc_target	0.9506	0.6085	0.6057	0.5956	-0.3421	-0.3449	-0.355
+factorforge_high_cai	0.7343	1.0	1.0	1.0	0.2657	0.2657	0.2657
+greedy_cai	1.0	1.0	1.0	1.0	0.0	0.0	0.0
+native_reference	0.7249	0.7647	0.7646	0.7565	0.0398	0.0397	0.0316
+random_synonymous	0.7279	0.6634	0.6626	0.6525	-0.0645	-0.0653	-0.0754

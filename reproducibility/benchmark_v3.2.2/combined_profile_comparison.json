@@ -1,0 +1,1346 @@
+[
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_assembly_friendly",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_assembly_friendly",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_assembly_friendly",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_assembly_friendly",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_assembly_friendly",
+    "metric": "pass_rate_assembly",
+    "value": 0.6578
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_assembly_friendly",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.6337
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_assembly_friendly",
+    "metric": "gc_in_range_rate",
+    "value": 0.9709
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_assembly_friendly",
+    "metric": "mean_cai",
+    "value": 0.9112
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_balanced",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_balanced",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_balanced",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_balanced",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_balanced",
+    "metric": "pass_rate_assembly",
+    "value": 0.279
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_balanced",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.269
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_balanced",
+    "metric": "gc_in_range_rate",
+    "value": 0.9819
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_balanced",
+    "metric": "mean_cai",
+    "value": 0.9388
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_gc_target",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_gc_target",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_gc_target",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_gc_target",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_gc_target",
+    "metric": "pass_rate_assembly",
+    "value": 0.2619
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_gc_target",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.2598
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_gc_target",
+    "metric": "gc_in_range_rate",
+    "value": 0.9976
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_gc_target",
+    "metric": "mean_cai",
+    "value": 0.9506
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_high_cai",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_high_cai",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_high_cai",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_high_cai",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_high_cai",
+    "metric": "pass_rate_assembly",
+    "value": 0.4158
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_high_cai",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_high_cai",
+    "metric": "gc_in_range_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "factorforge_high_cai",
+    "metric": "mean_cai",
+    "value": 0.7343
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "greedy_cai",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "greedy_cai",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "greedy_cai",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "greedy_cai",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "greedy_cai",
+    "metric": "pass_rate_assembly",
+    "value": 0.3107
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "greedy_cai",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.2177
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "greedy_cai",
+    "metric": "gc_in_range_rate",
+    "value": 0.7289
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "greedy_cai",
+    "metric": "mean_cai",
+    "value": 1.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "native_reference",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "native_reference",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "native_reference",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "native_reference",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "native_reference",
+    "metric": "pass_rate_assembly",
+    "value": 0.3736
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "native_reference",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0029
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "native_reference",
+    "metric": "gc_in_range_rate",
+    "value": 0.0042
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "native_reference",
+    "metric": "mean_cai",
+    "value": 0.7249
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "random_synonymous",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "random_synonymous",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "random_synonymous",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "random_synonymous",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "random_synonymous",
+    "metric": "pass_rate_assembly",
+    "value": 0.2644
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "random_synonymous",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0054
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "random_synonymous",
+    "metric": "gc_in_range_rate",
+    "value": 0.0134
+  },
+  {
+    "profile_id": "legacy_packaged",
+    "method": "random_synonymous",
+    "metric": "mean_cai",
+    "value": 0.7279
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "pass_rate_assembly",
+    "value": 0.7344
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "gc_in_range_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "mean_cai",
+    "value": 0.8824
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_balanced",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_balanced",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_balanced",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_balanced",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_balanced",
+    "metric": "pass_rate_assembly",
+    "value": 0.3167
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_balanced",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_balanced",
+    "metric": "gc_in_range_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_balanced",
+    "metric": "mean_cai",
+    "value": 0.9087
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_gc_target",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_gc_target",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_gc_target",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_gc_target",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_gc_target",
+    "metric": "pass_rate_assembly",
+    "value": 0.2288
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_gc_target",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.2268
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_gc_target",
+    "metric": "gc_in_range_rate",
+    "value": 0.9976
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_gc_target",
+    "metric": "mean_cai",
+    "value": 0.6085
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_high_cai",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_high_cai",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_high_cai",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_high_cai",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_high_cai",
+    "metric": "pass_rate_assembly",
+    "value": 0.3463
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_high_cai",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_high_cai",
+    "metric": "gc_in_range_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "factorforge_high_cai",
+    "metric": "mean_cai",
+    "value": 1.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "greedy_cai",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "greedy_cai",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "greedy_cai",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "greedy_cai",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "greedy_cai",
+    "metric": "pass_rate_assembly",
+    "value": 0.3463
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "greedy_cai",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "greedy_cai",
+    "metric": "gc_in_range_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "greedy_cai",
+    "metric": "mean_cai",
+    "value": 1.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "native_reference",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "native_reference",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "native_reference",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "native_reference",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "native_reference",
+    "metric": "pass_rate_assembly",
+    "value": 0.3736
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "native_reference",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0029
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "native_reference",
+    "metric": "gc_in_range_rate",
+    "value": 0.0042
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "native_reference",
+    "metric": "mean_cai",
+    "value": 0.7647
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "random_synonymous",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "random_synonymous",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "random_synonymous",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "random_synonymous",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "random_synonymous",
+    "metric": "pass_rate_assembly",
+    "value": 0.2644
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "random_synonymous",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0054
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "random_synonymous",
+    "metric": "gc_in_range_rate",
+    "value": 0.0134
+  },
+  {
+    "profile_id": "qld183_v103_derived",
+    "method": "random_synonymous",
+    "metric": "mean_cai",
+    "value": 0.6634
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "pass_rate_assembly",
+    "value": 0.7437
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "gc_in_range_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "mean_cai",
+    "value": 0.8827
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_balanced",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_balanced",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_balanced",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_balanced",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_balanced",
+    "metric": "pass_rate_assembly",
+    "value": 0.3172
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_balanced",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_balanced",
+    "metric": "gc_in_range_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_balanced",
+    "metric": "mean_cai",
+    "value": 0.909
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_gc_target",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_gc_target",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_gc_target",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_gc_target",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_gc_target",
+    "metric": "pass_rate_assembly",
+    "value": 0.2288
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_gc_target",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.2268
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_gc_target",
+    "metric": "gc_in_range_rate",
+    "value": 0.9976
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_gc_target",
+    "metric": "mean_cai",
+    "value": 0.6057
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_high_cai",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_high_cai",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_high_cai",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_high_cai",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_high_cai",
+    "metric": "pass_rate_assembly",
+    "value": 0.3463
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_high_cai",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_high_cai",
+    "metric": "gc_in_range_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "factorforge_high_cai",
+    "metric": "mean_cai",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "greedy_cai",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "greedy_cai",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "greedy_cai",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "greedy_cai",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "greedy_cai",
+    "metric": "pass_rate_assembly",
+    "value": 0.3463
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "greedy_cai",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "greedy_cai",
+    "metric": "gc_in_range_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "greedy_cai",
+    "metric": "mean_cai",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "native_reference",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "native_reference",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "native_reference",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "native_reference",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "native_reference",
+    "metric": "pass_rate_assembly",
+    "value": 0.3736
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "native_reference",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0029
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "native_reference",
+    "metric": "gc_in_range_rate",
+    "value": 0.0042
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "native_reference",
+    "metric": "mean_cai",
+    "value": 0.7646
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "random_synonymous",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "random_synonymous",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "random_synonymous",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "random_synonymous",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "random_synonymous",
+    "metric": "pass_rate_assembly",
+    "value": 0.2644
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "random_synonymous",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0054
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "random_synonymous",
+    "metric": "gc_in_range_rate",
+    "value": 0.0134
+  },
+  {
+    "profile_id": "nbev11_cds_all_derived",
+    "method": "random_synonymous",
+    "metric": "mean_cai",
+    "value": 0.6626
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "pass_rate_assembly",
+    "value": 0.814
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "gc_in_range_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_assembly_friendly",
+    "metric": "mean_cai",
+    "value": 0.8803
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_balanced",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_balanced",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_balanced",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_balanced",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_balanced",
+    "metric": "pass_rate_assembly",
+    "value": 0.3732
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_balanced",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_balanced",
+    "metric": "gc_in_range_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_balanced",
+    "metric": "mean_cai",
+    "value": 0.9074
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_gc_target",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_gc_target",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_gc_target",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_gc_target",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_gc_target",
+    "metric": "pass_rate_assembly",
+    "value": 0.2289
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_gc_target",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.2268
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_gc_target",
+    "metric": "gc_in_range_rate",
+    "value": 0.9976
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_gc_target",
+    "metric": "mean_cai",
+    "value": 0.5956
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_high_cai",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_high_cai",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_high_cai",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_high_cai",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_high_cai",
+    "metric": "pass_rate_assembly",
+    "value": 0.4627
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_high_cai",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_high_cai",
+    "metric": "gc_in_range_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "factorforge_high_cai",
+    "metric": "mean_cai",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "greedy_cai",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "greedy_cai",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "greedy_cai",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "greedy_cai",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "greedy_cai",
+    "metric": "pass_rate_assembly",
+    "value": 0.4627
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "greedy_cai",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "greedy_cai",
+    "metric": "gc_in_range_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "greedy_cai",
+    "metric": "mean_cai",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "native_reference",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "native_reference",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "native_reference",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "native_reference",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "native_reference",
+    "metric": "pass_rate_assembly",
+    "value": 0.3736
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "native_reference",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0029
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "native_reference",
+    "metric": "gc_in_range_rate",
+    "value": 0.0042
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "native_reference",
+    "metric": "mean_cai",
+    "value": 0.7565
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "random_synonymous",
+    "metric": "n_ok",
+    "value": 49257
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "random_synonymous",
+    "metric": "n_error",
+    "value": 0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "random_synonymous",
+    "metric": "error_rate",
+    "value": 0.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "random_synonymous",
+    "metric": "pass_rate_biological",
+    "value": 1.0
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "random_synonymous",
+    "metric": "pass_rate_assembly",
+    "value": 0.2644
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "random_synonymous",
+    "metric": "pass_rate_multi_constraint",
+    "value": 0.0054
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "random_synonymous",
+    "metric": "gc_in_range_rate",
+    "value": 0.0134
+  },
+  {
+    "profile_id": "nbev11_cds_hc_derived",
+    "method": "random_synonymous",
+    "metric": "mean_cai",
+    "value": 0.6525
+  }
+]

@@ -1,0 +1,22 @@
+{
+    "source_profile_id": "nbev11_cds_all_derived",
+    "source_url": "https://solgenomics.net/ftp/genomes/Nicotiana_benthamiana_NbeV1.1/Nbe_v1.1_cds.fa.gz",
+    "source_file_name": "Nbe_v1.1_cds.fa.gz",
+    "download_date": "2026-06-16",
+    "build_date": "2026-06-16",
+    "filtering_policy": "strict_nuclear_cds_v1",
+    "pseudocount_policy": "laplace",
+    "genetic_code": "standard",
+    "records_input": 84570,
+    "records_used": 83864,
+    "exclusion_non_atgc": 58,
+    "exclusion_length_mod3": 7,
+    "exclusion_too_short": 3,
+    "exclusion_internal_stop": 0,
+    "exclusion_organellar": 0,
+    "exclusion_duplicate": 638,
+    "exclusion_isoform_shorter": 0,
+    "total_sense_codons_counted": 24935496,
+    "codon_profile_sha256": "597c90e2c7ddcb361313f928d509b6e256b1ba020d3ef9140f869ab92c1c5203",
+    "build_script": "scripts/build_codon_profile.py"
+}
