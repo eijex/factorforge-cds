@@ -4,7 +4,7 @@
   "scoring_contract_version": "v1.1",
   "multi_constraint_pass_definition": "biological_pass AND assembly_pass AND gc_in_target_range",
   "factorforge_version": "3.2.1",
-  "git_commit": "e2edde7",
+  "git_commit": "826fcd3",
   "registry_version": "3.2.1",
   "registry_hash": "sha256:58a7085db18e99cf5c1a154669b2e2920dbe14a3edd87541a4706fd429100bfd",
   "spec_hash": "sha256:70adc5fcd681ad3451bc6bd8f685932448e137ec65d49d304b92807e22dca3fe",
