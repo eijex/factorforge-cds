@@ -1,0 +1,98 @@
+{
+  "run_id": "d4a379061f86",
+  "timestamp": "2026-06-17T05:47:16.429927+00:00",
+  "scoring_contract_version": "v1.1",
+  "multi_constraint_pass_definition": "biological_pass AND assembly_pass AND gc_in_target_range",
+  "factorforge_version": "3.2.1",
+  "git_commit": "976abd6",
+  "registry_version": "3.2.1",
+  "registry_hash": "sha256:58a7085db18e99cf5c1a154669b2e2920dbe14a3edd87541a4706fd429100bfd",
+  "spec_hash": "sha256:70adc5fcd681ad3451bc6bd8f685932448e137ec65d49d304b92807e22dca3fe",
+  "dataset_id": "formal",
+  "dataset_n": 49257,
+  "random_seed": 320,
+  "input_protein_fasta_sha256": "35dc8ec1f2adaea2be02ad843dd18ca62053595328fe35e38c04bfa596f188e2",
+  "dataset_cds_fasta_sha256": "714a7155c50fff4240c196389ade1860550eb5b949f3cbbd44406ddd6d6cdb53",
+  "runtime_seconds": 2093.3089,
+  "methods": {
+    "factorforge_assembly_friendly": {
+      "n_ok": 49257,
+      "n_error": 0,
+      "error_rate": 0.0,
+      "pass_rate_biological": 1.0,
+      "pass_rate_assembly": 0.7344,
+      "pass_rate_multi_constraint": 0.0,
+      "gc_in_range_rate": 0.0,
+      "mean_cai": 0.8824
+    },
+    "factorforge_balanced": {
+      "n_ok": 49257,
+      "n_error": 0,
+      "error_rate": 0.0,
+      "pass_rate_biological": 1.0,
+      "pass_rate_assembly": 0.3167,
+      "pass_rate_multi_constraint": 0.0,
+      "gc_in_range_rate": 0.0,
+      "mean_cai": 0.9087
+    },
+    "factorforge_gc_target": {
+      "n_ok": 49257,
+      "n_error": 0,
+      "error_rate": 0.0,
+      "pass_rate_biological": 1.0,
+      "pass_rate_assembly": 0.2288,
+      "pass_rate_multi_constraint": 0.2268,
+      "gc_in_range_rate": 0.9976,
+      "mean_cai": 0.6085
+    },
+    "factorforge_high_cai": {
+      "n_ok": 49257,
+      "n_error": 0,
+      "error_rate": 0.0,
+      "pass_rate_biological": 1.0,
+      "pass_rate_assembly": 0.3463,
+      "pass_rate_multi_constraint": 0.0,
+      "gc_in_range_rate": 0.0,
+      "mean_cai": 1.0
+    },
+    "greedy_cai": {
+      "n_ok": 49257,
+      "n_error": 0,
+      "error_rate": 0.0,
+      "pass_rate_biological": 1.0,
+      "pass_rate_assembly": 0.3463,
+      "pass_rate_multi_constraint": 0.0,
+      "gc_in_range_rate": 0.0,
+      "mean_cai": 1.0
+    },
+    "native_reference": {
+      "n_ok": 49257,
+      "n_error": 0,
+      "error_rate": 0.0,
+      "pass_rate_biological": 1.0,
+      "pass_rate_assembly": 0.3736,
+      "pass_rate_multi_constraint": 0.0029,
+      "gc_in_range_rate": 0.0042,
+      "mean_cai": 0.7647
+    },
+    "random_synonymous": {
+      "n_ok": 49257,
+      "n_error": 0,
+      "error_rate": 0.0,
+      "pass_rate_biological": 1.0,
+      "pass_rate_assembly": 0.2644,
+      "pass_rate_multi_constraint": 0.0054,
+      "gc_in_range_rate": 0.0134,
+      "mean_cai": 0.6634
+    }
+  },
+  "codon_table_id": "nbenthamiana_legacy_kazusa_sgn_v101",
+  "codon_table_sha256": "f6d000128f9064afa79e80078f4f5c3f6832926e8b4a8f7abbf6b09315e703c1",
+  "source_profile_id": "qld183_v103_derived",
+  "design_table_sha256": "f6d000128f9064afa79e80078f4f5c3f6832926e8b4a8f7abbf6b09315e703c1",
+  "score_table_sha256": "f6d000128f9064afa79e80078f4f5c3f6832926e8b4a8f7abbf6b09315e703c1",
+  "source_profile_manifest_sha256": "757a1740bc309bc2a6cd3fb6b8ca1ed135a184950f9dd35a04bd45aab930a1d9",
+  "codon_table_source_status": "legacy_metadata_only",
+  "codon_table_build_path_status": "incomplete",
+  "codon_table_reference_note": "CAI and codon-usage metrics are computed against the configured FactorForge codon reference. The current codon table is not a freshly rebuilt SGN QLD183 v103 codon table."
+}

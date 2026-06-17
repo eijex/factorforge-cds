@@ -24,7 +24,9 @@ def canonical_multi_constraint_pass(df: pd.DataFrame, gc_min: float, gc_max: flo
 
 
 def score_cds(method: str, method_type: str, sequence_id: str, protein: str, cds: str,
-              config: BenchmarkConfig, runtime_seconds: float) -> dict:
+              config: BenchmarkConfig, runtime_seconds: float,
+              codon_weights: dict[str, float] | None = None) -> dict:
+    weights = codon_weights if codon_weights is not None else _WEIGHTS
     val = validate_cds_output(protein, cds)
     translated = translate_dna(cds)
     internal_stop = translated[:-1].count("*")
@@ -41,7 +43,7 @@ def score_cds(method: str, method_type: str, sequence_id: str, protein: str, cds
         "internal_stop_count": internal_stop,
         "invalid_codon_count": invalid,
         "length_multiple_of_three": length_ok,
-        "cai": round(calculate_cai(cds, _WEIGHTS), 4),
+        "cai": round(calculate_cai(cds, weights), 4),
         "gc_percent": gc,
         "gc_in_target_range": gc_in_range,
         "forbidden_type_iis_site_count": len(type_iis),

@@ -1,0 +1,526 @@
+{
+    "organism": "Nicotiana benthamiana",
+    "source": "https://solgenomics.net/ftp/genomes/Nicotiana_benthamiana/annotation/NbQld183.v103.gff3.CDS.fasta.gz",
+    "description": "qld183_v103_derived codon usage table built with strict_nuclear_cds_v1 filtering, Laplace pseudocount, build_codon_profile.py",
+    "codons": {
+        "TTT": {
+            "aa": "F",
+            "frequency": 0.610062,
+            "per_thousand": 25.1663
+        },
+        "TTC": {
+            "aa": "F",
+            "frequency": 0.389938,
+            "per_thousand": 16.0857
+        },
+        "TTA": {
+            "aa": "L",
+            "frequency": 0.157161,
+            "per_thousand": 14.7596
+        },
+        "TTG": {
+            "aa": "L",
+            "frequency": 0.2495,
+            "per_thousand": 23.4316
+        },
+        "CTT": {
+            "aa": "L",
+            "frequency": 0.249289,
+            "per_thousand": 23.4118
+        },
+        "CTC": {
+            "aa": "L",
+            "frequency": 0.114827,
+            "per_thousand": 10.7838
+        },
+        "CTA": {
+            "aa": "L",
+            "frequency": 0.107827,
+            "per_thousand": 10.1265
+        },
+        "CTG": {
+            "aa": "L",
+            "frequency": 0.121396,
+            "per_thousand": 11.4008
+        },
+        "ATT": {
+            "aa": "I",
+            "frequency": 0.498495,
+            "per_thousand": 27.0356
+        },
+        "ATC": {
+            "aa": "I",
+            "frequency": 0.227981,
+            "per_thousand": 12.3643
+        },
+        "ATA": {
+            "aa": "I",
+            "frequency": 0.273524,
+            "per_thousand": 14.8344
+        },
+        "ATG": {
+            "aa": "M",
+            "frequency": 1.0,
+            "per_thousand": 25.4249
+        },
+        "GTT": {
+            "aa": "V",
+            "frequency": 0.4038,
+            "per_thousand": 26.2699
+        },
+        "GTC": {
+            "aa": "V",
+            "frequency": 0.158081,
+            "per_thousand": 10.2842
+        },
+        "GTA": {
+            "aa": "V",
+            "frequency": 0.180615,
+            "per_thousand": 11.7502
+        },
+        "GTG": {
+            "aa": "V",
+            "frequency": 0.257505,
+            "per_thousand": 16.7524
+        },
+        "TCT": {
+            "aa": "S",
+            "frequency": 0.268822,
+            "per_thousand": 23.5717
+        },
+        "TCC": {
+            "aa": "S",
+            "frequency": 0.119474,
+            "per_thousand": 10.476
+        },
+        "TCA": {
+            "aa": "S",
+            "frequency": 0.240068,
+            "per_thousand": 21.0503
+        },
+        "TCG": {
+            "aa": "S",
+            "frequency": 0.068194,
+            "per_thousand": 5.9795
+        },
+        "AGT": {
+            "aa": "S",
+            "frequency": 0.184032,
+            "per_thousand": 16.1368
+        },
+        "AGC": {
+            "aa": "S",
+            "frequency": 0.119411,
+            "per_thousand": 10.4705
+        },
+        "CCT": {
+            "aa": "P",
+            "frequency": 0.388175,
+            "per_thousand": 18.203
+        },
+        "CCC": {
+            "aa": "P",
+            "frequency": 0.128418,
+            "per_thousand": 6.022
+        },
+        "CCA": {
+            "aa": "P",
+            "frequency": 0.372778,
+            "per_thousand": 17.481
+        },
+        "CCG": {
+            "aa": "P",
+            "frequency": 0.110629,
+            "per_thousand": 5.1878
+        },
+        "ACT": {
+            "aa": "T",
+            "frequency": 0.380827,
+            "per_thousand": 18.4458
+        },
+        "ACC": {
+            "aa": "T",
+            "frequency": 0.17019,
+            "per_thousand": 8.2434
+        },
+        "ACA": {
+            "aa": "T",
+            "frequency": 0.348653,
+            "per_thousand": 16.8874
+        },
+        "ACG": {
+            "aa": "T",
+            "frequency": 0.10033,
+            "per_thousand": 4.8596
+        },
+        "GCT": {
+            "aa": "A",
+            "frequency": 0.419847,
+            "per_thousand": 27.1285
+        },
+        "GCC": {
+            "aa": "A",
+            "frequency": 0.152256,
+            "per_thousand": 9.838
+        },
+        "GCA": {
+            "aa": "A",
+            "frequency": 0.335688,
+            "per_thousand": 21.6906
+        },
+        "GCG": {
+            "aa": "A",
+            "frequency": 0.092208,
+            "per_thousand": 5.958
+        },
+        "TAT": {
+            "aa": "Y",
+            "frequency": 0.638637,
+            "per_thousand": 18.56
+        },
+        "TAC": {
+            "aa": "Y",
+            "frequency": 0.361363,
+            "per_thousand": 10.5019
+        },
+        "TAA": {
+            "aa": "*",
+            "frequency": 0.0,
+            "per_thousand": 0.0
+        },
+        "TAG": {
+            "aa": "*",
+            "frequency": 0.0,
+            "per_thousand": 0.0
+        },
+        "CAT": {
+            "aa": "H",
+            "frequency": 0.675224,
+            "per_thousand": 16.4551
+        },
+        "CAC": {
+            "aa": "H",
+            "frequency": 0.324776,
+            "per_thousand": 7.9147
+        },
+        "CAA": {
+            "aa": "Q",
+            "frequency": 0.57766,
+            "per_thousand": 21.4582
+        },
+        "CAG": {
+            "aa": "Q",
+            "frequency": 0.42234,
+            "per_thousand": 15.6885
+        },
+        "AAT": {
+            "aa": "N",
+            "frequency": 0.656966,
+            "per_thousand": 30.0264
+        },
+        "AAC": {
+            "aa": "N",
+            "frequency": 0.343034,
+            "per_thousand": 15.6782
+        },
+        "AAA": {
+            "aa": "K",
+            "frequency": 0.493699,
+            "per_thousand": 32.1769
+        },
+        "AAG": {
+            "aa": "K",
+            "frequency": 0.506301,
+            "per_thousand": 32.9982
+        },
+        "GAT": {
+            "aa": "D",
+            "frequency": 0.706554,
+            "per_thousand": 38.2028
+        },
+        "GAC": {
+            "aa": "D",
+            "frequency": 0.293446,
+            "per_thousand": 15.8663
+        },
+        "GAA": {
+            "aa": "E",
+            "frequency": 0.561089,
+            "per_thousand": 36.8975
+        },
+        "GAG": {
+            "aa": "E",
+            "frequency": 0.438911,
+            "per_thousand": 28.863
+        },
+        "TGT": {
+            "aa": "C",
+            "frequency": 0.591507,
+            "per_thousand": 11.1243
+        },
+        "TGC": {
+            "aa": "C",
+            "frequency": 0.408493,
+            "per_thousand": 7.6824
+        },
+        "TGA": {
+            "aa": "*",
+            "frequency": 0.0,
+            "per_thousand": 0.0
+        },
+        "TGG": {
+            "aa": "W",
+            "frequency": 1.0,
+            "per_thousand": 13.3895
+        },
+        "CGT": {
+            "aa": "R",
+            "frequency": 0.128584,
+            "per_thousand": 7.1333
+        },
+        "CGC": {
+            "aa": "R",
+            "frequency": 0.06851,
+            "per_thousand": 3.8006
+        },
+        "CGA": {
+            "aa": "R",
+            "frequency": 0.110035,
+            "per_thousand": 6.1043
+        },
+        "CGG": {
+            "aa": "R",
+            "frequency": 0.080972,
+            "per_thousand": 4.492
+        },
+        "AGA": {
+            "aa": "R",
+            "frequency": 0.334734,
+            "per_thousand": 18.5698
+        },
+        "AGG": {
+            "aa": "R",
+            "frequency": 0.277165,
+            "per_thousand": 15.3761
+        },
+        "GGT": {
+            "aa": "G",
+            "frequency": 0.321196,
+            "per_thousand": 20.4049
+        },
+        "GGC": {
+            "aa": "G",
+            "frequency": 0.157738,
+            "per_thousand": 10.0207
+        },
+        "GGA": {
+            "aa": "G",
+            "frequency": 0.335023,
+            "per_thousand": 21.2833
+        },
+        "GGG": {
+            "aa": "G",
+            "frequency": 0.186042,
+            "per_thousand": 11.8188
+        }
+    },
+    "amino_acids": {
+        "A": {
+            "name": "Alanine",
+            "codons": [
+                "GCT",
+                "GCC",
+                "GCA",
+                "GCG"
+            ],
+            "preferred": "GCT"
+        },
+        "C": {
+            "name": "Cysteine",
+            "codons": [
+                "TGT",
+                "TGC"
+            ],
+            "preferred": "TGT"
+        },
+        "D": {
+            "name": "Aspartic acid",
+            "codons": [
+                "GAT",
+                "GAC"
+            ],
+            "preferred": "GAT"
+        },
+        "E": {
+            "name": "Glutamic acid",
+            "codons": [
+                "GAA",
+                "GAG"
+            ],
+            "preferred": "GAA"
+        },
+        "F": {
+            "name": "Phenylalanine",
+            "codons": [
+                "TTT",
+                "TTC"
+            ],
+            "preferred": "TTT"
+        },
+        "G": {
+            "name": "Glycine",
+            "codons": [
+                "GGT",
+                "GGC",
+                "GGA",
+                "GGG"
+            ],
+            "preferred": "GGA"
+        },
+        "H": {
+            "name": "Histidine",
+            "codons": [
+                "CAT",
+                "CAC"
+            ],
+            "preferred": "CAT"
+        },
+        "I": {
+            "name": "Isoleucine",
+            "codons": [
+                "ATT",
+                "ATC",
+                "ATA"
+            ],
+            "preferred": "ATT"
+        },
+        "K": {
+            "name": "Lysine",
+            "codons": [
+                "AAA",
+                "AAG"
+            ],
+            "preferred": "AAG"
+        },
+        "L": {
+            "name": "Leucine",
+            "codons": [
+                "TTA",
+                "TTG",
+                "CTT",
+                "CTC",
+                "CTA",
+                "CTG"
+            ],
+            "preferred": "TTG"
+        },
+        "M": {
+            "name": "Methionine",
+            "codons": [
+                "ATG"
+            ],
+            "preferred": "ATG"
+        },
+        "N": {
+            "name": "Asparagine",
+            "codons": [
+                "AAT",
+                "AAC"
+            ],
+            "preferred": "AAT"
+        },
+        "P": {
+            "name": "Proline",
+            "codons": [
+                "CCT",
+                "CCC",
+                "CCA",
+                "CCG"
+            ],
+            "preferred": "CCT"
+        },
+        "Q": {
+            "name": "Glutamine",
+            "codons": [
+                "CAA",
+                "CAG"
+            ],
+            "preferred": "CAA"
+        },
+        "R": {
+            "name": "Arginine",
+            "codons": [
+                "CGT",
+                "CGC",
+                "CGA",
+                "CGG",
+                "AGA",
+                "AGG"
+            ],
+            "preferred": "AGA"
+        },
+        "S": {
+            "name": "Serine",
+            "codons": [
+                "TCT",
+                "TCC",
+                "TCA",
+                "TCG",
+                "AGT",
+                "AGC"
+            ],
+            "preferred": "TCT"
+        },
+        "T": {
+            "name": "Threonine",
+            "codons": [
+                "ACT",
+                "ACC",
+                "ACA",
+                "ACG"
+            ],
+            "preferred": "ACT"
+        },
+        "V": {
+            "name": "Valine",
+            "codons": [
+                "GTT",
+                "GTC",
+                "GTA",
+                "GTG"
+            ],
+            "preferred": "GTT"
+        },
+        "W": {
+            "name": "Tryptophan",
+            "codons": [
+                "TGG"
+            ],
+            "preferred": "TGG"
+        },
+        "Y": {
+            "name": "Tyrosine",
+            "codons": [
+                "TAT",
+                "TAC"
+            ],
+            "preferred": "TAT"
+        },
+        "*": {
+            "name": "Stop",
+            "codons": [
+                "TAA",
+                "TAG",
+                "TGA"
+            ],
+            "preferred": "TAA"
+        }
+    },
+    "gc_content": {
+        "overall": 0.4284,
+        "description": "GC fraction across retained strict_nuclear_cds_v1 CDS records"
+    },
+    "notes": [
+        "Laplace pseudocount (count+1) applied. Filtering: strict_nuclear_cds_v1. Build date: 2026-06-16."
+    ]
+}

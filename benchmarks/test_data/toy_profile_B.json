@@ -1,0 +1,528 @@
+{
+    "organism": "Toy Lysine flip profile B",
+    "source": "Derived from nbenthamiana_codons.json for benchmark injection acceptance testing",
+    "description": "Toy codon profile with inverted Lysine codon preference for benchmark tests",
+    "codons": {
+        "TTT": {
+            "aa": "F",
+            "frequency": 0.38,
+            "per_thousand": 18.5
+        },
+        "TTC": {
+            "aa": "F",
+            "frequency": 0.62,
+            "per_thousand": 30.2
+        },
+        "TTA": {
+            "aa": "L",
+            "frequency": 0.08,
+            "per_thousand": 7.2
+        },
+        "TTG": {
+            "aa": "L",
+            "frequency": 0.14,
+            "per_thousand": 12.8
+        },
+        "CTT": {
+            "aa": "L",
+            "frequency": 0.15,
+            "per_thousand": 13.7
+        },
+        "CTC": {
+            "aa": "L",
+            "frequency": 0.22,
+            "per_thousand": 20.1
+        },
+        "CTA": {
+            "aa": "L",
+            "frequency": 0.08,
+            "per_thousand": 7.3
+        },
+        "CTG": {
+            "aa": "L",
+            "frequency": 0.33,
+            "per_thousand": 30.2
+        },
+        "ATT": {
+            "aa": "I",
+            "frequency": 0.35,
+            "per_thousand": 16.8
+        },
+        "ATC": {
+            "aa": "I",
+            "frequency": 0.48,
+            "per_thousand": 23.1
+        },
+        "ATA": {
+            "aa": "I",
+            "frequency": 0.17,
+            "per_thousand": 8.2
+        },
+        "ATG": {
+            "aa": "M",
+            "frequency": 1.0,
+            "per_thousand": 22.5
+        },
+        "GTT": {
+            "aa": "V",
+            "frequency": 0.22,
+            "per_thousand": 11.2
+        },
+        "GTC": {
+            "aa": "V",
+            "frequency": 0.28,
+            "per_thousand": 14.3
+        },
+        "GTA": {
+            "aa": "V",
+            "frequency": 0.12,
+            "per_thousand": 6.1
+        },
+        "GTG": {
+            "aa": "V",
+            "frequency": 0.38,
+            "per_thousand": 19.4
+        },
+        "TCT": {
+            "aa": "S",
+            "frequency": 0.18,
+            "per_thousand": 15.2
+        },
+        "TCC": {
+            "aa": "S",
+            "frequency": 0.22,
+            "per_thousand": 18.6
+        },
+        "TCA": {
+            "aa": "S",
+            "frequency": 0.12,
+            "per_thousand": 10.1
+        },
+        "TCG": {
+            "aa": "S",
+            "frequency": 0.1,
+            "per_thousand": 8.5
+        },
+        "AGT": {
+            "aa": "S",
+            "frequency": 0.15,
+            "per_thousand": 12.7
+        },
+        "AGC": {
+            "aa": "S",
+            "frequency": 0.23,
+            "per_thousand": 19.5
+        },
+        "CCT": {
+            "aa": "P",
+            "frequency": 0.28,
+            "per_thousand": 17.8
+        },
+        "CCC": {
+            "aa": "P",
+            "frequency": 0.32,
+            "per_thousand": 20.4
+        },
+        "CCA": {
+            "aa": "P",
+            "frequency": 0.22,
+            "per_thousand": 14.0
+        },
+        "CCG": {
+            "aa": "P",
+            "frequency": 0.18,
+            "per_thousand": 11.5
+        },
+        "ACT": {
+            "aa": "T",
+            "frequency": 0.24,
+            "per_thousand": 13.2
+        },
+        "ACC": {
+            "aa": "T",
+            "frequency": 0.36,
+            "per_thousand": 19.8
+        },
+        "ACA": {
+            "aa": "T",
+            "frequency": 0.22,
+            "per_thousand": 12.1
+        },
+        "ACG": {
+            "aa": "T",
+            "frequency": 0.18,
+            "per_thousand": 9.9
+        },
+        "GCT": {
+            "aa": "A",
+            "frequency": 0.26,
+            "per_thousand": 18.9
+        },
+        "GCC": {
+            "aa": "A",
+            "frequency": 0.4,
+            "per_thousand": 29.1
+        },
+        "GCA": {
+            "aa": "A",
+            "frequency": 0.2,
+            "per_thousand": 14.6
+        },
+        "GCG": {
+            "aa": "A",
+            "frequency": 0.14,
+            "per_thousand": 10.2
+        },
+        "TAT": {
+            "aa": "Y",
+            "frequency": 0.41,
+            "per_thousand": 12.8
+        },
+        "TAC": {
+            "aa": "Y",
+            "frequency": 0.59,
+            "per_thousand": 18.4
+        },
+        "TAA": {
+            "aa": "*",
+            "frequency": 0.48,
+            "per_thousand": 1.2
+        },
+        "TAG": {
+            "aa": "*",
+            "frequency": 0.24,
+            "per_thousand": 0.6
+        },
+        "CAT": {
+            "aa": "H",
+            "frequency": 0.42,
+            "per_thousand": 10.5
+        },
+        "CAC": {
+            "aa": "H",
+            "frequency": 0.58,
+            "per_thousand": 14.5
+        },
+        "CAA": {
+            "aa": "Q",
+            "frequency": 0.45,
+            "per_thousand": 12.3
+        },
+        "CAG": {
+            "aa": "Q",
+            "frequency": 0.55,
+            "per_thousand": 15.0
+        },
+        "AAT": {
+            "aa": "N",
+            "frequency": 0.44,
+            "per_thousand": 17.2
+        },
+        "AAC": {
+            "aa": "N",
+            "frequency": 0.56,
+            "per_thousand": 21.9
+        },
+        "AAA": {
+            "aa": "K",
+            "frequency": 0.1,
+            "per_thousand": 24.8
+        },
+        "AAG": {
+            "aa": "K",
+            "frequency": 1.0,
+            "per_thousand": 34.2
+        },
+        "GAT": {
+            "aa": "D",
+            "frequency": 0.46,
+            "per_thousand": 25.3
+        },
+        "GAC": {
+            "aa": "D",
+            "frequency": 0.54,
+            "per_thousand": 29.7
+        },
+        "GAA": {
+            "aa": "E",
+            "frequency": 0.45,
+            "per_thousand": 29.2
+        },
+        "GAG": {
+            "aa": "E",
+            "frequency": 0.55,
+            "per_thousand": 35.7
+        },
+        "TGT": {
+            "aa": "C",
+            "frequency": 0.46,
+            "per_thousand": 4.8
+        },
+        "TGC": {
+            "aa": "C",
+            "frequency": 0.54,
+            "per_thousand": 5.6
+        },
+        "TGA": {
+            "aa": "*",
+            "frequency": 0.28,
+            "per_thousand": 0.7
+        },
+        "TGG": {
+            "aa": "W",
+            "frequency": 1.0,
+            "per_thousand": 13.2
+        },
+        "CGT": {
+            "aa": "R",
+            "frequency": 0.12,
+            "per_thousand": 4.8
+        },
+        "CGC": {
+            "aa": "R",
+            "frequency": 0.18,
+            "per_thousand": 7.2
+        },
+        "CGA": {
+            "aa": "R",
+            "frequency": 0.11,
+            "per_thousand": 4.4
+        },
+        "CGG": {
+            "aa": "R",
+            "frequency": 0.16,
+            "per_thousand": 6.4
+        },
+        "AGA": {
+            "aa": "R",
+            "frequency": 0.21,
+            "per_thousand": 8.4
+        },
+        "AGG": {
+            "aa": "R",
+            "frequency": 0.22,
+            "per_thousand": 8.8
+        },
+        "GGT": {
+            "aa": "G",
+            "frequency": 0.24,
+            "per_thousand": 10.8
+        },
+        "GGC": {
+            "aa": "G",
+            "frequency": 0.34,
+            "per_thousand": 15.3
+        },
+        "GGA": {
+            "aa": "G",
+            "frequency": 0.25,
+            "per_thousand": 11.3
+        },
+        "GGG": {
+            "aa": "G",
+            "frequency": 0.17,
+            "per_thousand": 7.7
+        }
+    },
+    "amino_acids": {
+        "A": {
+            "name": "Alanine",
+            "codons": [
+                "GCT",
+                "GCC",
+                "GCA",
+                "GCG"
+            ],
+            "preferred": "GCC"
+        },
+        "C": {
+            "name": "Cysteine",
+            "codons": [
+                "TGT",
+                "TGC"
+            ],
+            "preferred": "TGC"
+        },
+        "D": {
+            "name": "Aspartic acid",
+            "codons": [
+                "GAT",
+                "GAC"
+            ],
+            "preferred": "GAC"
+        },
+        "E": {
+            "name": "Glutamic acid",
+            "codons": [
+                "GAA",
+                "GAG"
+            ],
+            "preferred": "GAG"
+        },
+        "F": {
+            "name": "Phenylalanine",
+            "codons": [
+                "TTT",
+                "TTC"
+            ],
+            "preferred": "TTC"
+        },
+        "G": {
+            "name": "Glycine",
+            "codons": [
+                "GGT",
+                "GGC",
+                "GGA",
+                "GGG"
+            ],
+            "preferred": "GGC"
+        },
+        "H": {
+            "name": "Histidine",
+            "codons": [
+                "CAT",
+                "CAC"
+            ],
+            "preferred": "CAC"
+        },
+        "I": {
+            "name": "Isoleucine",
+            "codons": [
+                "ATT",
+                "ATC",
+                "ATA"
+            ],
+            "preferred": "ATC"
+        },
+        "K": {
+            "name": "Lysine",
+            "codons": [
+                "AAA",
+                "AAG"
+            ],
+            "preferred": "AAG"
+        },
+        "L": {
+            "name": "Leucine",
+            "codons": [
+                "TTA",
+                "TTG",
+                "CTT",
+                "CTC",
+                "CTA",
+                "CTG"
+            ],
+            "preferred": "CTG"
+        },
+        "M": {
+            "name": "Methionine",
+            "codons": [
+                "ATG"
+            ],
+            "preferred": "ATG"
+        },
+        "N": {
+            "name": "Asparagine",
+            "codons": [
+                "AAT",
+                "AAC"
+            ],
+            "preferred": "AAC"
+        },
+        "P": {
+            "name": "Proline",
+            "codons": [
+                "CCT",
+                "CCC",
+                "CCA",
+                "CCG"
+            ],
+            "preferred": "CCC"
+        },
+        "Q": {
+            "name": "Glutamine",
+            "codons": [
+                "CAA",
+                "CAG"
+            ],
+            "preferred": "CAG"
+        },
+        "R": {
+            "name": "Arginine",
+            "codons": [
+                "CGT",
+                "CGC",
+                "CGA",
+                "CGG",
+                "AGA",
+                "AGG"
+            ],
+            "preferred": "AGG"
+        },
+        "S": {
+            "name": "Serine",
+            "codons": [
+                "TCT",
+                "TCC",
+                "TCA",
+                "TCG",
+                "AGT",
+                "AGC"
+            ],
+            "preferred": "AGC"
+        },
+        "T": {
+            "name": "Threonine",
+            "codons": [
+                "ACT",
+                "ACC",
+                "ACA",
+                "ACG"
+            ],
+            "preferred": "ACC"
+        },
+        "V": {
+            "name": "Valine",
+            "codons": [
+                "GTT",
+                "GTC",
+                "GTA",
+                "GTG"
+            ],
+            "preferred": "GTG"
+        },
+        "W": {
+            "name": "Tryptophan",
+            "codons": [
+                "TGG"
+            ],
+            "preferred": "TGG"
+        },
+        "Y": {
+            "name": "Tyrosine",
+            "codons": [
+                "TAT",
+                "TAC"
+            ],
+            "preferred": "TAC"
+        },
+        "*": {
+            "name": "Stop",
+            "codons": [
+                "TAA",
+                "TAG",
+                "TGA"
+            ],
+            "preferred": "TAA"
+        }
+    },
+    "gc_content": {
+        "overall": 0.44,
+        "description": "N. benthamiana genome average GC content is ~44%"
+    },
+    "notes": [
+        "Frequencies are normalized within each amino acid family",
+        "Preferred codons are based on highest frequency",
+        "Data optimized for high-level protein expression in N. benthamiana"
+    ]
+}

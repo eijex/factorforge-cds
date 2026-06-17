@@ -11,8 +11,9 @@ for _cod in (a+b+c for a in "ACGT" for b in "ACGT" for c in "ACGT"):
         _AA_TO_CODONS.setdefault(_aa, []).append(_cod)
 
 
-def greedy_cai_cds(protein: str) -> str:
+def greedy_cai_cds(protein: str, codon_weights: dict[str, float] | None = None) -> str:
+    weights = codon_weights if codon_weights is not None else _WEIGHTS
     out = []
     for aa in protein.rstrip("*"):
-        out.append(max(_AA_TO_CODONS[aa], key=lambda c: _WEIGHTS.get(c, 0.0)))
+        out.append(max(_AA_TO_CODONS[aa], key=lambda c: weights.get(c, 0.0)))
     return "".join(out)
