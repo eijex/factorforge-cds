@@ -7,6 +7,8 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+- Benchmark: source-profile codon-table injection now flows into both the design and scoring paths (`design_table_sha256 == score_table_sha256` verified per run), fixing a prior gap where design always used the default table regardless of an injected profile (Job 130).
+- Data: added three genome-annotated *N. benthamiana* codon-usage profiles (SGN QLD183 v103 CDS-derived; SGN NbeV1.1 all-CDS-derived; SGN NbeV1.1 high-confidence-CDS-derived) built via `scripts/build_codon_profile.py` under `strict_nuclear_cds_v1` filtering, alongside the existing packaged reference profile (Job 130).
 - Docs: aligned public wet-lab validation contribution language with manual-review, public-safe submission rules.
 - Docs: clarified that public GitHub Issues must not contain raw sequences, confidential construct details, internal batch IDs, patient data, private contact information, exact process parameters, or confidential partner/customer data.
 - Docs: aligned public README, docs, web, citation, packaging, roadmap, and benchmark wording with the in-silico CDS design claim boundary.
