@@ -27,11 +27,24 @@
 #
 # Before rerunning, confirm the hard-error path is now clear for all three:
 set -e
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
+
+# `bash script.sh` launched from PowerShell's "(base)" conda env does NOT inherit
+# that env's PATH (conda activate only modifies the parent PowerShell session, not
+# this bash subshell) -- and even if it did, that conda base env is missing project
+# deps (yaml, pandas). The actual interpreter with factorforge's deps installed is
+# the hermes-agent venv. Pin to it explicitly so this is robust regardless of which
+# shell/session invokes this script.
+PYTHON="/c/Users/munky/AppData/Local/hermes/hermes-agent/venv/Scripts/python.exe"
+if [ ! -x "$PYTHON" ]; then
+  echo "WARNING: hermes venv python not found at $PYTHON -- falling back to PATH python" >&2
+  PYTHON="python"
+fi
+echo "Using: $PYTHON ($("$PYTHON" --version 2>&1))"
 
 for p in qld183_v103_derived nbev11_cds_all_derived nbev11_cds_hc_derived; do
   echo "=== sanity check: $p ==="
-  python benchmarks/run_benchmark.py --dataset synthetic --limit 2 --seed 320 \
+  "$PYTHON" benchmarks/run_benchmark.py --dataset synthetic --limit 2 --seed 320 \
     --codon-table-path "src/factorforge/data/profiles/${p}_codons.json" \
     --source-profile-id "$p" \
     --source-profile-manifest "src/factorforge/data/profiles/${p}_manifest.json"
@@ -39,29 +52,29 @@ done
 
 echo "=== sanity checks passed. Starting full reruns (B, C1, C2) ==="
 
-python benchmarks/scripts/run_and_archive_profile.py \
+"$PYTHON" benchmarks/scripts/run_and_archive_profile.py \
   --profile-id qld183_v103_derived \
   --codon-table-path src/factorforge/data/profiles/qld183_v103_derived_codons.json \
   --manifest-path src/factorforge/data/profiles/qld183_v103_derived_manifest.json \
   --seed 320
 
-python benchmarks/scripts/run_and_archive_profile.py \
+"$PYTHON" benchmarks/scripts/run_and_archive_profile.py \
   --profile-id nbev11_cds_all_derived \
   --codon-table-path src/factorforge/data/profiles/nbev11_cds_all_derived_codons.json \
   --manifest-path src/factorforge/data/profiles/nbev11_cds_all_derived_manifest.json \
   --seed 320
 
-python benchmarks/scripts/run_and_archive_profile.py \
+"$PYTHON" benchmarks/scripts/run_and_archive_profile.py \
   --profile-id nbev11_cds_hc_derived \
   --codon-table-path src/factorforge/data/profiles/nbev11_cds_hc_derived_codons.json \
   --manifest-path src/factorforge/data/profiles/nbev11_cds_hc_derived_manifest.json \
   --seed 320
 
 echo "=== Reruns complete. Aggregating ==="
-python benchmarks/scripts/aggregate_profiles.py
+"$PYTHON" benchmarks/scripts/aggregate_profiles.py
 
 echo "=== Regenerating SHA256SUMS.txt ==="
-python -c "
+"$PYTHON" -c "
 import hashlib, pathlib
 root = pathlib.Path('.')
 files = [
