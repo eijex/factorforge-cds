@@ -1,10 +1,10 @@
 {
-  "run_id": "d4a379061f86",
-  "timestamp": "2026-06-17T07:37:07.024958+00:00",
+  "run_id": "e3aff1e4cbe4",
+  "timestamp": "2026-06-17T17:12:27.292212+00:00",
   "scoring_contract_version": "v1.1",
   "multi_constraint_pass_definition": "biological_pass AND assembly_pass AND gc_in_target_range",
   "factorforge_version": "3.2.1",
-  "git_commit": "826fcd3",
+  "git_commit": "3163236",
   "registry_version": "3.2.1",
   "registry_hash": "sha256:58a7085db18e99cf5c1a154669b2e2920dbe14a3edd87541a4706fd429100bfd",
   "spec_hash": "sha256:70adc5fcd681ad3451bc6bd8f685932448e137ec65d49d304b92807e22dca3fe",
@@ -13,7 +13,7 @@
   "random_seed": 320,
   "input_protein_fasta_sha256": "35dc8ec1f2adaea2be02ad843dd18ca62053595328fe35e38c04bfa596f188e2",
   "dataset_cds_fasta_sha256": "714a7155c50fff4240c196389ade1860550eb5b949f3cbbd44406ddd6d6cdb53",
-  "runtime_seconds": 2939.7495,
+  "runtime_seconds": 2040.8093,
   "methods": {
     "factorforge_assembly_friendly": {
       "n_ok": 49257,
@@ -87,11 +87,11 @@
     }
   },
   "codon_table_id": "nbenthamiana_legacy_kazusa_sgn_v101",
-  "codon_table_sha256": "fdcbee2f630326f6dfd41376cf0d55473d0227db0e8bc84637d0a37267ed61d8",
+  "codon_table_sha256": "686f12f2881b00a45246670e6c73e10d2254854577c5323ceb19a9ee58ee87dd",
   "source_profile_id": "nbev11_cds_hc_derived",
-  "design_table_sha256": "fdcbee2f630326f6dfd41376cf0d55473d0227db0e8bc84637d0a37267ed61d8",
-  "score_table_sha256": "fdcbee2f630326f6dfd41376cf0d55473d0227db0e8bc84637d0a37267ed61d8",
-  "source_profile_manifest_sha256": "e41d1bc718dcdfd89f70ec30f1dc33885e48fd37791646605f6d3c19598dbb80",
+  "design_table_sha256": "686f12f2881b00a45246670e6c73e10d2254854577c5323ceb19a9ee58ee87dd",
+  "score_table_sha256": "686f12f2881b00a45246670e6c73e10d2254854577c5323ceb19a9ee58ee87dd",
+  "source_profile_manifest_sha256": "36c87e547f5e5065b7f934d759d557b19787e860c50b45e4ace8e7c123e746a3",
   "codon_table_source_status": "legacy_metadata_only",
   "codon_table_build_path_status": "incomplete",
   "codon_table_reference_note": "CAI and codon-usage metrics are computed against the configured FactorForge codon reference. The current codon table is not a freshly rebuilt SGN QLD183 v103 codon table."
