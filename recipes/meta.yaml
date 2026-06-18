@@ -1,5 +1,5 @@
 {% set name = "factorforge-cds" %}
-{% set version = "3.2.1" %}
+{% set version = "3.2.2" %}
 
 package:
   name: {{ name|lower }}
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name.replace('-', '_') }}-{{ version }}.tar.gz
-  sha256: 001e869ffdfcf6f2fac674cf594bc7ab1aca0968707e266b0a30ee01eae49dc9
+  sha256: FIXME-fetch-failed
 
 build:
   number: 0
