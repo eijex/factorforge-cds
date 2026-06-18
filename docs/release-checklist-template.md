@@ -20,10 +20,10 @@
 
 ```bash
 python scripts/release.py X.Y.Z --auto \
-  --audit-script "C:\Users\munky\.codex\skills\factorforge-public-surface-audit\scripts\audit_public_surface.py" \
-  --workspace C:\Work\eijex\eijex-workspace \
-  --mcp C:\Work\eijex\eijex-mcp \
-  --web C:\Work\eijex\eijex-web
+  --audit-script "<path-to-audit_public_surface.py>" \
+  --workspace <path-to-internal-tracking-repo> \
+  --mcp <workspace-root>/eijex-mcp \
+  --web <workspace-root>/eijex-web
 ```
 
 **`--auto` handles (in order):**
@@ -68,27 +68,27 @@ GitHub Actions then auto-publishes: **PyPI + Docker + GitHub Release + Zenodo**
 
 ---
 
-## Cross-repo commits (eijex-mcp, eijex-web, eijex-workspace)
+## Cross-repo commits (eijex-mcp, eijex-web, internal tracking repo)
 
 Files were updated by `--auto`, but these are separate git repos that need their own commits:
 
 ```bash
 # eijex-mcp
-cd C:\Work\eijex\eijex-mcp
+cd <workspace-root>/eijex-mcp
 git add -A && git commit -m "chore: FactorForge vX.Y.Z" && git push
 
 # eijex-web
-cd C:\Work\eijex\eijex-web
+cd <workspace-root>/eijex-web
 git add -A && git commit -m "chore: FactorForge vX.Y.Z" && git push
 
-# eijex-workspace
-cd C:\Work\eijex\eijex-workspace
+# internal tracking repo (if you maintain one)
+cd <workspace-root>/<your-internal-tracking-repo>
 git add -A && git commit -m "chore: FactorForge vX.Y.Z" && git push
 ```
 
 - [ ] eijex-mcp committed + pushed
 - [ ] eijex-web committed + pushed
-- [ ] eijex-workspace committed + pushed
+- [ ] internal tracking repo committed + pushed
 
 ---
 
