@@ -1,15 +1,15 @@
 {
-  "factorforge_version": "3.2.1",
+  "factorforge_version": "3.2.2",
   "scoring_contract": "v1.1",
   "design_id": "sfgfp_assembly_friendly_seed320_v1",
   "outputs": {
     "design_package": {
       "file": "design_package.json",
-      "sha256": "dae59bc124a603c53ce008bdef1dc2fccd26dba0d527de05572b9bc8014a922d"
+      "sha256": "bb3ff0560bb6f3a76a43170302839a66a9336317d98bcc2a244d4a45735681b4"
     },
     "validation_summary": {
       "file": "validation_summary.json",
-      "sha256": "97551d335f707605adf02d2594a84ac80c52b7bc4ba20f6e873b0a7c9bff3693"
+      "sha256": "b2881d21518ec7ae51cbc71853ab856f72a8c21c2bf50b8163fc0f1d10d3c4e8"
     }
   }
 }

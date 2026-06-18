@@ -19,7 +19,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
-## [Unreleased]
+## [3.2.2] — 2026-06-18
 
 ### Fixed
 
@@ -269,7 +269,8 @@ First official release of FactorForge.
 
 ---
 
-[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.2.1...HEAD
+[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.2.2...HEAD
+[3.2.2]: https://github.com/eijex/factorforge-cds/compare/v3.2.1...v3.2.2
 [3.2.1]: https://github.com/eijex/factorforge-cds/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/eijex/factorforge-cds/compare/v3.1.9...v3.2.0
 [3.1.9]: https://github.com/eijex/factorforge-cds/compare/v3.1.8...v3.1.9
