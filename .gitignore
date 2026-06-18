@@ -44,6 +44,7 @@ Thumbs.db
 CLAUDE.md
 GEMINI.md
 .claude/
+_ideas/
 
 # Local environment (database credentials etc.)
 .env
