@@ -5,16 +5,6 @@ All notable changes to FactorForge are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
-
-- Benchmark: source-profile codon-table injection now flows into both the design and scoring paths (`design_table_sha256 == score_table_sha256` verified per run), fixing a prior gap where design always used the default table regardless of an injected profile (Job 130).
-- Data: added three genome-annotated *N. benthamiana* codon-usage profiles (SGN QLD183 v103 CDS-derived; SGN NbeV1.1 all-CDS-derived; SGN NbeV1.1 high-confidence-CDS-derived) built via `scripts/build_codon_profile.py` under `strict_nuclear_cds_v1` filtering, alongside the existing packaged reference profile (Job 130).
-- Docs: aligned public wet-lab validation contribution language with manual-review, public-safe submission rules.
-- Docs: clarified that public GitHub Issues must not contain raw sequences, confidential construct details, internal batch IDs, patient data, private contact information, exact process parameters, or confidential partner/customer data.
-- Docs: aligned public README, docs, web, citation, packaging, roadmap, and benchmark wording with the in-silico CDS design claim boundary.
-- Web: Host System cards in `web/index.html` are now rendered dynamically from `GET /api/optimize` (`supported_hosts` + new `host_metadata` field) instead of being hardcoded, removing a 3-way duplication between the HTML, `web/js/app.js`, and the API (Job 133).
-- Docs: removed maintainer-local file paths and internal repo references from `docs/release-checklist-template.md`, replacing them with generic placeholders (Job 134).
-
 ### Release Policy
 
 | Bump | When to use |
@@ -26,6 +16,37 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Before each release, maintainers run lint/tests, update version-bearing files,
 verify package and Docker smoke tests, and check public documentation for
 version drift, unsupported claims, sensitive-data guidance, and stale examples.
+
+---
+
+## [Unreleased]
+
+### Fixed
+
+- **`multi_constraint_pass` definition corrected (scoring_contract v1.1)**: `benchmarks/scoring.py`
+  `score_cds()` now defines `multi_constraint_pass = biological_pass AND assembly_pass AND gc_in_target_range`.
+  The previous definition (`biological_pass AND assembly_pass`) omitted GC target compliance, producing
+  inflated L3/L4 ablation values (89.0%/88.6%) that were mathematically inconsistent with their GC in range
+  rates (3.7%/5.8%). Corrected values: L3=3.5%, L4=5.6%.
+  All benchmark artifacts (`benchmark_summary.json`, `ablation_summary.json`, `benchmark_v0.5.1` data/figures)
+  regenerated from full rerun (seed=320, N=49,257). Zenodo `benchmark_results.csv` v2 (DOI: 10.5281/zenodo.20676276) supersedes v1.
+  A `canonical_multi_constraint_pass()` helper added for recomputing from primitive columns in historical CSVs.
+- Benchmark: source-profile codon-table injection now flows into both the design and scoring paths (`design_table_sha256 == score_table_sha256` verified per run), fixing a prior gap where design always used the default table regardless of an injected profile (Job 130).
+
+### Added
+
+- Data: added three genome-annotated *N. benthamiana* codon-usage profiles (SGN QLD183 v103 CDS-derived; SGN NbeV1.1 all-CDS-derived; SGN NbeV1.1 high-confidence-CDS-derived) built via `scripts/build_codon_profile.py` under `strict_nuclear_cds_v1` filtering, alongside the existing packaged reference profile (Job 130).
+
+### Changed
+
+- Web: Host System cards in `web/index.html` are now rendered dynamically from `GET /api/optimize` (`supported_hosts` + new `host_metadata` field) instead of being hardcoded, removing a 3-way duplication between the HTML, `web/js/app.js`, and the API (Job 133).
+
+### Docs
+
+- Aligned public wet-lab validation contribution language with manual-review, public-safe submission rules.
+- Clarified that public GitHub Issues must not contain raw sequences, confidential construct details, internal batch IDs, patient data, private contact information, exact process parameters, or confidential partner/customer data.
+- Aligned public README, docs, web, citation, packaging, roadmap, and benchmark wording with the in-silico CDS design claim boundary.
+- Removed maintainer-local file paths and internal repo references from `docs/release-checklist-template.md`, replacing them with generic placeholders (Job 134).
 
 ---
 
@@ -55,21 +76,6 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Chore
 - Bump actions/configure-pages, codecov/codecov-action, actions/deploy-pages, actions/setup-python, softprops/action-gh-release (Dependabot)
-
----
-
-## [Unreleased]
-
-### Fixed
-
-- **`multi_constraint_pass` definition corrected (scoring_contract v1.1)**: `benchmarks/scoring.py`
-  `score_cds()` now defines `multi_constraint_pass = biological_pass AND assembly_pass AND gc_in_target_range`.
-  The previous definition (`biological_pass AND assembly_pass`) omitted GC target compliance, producing
-  inflated L3/L4 ablation values (89.0%/88.6%) that were mathematically inconsistent with their GC in range
-  rates (3.7%/5.8%). Corrected values: L3=3.5%, L4=5.6%.
-  All benchmark artifacts (`benchmark_summary.json`, `ablation_summary.json`, `benchmark_v0.5.1` data/figures)
-  regenerated from full rerun (seed=320, N=49,257). Zenodo `benchmark_results.csv` v2 (DOI: 10.5281/zenodo.20676276) supersedes v1.
-  A `canonical_multi_constraint_pass()` helper added for recomputing from primitive columns in historical CSVs.
 
 ---
 
