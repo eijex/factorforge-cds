@@ -78,6 +78,18 @@ DEFAULT_OBJECTIVE = "feasibility_best"
 DEFAULT_HOST_PROFILE = "nbenthamiana"
 VALID_HOSTS = ["nbenthamiana", "by2"]
 HOST_MAP = {"nbenthamiana": "nbenthamiana", "by2": "ntabacum"}
+# Single source of truth for host display metadata, consumed by web/js/app.js
+# via GET /api/optimize so web/index.html never hardcodes host cards.
+HOST_METADATA = {
+    "nbenthamiana": {
+        "display_name": "N. benthamiana",
+        "description": "Leaf agroinfiltration design host",
+    },
+    "by2": {
+        "display_name": "Tobacco BY-2",
+        "description": "N. tabacum cell culture codon usage",
+    },
+}
 DEFAULT_GC_MIN = 55.0
 DEFAULT_GC_MAX = 65.0
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
@@ -216,6 +228,7 @@ class handler(BaseHTTPRequestHandler):
             },
             "supported_profiles": VALID_PROFILES,
             "supported_hosts": VALID_HOSTS,
+            "host_metadata": HOST_METADATA,
             "supported_objectives": VALID_OBJECTIVES,
             "mock_enabled": ENABLE_MOCK,
             "engine_versions": ENGINE_VERSIONS,

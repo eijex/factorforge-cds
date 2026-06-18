@@ -12,6 +12,8 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Docs: aligned public wet-lab validation contribution language with manual-review, public-safe submission rules.
 - Docs: clarified that public GitHub Issues must not contain raw sequences, confidential construct details, internal batch IDs, patient data, private contact information, exact process parameters, or confidential partner/customer data.
 - Docs: aligned public README, docs, web, citation, packaging, roadmap, and benchmark wording with the in-silico CDS design claim boundary.
+- Web: Host System cards in `web/index.html` are now rendered dynamically from `GET /api/optimize` (`supported_hosts` + new `host_metadata` field) instead of being hardcoded, removing a 3-way duplication between the HTML, `web/js/app.js`, and the API (Job 133).
+- Docs: removed maintainer-local file paths and internal repo references from `docs/release-checklist-template.md`, replacing them with generic placeholders (Job 134).
 
 ### Release Policy
 

@@ -5,6 +5,10 @@
 
 const API_ENDPOINT = '/api/optimize';
 const ENABLE_MOCK = window.FACTORFORGE_ENABLE_MOCK === true;
+// Maps internal engine table names (incl. HOST_MAP aliases like 'ntabacum')
+// back to a human label for results display, and serves as the offline/dev
+// fallback for the Host System cards (rendered dynamically — see
+// loadHostOptions/renderHostCards, Job 133).
 const HOST_LABELS = {
     nbenthamiana: 'N. benthamiana',
     by2: 'Tobacco BY-2',
@@ -62,6 +66,7 @@ const elements = {
     themeIcon: document.getElementById('themeIcon'),
     objectiveRadios: document.getElementsByName('objective'),
     hostRadios: document.getElementsByName('host'),
+    hostCardsContainer: document.getElementById('hostCardsContainer'),
     feasibilityBestOption: document.getElementById('feasibilityBestOption'),
     feasibilityBestCard: document.getElementById('feasibilityBestCard'),
     feasibilityBestHostBadge: document.getElementById('feasibilityBestHostBadge'),
@@ -122,14 +127,61 @@ function trackEvent(name, data) {
 }
 
 // Initialization
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     applyStaticLabelPatches();
+    await loadHostOptions();
     initEventListeners();
     updateHostUI();
     renderHistory();
     console.log('FactorForge v3.2.1 Engaged');
 });
+
+// Fetches supported_hosts/host_metadata from GET /api/optimize and renders the
+// Host System cards. Falls back to the static HOST_LABELS defaults if the API
+// is unreachable, so the page still functions offline/in dev. (Job 133 —
+// replaces the previously hardcoded host cards in web/index.html.)
+async function loadHostOptions() {
+    let hosts = Object.keys(HOST_LABELS).filter((id) => id !== 'ntabacum');
+    let metadata = Object.fromEntries(
+        hosts.map((id) => [id, { display_name: HOST_LABELS[id], description: '' }])
+    );
+
+    try {
+        const response = await fetch(API_ENDPOINT, { method: 'GET' });
+        if (response.ok) {
+            const data = await response.json();
+            if (Array.isArray(data.supported_hosts) && data.supported_hosts.length) {
+                hosts = data.supported_hosts;
+            }
+            if (data.host_metadata && typeof data.host_metadata === 'object') {
+                metadata = data.host_metadata;
+            }
+        }
+    } catch (_) {
+        // Offline/dev fallback — keep static defaults above.
+    }
+
+    renderHostCards(hosts, metadata);
+}
+
+function renderHostCards(hosts, metadata) {
+    if (!elements.hostCardsContainer) return;
+
+    elements.hostCardsContainer.innerHTML = hosts.map((hostId, index) => {
+        const meta = metadata[hostId] || { display_name: hostId, description: '' };
+        const checkedAttr = index === 0 ? 'checked' : '';
+        return `
+            <label class="block relative group">
+                <input type="radio" name="host" value="${escapeHtml(hostId)}" ${checkedAttr} class="peer sr-only">
+                <div class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
+                    <span class="block text-sm font-bold text-slate-800">${escapeHtml(meta.display_name)}</span>
+                    <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">${escapeHtml(meta.description || '')}</span>
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">✓</div>
+                </div>
+            </label>`;
+    }).join('');
+}
 
 function initEventListeners() {
     // Input Handling
