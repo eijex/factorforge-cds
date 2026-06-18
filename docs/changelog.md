@@ -4,6 +4,24 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.2.2 — 2026-06-18
+
+### Fixed
+- **`multi_constraint_pass` definition corrected (scoring_contract v1.1)** — now requires GC-in-target-range in addition to biological/assembly pass; corrected ablation values (L3=3.5%, L4=5.6%) supersede the previous inflated figures. All benchmark artifacts regenerated (seed=320, N=49,257); Zenodo `benchmark_results.csv` v2 (DOI: [10.5281/zenodo.20676276](https://doi.org/10.5281/zenodo.20676276)) supersedes v1
+- Benchmark: source-profile codon-table injection now flows into both the design and scoring paths, fixing a prior gap where design always used the default table regardless of an injected profile (130)
+
+### Added
+- Data: three genome-annotated *N. benthamiana* codon-usage profiles (SGN QLD183 v103 CDS-derived; SGN NbeV1.1 all-CDS-derived; SGN NbeV1.1 high-confidence-CDS-derived), alongside the existing packaged reference profile (130)
+
+### Changed
+- Web: Host System cards now render dynamically from the API's `supported_hosts`/`host_metadata` instead of being hardcoded (133)
+
+### Docs
+- Aligned public README/docs/web/citation/packaging/roadmap/benchmark wording with the in-silico CDS design claim boundary
+- Clarified that public GitHub Issues must not contain raw sequences, confidential construct details, or other sensitive data
+
+---
+
 ## v3.2.1 — 2026-06-16
 
 ### Added
