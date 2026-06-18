@@ -5,11 +5,11 @@
   "outputs": {
     "design_package": {
       "file": "design_package.json",
-      "sha256": "bb3ff0560bb6f3a76a43170302839a66a9336317d98bcc2a244d4a45735681b4"
+      "sha256": "82ffb59462f3d63cf2f4d168803e30d7a97c36a4484982b5318c26e9e4599a82"
     },
     "validation_summary": {
       "file": "validation_summary.json",
-      "sha256": "b2881d21518ec7ae51cbc71853ab856f72a8c21c2bf50b8163fc0f1d10d3c4e8"
+      "sha256": "97551d335f707605adf02d2594a84ac80c52b7bc4ba20f6e873b0a7c9bff3693"
     }
   }
 }
