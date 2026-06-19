@@ -134,6 +134,7 @@ ALLOW = {
     "v3-alpha",
     "v3-ml-prototype",
     "not by gene id",
+    "never raw input or output sequence",
 }
 
 

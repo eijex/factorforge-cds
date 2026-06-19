@@ -4,6 +4,15 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.2.3 — 2026-06-19
+
+### Fixed
+- Release provenance hashing now computed from the committed git blob instead of local working-tree bytes, fixing CRLF/LF drift on Windows that could silently produce incorrect SHA-256 values in reproducibility manifests (139)
+- Public-surface DOI references switched from version-pinned Zenodo DOIs to the concept DOI, which always resolves to the latest release (137)
+
+### Added
+- A public-surface audit and a CHANGELOG consistency check now run on every push/PR in CI (139)
+
 ## v3.2.2 — 2026-06-18
 
 ### Fixed
