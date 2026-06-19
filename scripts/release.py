@@ -39,6 +39,9 @@ import urllib.request
 import json
 from pathlib import Path
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 ROOT = Path(__file__).parent.parent
 
 # (file_path, [(exact_old_string, exact_new_string)], required=True)
