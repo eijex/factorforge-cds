@@ -19,4 +19,4 @@
 
 - Any persistent artifact write
 - Public output generation
-- Manuscript or README claim changes
+- Evidence-pack or README claim changes

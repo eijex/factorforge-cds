@@ -7,6 +7,7 @@ reproducibility anchors drift.
 from __future__ import annotations
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -52,11 +53,21 @@ def test_manifest_inputs_sha256_non_empty():
 
 
 def test_manifest_input_sha256_matches_files():
+    # Hash the committed git blob, not local working-tree bytes: on Windows,
+    # core.autocrlf=true plus this repo's .gitattributes (eol=lf for
+    # json/yaml/yml) means the working tree can hold CRLF while git stores
+    # LF, so path.read_bytes() can produce a value that mismatches what is
+    # actually committed (the root cause of the Job 129 / Job 136 incidents).
     data = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     for name, entry in data["inputs"].items():
-        path = ROOT / entry["path"]
-        actual = hashlib.sha256(path.read_bytes()).hexdigest()
-        assert actual == entry["sha256"], f"MANIFEST.json hash drift for {name}: {path}"
+        blob = subprocess.run(
+            ["git", "show", f"HEAD:{entry['path']}"],
+            cwd=ROOT,
+            capture_output=True,
+            check=True,
+        ).stdout
+        actual = hashlib.sha256(blob).hexdigest()
+        assert actual == entry["sha256"], f"MANIFEST.json hash drift for {name}: {entry['path']}"
 
 
 def test_manifest_commands_use_reproducible_entrypoints():

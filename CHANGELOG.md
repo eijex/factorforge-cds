@@ -19,6 +19,21 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- Release provenance hashing now computed from the committed git blob (`git show HEAD:<path>`) instead of local working-tree bytes, fixing CRLF/LF drift on Windows that could silently produce incorrect SHA-256 values in `reproducibility/benchmark_v0.5.1/MANIFEST.json` and `tests/test_docs_consistency.py` (Job 139).
+- Public-surface DOI references (`README.md`, `docs/index.md`, `AGENTS.md`) switched from version-pinned Zenodo DOIs to the concept DOI, which always resolves to the latest release, so future releases no longer require manually updating these files (Job 137).
+- `AGENTS.md` no longer states a hardcoded "16 version-bearing files" count, which had gone stale; points at `scripts/release.py`'s `build_targets()` as the source of truth instead (Job 139).
+
+### Added
+
+- `scripts/audit_public_surface.py` and a CHANGELOG duplicate-`[Unreleased]`-header check now run on every push/PR in CI, instead of only when `release.py --auto --audit-script` is remembered (Job 139).
+- `scripts/regen_manifest.py` regenerates `reproducibility/benchmark_v0.5.1/MANIFEST.json` input hashes from committed git-blob content on demand (Job 139).
+
+---
+
 ## [3.2.2] — 2026-06-18
 
 ### Fixed
