@@ -153,6 +153,6 @@ The 8 public surfaces and their required checks:
 | MCP GitHub | https://github.com/eijex/eijex-mcp | version strings in mcp-tools.ts, route.ts |
 | MCP site | https://mcp.eijex.com | tool descriptions version |
 | PyPI | https://pypi.org/project/factorforge-cds/ | version, description |
-| Zenodo | https://zenodo.org/records/20407331 | new version record visible |
+| Zenodo | https://zenodo.org/records/20407330 | new version record visible |
 - Run or report proportional checks for CLI, API, package build metadata, and
   untracked-file hygiene before push.
