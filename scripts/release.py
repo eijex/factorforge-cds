@@ -710,6 +710,17 @@ def auto_release(
     else:
         print("  (skipped — dry run)")
 
+    # ── [1b] REGENERATE MANIFEST HASHES ─────────────────────
+    # The version bump above rewrites `current_parameter_registry.yaml`'s
+    # `version:` field, which is one of MANIFEST.json's hashed inputs — every
+    # release otherwise drifts this hash (this recurred across Jobs 129, 136,
+    # and again during the v3.2.3 release itself).
+    print("\n[1b] Regenerate MANIFEST.json provenance hashes")
+    if not dry_run:
+        _run_step("regen_manifest", ["python", "scripts/regen_manifest.py", "--write"])
+    else:
+        print("  (skipped — dry run)")
+
     # ── [2] FREEZE EXAMPLE ──────────────────────────────────
     print("\n[2] Regenerate frozen example")
     if not dry_run:
