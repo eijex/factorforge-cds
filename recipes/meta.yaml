@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name.replace('-', '_') }}-{{ version }}.tar.gz
-  sha256: FIXME-fetch-failed
+  sha256: ee5451ae463d37d1201600f56583f2c23c750977c94dd990baf8954e92a6967c
 
 build:
   number: 0
