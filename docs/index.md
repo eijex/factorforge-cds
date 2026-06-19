@@ -36,7 +36,7 @@ Or use the **[web app](https://factorforge.eijex.com)** — no installation requ
 
 ## Engineering Benchmark
 
-Benchmarked on *N. benthamiana* SGN CDS (v3.2.2, balanced profile, N=49,257 sequences, seed=320):
+Benchmarked on *N. benthamiana* SGN CDS (v3.2.3, balanced profile, N=49,257 sequences, seed=320):
 
 | Metric | Value | Target |
 |--------|-------|--------|

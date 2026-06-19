@@ -17,7 +17,7 @@ class RuleBasedOptimizer(OptimizerEngine):
     """Profile-based rule optimization engine."""
 
     name = "Profile-based"
-    version = "3.2.2"
+    version = "3.2.3"
 
     def __init__(self, codon_table_path: str | None = None) -> None:
         """

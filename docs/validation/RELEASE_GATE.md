@@ -1,4 +1,4 @@
-# FactorForge v3.2.2 Release Gate
+# FactorForge v3.2.3 Release Gate
 
 This gate covers the public Open Bio output and I/O contracts. FactorForge remains
 an in-silico CDS design assistant; this gate does not establish wet-lab, yield, or
@@ -42,7 +42,7 @@ unregistered findings remain; strict mode is a future hard gate.
 - Wolffia globosa is marked stable.
 - Benchmark summary lacks a registry hash.
 - Public wording implies expression, yield, wet-lab, or clinical performance.
-- `paper.md` or a JOSS submission artifact is added to the public repository.
+- A publication-submission artifact is added to the public repository.
 - Biopython, DNAChisel, or pySBOL3 is newly added as a required dependency by
   this release gate work.
 
@@ -65,9 +65,9 @@ unregistered findings remain; strict mode is a future hard gate.
 
 This gate does not add optimizer benchmarking conclusions, ML engines, Kaggle or
 Colab adapters, MCP contracts, GenBank/SBOL export, DNAChisel integration,
-external optimizer comparisons, new stable host profiles, or paper/JOSS
-artifacts. The host profile roadmap and Wolffia profile work remain deferred
-until the post-070 follow-up.
+external optimizer comparisons, new stable host profiles, or external
+publication artifacts. The host profile roadmap and Wolffia profile work
+remain deferred until the post-070 follow-up.
 
 ## Import Environment Note
 
