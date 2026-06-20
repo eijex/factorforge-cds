@@ -142,7 +142,7 @@ body:
       options:
         - label: I confirm that this public issue contains no raw sequence, construct ID, target identity, unpublished construct detail, internal batch ID, patient data, private contact information, institution name, exact process parameter, or confidential partner/customer information.
           required: true
-        - label: I understand that this submission does not constitute a validation certificate or clinical endorsement of FactorForge outputs.
+        - label: I understand that this submission is user-provided feedback only and is not a controlled validation study, regulatory claim, clinical endorsement, or guarantee of FactorForge performance.
           required: true
         - label: I understand that maintainers may edit, summarize, or decline this submission before referencing it in public documentation.
           required: true

@@ -24,7 +24,7 @@ def _sequence_hash(args: argparse.Namespace) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="factorforge-validate",
-        description="Generate a structured validation package from wet-lab results.",
+        description="Generate a structured public-safe wet-lab feedback package.",
     )
     parser.add_argument(
         "--construct-id",
@@ -58,12 +58,12 @@ def main() -> None:
     parser.add_argument(
         "--comparison",
         required=True,
-        choices=["FactorForge better", "Equivalent", "Worse", "Not compared"],
+        choices=["Improved", "Equivalent", "Reduced", "Inconclusive", "No control", "Not reported"],
     )
     parser.add_argument(
         "--expression-level",
         default=None,
-        choices=["High", "Medium", "Low", "Not detected", "Not measured"],
+        choices=["Detected", "Not detected", "Weak", "Strong", "Inconclusive", "Not reported"],
     )
     parser.add_argument("--notes", default=None)
     parser.add_argument("--institution", default=None)
