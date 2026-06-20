@@ -1,5 +1,5 @@
-name: Public-safe Wet-lab Summary
-description: Share a non-confidential experimental outcome summary for maintainer review
+name: Public-safe Wet-lab Feedback Summary
+description: Share a non-confidential experimental feedback summary for maintainer review
 labels: ["wet-lab", "needs-triage"]
 body:
   - type: markdown
@@ -13,8 +13,9 @@ body:
         contact information, institution names, exact process parameters, or
         confidential partner/customer information.
 
-        Submissions are user-provided feedback summaries, not controlled validation
-        studies or guarantees of FactorForge performance.
+        Submissions are user-provided feedback summaries only. They are not
+        controlled validation studies, regulatory claims, clinical endorsements,
+        or guarantees of FactorForge performance.
 
   - type: input
     id: version
@@ -69,10 +70,11 @@ body:
     id: assay_category
     attributes:
       label: Coarse assay category
+      description: Select only a broad category. Do not include target identity, exact protocol, raw values, antibody details, process parameters, or confidential information.
       options:
-        - Western blot
-        - ELISA
-        - Functional assay
+        - Protein detection assay
+        - Immunoassay
+        - Reporter or activity assay
         - Other non-identifying assay category
         - Not reported
     validations:
@@ -81,7 +83,8 @@ body:
   - type: dropdown
     id: comparison_result
     attributes:
-      label: Comparison with control
+      label: Coarse comparison with available control
+      description: Use only a coarse public-safe comparison. Do not include exact yields, raw measurements, construct IDs, target identities, or confidential details.
       options:
         - Improved
         - Equivalent
@@ -95,13 +98,13 @@ body:
   - type: dropdown
     id: expression_result
     attributes:
-      label: Coarse observed outcome
+      label: Coarse public-safe observation
+      description: Use a coarse summary only. This field does not establish controlled validation, clinical relevance, or guaranteed FactorForge performance.
       options:
-        - Detected
-        - Not detected
-        - Weak
-        - Strong
+        - Signal observed
+        - No signal observed
         - Inconclusive
+        - Not measured
         - Not reported
     validations:
       required: true
@@ -116,17 +119,6 @@ body:
         - 4+ replicates
         - Not reported
 
-  - type: dropdown
-    id: approximate_yield_range
-    attributes:
-      label: Coarse yield range
-      description: Select only if this range is non-confidential.
-      options:
-        - Low
-        - Medium
-        - High
-        - Not measured
-        - Not reported
 
   - type: textarea
     id: non_confidential_notes

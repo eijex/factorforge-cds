@@ -42,9 +42,6 @@ FactorForge v3.0+ is the current public release line.
 - Manifest SHA-256 reproducibility drift on Windows
 - wet-lab result GitHub template: protein_class options + validation consent checkbox
 
-### Changed
-- Google Form wet-lab submission channel added
-
 ---
 
 ## v3.2.0 — 2026-06-11

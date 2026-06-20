@@ -26,7 +26,6 @@ DEFAULT_EXTERNAL_URLS = [
     "https://zenodo.org/records/20407330",
     "https://github.com/eijex",
     "https://github.com/eijex/factorforge-cds",
-    "https://docs.google.com/forms/u/2/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform",
     "https://raw.githubusercontent.com/eijex/factorforge-cds/main/.github/ISSUE_TEMPLATE/wet_lab_result.yml",
 ]
 
@@ -105,8 +104,8 @@ PATTERNS = {
     ),
     "dangerous_feedback_field": re.compile(
         r"^\s*\d+\.?\s*(Construct ID|Protein name|Promoter|Institution)\b|"
-        r"FactorForge better|Detected by Western blot|Detected by ELISA|"
-        r"Functional activity confirmed|Relative to native control",
+        r"FactorForge\s+better|Detected\s+by\s+Western\s+blot|Detected\s+by\s+ELISA|"
+        r"Functional\s+activity\s+confirmed|Relative\s+to\s+native\s+control",
         re.IGNORECASE,
     ),
 }

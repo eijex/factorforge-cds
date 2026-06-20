@@ -82,7 +82,6 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 - wet-lab result GitHub template: add protein_class options (Reporter / Antigen / Cytokine) and validation consent checkbox
 
 ### Changed
-- Add Google Form as wet-lab submission channel alongside GitHub Issue and email
 - Standardize wet-lab submission link labels across README, docs, and web app
 
 ### Docs
@@ -226,7 +225,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Added
 
-- **Wet-lab feedback modal** — "Submit Wet-lab Result" button opens an embedded Google Form iframe with version and optimization profile pre-filled from the current result.
+- **Wet-lab feedback modal** — "Submit Wet-lab Result" button opens the public-safe GitHub feedback template.
 - **JSON Copy button** — one-click copy of the full optimization JSON output in the terminal panel.
 - **Submit button tooltip** — info icon explains what wet-lab feedback is used for.
 
