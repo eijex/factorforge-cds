@@ -1,5 +1,5 @@
 site_name: FactorForge
-site_description: Open-source constraint-based CDS design engine for plant CDS design workflows (N. benthamiana, Tobacco BY-2 experimental)
+site_description: Open-source CDS design and pre-synthesis sequence review for plant CDS workflows (N. benthamiana, Tobacco BY-2 experimental)
 site_url: https://eijex.github.io/factorforge-cds/
 repo_url: https://github.com/eijex/factorforge-cds
 repo_name: eijex/factorforge-cds
@@ -38,6 +38,7 @@ nav:
     - CLI Reference: cli.md
     - Output Format: output.md
   - Validation: validation.md
+  - Roadmap: roadmap.md
   - Changelog: changelog.md
 
 markdown_extensions:

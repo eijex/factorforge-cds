@@ -106,6 +106,18 @@ No public ML engine is scheduled until sufficient, non-confidential validation d
 
 ---
 
+## Product Roadmap Themes *(claim-bounded)*
+
+Beyond version-bound engineering work, FactorForge is being shaped as a pre-synthesis review harness for plant CDS design workflows. The product journey builds on the paper/research-software track: reproducible in-silico candidate generation first, then broader review artifacts for synthesis, cloning, and experimental planning.
+
+- **Experimental speed** — deterministic assembly checks, sequence-complexity warnings, multi-gene assembly review, and reproducible design packages.
+- **Production-quality review** — host/profile maturity labels and quality-risk-aware design annotations for expert review.
+- **Regulatory and safety boundaries** — privacy-aware review workflows, local-first safety screening hooks, and public-safe feedback processes.
+
+These themes are intended to improve reviewability and reproducibility. They do not guarantee expression, glycosylation, folding, yield, synthesis acceptance, biosecurity compliance, regulatory approval, or downstream biological performance.
+
+---
+
 ## Wet-lab Validation *(ongoing — not version-bound)*
 
 Wet-lab validation is an ongoing, open-ended process independent of software versioning.
