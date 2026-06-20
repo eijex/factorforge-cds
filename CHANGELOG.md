@@ -32,6 +32,10 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 - `scripts/audit_public_surface.py` and a CHANGELOG duplicate-`[Unreleased]`-header check now run on every push/PR in CI, instead of only when `release.py --auto --audit-script` is remembered (Job 139).
 - `scripts/regen_manifest.py` regenerates `reproducibility/benchmark_v0.5.1/MANIFEST.json` input hashes from committed git-blob content on demand (Job 139).
 
+### Changed
+
+- Repositioned FactorForge as a claim-bounded pre-synthesis review harness across `README.md`, `ROADMAP.md`, `docs/index.md`, the new `docs/roadmap.md`, and `web/index.html`, separating the research-software journey from product roadmap themes without adding any new guarantees (expression, glycosylation, folding, yield, synthesis acceptance, regulatory approval).
+
 ---
 
 ## [3.2.2] — 2026-06-18
