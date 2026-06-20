@@ -64,10 +64,9 @@ If using email, submit only information you have permission to share and do not 
 
 Contributor identity is not listed in public summaries by default. Public credit requires explicit approval and additional maintainer review.
 
-Submission links:
+Submission channels:
 
 - [Share Wet-lab Results (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) — public-safe coarse summaries only
-- [Share Wet-lab Results (Form)](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform) — structured wet-lab result submission
 - Email `eijex.lab@gmail.com` for private or sensitive summaries
 
 ---

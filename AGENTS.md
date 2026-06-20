@@ -120,7 +120,7 @@ After any change, update the relevant public-facing files before pushing:
 | New feature / API change | `README.md`, `CHANGELOG.md` |
 | Bug fix | `CHANGELOG.md` |
 | Version bump | Run `python scripts/release.py X.Y.Z` — updates all version-bearing files automatically (count drifts over time; verify with `grep -c '^        ("' scripts/release.py` or read `build_targets()` directly rather than trusting a hardcoded number here). Then manually update `web/index.html` changelog panel and `docs/changelog.md`. **Then run Step 4 public surface audit** (see `docs/release-checklist-template.md`). |
-| Wet-lab submission link change | Update all 8 surfaces: `web/index.html`, `web/js/app.js`, `README.md`, `CONTRIBUTING.md`, `VALIDATION.md`, `docs/index.md`, `docs/validation.md`, `docs/feedback-inbox.md`. Label convention: **Share Wet-lab Results (GitHub)** / **Share Wet-lab Results (Form)**. |
+| Wet-lab submission link change | Update all public surfaces: `web/index.html`, `web/js/app.js`, `README.md`, `CONTRIBUTING.md`, `VALIDATION.md`, `docs/index.md`, `docs/validation.md`, `docs/feedback-inbox.md`. Label convention: **Share Wet-lab Results (GitHub)** for public-safe summaries; use maintainer email for private or sensitive summaries. |
 | New distribution method | `README.md` (Installation), `CHANGELOG.md` |
 | Web UI change | `web/index.html`, `web/README.md` — also run: `npx playwright test` |
 | New engine / model | `docs/model_cards/`, `CHANGELOG.md` |

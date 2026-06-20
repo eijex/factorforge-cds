@@ -7,7 +7,6 @@ This document describes a planned feedback path. It is documentation only; no ex
 | Channel | Use |
 | --- | --- |
 | [Share Wet-lab Results (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) | Public-safe coarse summaries only |
-| [Share Wet-lab Results (Form)](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform) | Structured wet-lab result submission |
 | Email: eijex.lab@gmail.com | Private or sensitive summaries |
 
 Public GitHub Issues must not contain private or sensitive wet-lab data.
@@ -35,8 +34,7 @@ Use this shape for public experimental feedback. Keep private, unpublished, iden
 | `harvest_timepoint` | Coarse harvest timepoint |
 | `replicate_category` | Coarse replicate category |
 | `comparison_result` | Improved, equivalent, reduced, inconclusive, no control, or not reported |
-| `expression_result` | Detected, not detected, weak, strong, inconclusive, or not reported |
-| `approximate_yield_range` | Coarse yield range, not exact confidential process data |
+| `expression_result` | Signal observed, no signal observed, inconclusive, not measured, or not reported |
 | `institution_disclosure` | Anonymous, disclosed, or not provided |
 | `non_confidential_notes` | Additional non-sensitive context |
 

@@ -81,7 +81,7 @@ GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).
 ## Get in Touch
 
 - **Docs** — [eijex.github.io/factorforge-cds](https://eijex.github.io/factorforge-cds/)
-- **Wet-lab Results** — Public-safe validation summaries are welcome. [Share Wet-lab Results (Form)](https://docs.google.com/forms/d/e/1FAIpQLSeSx-wYvF6YwHhSPdLMl-L44frCugdm25X_eDz50OaqTD66qA/viewform) or [Share Wet-lab Results (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) (public-safe summaries only). Do not submit raw sequences, confidential construct details, internal batch IDs, patient data, private contact information, exact process parameters, or confidential partner/customer data. See [VALIDATION.md](VALIDATION.md) before submitting.
+- **Wet-lab Feedback** — Public-safe feedback summaries are welcome via [Share Wet-lab Feedback (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml). Do not submit raw sequences, confidential construct details, internal batch IDs, patient data, private contact information, exact process parameters, or confidential partner/customer data. Email `eijex.lab@gmail.com` for private or sensitive summaries. See [VALIDATION.md](VALIDATION.md) before submitting.
 - **GitHub Issues** — bugs, features: [github.com/eijex/factorforge-cds/issues](https://github.com/eijex/factorforge-cds/issues)
 - **Email** — eijex.lab@gmail.com
 - **FactorForge** — [factorforge.eijex.com](https://factorforge.eijex.com)
