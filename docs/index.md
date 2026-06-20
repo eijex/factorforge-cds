@@ -1,6 +1,6 @@
 # FactorForge
 
-**Open-source constraint-based CDS design engine for sequence-level CDS design, with primary support for *Nicotiana benthamiana* (Tobacco BY-2: experimental).**
+**Open-source constraint-based CDS design and pre-synthesis sequence review engine for plant CDS workflows, with primary support for *Nicotiana benthamiana* (Tobacco BY-2: experimental).**
 
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](https://github.com/eijex/factorforge-cds/blob/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/factorforge-cds.svg)](https://pypi.org/project/factorforge-cds/)
@@ -8,7 +8,7 @@
 [![codecov](https://codecov.io/gh/eijex/factorforge-cds/branch/main/graph/badge.svg)](https://codecov.io/gh/eijex/factorforge-cds)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20407330.svg)](https://doi.org/10.5281/zenodo.20407330)
 
-FactorForge performs profile-guided CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
+FactorForge performs profile-guided CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. It supports reproducible in-silico CDS candidate generation and pre-synthesis sequence review for plant CDS workflows. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
 
 ---
 
@@ -70,7 +70,13 @@ Reproducible benchmark foundation: see `benchmarks/README.md`.
 ---
 
 !!! warning "Validation Status"
-    FactorForge outputs are **in-silico only** and have not been experimentally validated in wet-lab conditions. See [Validation](validation.md) for details.
+    FactorForge outputs are **in-silico only** and have not been experimentally validated in wet-lab conditions. They support reviewability and reproducibility, not guarantees of expression, yield, synthesis acceptance, folding, glycosylation, regulatory approval, or downstream biological performance. See [Validation](validation.md) for details.
+
+## Paper-to-product journey
+
+FactorForge's public roadmap keeps the paper/research-software track and product track connected but claim-bounded. The research track focuses on reproducible in-silico CDS candidate generation, documented benchmarks, and explicit limitations. The product track extends those artifacts toward a pre-synthesis review harness: assembly-relevant checks, host/profile maturity labels, quality-risk-aware annotations, and privacy-aware feedback records.
+
+These extensions are future-facing review aids; they do not establish wet-lab performance, synthesis acceptance, biosecurity compliance, or regulatory approval.
 
 ---
 

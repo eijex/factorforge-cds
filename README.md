@@ -1,6 +1,6 @@
 # FactorForge
 
-**Open-source constraint-based CDS design engine for sequence-level CDS design, with primary support for *Nicotiana benthamiana* (Tobacco BY-2: experimental).**
+**Open-source constraint-based CDS design and pre-synthesis sequence review engine for plant CDS workflows, with primary support for *Nicotiana benthamiana* (Tobacco BY-2: experimental).**
 
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
@@ -10,9 +10,9 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20407330.svg)](https://doi.org/10.5281/zenodo.20407330)
 [![Web App](https://img.shields.io/badge/web-factorforge.eijex.com-brightgreen.svg)](https://factorforge.eijex.com)
 
-FactorForge performs profile-guided CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
+FactorForge performs profile-guided CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. It is positioned as a pre-synthesis review harness: it helps teams generate reproducible CDS candidates, inspect assembly-relevant sequence constraints, and package design metadata before downstream synthesis, cloning, or experimental review. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
 
-**→ [Full Documentation](https://eijex.github.io/factorforge-cds/)**
+**→ [Full Documentation](https://eijex.github.io/factorforge-cds/)** · **[Roadmap](https://eijex.github.io/factorforge-cds/roadmap/)**
 
 ---
 
@@ -53,7 +53,7 @@ and are not imported by the installed package or exposed as supported engines.
 
 ## ⚠️ Validation Status
 
-FactorForge outputs are **in-silico only** and have not been experimentally validated in wet-lab conditions. See [Validation](https://eijex.github.io/factorforge-cds/validation/) and [VALIDATION.md](VALIDATION.md).
+FactorForge outputs are **in-silico only** and have not been experimentally validated in wet-lab conditions. These checks support reviewability and reproducibility; they do not guarantee expression, yield, synthesis acceptance, folding, glycosylation, regulatory approval, or downstream biological performance. See [Validation](https://eijex.github.io/factorforge-cds/validation/) and [VALIDATION.md](VALIDATION.md).
 
 ---
 
