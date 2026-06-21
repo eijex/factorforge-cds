@@ -14,6 +14,7 @@ const HOST_LABELS = {
     by2: 'Tobacco BY-2',
     ntabacum: 'Tobacco BY-2'
 };
+let validationRegistry = [];
 
 // State Management
 const state = {
@@ -157,9 +158,14 @@ async function loadHostOptions() {
             if (data.host_metadata && typeof data.host_metadata === 'object') {
                 metadata = data.host_metadata;
             }
+            if (Array.isArray(data.validation_checks)) {
+                validationRegistry = data.validation_checks;
+            }
         }
     } catch (_) {
-        // Offline/dev fallback — keep static defaults above.
+        // Offline/dev fallback — keep static defaults above; validationRegistry
+        // stays [] and renderValidationChecks() degrades to "no rows" rather
+        // than guessing labels.
     }
 
     renderHostCards(hosts, metadata);
@@ -628,32 +634,9 @@ function renderResults() {
         elements.polyaValue.className = 'text-xl font-black text-amber-600 dark:text-amber-400 leading-none';
     }
 
-    // Validation Badges
+    // Validation Badges (registry-driven — Job 143-A)
     elements.validationStatus.classList.remove('hidden');
-    const v = primary.validation || { polya: 'PASS', moclo: 'UNCHECKED', gc: 'PASS' };
-    updateValidationIcon('valPolyA', v.polya === 'PASS');
-    updateValidationIcon('valMoClo', v.moclo === 'PASS' ? true : v.moclo === 'UNCHECKED' ? null : false);
-
-    // Improved GC Status (Logic separation: N/A vs Out of Range)
-    const valGC = document.getElementById('valGC');
-    const gcMin = (primary.gc_window_min != null) ? Number(primary.gc_window_min) : 40.0;
-    const gcMax = (primary.gc_window_max != null) ? Number(primary.gc_window_max) : 55.0;
-
-    if (!optSeq || optSeq.length === 0 || calculatedGC === 0) {
-        valGC.textContent = '⚠️';
-        valGC.className = 'text-amber-500';
-        valGC.nextElementSibling.textContent = 'GC Content: N/A';
-        valGC.nextElementSibling.title = 'GC calculation failed or sequence not available';
-    } else if (v.gc !== 'PASS' || (calculatedGC < gcMin || calculatedGC > gcMax)) {
-        valGC.textContent = '⚠️';
-        valGC.className = 'text-amber-500';
-        valGC.nextElementSibling.textContent = `⚠️ Outside target range (${calculatedGC.toFixed(1)}%)`;
-        valGC.nextElementSibling.title = `Target: ${gcMin.toFixed(0)}–${gcMax.toFixed(0)}% | Calculated: ${calculatedGC.toFixed(1)}%`;
-    } else {
-        valGC.textContent = '✅';
-        valGC.className = 'text-emerald-400';
-        valGC.nextElementSibling.textContent = `GC Content Check (${gcMin.toFixed(0)}–${gcMax.toFixed(0)}%)`;
-    }
+    renderValidationChecks(validationRegistry, resultChecksFromResponse(res));
 
     // Structure prediction links
     updateStructureLinks();
@@ -842,6 +825,63 @@ function updateValidationIcon(id, pass) {
             el.className = pass ? 'text-emerald-400' : 'text-rose-500';
         }
     }
+}
+
+const DOMAIN_GROUP_LABELS = {
+    configured_constraint: 'Configured constraint',
+    advisory_scan: 'Advisory sequence scans',
+    assembly_review: 'Assembly review',
+};
+
+function statusIcon(status) {
+    if (status === 'PASS') return { icon: '✅', className: 'text-emerald-400' };
+    if (status === 'NOT_RUN' || status === 'NOT_APPLICABLE') return { icon: '⏭️', className: 'text-slate-500' };
+    if (status === 'WARNING') return { icon: '⚠️', className: 'text-amber-500' };
+    return { icon: '❌', className: 'text-rose-500' };
+}
+
+function resultChecksFromResponse(res) {
+    if (res.validation && res.validation.checks) return res.validation.checks;
+    if (res.validation_report && res.validation_report.checks) return res.validation_report.checks;
+    return {};
+}
+
+function renderValidationChecks(registryChecks, resultChecks) {
+    const container = document.getElementById('validationChecksContainer');
+    if (!container) return;
+
+    if (!Array.isArray(registryChecks) || registryChecks.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-500">Validation registry unavailable.</p>';
+        return;
+    }
+
+    const sorted = [...registryChecks].sort((a, b) => a.order - b.order);
+    const groups = new Map();
+    for (const check of sorted) {
+        const groupLabel = DOMAIN_GROUP_LABELS[check.primary_domain] || check.primary_domain;
+        if (!groups.has(groupLabel)) groups.set(groupLabel, []);
+        groups.get(groupLabel).push(check);
+    }
+
+    let html = '';
+    for (const [groupLabel, checks] of groups) {
+        html += `<div>
+            <p class="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-2">${escapeHtml(groupLabel)}</p>
+            <div class="space-y-2">`;
+        for (const check of checks) {
+            const result = resultChecks[check.check_id];
+            const status = result ? result.status : 'NOT_RUN';
+            const { icon, className } = statusIcon(status);
+            const findingText = result && result.finding_count != null ? ` (${result.finding_count})` : '';
+            html += `<div class="flex items-center space-x-3 text-xs text-slate-300">
+                <span class="${className}">${icon}</span>
+                <span class="font-medium">${escapeHtml(check.display_name)}${findingText}</span>
+            </div>`;
+        }
+        html += `</div></div>`;
+    }
+
+    container.innerHTML = html;
 }
 
 function formatSequence(seq) {

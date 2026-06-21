@@ -443,22 +443,14 @@
                             Optimizing sequence...</p>
                     </div>
 
-                    <!-- Validation Status -->
+                    <!-- Validation Status (rendered dynamically from the runtime
+                         validation registry — see renderValidationChecks() in
+                         app.js. Job 143-A: replaces the 3 hardcoded rows above
+                         with up to 12 registry-driven rows.) -->
                     <div id="validationStatus"
-                        class="hidden mt-8 space-y-3 p-5 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl">
+                        class="hidden mt-8 space-y-4 p-5 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl">
                         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Sequence Checks</p>
-                        <div class="flex items-center space-x-3 text-xs text-slate-300">
-                            <span id="valPolyA" class="text-emerald-400">✅</span>
-                            <span class="font-medium">PolyA Scanner</span>
-                        </div>
-                        <div class="flex items-center space-x-3 text-xs text-slate-300">
-                            <span id="valMoClo" class="text-emerald-400">✅</span>
-                            <span class="font-medium">Restriction Site Check (Type IIS)</span>
-                        </div>
-                        <div class="flex items-center space-x-3 text-xs text-slate-300">
-                            <span id="valGC" class="text-emerald-400">✅</span>
-                            <span class="font-medium">GC Content Check</span>
-                        </div>
+                        <div id="validationChecksContainer" class="space-y-4"></div>
                     </div>
                 </div>
             </section>
