@@ -27,6 +27,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 - Public-surface DOI references (`README.md`, `docs/index.md`, `AGENTS.md`) switched from version-pinned Zenodo DOIs to the concept DOI, which always resolves to the latest release, so future releases no longer require manually updating these files (Job 137).
 - `AGENTS.md` no longer states a hardcoded "16 version-bearing files" count, which had gone stale; points at `scripts/release.py`'s `build_targets()` as the source of truth instead (Job 139).
 - `docs/rule-engine-roadmap.md`, `docs/validation.md`, `docs/how-it-works.md`, and `docs/factorforge-architecture.md` enumerated only 5-8 of the 9 default advisory RuleEngine scanners and omitted the MoClo overhang assembly-review check; all four now list the complete set. `rule-engine-roadmap.md` additionally mis-stated "Repeat patterns" as "Planned / Not yet implemented" (it is implemented and runs by default) and described an unused legacy GC-window calculation instead of the active `scan_gc_extremes` thresholds; both corrected. No runtime code changed (Job 141).
+- Web app "Sequence Checks" badge labeled "MoClo Overhang Check" actually reported a Type IIS restriction-site scan result, not MoClo overhang validity (the real MoClo overhang check lives in the opt-in construct-builder path and was never called here); label and changelog text corrected to "Restriction Site Check (Type IIS)". `validation.moclo` JSON field name kept unchanged for frontend compatibility (Job 142-fix).
 
 ### Added
 
