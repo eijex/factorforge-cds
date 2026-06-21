@@ -292,3 +292,77 @@ def test_optimize_endpoint_allows_dna_above_protein_limit() -> None:
     status_code, result = _post_optimize({"sequence": "ACG" * 2000, "profile": "balanced"})
     if status_code == 400:
         assert "exceeds maximum length" not in result.get("error", "")
+
+
+def test_get_health_check_exposes_validation_registry() -> None:
+    h = _handler()
+    responses: list[int] = []
+    headers: list[tuple[str, str]] = []
+    sent: dict[str, object] = {}
+    h.path = "/api/optimize"
+    h.send_response = responses.append
+    h.send_header = lambda key, value: headers.append((key, value))
+    h.end_headers = lambda: None
+    h.wfile = BytesIO()
+
+    handler.do_GET(h)
+
+    h.wfile.seek(0)
+    body = json.loads(h.wfile.read().decode("utf-8"))
+    assert body["validation_registry_version"] == "1.0"
+    assert body["validation_report_schema_version"] == "1.0"
+    assert len(body["validation_checks"]) == 12
+    assert body["validation_checks"][0]["check_id"] == "global_gc_range"
+
+
+def test_legacy_profile_response_gains_additive_validation_checks() -> None:
+    h = _handler()
+
+    result = h.optimize_sequence(
+        "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+        "gc_target",
+        False,
+        False,
+        False,
+        objective=None,
+        return_candidates=True,
+        constraints={"gc_min": 40.0, "gc_max": 55.0},
+    )
+
+    # Existing legacy fields untouched (AC9):
+    assert result["validation"]["polya"] in {"PASS", "WARNING"}
+    assert result["validation"]["moclo"] in {"PASS", "WARNING"}
+    assert result["validation"]["gc"] in {"PASS", "WARNING"}
+    # New additive fields:
+    assert result["validation"]["schema_version"] == "1.0"
+    assert "checks" in result["validation"]
+    assert result["metadata"]["validation_registry_version"] == "1.0"
+
+
+def test_feasibility_best_response_gains_additive_validation_checks() -> None:
+    h = _handler()
+
+    result = h.optimize_sequence(
+        "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+        "balanced",
+        False,
+        False,
+        False,
+        objective="feasibility_best",
+        host_profile="nbenthamiana",
+        return_candidates=True,
+        constraints={"gc_min": 40.0, "gc_max": 55.0},
+    )
+
+    # Existing fields untouched (AC9):
+    assert result["validation"] == {
+        "input_type": "protein",
+        "sequence_length": 35,
+        "host_profile": "nbenthamiana",
+    }
+    # New additive top-level fields, alongside the unchanged dict above —
+    # added as siblings, not merged into the existing "validation" dict,
+    # since that dict's exact shape is pinned by AC9.
+    assert result["validation_report"]["schema_version"] == "1.0"
+    assert "checks" in result["validation_report"]
+    assert result["metadata"]["validation_registry_version"] == "1.0"

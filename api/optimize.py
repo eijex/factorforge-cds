@@ -46,7 +46,11 @@ try:
         domesticate_custom_sites,
     )
     from factorforge.utils.sequence_validator import validate_cds_output
-    from factorforge.validation_report import build_validation_report
+    from factorforge.validation_registry import VALIDATION_REGISTRY_VERSION, public_badge_checks
+    from factorforge.validation_report import (
+        VALIDATION_REPORT_SCHEMA_VERSION,
+        build_validation_report,
+    )
 
     FACTORFORGE_AVAILABLE = True
     logger.info("FactorForge v3.x profile engine loaded successfully")
@@ -233,6 +237,9 @@ class handler(BaseHTTPRequestHandler):
             "supported_objectives": VALID_OBJECTIVES,
             "mock_enabled": ENABLE_MOCK,
             "engine_versions": ENGINE_VERSIONS,
+            "validation_registry_version": VALIDATION_REGISTRY_VERSION,
+            "validation_report_schema_version": VALIDATION_REPORT_SCHEMA_VERSION,
+            "validation_checks": public_badge_checks(),
         }
 
         if FACTORFORGE_AVAILABLE:
@@ -638,6 +645,18 @@ class handler(BaseHTTPRequestHandler):
                 "validation": {"polya": polya_check, "moclo": moclo_check, "gc": gc_check},
                 "engine": {"name": optimizer.name, "version": optimizer.version},
             }
+            validation_report = build_validation_report(
+                optimized_sequence,
+                gc_percent=gc_percent,
+                constraints=constraints,
+                rule_engine=RuleEngine(host=host),
+                moclo_requested=use_template,
+            )
+            response["validation"]["schema_version"] = validation_report["schema_version"]
+            response["validation"]["checks"] = validation_report["checks"]
+            response.setdefault("metadata", {})["validation_registry_version"] = (
+                VALIDATION_REGISTRY_VERSION
+            )
             if return_candidates:
                 response["recommended_candidate"] = self.build_candidate(
                     candidate_id=profile,
@@ -748,6 +767,18 @@ class handler(BaseHTTPRequestHandler):
             },
             "engine_versions": ENGINE_VERSIONS,
         }
+
+        primary_dna = candidates[0]["dna_sequence"]
+        validation_report = build_validation_report(
+            primary_dna,
+            gc_percent=float(candidates[0]["gc_percent"]),
+            constraints=constraints,
+            rule_engine=RuleEngine(host=host),
+        )
+        response["validation_report"] = validation_report
+        response.setdefault("metadata", {})["validation_registry_version"] = (
+            VALIDATION_REGISTRY_VERSION
+        )
 
         response = self.apply_custom_restriction_sites(response, custom_restriction_sites)
         return self.add_design_package_fields(
