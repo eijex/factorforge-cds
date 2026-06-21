@@ -26,6 +26,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 - Release provenance hashing now computed from the committed git blob (`git show HEAD:<path>`) instead of local working-tree bytes, fixing CRLF/LF drift on Windows that could silently produce incorrect SHA-256 values in `reproducibility/benchmark_v0.5.1/MANIFEST.json` and `tests/test_docs_consistency.py` (Job 139).
 - Public-surface DOI references (`README.md`, `docs/index.md`, `AGENTS.md`) switched from version-pinned Zenodo DOIs to the concept DOI, which always resolves to the latest release, so future releases no longer require manually updating these files (Job 137).
 - `AGENTS.md` no longer states a hardcoded "16 version-bearing files" count, which had gone stale; points at `scripts/release.py`'s `build_targets()` as the source of truth instead (Job 139).
+- `docs/rule-engine-roadmap.md`, `docs/validation.md`, `docs/how-it-works.md`, and `docs/factorforge-architecture.md` enumerated only 5-8 of the 9 default advisory RuleEngine scanners and omitted the MoClo overhang assembly-review check; all four now list the complete set. `rule-engine-roadmap.md` additionally mis-stated "Repeat patterns" as "Planned / Not yet implemented" (it is implemented and runs by default) and described an unused legacy GC-window calculation instead of the active `scan_gc_extremes` thresholds; both corrected. No runtime code changed (Job 141).
 
 ### Added
 
