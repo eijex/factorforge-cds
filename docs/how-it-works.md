@@ -12,18 +12,22 @@ Protein sequence (FASTA or plain text)
    (N. benthamiana by default; --host by2 for Tobacco BY-2)
         │
         ▼
-2. Rule Scan
-   Detects PolyA signals, homopolymers,
-   CpG/TpA dinucleotide hotspots,
-   repeat sequences, rare codon runs,
-   forbidden restriction sites
+2. Rule Scan (9 advisory scanners, run by default)
+   Detects PolyA signals, AU-rich elements,
+   AT-rich runs, homopolymers, tandem repeats,
+   local GC extremes, splice-like motifs,
+   CpG/TpA dinucleotide hotspots, rare codon runs
+   (advisory findings only — never gating)
         │
         ▼
 3. Domestication
    Removes Golden Gate / MoClo-incompatible
    BsaI / BsmBI recognition sites via silent edits
+   (halts if unresolvable)
    Optional custom restriction sites removed
    CpG/TpA reduction with CAI-budgeted balanced mode
+   MoClo overhang validity/collision check available
+   when building a construct (opt-in, non-gating)
         │
         ▼
 4. Output
