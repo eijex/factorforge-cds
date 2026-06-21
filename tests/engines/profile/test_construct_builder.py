@@ -199,3 +199,12 @@ class TestOverhangValidation:
         # Filter out any hits that aren't AATG or GCTT
         relevant = [c for c in collisions if c["overhang"] in ("AATG", "GCTT")]
         assert len(relevant) == 0
+
+
+def test_construct_builder_instantiates_without_template_dir() -> None:
+    from factorforge.engines.profile.construct_builder import ConstructBuilder
+
+    builder = ConstructBuilder()
+    collisions = builder.check_internal_overhang_collisions("AATG")
+
+    assert collisions == [{"overhang": "AATG", "position": 0, "strand": "forward"}]
