@@ -1,9 +1,9 @@
 # factorforge/tests/test_validation_contract_compat.py
 """Cross-repo compatibility test: the runtime registry must still cover every
-check the frozen manuscript contract (validation_contract_v1.yaml, vendored
-from eijex-workspace Job 141) claimed to exist. The registry is the ongoing
-source of truth; the contract is a pinned historical snapshot and may be a
-subset of the registry, never a superset."""
+check the frozen validation-check taxonomy snapshot (validation_contract_v1.yaml)
+claimed to exist. The registry is the ongoing source of truth; the snapshot is a
+pinned historical reference and may be a subset of the registry, never a
+superset."""
 
 from __future__ import annotations
 
