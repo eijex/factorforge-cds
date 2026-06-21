@@ -21,6 +21,10 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
+### Added
+
+- Runtime validation registry (`factorforge.validation_registry`) listing all 17 validation checks with per-execution-path enforcement metadata, and a canonical validation report builder (`factorforge.validation_report`) that scans the final returned CDS and reports results keyed by `check_id`. The web "Sequence Checks" panel and the `/api/optimize` response now expose all 9 advisory scanners plus restriction-site and MoClo-overhang results (previously only 3 of 9+ checks were visible). `validation.moclo`/`polya`/`gc` legacy fields are unchanged (Job 143-A).
+
 ### Fixed
 
 - Release provenance hashing now computed from the committed git blob (`git show HEAD:<path>`) instead of local working-tree bytes, fixing CRLF/LF drift on Windows that could silently produce incorrect SHA-256 values in `reproducibility/benchmark_v0.5.1/MANIFEST.json` and `tests/test_docs_consistency.py` (Job 139).
