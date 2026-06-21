@@ -19,10 +19,13 @@ if TYPE_CHECKING:
 class ConstructBuilder:
     """Assemble constructs from JSON templates."""
 
-    def __init__(self, template_dir: Path) -> None:
+    def __init__(self, template_dir: Path | None = None) -> None:
         """
         Args:
-            template_dir: Directory containing construct templates.
+            template_dir: Directory containing construct templates. Optional —
+                omit when only using template-independent methods such as
+                check_internal_overhang_collisions() or validate_overhangs(),
+                which do not read from disk.
         """
         self.template_dir = template_dir
 
