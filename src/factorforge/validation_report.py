@@ -1,11 +1,9 @@
 """Canonical, check_id-keyed validation report builder.
 
 Converts raw RuleEngine / Domesticator / ConstructBuilder outputs into the
-stable result envelope described in
-docs/superpowers/specs/2026-06-21-factorforge-validation-registry-design.md
-(eijex-workspace, private) §4. Every advisory scanner and the restriction-site
-scan run fresh against `final_cds` — the exact sequence the caller is about to
-return — never a stale or intermediate candidate (spec §4.3).
+stable, check_id-keyed result envelope. Every advisory scanner and the
+restriction-site scan run fresh against `final_cds` — the exact sequence the
+caller is about to return — never a stale or intermediate candidate.
 """
 
 from __future__ import annotations

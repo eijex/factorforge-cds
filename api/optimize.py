@@ -674,6 +674,8 @@ class handler(BaseHTTPRequestHandler):
             response = self.apply_custom_restriction_sites(
                 response,
                 custom_restriction_sites,
+                constraints=constraints,
+                host=host,
             )
             response = self.add_design_package_fields(
                 response=response,
@@ -780,7 +782,9 @@ class handler(BaseHTTPRequestHandler):
             VALIDATION_REGISTRY_VERSION
         )
 
-        response = self.apply_custom_restriction_sites(response, custom_restriction_sites)
+        response = self.apply_custom_restriction_sites(
+            response, custom_restriction_sites, constraints=constraints, host=host
+        )
         return self.add_design_package_fields(
             response=response,
             input_sequence=sequence,
@@ -931,7 +935,13 @@ class handler(BaseHTTPRequestHandler):
             "moclo_check": "unchecked" if moclo == "unchecked" else moclo,
         }
 
-    def apply_custom_restriction_sites(self, response, custom_restriction_sites):
+    def apply_custom_restriction_sites(
+        self,
+        response,
+        custom_restriction_sites,
+        constraints=None,
+        host=DEFAULT_HOST_PROFILE,
+    ):
         """Apply custom restriction-site domestication to the primary response CDS."""
         if not custom_restriction_sites:
             return response
@@ -950,7 +960,12 @@ class handler(BaseHTTPRequestHandler):
         after_metrics = self.custom_site_metrics(after_sequence, usage_table.codon_weights)
 
         self.update_primary_dna_sequence(
-            response, dna_sequence, after_sequence, usage_table.codon_weights
+            response,
+            dna_sequence,
+            after_sequence,
+            usage_table.codon_weights,
+            constraints=constraints,
+            host=host,
         )
 
         metrics = response.setdefault("metrics", {})
@@ -981,7 +996,15 @@ class handler(BaseHTTPRequestHandler):
 
         raise ValueError("No primary DNA sequence available for custom restriction-site cleanup")
 
-    def update_primary_dna_sequence(self, response, before_sequence, after_sequence, codon_weights):
+    def update_primary_dna_sequence(
+        self,
+        response,
+        before_sequence,
+        after_sequence,
+        codon_weights,
+        constraints=None,
+        host=DEFAULT_HOST_PROFILE,
+    ):
         """Update primary DNA fields and candidate evidence after custom domestication."""
         if response.get("optimized_sequence") == before_sequence:
             response["optimized_sequence"] = after_sequence
@@ -990,16 +1013,34 @@ class handler(BaseHTTPRequestHandler):
         recommended = response.get("recommended_candidate")
         if isinstance(recommended, dict):
             self.update_candidate_sequence(
-                recommended, before_sequence, after_sequence, codon_weights
+                recommended,
+                before_sequence,
+                after_sequence,
+                codon_weights,
+                constraints=constraints,
+                host=host,
             )
 
         for candidate in response.get("candidates", []):
             if isinstance(candidate, dict):
                 self.update_candidate_sequence(
-                    candidate, before_sequence, after_sequence, codon_weights
+                    candidate,
+                    before_sequence,
+                    after_sequence,
+                    codon_weights,
+                    constraints=constraints,
+                    host=host,
                 )
 
-    def update_candidate_sequence(self, candidate, before_sequence, after_sequence, codon_weights):
+    def update_candidate_sequence(
+        self,
+        candidate,
+        before_sequence,
+        after_sequence,
+        codon_weights,
+        constraints=None,
+        host=DEFAULT_HOST_PROFILE,
+    ):
         """Update one candidate when it points at the primary DNA sequence."""
         if candidate.get("dna_sequence") != before_sequence:
             return
@@ -1013,6 +1054,8 @@ class handler(BaseHTTPRequestHandler):
                 "recommendation_reason",
                 "Custom restriction-site domesticated candidate",
             ),
+            constraints=constraints or {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX},
+            host=host,
         )
         candidate.update(updated)
 

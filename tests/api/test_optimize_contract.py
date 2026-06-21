@@ -366,3 +366,41 @@ def test_feasibility_best_response_gains_additive_validation_checks() -> None:
     assert result["validation_report"]["schema_version"] == "1.0"
     assert "checks" in result["validation_report"]
     assert result["metadata"]["validation_registry_version"] == "1.0"
+
+
+def test_custom_restriction_site_rebuild_uses_request_host_and_constraints() -> None:
+    """Rebuilt candidate checks must use the request's host/constraints, not defaults.
+
+    GAGGAG is present in the gc_target-optimized DNA for this protein under the
+    ntabacum host, so domestication actually fires and update_candidate_sequence
+    rebuilds the candidate via build_candidate. The GC band 70-80% is chosen so
+    that the rebuilt candidate's ~59% GC is a WARNING under the *custom* band but
+    would be a PASS under the default 55-65% band — this discriminates between
+    "used the real constraints" and "silently fell back to defaults".
+    """
+    h = _handler()
+
+    result = h.optimize_sequence(
+        "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+        "gc_target",
+        False,
+        False,
+        False,
+        objective=None,
+        host="ntabacum",
+        return_candidates=True,
+        constraints={"gc_min": 70.0, "gc_max": 80.0},
+        custom_restriction_sites=[{"name": "TestSite", "sequence": "GAGGAG"}],
+    )
+
+    # Domestication must have actually fired for this assertion to be meaningful.
+    assert result["custom_restriction_sites"]["removed"]
+
+    recommended = result["recommended_candidate"]
+    # The rebuilt candidate's GC% sits inside the *default* 55-65% band (would be
+    # PASS if the rebuild silently fell back to defaults) but outside the custom
+    # 70-80% band actually requested — proving the real constraints were used.
+    assert DEFAULT_GC_MIN <= recommended["gc_percent"] <= DEFAULT_GC_MAX
+    assert recommended["checks"]["global_gc_range"]["status"] == "WARNING"
+    for candidate in result["candidates"]:
+        assert candidate["checks"]["global_gc_range"]["status"] == "WARNING"
