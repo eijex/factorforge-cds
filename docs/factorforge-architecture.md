@@ -40,16 +40,23 @@ usage table.
 ### 3. Rule Engine
 
 The rule engine scans and, where supported, repairs sequence features relevant
-to expression-context review, synthesis, cloning, or downstream handling:
+to expression-context review, synthesis, cloning, or downstream handling. The
+9 advisory scanners run by default (`scan_mode="full"`) are:
 
-- Homopolymer runs.
-- Local GC windows.
-- Rare codon runs.
-- Restriction sites.
 - PolyA signal motifs.
-- Splice-like motifs.
+- AU-rich elements (ARE).
+- AT-rich runs.
+- Homopolymer runs.
 - Repeat patterns.
+- Local GC extremes.
+- Splice-like motifs.
 - CpG and TpA dinucleotide density.
+- Rare codon runs.
+
+Two further assembly-review checks have different enforcement: restriction-site
+conflicts halt the production design pipeline when unresolvable, while MoClo
+overhang validity/collision checks are opt-in (run only when a construct
+template is requested) and never halt the pipeline.
 
 Rules should report severity and provenance separately from optimization score.
 That separation lets users review biological and manufacturing risks without

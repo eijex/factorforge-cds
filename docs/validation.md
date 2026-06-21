@@ -11,15 +11,49 @@ Public validation entries are manually reviewed, non-confidential wet-lab feedba
 
 ## What FactorForge Checks
 
+Checks are grouped by domain (see `rule-engine-roadmap.md` for full per-rule
+status).
+
+**Sequence integrity** (hard fail in the production design pipeline):
+
 | Check | Covered | Notes |
 |-------|---------|-------|
 | Internal stop codons | Yes | Hard fail |
 | Amino acid identity | Yes | Hard fail |
-| GC% range | Yes | Host-dependent; default *N. benthamiana*: 55-65% |
-| Forbidden restriction sites | Yes | BsaI, BsmBI, BpiI (Golden Gate) |
-| Invalid codons | Yes | Hard fail |
-| Rare codon runs | Yes | Ribosome stalling risk detection |
+| Invalid / partial codons | Yes | Hard fail |
+| Reading-frame / length consistency | Yes | Hard fail |
+
+**Configured constraints**:
+
+| Check | Covered | Notes |
+|-------|---------|-------|
+| GC% range | Yes | Host-dependent; default *N. benthamiana*: 55-65%. A configured target metric, not a hard gate outside the benchmark scoring contract. |
+
+**Advisory sequence-risk scans** (all 9 run by default; findings are reported, never gating):
+
+| Check | Covered | Notes |
+|-------|---------|-------|
+| PolyA-like motifs | Yes | Heuristic |
+| AU-rich elements (ARE) | Yes | Heuristic |
+| AT-rich runs | Yes | Minimum run length 6 nt default |
+| Homopolymers | Yes | Synthesis-risk threshold |
+| Tandem repeats | Yes | >=15 nt, recombination risk |
+| Local GC extremes | Yes | 50-nt window, 25-75% synthesis guard |
+| Splice-like motifs | Yes | Heuristic; false positive risk noted |
 | CpG/TpA dinucleotides | Yes | CAI-budgeted reduction |
+| Rare codon runs | Yes | Ribosome stalling risk detection |
+
+**Assembly review**:
+
+| Check | Covered | Notes |
+|-------|---------|-------|
+| Forbidden restriction sites | Yes | BsaI, BsmBI, BpiI (Golden Gate); halts the production design pipeline when unresolvable |
+| MoClo overhang validity / collision | Yes (opt-in) | Not run by default; reports warnings only, never halts the pipeline |
+
+**Outside current scope** (requires wet-lab validation):
+
+| Check | Covered | Notes |
+|-------|---------|-------|
 | Protein folding | No | Requires wet-lab validation |
 | Actual expression level | No | Requires wet-lab validation |
 | Yield / solubility | No | Requires wet-lab validation |
