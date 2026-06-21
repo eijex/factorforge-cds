@@ -1,0 +1,411 @@
+# === FactorForge fixture provenance (Job 143-A) ===
+# This file is a read-only, vendored snapshot of a frozen validation-check
+# taxonomy reference. Do not edit by hand — if the upstream reference
+# changes, re-vendor it via the Job 143-A implementation plan, Task 4
+# (private planning repo).
+#
+# source_contract_sha256: 8d6fc72205b41b15f5e19dc2aac1a1e614a23295b271378bed225ea3d89e3376
+# source_factorforge_commit: 4a8be9f053797d5f54154afcbda732eaaf79f8ae
+# snapshot_purpose: runtime validation-registry compatibility test
+# ===================================================
+
+contract_version: "1.0"
+factorforge_commit: "4a8be9f053797d5f54154afcbda732eaaf79f8ae"
+factorforge_release_tag: "v3.2.3"
+status: "frozen_reference_snapshot"
+benchmark_scoring_contract_version: "v1.1"
+created_at_kst: "2026-06-21"
+
+# ---------------------------------------------------------------------------
+# Execution paths (see evidence/pass-contract-audit.md for full audit)
+# ---------------------------------------------------------------------------
+execution_paths:
+  bare_optimizer:
+    impl: "src/factorforge/engines/profile/optimizer.py::RuleBasedOptimizer.optimize"
+    description: "Bare CDS optimization. Runs 9 advisory scanners only. No restriction-site or MoClo check. No single verdict — returns violations count + scan_results breakdown."
+  pipeline_default:
+    impl: "src/factorforge/engines/profile/pipeline.py"
+    description: "Production orchestration. Runs 9 advisory scanners + Type IIS domestication (raises ValueError on unfixable). MoClo overhang check is opt-in (construct_template defaults to None) and never raises even when run."
+  benchmark_scoring:
+    impl: "benchmarks/scoring.py::score_cds / canonical_multi_constraint_pass"
+    description: "Benchmark-only scoring endpoint. multi_constraint_pass = biological_pass AND assembly_pass(soft, no raise) AND gc_in_target_range. Does NOT include the 9 advisory scanners, MoClo overhang, or CAI."
+  web_ui:
+    impl: "web/js/app.js"
+    description: "Displays 3 badges (PolyA, MoClo[default UNCHECKED], GC) + a Repeats column in the comparison table. Reflects pipeline_default behavior (MoClo opt-in shows as UNCHECKED by default)."
+
+# ---------------------------------------------------------------------------
+# Domain A — Sequence Integrity (hard, gates pipeline via raise)
+# ---------------------------------------------------------------------------
+checks:
+  - check_id: aa_identity
+    display_name: "Amino-acid identity"
+    primary_domain: integrity
+    implementation_path: "src/factorforge/utils/sequence_validator.py"
+    implementation_symbol: "validate_cds_output"
+    default_enabled: true
+    threshold: "== 1.0"
+    threshold_source: "biological_definition"
+    enforcement_bare_optimizer: "not_checked"
+    enforcement_pipeline_default: "hard_fail_raise"
+    enforcement_benchmark_scoring: "component_of_biological_pass (soft)"
+    ui_badge_status: "not_directly_badged"
+    in_violations_total: false
+    output_field: "metadata.final_validation.aa_identity (pipeline); val['aa_identity'] (benchmark)"
+    test_status: "covered (sequence_validator tests)"
+    scientific_interpretation: "Translated CDS must encode the exact input protein."
+    claim_boundary: "Hard structural validity check, not a biological-risk prediction."
+    known_limitations: []
+
+  - check_id: internal_stop
+    display_name: "Internal stop codons"
+    primary_domain: integrity
+    implementation_path: "src/factorforge/engines/profile/optimizer.py, pipeline.py"
+    implementation_symbol: "translate_dna(...).count('*')"
+    default_enabled: true
+    threshold: "== 0"
+    threshold_source: "biological_definition"
+    enforcement_bare_optimizer: "not_checked"
+    enforcement_pipeline_default: "hard_fail_raise (via final_validation)"
+    enforcement_benchmark_scoring: "component_of_biological_pass (soft)"
+    ui_badge_status: "not_directly_badged"
+    in_violations_total: false
+    output_field: "metadata.final_validation; biological_pass component (benchmark)"
+    test_status: "covered (translation tests)"
+    scientific_interpretation: "Premature stop codon makes the CDS non-functional."
+    claim_boundary: "Hard structural validity check."
+    known_limitations: []
+
+  - check_id: invalid_codon
+    display_name: "Invalid / partial codons"
+    primary_domain: integrity
+    implementation_path: "src/factorforge/utils/sequence_validator.py"
+    implementation_symbol: "detect_invalid_codons"
+    default_enabled: true
+    threshold: "count == 0"
+    threshold_source: "biological_definition"
+    enforcement_bare_optimizer: "not_checked"
+    enforcement_pipeline_default: "hard_fail_raise (via final_validation)"
+    enforcement_benchmark_scoring: "component_of_biological_pass (soft)"
+    ui_badge_status: "not_directly_badged"
+    in_violations_total: false
+    output_field: "metadata.final_validation; biological_pass component"
+    test_status: "covered"
+    scientific_interpretation: "Non-ATGC or malformed codons indicate a structurally invalid sequence."
+    claim_boundary: "Hard structural validity check."
+    known_limitations: []
+
+  - check_id: frame_length
+    display_name: "Reading-frame / length consistency"
+    primary_domain: integrity
+    implementation_path: "src/factorforge/engines/profile/pipeline.py, benchmarks/scoring.py"
+    implementation_symbol: "len(seq) % 3 == 0"
+    default_enabled: true
+    threshold: "length % 3 == 0"
+    threshold_source: "biological_definition"
+    enforcement_bare_optimizer: "not_checked"
+    enforcement_pipeline_default: "implicit (validator stage)"
+    enforcement_benchmark_scoring: "component_of_biological_pass (soft)"
+    ui_badge_status: "not_directly_badged"
+    in_violations_total: false
+    output_field: "biological_pass component"
+    test_status: "covered"
+    scientific_interpretation: "CDS length must be a multiple of 3 to preserve frame."
+    claim_boundary: "Hard structural validity check."
+    known_limitations: []
+
+  # -------------------------------------------------------------------------
+  # Domain B — Configured Constraints
+  # -------------------------------------------------------------------------
+  - check_id: global_gc_range
+    display_name: "Global GC% target band"
+    primary_domain: configured_constraint
+    implementation_path: "benchmarks/scoring.py; src/factorforge/analysis/metrics.py::calculate_gc"
+    implementation_symbol: "gc_in_target_range"
+    default_enabled: true
+    threshold: "config.gc_min <= gc <= config.gc_max (study default; not a universal fixed band)"
+    threshold_source: "user_configurable"
+    enforcement_bare_optimizer: "metric_only (not gating)"
+    enforcement_pipeline_default: "metric_only (not gating)"
+    enforcement_benchmark_scoring: "component_of_multi_constraint_pass (soft)"
+    ui_badge_status: "valGC badge (PASS/WARN based on target band)"
+    in_violations_total: false
+    output_field: "metrics.gc_percent / gc_content; gc_in_target_range (benchmark)"
+    test_status: "covered"
+    scientific_interpretation: "Global nucleotide composition target, distinct from the local gc_extremes advisory scan."
+    claim_boundary: "Configured optimization target, not a pass/fail biological-risk scanner. Only gates in the benchmark scoring path."
+    known_limitations: []
+
+  - check_id: custom_forbidden_motifs
+    display_name: "User-configured forbidden motifs"
+    primary_domain: configured_constraint
+    implementation_path: "src/factorforge/utils/validation.py::validate_candidate_sequence; src/factorforge/analysis/metrics.py::detect_forbidden_motifs"
+    implementation_symbol: "detect_forbidden_motifs"
+    default_enabled: false
+    threshold: "user-supplied motif list (cfg['forbidden_motifs'])"
+    threshold_source: "user_configurable"
+    enforcement_bare_optimizer: "not_wired"
+    enforcement_pipeline_default: "not_wired"
+    enforcement_benchmark_scoring: "not_wired"
+    ui_badge_status: "not_exposed"
+    in_violations_total: false
+    output_field: "n/a in current product surfaces"
+    test_status: "covered at unit level (test_utils/test_validation.py) but caller is archived (archive/v3-ml-prototype/) — no active production caller as of pinned commit"
+    scientific_interpretation: "Capability exists in code to flag user-defined forbidden sequence motifs."
+    claim_boundary: "MUST NOT be described as an active product feature. State explicitly: implemented in a legacy/archived code path, not connected to the current optimize()/pipeline()/CLI/API surface at the pinned commit."
+    known_limitations: ["Not reachable from any current production entry point."]
+
+  # -------------------------------------------------------------------------
+  # Domain C — Advisory Sequence Scans (RuleEngine, 9 scanners)
+  # -------------------------------------------------------------------------
+  - check_id: polya
+    display_name: "PolyA-like motifs"
+    primary_domain: advisory_scan
+    implementation_path: "src/factorforge/engines/profile/rules/rule_engine.py"
+    implementation_symbol: "scan_polya(window=30)"
+    default_enabled: true
+    threshold: "window=30bp, motif set (AATAAA/ATTAAA/AGTAAA family)"
+    threshold_source: "engineering_heuristic"
+    enforcement_bare_optimizer: "advisory_only"
+    enforcement_pipeline_default: "advisory_only"
+    enforcement_benchmark_scoring: "not_included"
+    ui_badge_status: "valPolyA badge"
+    in_violations_total: true
+    output_field: "metadata.scan_results.polya"
+    test_status: "covered (tests/engines/profile/test_polya_scanner.py)"
+    scientific_interpretation: "Premature polyadenylation signal risk in coding sequence."
+    claim_boundary: "Advisory finding, not a guarantee of expression impact."
+    known_limitations: []
+
+  - check_id: are
+    display_name: "AU-rich elements (ARE)"
+    primary_domain: advisory_scan
+    implementation_path: "src/factorforge/engines/profile/rules/rule_engine.py"
+    implementation_symbol: "scan_are()"
+    default_enabled: true
+    threshold: "pattern-based (see implementation)"
+    threshold_source: "engineering_heuristic"
+    enforcement_bare_optimizer: "advisory_only"
+    enforcement_pipeline_default: "advisory_only"
+    enforcement_benchmark_scoring: "not_included"
+    ui_badge_status: "not_badged (only in changelog text)"
+    in_violations_total: true
+    output_field: "metadata.scan_results.are"
+    test_status: "GAP — only indirect coverage via scan_all() include/exclude dispatch test (test_rule_engine.py); no dedicated positive/negative fixture"
+    scientific_interpretation: "mRNA destabilizing motif risk."
+    claim_boundary: "Advisory finding."
+    known_limitations: ["No dedicated unit test fixture as of pinned commit — flag for Job B."]
+
+  - check_id: at_runs
+    display_name: "AT-rich runs"
+    primary_domain: advisory_scan
+    implementation_path: "src/factorforge/engines/profile/rules/rule_engine.py"
+    implementation_symbol: "scan_at_runs(min_length=6)"
+    default_enabled: true
+    threshold: "min_length=6bp"
+    threshold_source: "engineering_heuristic"
+    enforcement_bare_optimizer: "advisory_only"
+    enforcement_pipeline_default: "advisory_only"
+    enforcement_benchmark_scoring: "not_included"
+    ui_badge_status: "not_badged"
+    in_violations_total: true
+    output_field: "metadata.scan_results.at_runs"
+    test_status: "GAP — no test reference found (direct or via scan_all dispatch)"
+    scientific_interpretation: "AT-rich run risk (instability / cryptic regulatory motif)."
+    claim_boundary: "Advisory finding."
+    known_limitations: ["No test coverage found as of pinned commit — flag for Job B."]
+
+  - check_id: homopolymers
+    display_name: "Homopolymer runs (synthesis risk)"
+    primary_domain: advisory_scan
+    implementation_path: "src/factorforge/engines/profile/rules/rule_engine.py"
+    implementation_symbol: "scan_homopolymers(min_length=HOMOPOLYMER_SYNTHESIS_WARN_NT)"
+    default_enabled: true
+    threshold: "default 8nt (HOMOPOLYMER_SYNTHESIS_WARN_NT)"
+    threshold_source: "engineering_heuristic (gene-synthesis vendor flagging convention)"
+    enforcement_bare_optimizer: "advisory_only"
+    enforcement_pipeline_default: "advisory_only"
+    enforcement_benchmark_scoring: "not_included"
+    ui_badge_status: "not_badged"
+    in_violations_total: true
+    output_field: "metadata.scan_results.homopolymers"
+    test_status: "covered (tests/engines/profile/test_rule_engine.py)"
+    scientific_interpretation: "Long homopolymer runs are difficult to synthesize with high fidelity."
+    claim_boundary: "Synthesis-difficulty advisory, distinct from the separate expression-stability homopolymer threshold (HOMOPOLYMER_EXPRESSION_WARN_NT) used in the unrelated/archived utils/validation.py path."
+    known_limitations: []
+
+  - check_id: repeats
+    display_name: "Tandem / perfect repeats"
+    primary_domain: advisory_scan
+    implementation_path: "src/factorforge/engines/profile/rules/rule_engine.py"
+    implementation_symbol: "scan_repeats(min_length=15)"
+    default_enabled: true
+    threshold: "min_length=15bp"
+    threshold_source: "engineering_heuristic (recombination risk)"
+    enforcement_bare_optimizer: "advisory_only"
+    enforcement_pipeline_default: "advisory_only"
+    enforcement_benchmark_scoring: "not_included"
+    ui_badge_status: "comparison-table column only (no progress badge)"
+    in_violations_total: true
+    output_field: "metadata.scan_results.repeats"
+    test_status: "GAP — only indirect coverage via scan_all() dispatch test; no dedicated positive/negative fixture"
+    scientific_interpretation: "Perfect repeats >=15bp carry recombination risk."
+    claim_boundary: "Advisory finding."
+    known_limitations: ["No dedicated unit test fixture as of pinned commit — flag for Job B."]
+
+  - check_id: gc_extremes
+    display_name: "Local GC extremes (sliding window)"
+    primary_domain: advisory_scan
+    implementation_path: "src/factorforge/engines/profile/rules/rule_engine.py"
+    implementation_symbol: "scan_gc_extremes(window=50, min_gc=25, max_gc=75)"
+    default_enabled: true
+    threshold: "50bp window, 25-75% (synthesis guard band)"
+    threshold_source: "engineering_heuristic (analysis 004: engine output distribution 55-71%)"
+    enforcement_bare_optimizer: "advisory_only"
+    enforcement_pipeline_default: "advisory_only"
+    enforcement_benchmark_scoring: "not_included"
+    ui_badge_status: "not_badged (valGC badge is the unrelated global_gc_range check)"
+    in_violations_total: true
+    output_field: "metadata.scan_results.gc_extremes"
+    test_status: "covered (tests/engines/profile/test_rule_engine.py)"
+    scientific_interpretation: "Local synthesis-hostile GC extremes, NOT the global GC optimization target."
+    claim_boundary: "Must not be conflated with global_gc_range in manuscript text — different window, different threshold, different purpose."
+    known_limitations: []
+
+  - check_id: splice_sites
+    display_name: "Cryptic splice-site-like motifs"
+    primary_domain: advisory_scan
+    implementation_path: "src/factorforge/engines/profile/rules/rule_engine.py"
+    implementation_symbol: "scan_splice_sites()"
+    default_enabled: true
+    threshold: "donor GT[AG]AG ... 20-200bp ... acceptor [CT]AG (plant consensus GTRAG...YAG)"
+    threshold_source: "engineering_heuristic (plant splice consensus)"
+    enforcement_bare_optimizer: "advisory_only"
+    enforcement_pipeline_default: "advisory_only"
+    enforcement_benchmark_scoring: "not_included"
+    ui_badge_status: "not_badged"
+    in_violations_total: true
+    output_field: "metadata.scan_results.splice_sites"
+    test_status: "GAP — no test reference found (direct or via scan_all dispatch)"
+    scientific_interpretation: "Cryptic splice-site-like pattern risk in coding sequence."
+    claim_boundary: "Advisory pattern-match finding, low severity by default — not a validated splicing prediction."
+    known_limitations: ["No test coverage found as of pinned commit — flag for Job B."]
+
+  - check_id: dinucleotides
+    display_name: "CpG / TpA dinucleotide density"
+    primary_domain: advisory_scan
+    implementation_path: "src/factorforge/engines/profile/rules/rule_engine.py"
+    implementation_symbol: "scan_dinucleotides()"
+    default_enabled: true
+    threshold: "see implementation"
+    threshold_source: "engineering_heuristic"
+    enforcement_bare_optimizer: "advisory_only"
+    enforcement_pipeline_default: "advisory_only"
+    enforcement_benchmark_scoring: "not_included"
+    ui_badge_status: "not_badged"
+    in_violations_total: true
+    output_field: "metadata.scan_results.dinucleotides"
+    test_status: "covered (tests/engines/profile/test_dinucleotide.py)"
+    scientific_interpretation: "Destabilizing dinucleotide density risk."
+    claim_boundary: "Advisory finding."
+    known_limitations: []
+
+  - check_id: rare_codon_runs
+    display_name: "Rare-codon runs"
+    primary_domain: advisory_scan
+    implementation_path: "src/factorforge/engines/profile/rules/rule_engine.py"
+    implementation_symbol: "scan_rare_codon_runs()"
+    default_enabled: true
+    threshold: "see implementation"
+    threshold_source: "engineering_heuristic / codon-usage table derived"
+    enforcement_bare_optimizer: "advisory_only"
+    enforcement_pipeline_default: "advisory_only"
+    enforcement_benchmark_scoring: "not_included"
+    ui_badge_status: "not_badged"
+    in_violations_total: true
+    output_field: "metadata.scan_results.rare_codon_runs"
+    test_status: "covered (tests/engines/profile/test_rare_codon_runs.py)"
+    scientific_interpretation: "Runs of rare/low-usage codons may slow translation elongation."
+    claim_boundary: "Advisory finding, not a validated translation-rate measurement."
+    known_limitations: []
+
+  # -------------------------------------------------------------------------
+  # Domain D — Assembly Review
+  # -------------------------------------------------------------------------
+  - check_id: restriction_sites
+    display_name: "Type IIS restriction sites (BsaI/BpiI/BsmBI)"
+    primary_domain: assembly_review
+    implementation_path: "src/factorforge/engines/profile/rules/domesticator.py; src/factorforge/utils/restriction_sites.py"
+    implementation_symbol: "Domesticator.domesticate / detect_restriction_sites"
+    default_enabled: true
+    threshold: "built-in sites: BsaI(GGTCTC), BpiI(GAAGAC), BsmBI(CGTCTC), scan_rc=True; custom sites supported via domesticate_custom_sites"
+    threshold_source: "assembly_standard_definition (Golden Gate / MoClo)"
+    enforcement_bare_optimizer: "not_checked"
+    enforcement_pipeline_default: "hard_fail_raise (ValueError if unfixable)"
+    enforcement_benchmark_scoring: "component_of_assembly_pass (soft, no raise)"
+    ui_badge_status: "customRestrictionResults panel (separate from valPolyA/valMoClo/valGC badges)"
+    in_violations_total: false
+    output_field: "metadata.domestication (pipeline); forbidden_type_iis_site_count, assembly_pass (benchmark)"
+    test_status: "covered"
+    scientific_interpretation: "Internal Type IIS sites would be cleaved during Golden Gate / MoClo assembly."
+    claim_boundary: "Same biological check enforced at TWO different strengths: production pipeline raises and halts; benchmark scoring records a soft boolean. Manuscript Methods must specify which path is being described."
+    known_limitations: []
+
+  - check_id: moclo_overhang
+    display_name: "MoClo Level-0 overhang validity + internal collision"
+    primary_domain: assembly_review
+    implementation_path: "src/factorforge/engines/profile/construct_builder.py"
+    implementation_symbol: "validate_overhangs, check_internal_overhang_collisions, generate_construct"
+    default_enabled: false
+    threshold: "5' AATG / 3' GCTT (MoClo Level 0 CDS standard)"
+    threshold_source: "assembly_standard_definition (MoClo)"
+    enforcement_bare_optimizer: "not_checked"
+    enforcement_pipeline_default: "opt-in only (construct_template param defaults to None); when run, warnings are logged but never raised"
+    enforcement_benchmark_scoring: "not_included"
+    ui_badge_status: "valMoClo badge, default value 'UNCHECKED'"
+    in_violations_total: false
+    output_field: "construct generation warnings (logger only); not part of any structured pass/fail field"
+    test_status: "covered (construct_builder tests) for the validation logic itself; not exercised by default product paths"
+    scientific_interpretation: "Internal MoClo overhang occurrences could disrupt Golden Gate assembly if a construct is built."
+    claim_boundary: "MUST be described as a non-gating, opt-in advisory check. It is not run by default, and even when run it never blocks a result — unlike restriction_sites, which can halt the pipeline."
+    known_limitations: ["Not gating anywhere in the codebase as of pinned commit.", "Not run by default (requires explicit construct_template)."]
+
+# ---------------------------------------------------------------------------
+# Quantitative metrics — non-gating, reported only (separate from `checks`)
+# ---------------------------------------------------------------------------
+metrics:
+  - metric_id: cai
+    display_name: "Codon Adaptation Index"
+    output_field: "metrics.cai (optimizer/pipeline); cai (benchmark)"
+    gating: false
+    claim_boundary: "Optimization target metric, not part of multi_constraint_pass or any production verdict."
+  - metric_id: gc_percent
+    display_name: "Global GC%"
+    output_field: "metrics.gc_content / gc_percent (kept as two keys for caller compatibility)"
+    gating: false
+  - metric_id: violations_total
+    display_name: "Advisory finding count (unweighted)"
+    output_field: "metrics.violations = sum(len(v) for v in scan_results.values())"
+    gating: false
+    claim_boundary: "Unweighted sum across the 9 advisory scanners ONLY. Does not include integrity checks, configured constraints, or assembly-review findings. Findings may overlap spatially/mechanistically. This is NOT a biological quality score."
+  - metric_id: score
+    display_name: "Composite score"
+    output_field: "metrics.score"
+    gating: false
+  - metric_id: mfe
+    display_name: "Minimum free energy (provenance-gated)"
+    output_field: "compute_mfe_evidence() output"
+    gating: false
+    claim_boundary: "Reports whether MFE was actually computed to avoid an uncomputed value being misread as 0.0 (per prior 016 audit)."
+  - metric_id: runtime_seconds
+    display_name: "Runtime"
+    output_field: "benchmark only"
+    gating: false
+
+# ---------------------------------------------------------------------------
+# Explicitly excluded from this contract (documented, not silently dropped)
+# ---------------------------------------------------------------------------
+excluded_from_scope:
+  - id: legacy_validate_candidate_sequence
+    reason: "utils/validation.py::validate_candidate_sequence and its analysis/metrics.py-based detectors (detect_homopolymers, detect_repeats, detect_invalid_codons, detect_forbidden_motifs in that call path) have no active caller in the current product surface as of the pinned commit. All callers found are under archive/v3-ml-prototype/, plus the function's own unit test."
+  - id: protein_risk_module
+    reason: "Schema field exists (design_package.py::protein_risk) but annotate_protein_risk() has no caller outside its own module and its own test file. Treated as optional/future annotation, outside the core validation harness, per the brainstorm design decision."
