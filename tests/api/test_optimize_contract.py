@@ -118,6 +118,45 @@ def test_candidate_with_type_iis_conflict_is_not_reported_as_pass() -> None:
     assert candidate["validator_status"] == "warning"
 
 
+def test_build_candidate_includes_canonical_checks() -> None:
+    h = _handler()
+    table = optimize_api.load_codon_usage_table()
+
+    candidate = h.build_candidate(
+        candidate_id="test",
+        label="Test",
+        dna_sequence="ATGGCTGGCGGCGGCAGCGGCAGCAATAAAGGCGGCAGCGGCAGCGGCGGCAGCGGCGGC",
+        codon_weights=table.codon_weights,
+        recommendation_reason="test fixture",
+        constraints={"gc_min": 40.0, "gc_max": 70.0},
+    )
+
+    assert "checks" in candidate
+    assert candidate["checks"]["polya"]["status"] == "WARNING"
+    assert candidate["checks"]["polya"]["finding_count"] >= 1
+    assert candidate["checks"]["moclo_overhang"]["status"] == "NOT_RUN"
+
+
+def test_feasibility_best_candidates_each_carry_checks() -> None:
+    h = _handler()
+
+    result = h.optimize_sequence(
+        "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+        "balanced",
+        False,
+        False,
+        False,
+        objective="feasibility_best",
+        host_profile="nbenthamiana",
+        return_candidates=True,
+        constraints={"gc_min": 40.0, "gc_max": 55.0},
+    )
+
+    assert "checks" in result["recommended_candidate"]
+    for candidate in result["candidates"]:
+        assert "checks" in candidate
+
+
 def test_design_package_aa_identity_uses_cds_validator_result() -> None:
     h = _handler()
 

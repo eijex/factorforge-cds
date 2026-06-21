@@ -46,6 +46,7 @@ try:
         domesticate_custom_sites,
     )
     from factorforge.utils.sequence_validator import validate_cds_output
+    from factorforge.validation_report import build_validation_report
 
     FACTORFORGE_AVAILABLE = True
     logger.info("FactorForge v3.x profile engine loaded successfully")
@@ -645,6 +646,9 @@ class handler(BaseHTTPRequestHandler):
                     codon_weights=table.codon_weights,
                     profile_cai=cai,
                     recommendation_reason=f"Profile engine {profile} result",
+                    constraints=constraints,
+                    host=host,
+                    moclo_requested=use_template,
                 )
                 response["candidates"] = [response["recommended_candidate"]]
                 response["engine_versions"] = ENGINE_VERSIONS
@@ -707,6 +711,8 @@ class handler(BaseHTTPRequestHandler):
                     if feasibility["target"]["best_candidate"]
                     else "Maximum CAI without GC constraint; requested GC range was infeasible"
                 ),
+                constraints=constraints,
+                host=host,
             )
         ]
 
@@ -726,6 +732,8 @@ class handler(BaseHTTPRequestHandler):
                     codon_weights=table.codon_weights,
                     profile_cai=float(result.metrics.get("cai", 0.0)),
                     recommendation_reason=f"Profile engine {candidate_profile} comparison candidate",
+                    constraints=constraints,
+                    host=host,
                 )
             )
 
@@ -992,6 +1000,9 @@ class handler(BaseHTTPRequestHandler):
         codon_weights: dict[str, float],
         recommendation_reason: str,
         profile_cai: float | None = None,
+        constraints: dict[str, float] | None = None,
+        host: str = DEFAULT_HOST_PROFILE,
+        moclo_requested: bool = False,
     ) -> dict[str, Any]:
         """Build a v1 candidate payload with evidence metrics."""
         windows = calculate_gc_windows(dna_sequence)
@@ -1002,6 +1013,15 @@ class handler(BaseHTTPRequestHandler):
         general_cai = round(calculate_cai(dna_sequence, codon_weights), 3)
         type_iis_sites = Domesticator().scan_restriction_sites(dna_sequence, "golden_gate")
         assembly_pass = len(type_iis_sites) == 0
+        gc_percent = calculate_gc(dna_sequence)
+        active_constraints = constraints or {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX}
+        validation_report = build_validation_report(
+            dna_sequence,
+            gc_percent=gc_percent,
+            constraints=active_constraints,
+            rule_engine=RuleEngine(host=host),
+            moclo_requested=moclo_requested,
+        )
 
         return {
             "id": candidate_id,
@@ -1012,7 +1032,7 @@ class handler(BaseHTTPRequestHandler):
                 "profile_golden_set" if profile_cai is not None else "configured_codon_table"
             ),
             "general_cai": general_cai,
-            "gc_percent": round(calculate_gc(dna_sequence), 1),
+            "gc_percent": round(gc_percent, 1),
             "gc_window_min": round(min(window_values), 1) if window_values else 0.0,
             "gc_window_max": round(max(window_values), 1) if window_values else 0.0,
             "first_region_gc": round(float(first_region["first_30nt_gc"]), 1),
@@ -1029,6 +1049,7 @@ class handler(BaseHTTPRequestHandler):
                 else "warning"
             ),
             "recommendation_reason": recommendation_reason,
+            "checks": validation_report["checks"],
         }
 
     def candidate_label(self, candidate_id):
