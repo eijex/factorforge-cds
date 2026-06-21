@@ -600,8 +600,13 @@ class handler(BaseHTTPRequestHandler):
             # Validation checks
             polya_check = "PASS" if polya_warnings == 0 else "WARNING"
             gc_check = self.gc_check(gc_percent, constraints)
+            # NOTE: this checks Type IIS restriction sites (BsaI/BsmBI/BpiI),
+            # not MoClo overhang validity. The "moclo" JSON key is kept for
+            # frontend backward compatibility; the displayed UI label was
+            # corrected to "Restriction Site Check" (Job 142-fix).
             type_iis_sites = Domesticator().scan_restriction_sites(result.sequence, "golden_gate")
-            moclo_check = "PASS" if not type_iis_sites else "WARNING"
+            restriction_site_check = "PASS" if not type_iis_sites else "WARNING"
+            moclo_check = restriction_site_check
 
             logger.info(
                 f"Optimization metrics: CAI={cai:.3f}, GC={gc_percent:.1f}%, PolyA={polya_warnings}"
