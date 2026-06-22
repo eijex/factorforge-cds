@@ -203,9 +203,6 @@ def build_targets(old: str, new: str) -> list[tuple[str, list[tuple[str, str]], 
         ("docs/benchmark.md", [
             (f"FactorForge v{old} provides", f"FactorForge v{new} provides"),
         ], True),
-        ("docs/index.md", [
-            (f"(v{old}, balanced profile", f"(v{new}, balanced profile"),
-        ], True),
         ("docs/validation/RELEASE_GATE.md", [
             (f"# FactorForge v{old} Release Gate", f"# FactorForge v{new} Release Gate"),
         ], True),
