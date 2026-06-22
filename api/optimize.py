@@ -92,9 +92,10 @@ HOST_METADATA = {
     },
     "by2": {
         "display_name": "Tobacco BY-2",
-        "description": (
-            "N. tabacum cell culture codon usage — experimental, species-level "
-            "proxy table, not wet-lab validated for BY-2 expression"
+        "description": "N. tabacum cell culture codon usage",
+        "caveat": (
+            "Experimental: species-level proxy table, not wet-lab validated "
+            "for BY-2 expression performance."
         ),
     },
 }

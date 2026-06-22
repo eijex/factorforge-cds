@@ -180,11 +180,16 @@ function renderHostCards(hosts, metadata) {
     elements.hostCardsContainer.innerHTML = hosts.map((hostId, index) => {
         const meta = metadata[hostId] || { display_name: hostId, description: '' };
         const checkedAttr = index === 0 ? 'checked' : '';
+        const caveatHtml = meta.caveat ? `
+                    <span class="tooltip-container">
+                        <span class="info-icon">i</span>
+                        <span class="tooltip-text">${escapeHtml(meta.caveat)}</span>
+                    </span>` : '';
         return `
             <label class="block relative group">
                 <input type="radio" name="host" value="${escapeHtml(hostId)}" ${checkedAttr} class="peer sr-only">
                 <div class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
-                    <span class="block text-sm font-bold text-slate-800">${escapeHtml(meta.display_name)}</span>
+                    <span class="flex items-center text-sm font-bold text-slate-800">${escapeHtml(meta.display_name)}${caveatHtml}</span>
                     <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">${escapeHtml(meta.description || '')}</span>
                     <div class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">✓</div>
                 </div>
