@@ -361,7 +361,7 @@ class RuleEngine:
         by the scoring band (GC_OPT_MIN/MAX, ~55-65%) and the API/DP gc_min/gc_max
         constraints. The wide 25-75% band intentionally flags only synthesis-hostile
         local windows; narrowing it toward the global optimum would raise false
-        positives against the engine's own output distribution (analysis 004: 55-71%).
+        positives against the engine's own output distribution (internal benchmark: 55-71%).
 
         Args:
             seq: DNA sequence
@@ -704,7 +704,7 @@ class RuleEngine:
         Reduce CpG and TpA dinucleotide density via greedy synonymous substitution.
 
         Modes:
-            aggressive: dinucleotide reduction only; no CAI check (Job 044 behaviour).
+            aggressive: dinucleotide reduction only; no CAI check.
             balanced: dinucleotide reduction first; rollback each pass if final CAI
                       drops below cai_floor.
             cai_preserving: rollback each pass if CAI drops more than max_cai_drop

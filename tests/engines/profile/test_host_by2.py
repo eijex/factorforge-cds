@@ -72,11 +72,12 @@ def test_nbenthamiana_and_by2_hosts_both_produce_valid_sequences() -> None:
 
 WITNESS_PROTEIN = "MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQ"
 
-# Pinned 2026-06-23 by running the pre-Job-147 code directly (seed=42 fixes
+# Pinned 2026-06-23 by running the pre-guard code directly (seed=42 fixes
 # balanced/assembly_friendly non-determinism, confirmed by running each
-# combination twice and comparing). These are not derived by hand. Job 147
-# must not change any of these values — it only adds rejection/disclosure
-# around the existing engine, never touches profile output.
+# combination twice and comparing). These are not derived by hand. The
+# host/strategy compatibility guard below must not change any of these
+# values — it only adds rejection/disclosure around the existing engine,
+# never touches profile output.
 NBENTHAMIANA_BASELINE_SEED42 = {
     "balanced": "ATGAAGACCGCCTACATCGCCAAGCAGCGGCAGATCAGCTTCGTCAAGAGCCATTTCAGCAGGCAGCTGGAAGAGAGGCTGGGACTGATCGAGGTGCAG",
     "gc_target": "ATGAAGACCGCCTACATCGCCAAGCAGCGCCAGATCAGCTTCGTGAAGAGCCACTTCAGCCGCCAGCTGGAGGAGAGGCTGGGACTTATCGAGGTGCAG",
@@ -89,7 +90,7 @@ NTABACUM_BASELINE_SEED42 = {
     "assembly_friendly": "ATGAAAACAGCTTATATCGCCAAGCAAAGACAAATTTCATTCGTGAAATCTCATTTTAGCAGACAACTTGAGGAACGTCTTGGATTGATTGAGGTTCAA",
     # Intentionally identical to NBENTHAMIANA_BASELINE_SEED42["high_cai"]:
     # high_cai always optimizes against the nbenthamiana-only golden-set
-    # reference (see Job 147 Source of Truth) and has no BY-2 equivalent.
+    # reference and has no BY-2 equivalent.
     "high_cai": "ATGAAAACTGCTTATATTGCTAAACAAAGACAAATTTCTTTCGTTAAATCTCATTTCTCTAGACAACTTGAAGAAAGACTTGGTCTTATTGAAGTTCAA",
 }
 
@@ -110,8 +111,8 @@ def test_ntabacum_baseline_unchanged(profile: str) -> None:
 
 @pytest.mark.parametrize("profile", ["balanced", "gc_target", "assembly_friendly"])
 def test_host_aware_profiles_differ_by_host(profile: str) -> None:
-    """Regression guard for the gap found during Job 147 investigation:
-    test_nbenthamiana_and_by2_hosts_both_produce_valid_sequences() never
+    """Regression guard for a gap found during the host/strategy guard
+    investigation: test_nbenthamiana_and_by2_hosts_both_produce_valid_sequences() never
     asserted the two hosts produce *different* DNA for host-aware profiles,
     which is why high_cai's host-blindness went undetected."""
     assert NBENTHAMIANA_BASELINE_SEED42[profile] != NTABACUM_BASELINE_SEED42[profile]
@@ -119,8 +120,8 @@ def test_host_aware_profiles_differ_by_host(profile: str) -> None:
 
 def test_high_cai_is_host_invariant_by_design() -> None:
     """high_cai is anchored to the nbenthamiana-only golden-set reference
-    (Job 147 Source of Truth) and has no BY-2 equivalent — this equality is
-    the documented capability boundary, not a bug."""
+    and has no BY-2 equivalent — this equality is the documented capability
+    boundary, not a bug."""
     assert NBENTHAMIANA_BASELINE_SEED42["high_cai"] == NTABACUM_BASELINE_SEED42["high_cai"]
 
 

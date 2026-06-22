@@ -4,7 +4,7 @@ display metadata, and per-execution-path enforcement.
 Frozen reference: validation_contract_v1.yaml, factorforge commit
 4a8be9f053797d5f54154afcbda732eaaf79f8ae (v3.2.3). This module is the
 runtime source of truth; the contract file is a pinned manuscript snapshot
-of what this registry's predecessor behavior was (Job 141 / Job 142-fix).
+of what this registry's predecessor behavior was.
 """
 
 from __future__ import annotations
@@ -297,8 +297,8 @@ PUBLIC_VALIDATION_BADGE_IDS: tuple[str, ...] = ("global_gc_range",) + REVIEW_CON
 LEGACY_VALIDATION_FIELD_MAP: dict[str, str] = {
     "polya": "polya",
     "gc": "global_gc_range",
-    # Job 142-fix confirmed: validation.moclo carries the Type IIS restriction-site
-    # result, NOT moclo_overhang.
+    # validation.moclo carries the Type IIS restriction-site result, NOT
+    # moclo_overhang.
     "moclo": "restriction_sites",
 }
 

@@ -56,7 +56,7 @@ def test_schema_host_profiles_match_registry() -> None:
 
 def test_host_profile_roadmap_remains_deferred() -> None:
     roadmap = ROOT / "docs/host_profiles/HOST_PROFILE_REGISTRY_ROADMAP.md"
-    assert not roadmap.exists(), "Host profile roadmap is deferred until Job 070 is Done"
+    assert not roadmap.exists(), "Host profile roadmap is deferred until the host profile registry migration is done"
 
 
 def test_design_package_accepts_registry_host_metadata(design_package: dict) -> None:
