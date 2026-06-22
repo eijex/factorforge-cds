@@ -254,12 +254,15 @@
                             </div>
                         </label>
 
-                        <label class="block relative group">
+                        <label id="highCaiOption" class="block relative group">
                             <input type="radio" name="objective" value="high_cai" class="peer sr-only">
                             <div
+                                id="highCaiCard"
                                 class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
                                 <span class="flex items-center text-sm font-bold text-slate-800">
                                     High CAI
+                                    <span id="highCaiHostBadge"
+                                        class="hidden ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">N. benthamiana only</span>
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
                                         <span class="tooltip-text">Profile-engine comparison that favors high codon adaptation index.</span>

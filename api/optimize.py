@@ -92,7 +92,10 @@ HOST_METADATA = {
     },
     "by2": {
         "display_name": "Tobacco BY-2",
-        "description": "N. tabacum cell culture codon usage",
+        "description": (
+            "N. tabacum cell culture codon usage — experimental, species-level "
+            "proxy table, not wet-lab validated for BY-2 expression"
+        ),
     },
 }
 DEFAULT_GC_MIN = 55.0
@@ -152,7 +155,7 @@ class handler(BaseHTTPRequestHandler):
                     objective = DEFAULT_OBJECTIVE
             host_profile = data.get("host_profile", host)
 
-            # Job 147: explicit strategy/host compatibility guard. Reject
+            # Explicit strategy/host compatibility guard. Reject
             # rather than silently emitting nbenthamiana-table output under
             # a different host's name. feasibility_best (DP engine, hardcoded
             # table) and high_cai (nbenthamiana-only golden-set reference)
@@ -669,7 +672,7 @@ class handler(BaseHTTPRequestHandler):
             # NOTE: this checks Type IIS restriction sites (BsaI/BsmBI/BpiI),
             # not MoClo overhang validity. The "moclo" JSON key is kept for
             # frontend backward compatibility; the displayed UI label was
-            # corrected to "Restriction Site Check" (Job 142-fix).
+            # corrected to "Restriction Site Check".
             type_iis_sites = Domesticator().scan_restriction_sites(result.sequence, "golden_gate")
             restriction_site_check = "PASS" if not type_iis_sites else "WARNING"
             moclo_check = restriction_site_check

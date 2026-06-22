@@ -71,6 +71,9 @@ const elements = {
     feasibilityBestOption: document.getElementById('feasibilityBestOption'),
     feasibilityBestCard: document.getElementById('feasibilityBestCard'),
     feasibilityBestHostBadge: document.getElementById('feasibilityBestHostBadge'),
+    highCaiOption: document.getElementById('highCaiOption'),
+    highCaiCard: document.getElementById('highCaiCard'),
+    highCaiHostBadge: document.getElementById('highCaiHostBadge'),
     useTemplateCheck: document.getElementById('useTemplate'),
     kozakToggle: document.getElementById('toggleKozak'),
     dinucToggle: document.getElementById('toggleDinuc'),
@@ -291,6 +294,20 @@ function updateHostUI() {
     }
     if (elements.feasibilityBestHostBadge) {
         elements.feasibilityBestHostBadge.classList.toggle('hidden', !isBy2);
+    }
+
+    if (elements.highCaiOption) {
+        elements.highCaiOption.classList.toggle('cursor-not-allowed', isBy2);
+    }
+    if (elements.highCaiCard) {
+        elements.highCaiCard.classList.toggle('opacity-60', isBy2);
+        elements.highCaiCard.classList.toggle('cursor-not-allowed', isBy2);
+        elements.highCaiCard.classList.toggle('cursor-pointer', !isBy2);
+        elements.highCaiCard.classList.toggle('hover:border-emerald-400', !isBy2);
+        elements.highCaiCard.classList.toggle('hover:shadow-md', !isBy2);
+    }
+    if (elements.highCaiHostBadge) {
+        elements.highCaiHostBadge.classList.toggle('hidden', !isBy2);
     }
 }
 
