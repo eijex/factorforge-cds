@@ -1,6 +1,6 @@
 """Registry-production sync test (Brief §8).
 Compares registry values against actual production code constants/function defaults.
-Production constants are exported as named module/class attributes (Job 091),
+Production constants are exported as named module/class attributes,
 so these checks are strict assertions against the registry (single source of truth).
 """
 from __future__ import annotations
@@ -54,7 +54,7 @@ def test_bbsi_not_in_canonical_enzyme_set():
 
     BpiI is the canonical FactorForge label for the GAAGAC target.
     BbsI is an isoschizomer alias and must never re-enter as an active scan
-    target — it was explicitly removed in Job 091 to prevent duplicate scanning.
+    target — it was explicitly removed to prevent duplicate scanning.
     """
     from factorforge.engines.profile.rules.domesticator import Domesticator
     assert "BbsI" not in set(Domesticator.GOLDEN_GATE_ENZYMES), (

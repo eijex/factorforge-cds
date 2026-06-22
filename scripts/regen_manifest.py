@@ -5,7 +5,7 @@ from local working-tree bytes. On Windows, `core.autocrlf=true` combined with
 this repo's `.gitattributes` (`eol=lf` for json/yaml/yml) means the working
 tree can hold CRLF bytes while git stores LF — hashing `path.read_bytes()`
 then produces a value that mismatches what is actually committed (the root
-cause of the Job 129 / Job 136 MANIFEST drift incidents).
+cause of two prior MANIFEST drift incidents).
 
 Usage:
     python scripts/regen_manifest.py            # report diff, exit 1 if any

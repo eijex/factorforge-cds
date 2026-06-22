@@ -52,7 +52,7 @@ class TestSequenceTypeDetection:
         Root cause: M/S/N/Y/R/D/W/K are valid both as amino acid single-letter codes
         and as IUPAC ambiguous nucleotide codes. The validator now checks protein before
         ambiguous DNA to prevent optimizer returning the protein string as CDS.
-        (Analysis 017-F1, benchmark NbQ00g03920.1 / NbQ00g14770.1 / NbQ00g19220.1)
+        (benchmark NbQ00g03920.1 / NbQ00g14770.1 / NbQ00g19220.1)
         """
         assert validator.detect_sequence_type(seq) == SequenceType.PROTEIN
 

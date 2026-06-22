@@ -30,7 +30,7 @@
   "evidence": {
     "sequence_hash": "sha256:9e1e328157668f0cf09fac6f80a07afd9371990f0ef951a4d0129a70571dcd82",
     "registry_version": "3.2.3",
-    "registry_hash": "sha256:9612456ac0514f5c7231aed260ae6914962502bde128df8e0cc478347b8fc499"
+    "registry_hash": "sha256:8ad7950082c6d04afb2621f3ecaaa6e0892e374d2dd9ca8502b1a0b41b236046"
   },
   "claim_boundary": {
     "in_silico_only": true,

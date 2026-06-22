@@ -1,4 +1,4 @@
-"""MFE provenance/evidence tests (job 075, 016 audit blocker).
+"""MFE provenance/evidence tests (release-readiness audit blocker).
 
 When MFE is not computed (e.g. ViennaRNA unavailable, as on Vercel), downstream
 artifacts must report it honestly — never as a misleading 0.0.

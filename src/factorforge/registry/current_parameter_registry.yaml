@@ -5,9 +5,9 @@ registry:
   owner: factorforge-cds
   last_reviewed: "2026-06-10"
   review_context:
-    - "Job 084: benchmark foundation — registry schema, parameter_audit, production sync contract"
-    - "Job 091: registry-production constant export (DEFAULT_CAI_TARGET, DEFAULT_GC_LOW/HIGH, BpiI canonical label)"
-    - "Job 090: Design Package + Open Bio I/O contracts (MFE null invariant, FASTA/IUPAC privacy)"
+    - "Benchmark foundation — registry schema, parameter_audit, production sync contract"
+    - "Registry-production constant export (DEFAULT_CAI_TARGET, DEFAULT_GC_LOW/HIGH, BpiI canonical label)"
+    - "Design Package + Open Bio I/O contracts (MFE null invariant, FASTA/IUPAC privacy)"
   note: "Registry is not the evidence source. It is a reviewed parameter state derived from evidence packages, benchmarks, and maintainer decisions."
 
 parameters:
@@ -19,10 +19,9 @@ parameters:
         claim_level: hard_requirement
         evidence_status: hard_gate
         release_status: stable
-        owner_job: "036"
         source: "src/factorforge/utils/sequence_validator.py"
         rationale: "Optimized CDS must translate to the input protein exactly."
-        provenance: "Job 036 output validator; molecular biology hard requirement for any CDS optimization."
+        provenance: "Output validator; molecular biology hard requirement for any CDS optimization."
         visibility: public
         permission: publish_allowed
       internal_stop_allowance:
@@ -31,10 +30,9 @@ parameters:
         claim_level: hard_requirement
         evidence_status: hard_gate
         release_status: stable
-        owner_job: "036"
         source: "src/factorforge/utils/sequence_validator.py"
         rationale: "Internal stop codons truncate the product."
-        provenance: "Job 036 output validator; any premature stop codon terminates translation."
+        provenance: "Output validator; any premature stop codon terminates translation."
         visibility: public
         permission: publish_allowed
       invalid_codons:
@@ -43,10 +41,9 @@ parameters:
         claim_level: hard_requirement
         evidence_status: hard_gate
         release_status: stable
-        owner_job: "036"
         source: "src/factorforge/utils/sequence_validator.py"
         rationale: "Non-ACGT or non-triplet codons are invalid output."
-        provenance: "Job 036 output validator; undefined codons cannot be translated."
+        provenance: "Output validator; undefined codons cannot be translated."
         visibility: public
         permission: publish_allowed
       length_multiple_of_three:
@@ -55,10 +52,9 @@ parameters:
         claim_level: hard_requirement
         evidence_status: hard_gate
         release_status: stable
-        owner_job: "036"
         source: "src/factorforge/utils/sequence_validator.py"
         rationale: "CDS length must be a multiple of 3."
-        provenance: "Job 036 output validator; reading frame integrity hard requirement."
+        provenance: "Output validator; reading frame integrity hard requirement."
         visibility: public
         permission: publish_allowed
     assembly:
@@ -68,10 +64,9 @@ parameters:
         claim_level: hard_requirement
         evidence_status: hard_gate
         release_status: stable
-        owner_job: "075"
         source: "src/factorforge/engines/profile/rules/domesticator.py"
         rationale: "Type IIS sites interfere with Golden Gate / MoClo assembly. BpiI is the canonical FactorForge label for the GAAGAC Type IIS scanning target (see ASSEMBLY_STANDARDS in domesticator.py); BbsI is a common synonym/vendor naming convention for the same recognition target and may appear in external literature."
-        provenance: "NEB Golden Gate Assembly protocol standard enzyme list; Job 041/075 Type IIS handling. Job 091: aligned canonical label to existing FactorForge production convention (BpiI) — naming normalization, not a change to the biological scanning target."
+        provenance: "NEB Golden Gate Assembly protocol standard enzyme list. Canonical label aligned to existing FactorForge production convention (BpiI) — naming normalization, not a change to the biological scanning target."
         visibility: public
         permission: publish_allowed
   optimization:
@@ -81,11 +76,10 @@ parameters:
       claim_level: optimization_target
       evidence_status: literature_supported_internal_benchmark
       release_status: stable
-      owner_job: "072"
-      source: "Job 072 CAI unification + golden_set; src/factorforge/analysis/feasibility.py"
+      source: "CAI unification + golden_set; src/factorforge/analysis/feasibility.py"
       rationale: "Soft optimization target. Not a hard gate or wet-lab predictor."
-      notes: "Production default is exported as DEFAULT_CAI_TARGET (Job 091) and verified by test_registry_production_sync.py."
-      provenance: "Job 072 CAI reference unification; golden_set N. benthamiana CDS distribution (Analysis 004)."
+      notes: "Production default is exported as DEFAULT_CAI_TARGET and verified by test_registry_production_sync.py."
+      provenance: "CAI reference unification; golden_set N. benthamiana CDS distribution (internal benchmark)."
       visibility: public
       permission: publish_allowed
     gc_range_nbenthamiana_global:
@@ -94,10 +88,9 @@ parameters:
       claim_level: optimization_target
       evidence_status: internal_benchmark
       release_status: stable
-      owner_job: "042"
-      source: "src/factorforge/engines/profile/scoring.py; analysis 004 n=49 avg GC=60.1%"
+      source: "src/factorforge/engines/profile/scoring.py; internal benchmark n=49 avg GC=60.1%"
       rationale: "Aligned with host codon-table output distribution. Not a wet-lab validated optimum."
-      provenance: "Analysis 004 N. benthamiana CDS distribution (n=49, avg GC=60.1%); Job 042 GC parameter fix."
+      provenance: "Internal benchmark N. benthamiana CDS distribution (n=49, avg GC=60.1%); GC parameter fix."
       visibility: public
       permission: publish_allowed
     gc_extreme_local_window:
@@ -109,10 +102,9 @@ parameters:
       claim_level: warning_threshold
       evidence_status: production_default
       release_status: stable
-      owner_job: "016"
       source: "src/factorforge/engines/profile/scoring.py"
       rationale: "Local GC extremes in 50bp windows indicate potential assembly/expression risk."
-      provenance: "Job 016 release-readiness audit; heuristic derived from assembly folding risk literature."
+      provenance: "Release-readiness audit; heuristic derived from assembly folding risk literature."
       visibility: public
       permission: publish_allowed
   scoring:
@@ -125,10 +117,9 @@ parameters:
         claim_level: warning_threshold
         evidence_status: production_default
         release_status: stable
-        owner_job: "074"
         source: "MFE is optional; null/status/used contract prevents 0.0 placeholder."
         rationale: "MFE not computed must not be reported as 0.0 — semantically misleading."
-        provenance: "Job 074 pipeline validation hardening; Job 075 MFE null contract fix."
+        provenance: "Pipeline validation hardening; MFE null contract fix."
         visibility: public
         permission: publish_allowed
   benchmarks:
@@ -138,10 +129,9 @@ parameters:
       claim_level: documentation_only
       evidence_status: internal_benchmark
       release_status: stable
-      owner_job: "004"
       source: "Sol Genomics Network N. benthamiana CDS (filtered)"
       rationale: "Reference dataset size for benchmark reproducibility."
-      provenance: "Analysis 004; Sol Genomics Network public CDS download, filtered for valid ORFs."
+      provenance: "Internal benchmark; Sol Genomics Network public CDS download, filtered for valid ORFs."
       visibility: public
       permission: publish_allowed
   host_profiles:
@@ -154,10 +144,9 @@ parameters:
       claim_level: documentation_only
       evidence_status: production_default
       release_status: stable
-      owner_job: "004"
       source: "NCBI Taxonomy Browser NCBITaxon:4100; Sol Genomics Network"
       rationale: "Primary host for N. benthamiana plant expression; default host profile."
-      provenance: "Job 004 baseline; NCBI taxid confirmed in Job 061 host addition."
+      provenance: "Baseline host profile; NCBI taxid confirmed during host-addition review."
       visibility: public
       permission: publish_allowed
     by2:
@@ -168,10 +157,9 @@ parameters:
       claim_level: experimental_setting
       evidence_status: experimental
       release_status: experimental
-      owner_job: "004"
       source: "NCBI Taxonomy Browser NCBITaxon:4097; Nagata et al. (1992)"
       rationale: "Tobacco BY-2 experimental host; not validated for production use."
-      provenance: "Job 061 BY-2 host addition; experimental only — Nagata et al. (1992) BY-2 cell line."
+      provenance: "BY-2 host addition; experimental only — Nagata et al. (1992) BY-2 cell line."
       visibility: public
       permission: publish_allowed
 
@@ -186,5 +174,4 @@ codon_reference:
   sha256: "ddbd0a41da88109a709bca0304581e29bd0a756e4db1c51809d5002e9b2d5e8c"
   planned_rebuild: v3.3.0_sgn_qld183_v103
   claim_boundary: "Configured in-silico codon reference only; not wet-lab validation or yield prediction."
-  owner_job: "097"
   note: "The original authoritative build path for the current JSON codon table is incomplete/not verified. See docs/reference/CODON_TABLE_PROVENANCE.md for full disclosure."

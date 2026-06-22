@@ -1,8 +1,8 @@
-# === FactorForge fixture provenance (Job 143-A) ===
+# === FactorForge fixture provenance ===
 # This file is a read-only, vendored snapshot of a frozen validation-check
 # taxonomy reference. Do not edit by hand — if the upstream reference
-# changes, re-vendor it via the Job 143-A implementation plan, Task 4
-# (private planning repo).
+# changes, re-vendor it via the implementation plan in the private planning
+# repo.
 #
 # source_contract_sha256: 8d6fc72205b41b15f5e19dc2aac1a1e614a23295b271378bed225ea3d89e3376
 # source_factorforge_commit: 4a8be9f053797d5f54154afcbda732eaaf79f8ae
@@ -259,7 +259,7 @@ checks:
     implementation_symbol: "scan_gc_extremes(window=50, min_gc=25, max_gc=75)"
     default_enabled: true
     threshold: "50bp window, 25-75% (synthesis guard band)"
-    threshold_source: "engineering_heuristic (analysis 004: engine output distribution 55-71%)"
+    threshold_source: "engineering_heuristic (internal benchmark: engine output distribution 55-71%)"
     enforcement_bare_optimizer: "advisory_only"
     enforcement_pipeline_default: "advisory_only"
     enforcement_benchmark_scoring: "not_included"

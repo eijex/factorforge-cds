@@ -87,7 +87,7 @@ def test_optimize_short_iupac_overlap_proteins(optimizer, seq, expected_len):
 
     Before the fix these sequences were misclassified as DNA and returned unchanged,
     producing invalid_codon_count > 0 and aa_identity = 0.0 in the benchmark.
-    (Analysis 017-F1)
+    (see test_input_validator.py for the benchmark case this regression-guards)
     """
     result = optimizer.optimize(seq, profile="balanced")
     assert len(result.sequence) == expected_len, (

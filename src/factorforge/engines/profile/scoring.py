@@ -12,7 +12,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 # GC band for N. benthamiana codon-optimized sequences.
-# Benchmark (analysis 004, n=49): balanced profile output average GC% = 60.1%
+# Benchmark (internal, n=49): balanced profile output average GC% = 60.1%
 # (range 55-71%). The genome-wide average (~42%) reflects all genes, not the
 # high-expression codon table which exhibits 3rd-position GC bias.
 # These constants define the acceptable band — sequences within [GC_OPT_MIN, GC_OPT_MAX]

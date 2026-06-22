@@ -1,4 +1,4 @@
-"""Docs-as-Code consistency guardrails (job 108).
+"""Docs-as-Code consistency guardrails.
 
 Checks that key documentation files stay in sync with their source-of-truth
 artifacts. Fails CI if claim wording, ablation layer definitions, or
@@ -57,7 +57,7 @@ def test_manifest_input_sha256_matches_files():
     # core.autocrlf=true plus this repo's .gitattributes (eol=lf for
     # json/yaml/yml) means the working tree can hold CRLF while git stores
     # LF, so path.read_bytes() can produce a value that mismatches what is
-    # actually committed (the root cause of the Job 129 / Job 136 incidents).
+    # actually committed (the root cause of two prior MANIFEST drift incidents).
     data = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     for name, entry in data["inputs"].items():
         blob = subprocess.run(

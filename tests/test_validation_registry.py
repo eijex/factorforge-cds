@@ -95,7 +95,7 @@ def test_public_badge_checks_returns_12_sorted_by_order() -> None:
     assert orders == sorted(orders)
 
 
-def test_legacy_field_map_matches_job_142_fix_semantics() -> None:
+def test_legacy_field_map_matches_restriction_site_relabel_semantics() -> None:
     assert LEGACY_VALIDATION_FIELD_MAP == {
         "polya": "polya",
         "gc": "global_gc_range",

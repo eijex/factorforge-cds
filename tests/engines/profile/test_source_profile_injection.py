@@ -1,7 +1,7 @@
 """
 Source-profile codon table injection into RuleBasedOptimizer.
 
-Covers the benchmark contract (Job 130): when a source-profile codon table is
+Covers the benchmark contract: when a source-profile codon table is
 injected, the CAI-dependent profiles must re-design against it, while the product
 engine path (no injection) must remain byte-identical to the bundled reference.
 """
@@ -38,7 +38,7 @@ def _has_profiles() -> bool:
 
 pytestmark = pytest.mark.skipif(
     not _has_profiles(),
-    reason="Source-profile codon tables not built (Job 130 STEP 6 artifacts absent).",
+    reason="Source-profile codon tables not built.",
 )
 
 

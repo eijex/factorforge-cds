@@ -15,7 +15,7 @@ from factorforge.analysis.metrics import (
 
 
 # Defaults calibrated to nbenthamiana profile engine output distribution
-# (analysis 004, n=49): avg CAI=0.76, avg GC=60.1% (range 55-71%).
+# (internal benchmark, n=49): avg CAI=0.76, avg GC=60.1% (range 55-71%).
 # DEFAULT_CAI_TARGET=0.82 aligns with industry practice (>0.8) and is achievable.
 # Exported as named constants so tests/test_registry_production_sync.py can
 # strictly compare them against the registry (single source of truth).
@@ -110,7 +110,7 @@ def analyze_feasibility(
     codon weights.
 
     See module-level DEFAULT_CAI_TARGET / DEFAULT_GC_LOW / DEFAULT_GC_HIGH for
-    the calibration rationale (analysis 004, n=49).
+    the calibration rationale (internal benchmark, n=49).
     """
     protein = "".join(protein_sequence.upper().split()).rstrip("*")
     if not protein:

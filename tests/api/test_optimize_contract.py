@@ -406,7 +406,7 @@ def test_custom_restriction_site_rebuild_uses_request_host_and_constraints() -> 
         assert candidate["checks"]["global_gc_range"]["status"] == "WARNING"
 
 
-# --- Job 147: BY-2 strategy/host compatibility guard + disclosure ---
+# --- BY-2 strategy/host compatibility guard + disclosure ---
 
 
 def test_explicit_feasibility_best_rejected_for_by2() -> None:

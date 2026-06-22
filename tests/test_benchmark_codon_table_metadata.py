@@ -1,4 +1,4 @@
-"""Benchmark summary codon table metadata guardrails (job 097)."""
+"""Benchmark summary codon table metadata guardrails."""
 from __future__ import annotations
 import json
 from pathlib import Path

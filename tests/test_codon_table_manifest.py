@@ -1,4 +1,4 @@
-"""Codon table manifest provenance guardrails (job 097)."""
+"""Codon table manifest provenance guardrails."""
 from __future__ import annotations
 import hashlib
 import json
