@@ -151,6 +151,61 @@ class handler(BaseHTTPRequestHandler):
                 else:
                     objective = DEFAULT_OBJECTIVE
             host_profile = data.get("host_profile", host)
+
+            # Job 147: explicit strategy/host compatibility guard. Reject
+            # rather than silently emitting nbenthamiana-table output under
+            # a different host's name. feasibility_best (DP engine, hardcoded
+            # table) and high_cai (nbenthamiana-only golden-set reference)
+            # are both N. benthamiana-only by current design.
+            if internal_host != DEFAULT_HOST_PROFILE:
+                if data.get("objective") == "feasibility_best":
+                    self.send_error_response(
+                        400,
+                        {
+                            "error": (
+                                "objective=feasibility_best is only supported "
+                                "with host=nbenthamiana"
+                            ),
+                            "error_code": "UNSUPPORTED_STRATEGY_HOST_COMBINATION",
+                            "requested_host": internal_host,
+                            "requested_strategy": "feasibility_best",
+                        },
+                    )
+                    return
+                if data.get("profile") == "high_cai":
+                    self.send_error_response(
+                        400,
+                        {
+                            "error": (
+                                "high_cai requires the N. benthamiana golden-set "
+                                f"reference and is not available for host={internal_host}"
+                            ),
+                            "error_code": "UNSUPPORTED_STRATEGY_HOST_COMBINATION",
+                            "requested_host": internal_host,
+                            "requested_strategy": "high_cai",
+                        },
+                    )
+                    return
+
+            # Implicit case (host-only request, no explicit objective/profile)
+            # already resolves to a host-supported strategy via the
+            # objective/profile defaulting above — this just discloses that
+            # a substitution happened.
+            implicit_strategy_disclosure = None
+            if (
+                internal_host != DEFAULT_HOST_PROFILE
+                and "objective" not in data
+                and "profile" not in data
+            ):
+                implicit_strategy_disclosure = {
+                    "requested_strategy": "feasibility_best",
+                    "resolved_strategy": "balanced",
+                    "resolution_reason": (
+                        "feasibility_best is not available for this host; "
+                        "resolved to a host-supported strategy"
+                    ),
+                }
+
             return_candidates = bool(data.get("return_candidates", True))
             constraints = self.parse_constraints(data.get("constraints", {}))
             use_template = data.get("use_template", False)
@@ -204,6 +259,9 @@ class handler(BaseHTTPRequestHandler):
                     constraints=constraints,
                     custom_restriction_sites=custom_restriction_sites,
                 )
+
+            if implicit_strategy_disclosure and isinstance(result, dict):
+                result.update(implicit_strategy_disclosure)
 
             logger.info("Optimization completed successfully")
             self.send_json_response(200, result)

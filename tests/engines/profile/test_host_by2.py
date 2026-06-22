@@ -70,6 +70,60 @@ def test_nbenthamiana_and_by2_hosts_both_produce_valid_sequences() -> None:
     assert Path(get_data_path(), "ntabacum_codons.json").exists()
 
 
+WITNESS_PROTEIN = "MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQ"
+
+# Pinned 2026-06-23 by running the pre-Job-147 code directly (seed=42 fixes
+# balanced/assembly_friendly non-determinism, confirmed by running each
+# combination twice and comparing). These are not derived by hand. Job 147
+# must not change any of these values — it only adds rejection/disclosure
+# around the existing engine, never touches profile output.
+NBENTHAMIANA_BASELINE_SEED42 = {
+    "balanced": "ATGAAGACCGCCTACATCGCCAAGCAGCGGCAGATCAGCTTCGTCAAGAGCCATTTCAGCAGGCAGCTGGAAGAGAGGCTGGGACTGATCGAGGTGCAG",
+    "gc_target": "ATGAAGACCGCCTACATCGCCAAGCAGCGCCAGATCAGCTTCGTGAAGAGCCACTTCAGCCGCCAGCTGGAGGAGAGGCTGGGACTTATCGAGGTGCAG",
+    "assembly_friendly": "ATGAAAACCGCCTACATCGCCAAGCAGAGGCAGATCAGCTTCGTGAAAAGCCACTTCAGCCGGCAGCTCGAGGAGAGGCTGGGCCTCATCGAGGTGCAG",
+    "high_cai": "ATGAAAACTGCTTATATTGCTAAACAAAGACAAATTTCTTTCGTTAAATCTCATTTCTCTAGACAACTTGAAGAAAGACTTGGTCTTATTGAAGTTCAA",
+}
+NTABACUM_BASELINE_SEED42 = {
+    "balanced": "ATGAAGACAGCTTATATTGCCAAACAAAGACAAATCTCTTTTGTTAAAAGCCATTTTAGCCGACAACTTGAGGAAAGGCTTGGACTTATTGAAGTCCAA",
+    "gc_target": "ATGAAGACCGCCTACATCGCCAAGCAGCGCCAGATCTCCTTCGTGAAGTCCCACTTCTCCCGCCAGCTCGAGGAGAGGCTCGGACTTATCGAGGTGCAG",
+    "assembly_friendly": "ATGAAAACAGCTTATATCGCCAAGCAAAGACAAATTTCATTCGTGAAATCTCATTTTAGCAGACAACTTGAGGAACGTCTTGGATTGATTGAGGTTCAA",
+    # Intentionally identical to NBENTHAMIANA_BASELINE_SEED42["high_cai"]:
+    # high_cai always optimizes against the nbenthamiana-only golden-set
+    # reference (see Job 147 Source of Truth) and has no BY-2 equivalent.
+    "high_cai": "ATGAAAACTGCTTATATTGCTAAACAAAGACAAATTTCTTTCGTTAAATCTCATTTCTCTAGACAACTTGAAGAAAGACTTGGTCTTATTGAAGTTCAA",
+}
+
+
+@pytest.mark.parametrize("profile", ["balanced", "gc_target", "assembly_friendly", "high_cai"])
+def test_nbenthamiana_baseline_unchanged(profile: str) -> None:
+    optimizer = RuleBasedOptimizer()
+    result = optimizer.optimize(WITNESS_PROTEIN, profile=profile, host="nbenthamiana", seed=42)
+    assert result.sequence == NBENTHAMIANA_BASELINE_SEED42[profile]
+
+
+@pytest.mark.parametrize("profile", ["balanced", "gc_target", "assembly_friendly", "high_cai"])
+def test_ntabacum_baseline_unchanged(profile: str) -> None:
+    optimizer = RuleBasedOptimizer()
+    result = optimizer.optimize(WITNESS_PROTEIN, profile=profile, host="ntabacum", seed=42)
+    assert result.sequence == NTABACUM_BASELINE_SEED42[profile]
+
+
+@pytest.mark.parametrize("profile", ["balanced", "gc_target", "assembly_friendly"])
+def test_host_aware_profiles_differ_by_host(profile: str) -> None:
+    """Regression guard for the gap found during Job 147 investigation:
+    test_nbenthamiana_and_by2_hosts_both_produce_valid_sequences() never
+    asserted the two hosts produce *different* DNA for host-aware profiles,
+    which is why high_cai's host-blindness went undetected."""
+    assert NBENTHAMIANA_BASELINE_SEED42[profile] != NTABACUM_BASELINE_SEED42[profile]
+
+
+def test_high_cai_is_host_invariant_by_design() -> None:
+    """high_cai is anchored to the nbenthamiana-only golden-set reference
+    (Job 147 Source of Truth) and has no BY-2 equivalent — this equality is
+    the documented capability boundary, not a bug."""
+    assert NBENTHAMIANA_BASELINE_SEED42["high_cai"] == NTABACUM_BASELINE_SEED42["high_cai"]
+
+
 def test_by2_genbank_organism_comes_from_feature_registry() -> None:
     exporter = SequenceExporter()
 

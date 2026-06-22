@@ -257,16 +257,25 @@ function updateHostUI() {
     const isBy2 = state.host === 'by2';
     const objectiveRadios = Array.from(elements.objectiveRadios);
     const feasibilityRadio = objectiveRadios.find(radio => radio.value === 'feasibility_best');
+    const highCaiRadio = objectiveRadios.find(radio => radio.value === 'high_cai');
 
+    // high_cai is anchored to the nbenthamiana-only golden-set reference
+    // (Job 147) and has no BY-2 equivalent, so it is disabled for BY-2 the
+    // same way feasibility_best is. Note: 'balanced' is not a selectable
+    // objective radio in this UI (only feasibility_best/ramp/high_cai/
+    // gc_target/assembly_friendly/viral_delivery exist) — the fallback
+    // below resolves to 'gc_target', the first remaining enabled radio.
     if (feasibilityRadio) {
         feasibilityRadio.disabled = isBy2;
-        if (isBy2 && feasibilityRadio.checked) {
-            const fallback = objectiveRadios.find(radio => !radio.disabled && radio.value === 'high_cai')
-                || objectiveRadios.find(radio => !radio.disabled);
-            if (fallback) {
-                fallback.checked = true;
-                state.objective = fallback.value;
-            }
+    }
+    if (highCaiRadio) {
+        highCaiRadio.disabled = isBy2;
+    }
+    if (isBy2 && ((feasibilityRadio && feasibilityRadio.checked) || (highCaiRadio && highCaiRadio.checked))) {
+        const fallback = objectiveRadios.find(radio => !radio.disabled);
+        if (fallback) {
+            fallback.checked = true;
+            state.objective = fallback.value;
         }
     }
 

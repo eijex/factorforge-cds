@@ -37,7 +37,8 @@ test('BY-2 host disables feasibility_best and selects a profile fallback', async
 
   await expect(page.locator('input[name="host"][value="by2"]')).toBeChecked();
   await expect(page.locator('input[name="objective"][value="feasibility_best"]')).toBeDisabled();
-  await expect(page.locator('input[name="objective"][value="high_cai"]')).toBeChecked();
+  await expect(page.locator('input[name="objective"][value="high_cai"]')).toBeDisabled();
+  await expect(page.locator('input[name="objective"][value="gc_target"]')).toBeChecked();
 });
 
 test('optimization payload includes host and renders host_profile', async ({ page }) => {
@@ -58,7 +59,7 @@ test('optimization payload includes host and renders host_profile', async ({ pag
           polya_signals: 0,
           length: MOCK_DNA.length
         },
-        profile: 'high_cai',
+        profile: 'gc_target',
         host_profile: 'by2',
         validation: {
           input_type: 'protein',
@@ -78,7 +79,7 @@ test('optimization payload includes host and renders host_profile', async ({ pag
   await expect.poll(() => requestBody).toMatchObject({
     sequence: SAMPLE_PROTEIN,
     host: 'by2',
-    profile: 'high_cai'
+    profile: 'gc_target'
   });
   await expect(page.locator('#hostProfileValue')).toContainText('by2');
   await expect(page.locator('#optimizedSequence')).toContainText(MOCK_DNA.slice(0, 20));

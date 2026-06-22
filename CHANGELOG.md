@@ -26,8 +26,25 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 - Runtime validation registry (`factorforge.validation_registry`) listing all 17 validation checks with per-execution-path enforcement metadata, and a canonical validation report builder (`factorforge.validation_report`) that scans the final returned CDS and reports results keyed by `check_id`. The web "Sequence Checks" panel and the `/api/optimize` response now expose all 9 advisory scanners plus restriction-site and MoClo-overhang results (previously only 3 of 9+ checks were visible). `validation.moclo`/`polya`/`gc` legacy fields are unchanged (Job 143-A).
 - `reproducibility/benchmark_v0.5.1/scripts/figures/make_cai_vs_multiconstraint_figure.py` regenerates the "CAI-only baseline versus constraint-aware design" scatter figure (mean CAI vs. corrected multi-constraint pass rate per method) from `benchmark_summary.frozen.json`. No generation script for this figure existed anywhere in the repository or its Git history; this is a reconstruction verified against the figure's existing per-method values, not a recovery of the original code (Job 146).
 
+### Docs
+
+- Clarified that BY-2 (N. tabacum) experimental host support applies to
+  the `balanced`/`gc_target`/`assembly_friendly` rule-based profiles only;
+  `high_cai` and `feasibility_best` remain N. benthamiana-only by design
+  (Job 147).
+
 ### Fixed
 
+- `/api/optimize` now rejects explicit `objective=feasibility_best` or
+  `profile=high_cai` requests combined with a non-default `host` (HTTP
+  400) instead of silently returning N. benthamiana-table output. The
+  implicit case (host-only request, no explicit strategy) now discloses
+  `requested_strategy`/`resolved_strategy`/`resolution_reason` and
+  resolves to `balanced` (previously silently resolved toward `high_cai`,
+  which is also N. benthamiana-only). CLI and web UI now block `high_cai`
+  for non-default hosts (`--compare-profiles` included), matching the
+  existing `feasibility_best` guard; the web UI's auto-selected fallback
+  for BY-2 changes from `high_cai` to `gc_target` (Job 147).
 - Release provenance hashing now computed from the committed git blob (`git show HEAD:<path>`) instead of local working-tree bytes, fixing CRLF/LF drift on Windows that could silently produce incorrect SHA-256 values in `reproducibility/benchmark_v0.5.1/MANIFEST.json` and `tests/test_docs_consistency.py` (Job 139).
 - Public-surface DOI references (`README.md`, `docs/index.md`, `AGENTS.md`) switched from version-pinned Zenodo DOIs to the concept DOI, which always resolves to the latest release, so future releases no longer require manually updating these files (Job 137).
 - `AGENTS.md` no longer states a hardcoded "16 version-bearing files" count, which had gone stale; points at `scripts/release.py`'s `build_targets()` as the source of truth instead (Job 139).

@@ -212,6 +212,13 @@ def optimize(
     if host_was_explicit and engine == "dp" and internal_host != "nbenthamiana":
         engine = "profile"
 
+    if host_was_explicit and internal_host != "nbenthamiana":
+        if profile == "high_cai" or "high_cai" in (compare_profile_list or []):
+            raise click.UsageError(
+                "high_cai requires the N. benthamiana golden-set reference "
+                "and is not available for non-default hosts."
+            )
+
     if compare_profile_list:
         if engine == "dp" and _engine_option_was_explicitly_set():
             raise click.UsageError("--compare-profiles cannot be used with --engine dp.")
