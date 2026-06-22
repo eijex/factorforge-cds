@@ -404,3 +404,87 @@ def test_custom_restriction_site_rebuild_uses_request_host_and_constraints() -> 
     assert recommended["checks"]["global_gc_range"]["status"] == "WARNING"
     for candidate in result["candidates"]:
         assert candidate["checks"]["global_gc_range"]["status"] == "WARNING"
+
+
+# --- Job 147: BY-2 strategy/host compatibility guard + disclosure ---
+
+
+def test_explicit_feasibility_best_rejected_for_by2() -> None:
+    status_code, result = _post_optimize(
+        {"sequence": "MSKGEELFTGVVPILVELD", "objective": "feasibility_best", "host": "by2"}
+    )
+
+    assert status_code == 400
+    assert result["success"] is False
+    assert isinstance(result["error"], str)
+    assert "feasibility_best" in result["error"]
+    assert result["error_code"] == "UNSUPPORTED_STRATEGY_HOST_COMBINATION"
+    assert result["requested_host"] == "ntabacum"
+    assert result["requested_strategy"] == "feasibility_best"
+
+
+def test_explicit_high_cai_rejected_for_by2() -> None:
+    status_code, result = _post_optimize(
+        {"sequence": "MSKGEELFTGVVPILVELD", "profile": "high_cai", "host": "by2"}
+    )
+
+    assert status_code == 400
+    assert result["success"] is False
+    assert isinstance(result["error"], str)
+    assert "high_cai" in result["error"]
+    assert result["error_code"] == "UNSUPPORTED_STRATEGY_HOST_COMBINATION"
+    assert result["requested_host"] == "ntabacum"
+    assert result["requested_strategy"] == "high_cai"
+
+
+def test_explicit_feasibility_best_unaffected_for_nbenthamiana() -> None:
+    status_code, result = _post_optimize(
+        {"sequence": "MSKGEELFTGVVPILVELD", "objective": "feasibility_best", "host": "nbenthamiana"}
+    )
+
+    assert status_code == 200
+    assert result["success"] is True
+    assert "error_code" not in result
+
+
+def test_explicit_high_cai_unaffected_for_nbenthamiana() -> None:
+    status_code, result = _post_optimize(
+        {"sequence": "MSKGEELFTGVVPILVELD", "profile": "high_cai", "host": "nbenthamiana"}
+    )
+
+    assert status_code == 200
+    assert result["success"] is True
+    assert "error_code" not in result
+
+
+def test_implicit_by2_resolves_to_balanced_with_disclosure() -> None:
+    status_code, result = _post_optimize({"sequence": "MSKGEELFTGVVPILVELD", "host": "by2"})
+
+    assert status_code == 200
+    assert result["success"] is True
+    assert result["profile"] == "balanced"
+    assert result["requested_strategy"] == "feasibility_best"
+    assert result["resolved_strategy"] == "balanced"
+    assert "not available for this host" in result["resolution_reason"]
+
+
+def test_explicit_balanced_for_by2_is_host_aware_and_unrejected() -> None:
+    status_code, result = _post_optimize(
+        {"sequence": "MSKGEELFTGVVPILVELD", "profile": "balanced", "host": "by2"}
+    )
+
+    assert status_code == 200
+    assert result["success"] is True
+    assert "error_code" not in result
+    assert "resolved_strategy" not in result
+
+
+def test_invalid_host_error_contract_unchanged() -> None:
+    status_code, result = _post_optimize(
+        {"sequence": "MSKGEELFTGVVPILVELD", "profile": "balanced", "host": "not_a_host"}
+    )
+
+    assert status_code == 400
+    assert result["success"] is False
+    assert isinstance(result["error"], str)
+    assert "Invalid host" in result["error"]
