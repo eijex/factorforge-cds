@@ -36,7 +36,7 @@ FactorForge is **not** an all-in-one platform. Its scope is:
 
 ## Immediate Action (now)
 
-- **Genome sequence + Gene annotation** → Job 097 Reference Provenance Pack
+- **Genome sequence + Gene annotation** → Reference Provenance Pack
   - `docs/reference/NBENTHAMIANA_REFERENCE.md`
   - `scripts/download_nbenthamiana_reference.py`
   - checksum + filtering rule documentation

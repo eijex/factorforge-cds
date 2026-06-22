@@ -7,23 +7,23 @@ FactorForge v3.0+ is the current public release line.
 ## v3.2.3 — 2026-06-19
 
 ### Fixed
-- Release provenance hashing now computed from the committed git blob instead of local working-tree bytes, fixing CRLF/LF drift on Windows that could silently produce incorrect SHA-256 values in reproducibility manifests (139)
-- Public-surface DOI references switched from version-pinned Zenodo DOIs to the concept DOI, which always resolves to the latest release (137)
+- Release provenance hashing now computed from the committed git blob instead of local working-tree bytes, fixing CRLF/LF drift on Windows that could silently produce incorrect SHA-256 values in reproducibility manifests
+- Public-surface DOI references switched from version-pinned Zenodo DOIs to the concept DOI, which always resolves to the latest release
 
 ### Added
-- A public-surface audit and a CHANGELOG consistency check now run on every push/PR in CI (139)
+- A public-surface audit and a CHANGELOG consistency check now run on every push/PR in CI
 
 ## v3.2.2 — 2026-06-18
 
 ### Fixed
 - **`multi_constraint_pass` definition corrected (scoring_contract v1.1)** — now requires GC-in-target-range in addition to biological/assembly pass; corrected ablation values (L3=3.5%, L4=5.6%) supersede the previous inflated figures. All benchmark artifacts regenerated (seed=320, N=49,257); Zenodo `benchmark_results.csv` v2 (DOI: [10.5281/zenodo.20676276](https://doi.org/10.5281/zenodo.20676276)) supersedes v1
-- Benchmark: source-profile codon-table injection now flows into both the design and scoring paths, fixing a prior gap where design always used the default table regardless of an injected profile (130)
+- Benchmark: source-profile codon-table injection now flows into both the design and scoring paths, fixing a prior gap where design always used the default table regardless of an injected profile
 
 ### Added
-- Data: three genome-annotated *N. benthamiana* codon-usage profiles (SGN QLD183 v103 CDS-derived; SGN NbeV1.1 all-CDS-derived; SGN NbeV1.1 high-confidence-CDS-derived), alongside the existing packaged reference profile (130)
+- Data: three genome-annotated *N. benthamiana* codon-usage profiles (SGN QLD183 v103 CDS-derived; SGN NbeV1.1 all-CDS-derived; SGN NbeV1.1 high-confidence-CDS-derived), alongside the existing packaged reference profile
 
 ### Changed
-- Web: Host System cards now render dynamically from the API's `supported_hosts`/`host_metadata` instead of being hardcoded (133)
+- Web: Host System cards now render dynamically from the API's `supported_hosts`/`host_metadata` instead of being hardcoded
 
 ### Docs
 - Aligned public README/docs/web/citation/packaging/roadmap/benchmark wording with the in-silico CDS design claim boundary
@@ -48,21 +48,21 @@ FactorForge v3.0+ is the current public release line.
 
 ### Benchmark
 - **Formal benchmark** — N. benthamiana SGN CDS dataset (N=49,257 sequences), seed=320 for deterministic reproduction. All metrics are in-silico; no wet-lab validation is claimed.
-- **Seed injection** — benchmark runner now accepts `--seed` for fully deterministic reruns; `most_frequent_codon` tie-breaking deduplication included (099)
+- **Seed injection** — benchmark runner now accepts `--seed` for fully deterministic reruns; `most_frequent_codon` tie-breaking deduplication included
 
 ### Data / Provenance
-- **Codon table provenance disclosure** — `nbenthamiana_codons.json` origin documented as a legacy Kazusa + SGN v1.0.1-era reference; `codon_table_manifest.json` added with sha256 pin, `build_path_status: incomplete`, and known limitations recorded (097)
+- **Codon table provenance disclosure** — `nbenthamiana_codons.json` origin documented as a legacy Kazusa + SGN v1.0.1-era reference; `codon_table_manifest.json` added with sha256 pin, `build_path_status: incomplete`, and known limitations recorded
 
 ### API / Schema
-- **Design Package schema v1.0.0** — formal IUPAC/FASTA I/O contracts and MFE null invariant established (090)
-- **Registry constants export** — `DEFAULT_CAI_TARGET`, `DEFAULT_GC_LOW`, `DEFAULT_GC_HIGH` importable as public production constants (091)
+- **Design Package schema v1.0.0** — formal IUPAC/FASTA I/O contracts and MFE null invariant established
+- **Registry constants export** — `DEFAULT_CAI_TARGET`, `DEFAULT_GC_LOW`, `DEFAULT_GC_HIGH` importable as public production constants
 
 ### Fixed
-- **Input validator** — IUPAC ambiguous DNA/AA sequence misclassification corrected (098)
+- **Input validator** — IUPAC ambiguous DNA/AA sequence misclassification corrected
 
 ### Documentation
-- **Benchmark Trust Pack** — registry/spec integrity tests, metric correctness tests, and deterministic baseline runner added (084)
-- **Claim wording alignment** — public-facing API and CLI output wording unified; no expression-level or yield improvement claims (092)
+- **Benchmark Trust Pack** — registry/spec integrity tests, metric correctness tests, and deterministic baseline runner added
+- **Claim wording alignment** — public-facing API and CLI output wording unified; no expression-level or yield improvement claims
 
 ---
 

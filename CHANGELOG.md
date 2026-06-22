@@ -23,18 +23,18 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Added
 
-- Runtime validation registry (`factorforge.validation_registry`) listing all 17 validation checks with per-execution-path enforcement metadata, and a canonical validation report builder (`factorforge.validation_report`) that scans the final returned CDS and reports results keyed by `check_id`. The web "Sequence Checks" panel and the `/api/optimize` response now expose all 9 advisory scanners plus restriction-site and MoClo-overhang results (previously only 3 of 9+ checks were visible). `validation.moclo`/`polya`/`gc` legacy fields are unchanged (Job 143-A).
-- `reproducibility/benchmark_v0.5.1/scripts/figures/make_cai_vs_multiconstraint_figure.py` regenerates the "CAI-only baseline versus constraint-aware design" scatter figure (mean CAI vs. corrected multi-constraint pass rate per method) from `benchmark_summary.frozen.json`. No generation script for this figure existed anywhere in the repository or its Git history; this is a reconstruction verified against the figure's existing per-method values, not a recovery of the original code (Job 146).
+- Runtime validation registry (`factorforge.validation_registry`) listing all 17 validation checks with per-execution-path enforcement metadata, and a canonical validation report builder (`factorforge.validation_report`) that scans the final returned CDS and reports results keyed by `check_id`. The web "Sequence Checks" panel and the `/api/optimize` response now expose all 9 advisory scanners plus restriction-site and MoClo-overhang results (previously only 3 of 9+ checks were visible). `validation.moclo`/`polya`/`gc` legacy fields are unchanged.
+- `reproducibility/benchmark_v0.5.1/scripts/figures/make_cai_vs_multiconstraint_figure.py` regenerates the "CAI-only baseline versus constraint-aware design" scatter figure (mean CAI vs. corrected multi-constraint pass rate per method) from `benchmark_summary.frozen.json`. No generation script for this figure existed anywhere in the repository or its Git history; this is a reconstruction verified against the figure's existing per-method values, not a recovery of the original code.
 
 ### Docs
 
 - Clarified that BY-2 (N. tabacum) experimental host support applies to
   the `balanced`/`gc_target`/`assembly_friendly` rule-based profiles only;
-  `high_cai` and `feasibility_best` remain N. benthamiana-only by design
-  (Job 147).
+  `high_cai` and `feasibility_best` remain N. benthamiana-only by design.
 
 ### Fixed
 
+- Removed internal task-tracking references ("Job NNN") from the public changelog (`CHANGELOG.md`, `docs/changelog.md`, `web/index.html`) and from public docs (`docs/strategy/eijex-tool-layer-classification.md`, `docs/validation/RELEASE_GATE.md`, `reproducibility/benchmark_v0.5.1/README.md`). `scripts/audit_public_surface.py`'s `internal_reference` pattern now also matches `Job \d+` so future releases catch this automatically.
 - `/api/optimize` now rejects explicit `objective=feasibility_best` or
   `profile=high_cai` requests combined with a non-default `host` (HTTP
   400) instead of silently returning N. benthamiana-table output. The
@@ -44,17 +44,17 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   which is also N. benthamiana-only). CLI and web UI now block `high_cai`
   for non-default hosts (`--compare-profiles` included), matching the
   existing `feasibility_best` guard; the web UI's auto-selected fallback
-  for BY-2 changes from `high_cai` to `gc_target` (Job 147).
-- Release provenance hashing now computed from the committed git blob (`git show HEAD:<path>`) instead of local working-tree bytes, fixing CRLF/LF drift on Windows that could silently produce incorrect SHA-256 values in `reproducibility/benchmark_v0.5.1/MANIFEST.json` and `tests/test_docs_consistency.py` (Job 139).
-- Public-surface DOI references (`README.md`, `docs/index.md`, `AGENTS.md`) switched from version-pinned Zenodo DOIs to the concept DOI, which always resolves to the latest release, so future releases no longer require manually updating these files (Job 137).
-- `AGENTS.md` no longer states a hardcoded "16 version-bearing files" count, which had gone stale; points at `scripts/release.py`'s `build_targets()` as the source of truth instead (Job 139).
-- `docs/rule-engine-roadmap.md`, `docs/validation.md`, `docs/how-it-works.md`, and `docs/factorforge-architecture.md` enumerated only 5-8 of the 9 default advisory RuleEngine scanners and omitted the MoClo overhang assembly-review check; all four now list the complete set. `rule-engine-roadmap.md` additionally mis-stated "Repeat patterns" as "Planned / Not yet implemented" (it is implemented and runs by default) and described an unused legacy GC-window calculation instead of the active `scan_gc_extremes` thresholds; both corrected. No runtime code changed (Job 141).
-- Web app "Sequence Checks" badge labeled "MoClo Overhang Check" actually reported a Type IIS restriction-site scan result, not MoClo overhang validity (the real MoClo overhang check lives in the opt-in construct-builder path and was never called here); label and changelog text corrected to "Restriction Site Check (Type IIS)". `validation.moclo` JSON field name kept unchanged for frontend compatibility (Job 142-fix).
+  for BY-2 changes from `high_cai` to `gc_target`.
+- Release provenance hashing now computed from the committed git blob (`git show HEAD:<path>`) instead of local working-tree bytes, fixing CRLF/LF drift on Windows that could silently produce incorrect SHA-256 values in `reproducibility/benchmark_v0.5.1/MANIFEST.json` and `tests/test_docs_consistency.py`.
+- Public-surface DOI references (`README.md`, `docs/index.md`, `AGENTS.md`) switched from version-pinned Zenodo DOIs to the concept DOI, which always resolves to the latest release, so future releases no longer require manually updating these files.
+- `AGENTS.md` no longer states a hardcoded "16 version-bearing files" count, which had gone stale; points at `scripts/release.py`'s `build_targets()` as the source of truth instead.
+- `docs/rule-engine-roadmap.md`, `docs/validation.md`, `docs/how-it-works.md`, and `docs/factorforge-architecture.md` enumerated only 5-8 of the 9 default advisory RuleEngine scanners and omitted the MoClo overhang assembly-review check; all four now list the complete set. `rule-engine-roadmap.md` additionally mis-stated "Repeat patterns" as "Planned / Not yet implemented" (it is implemented and runs by default) and described an unused legacy GC-window calculation instead of the active `scan_gc_extremes` thresholds; both corrected. No runtime code changed.
+- Web app "Sequence Checks" badge labeled "MoClo Overhang Check" actually reported a Type IIS restriction-site scan result, not MoClo overhang validity (the real MoClo overhang check lives in the opt-in construct-builder path and was never called here); label and changelog text corrected to "Restriction Site Check (Type IIS)". `validation.moclo` JSON field name kept unchanged for frontend compatibility.
 
 ### Added
 
-- `scripts/audit_public_surface.py` and a CHANGELOG duplicate-`[Unreleased]`-header check now run on every push/PR in CI, instead of only when `release.py --auto --audit-script` is remembered (Job 139).
-- `scripts/regen_manifest.py` regenerates `reproducibility/benchmark_v0.5.1/MANIFEST.json` input hashes from committed git-blob content on demand (Job 139).
+- `scripts/audit_public_surface.py` and a CHANGELOG duplicate-`[Unreleased]`-header check now run on every push/PR in CI, instead of only when `release.py --auto --audit-script` is remembered.
+- `scripts/regen_manifest.py` regenerates `reproducibility/benchmark_v0.5.1/MANIFEST.json` input hashes from committed git-blob content on demand.
 
 ### Changed
 
@@ -74,22 +74,22 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   All benchmark artifacts (`benchmark_summary.json`, `ablation_summary.json`, `benchmark_v0.5.1` data/figures)
   regenerated from full rerun (seed=320, N=49,257). Zenodo `benchmark_results.csv` v2 (DOI: 10.5281/zenodo.20676276) supersedes v1.
   A `canonical_multi_constraint_pass()` helper added for recomputing from primitive columns in historical CSVs.
-- Benchmark: source-profile codon-table injection now flows into both the design and scoring paths (`design_table_sha256 == score_table_sha256` verified per run), fixing a prior gap where design always used the default table regardless of an injected profile (Job 130).
+- Benchmark: source-profile codon-table injection now flows into both the design and scoring paths (`design_table_sha256 == score_table_sha256` verified per run), fixing a prior gap where design always used the default table regardless of an injected profile.
 
 ### Added
 
-- Data: added three genome-annotated *N. benthamiana* codon-usage profiles (SGN QLD183 v103 CDS-derived; SGN NbeV1.1 all-CDS-derived; SGN NbeV1.1 high-confidence-CDS-derived) built via `scripts/build_codon_profile.py` under `strict_nuclear_cds_v1` filtering, alongside the existing packaged reference profile (Job 130).
+- Data: added three genome-annotated *N. benthamiana* codon-usage profiles (SGN QLD183 v103 CDS-derived; SGN NbeV1.1 all-CDS-derived; SGN NbeV1.1 high-confidence-CDS-derived) built via `scripts/build_codon_profile.py` under `strict_nuclear_cds_v1` filtering, alongside the existing packaged reference profile.
 
 ### Changed
 
-- Web: Host System cards in `web/index.html` are now rendered dynamically from `GET /api/optimize` (`supported_hosts` + new `host_metadata` field) instead of being hardcoded, removing a 3-way duplication between the HTML, `web/js/app.js`, and the API (Job 133).
+- Web: Host System cards in `web/index.html` are now rendered dynamically from `GET /api/optimize` (`supported_hosts` + new `host_metadata` field) instead of being hardcoded, removing a 3-way duplication between the HTML, `web/js/app.js`, and the API.
 
 ### Docs
 
 - Aligned public wet-lab validation contribution language with manual-review, public-safe submission rules.
 - Clarified that public GitHub Issues must not contain raw sequences, confidential construct details, internal batch IDs, patient data, private contact information, exact process parameters, or confidential partner/customer data.
 - Aligned public README, docs, web, citation, packaging, roadmap, and benchmark wording with the in-silico CDS design claim boundary.
-- Removed maintainer-local file paths and internal repo references from `docs/release-checklist-template.md`, replacing them with generic placeholders (Job 134).
+- Removed maintainer-local file paths and internal repo references from `docs/release-checklist-template.md`, replacing them with generic placeholders.
 
 ---
 
@@ -102,8 +102,8 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   - Risk classification: HIGH / MEDIUM / LOW / UNKNOWN
 
 ### Fixed
-- Correct CAI provenance annotation in benchmark output (Job 110)
-- Correct Type IIS restriction site warning status (Job 110)
+- Correct CAI provenance annotation in benchmark output
+- Correct Type IIS restriction site warning status
 - Pin JSON files to LF line endings for Windows reproducibility
 - Add pandas to dev test dependencies
 - Manifest SHA-256 reproducibility drift on Windows (JSON/EOL normalization)
