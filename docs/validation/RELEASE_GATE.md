@@ -55,9 +55,9 @@ unregistered findings remain; strict mode is a future hard gate.
 - Confirm FASTA output headers contain only allowlisted metadata.
 - Confirm `BbsI` occurrences are alias or provenance explanations only.
 - Confirm benchmark results contain no raw-sequence columns.
-- Confirm the registry changelog records the 091 canonical label normalization.
+- Confirm the registry changelog records the canonical label normalization.
 - Confirm `docs/host_profiles/HOST_PROFILE_REGISTRY_ROADMAP.md` remains deferred
-  until Job 070 is Done.
+  until host profile registry migration is done.
 - Review `git ls-files --others --exclude-standard` and `git status --short`
   before publishing.
 
@@ -73,4 +73,4 @@ remain deferred until the post-070 follow-up.
 
 For direct import checks, use pytest, `PYTHONPATH=src`, or an editable install
 instead of plain `python -c`. This avoids accidentally importing an older
-site-packages installation, as observed during Job 091.
+site-packages installation.

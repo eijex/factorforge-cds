@@ -91,7 +91,8 @@ PATTERNS = {
     "internal_reference": re.compile(
         r"\bClaude\b|\bCodex\b|\bAnthropic\b|\bOpenAI\b|CLAUDE\.md|eijex-workspace|"
         r"C:\\Work|PlantFormOrg|PlantForm-AI|"
-        r"eijex-web\.vercel\.app",
+        r"eijex-web\.vercel\.app|"
+        r"\bJob\s*\d+[A-Za-z-]*\b",
         re.IGNORECASE,
     ),
     "ml_public_exposure": re.compile(

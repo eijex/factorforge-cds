@@ -8,7 +8,7 @@ const ENABLE_MOCK = window.FACTORFORGE_ENABLE_MOCK === true;
 // Maps internal engine table names (incl. HOST_MAP aliases like 'ntabacum')
 // back to a human label for results display, and serves as the offline/dev
 // fallback for the Host System cards (rendered dynamically — see
-// loadHostOptions/renderHostCards, Job 133).
+// loadHostOptions/renderHostCards).
 const HOST_LABELS = {
     nbenthamiana: 'N. benthamiana',
     by2: 'Tobacco BY-2',
@@ -140,8 +140,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Fetches supported_hosts/host_metadata from GET /api/optimize and renders the
 // Host System cards. Falls back to the static HOST_LABELS defaults if the API
-// is unreachable, so the page still functions offline/in dev. (Job 133 —
-// replaces the previously hardcoded host cards in web/index.html.)
+// is unreachable, so the page still functions offline/in dev.
+// (Replaces the previously hardcoded host cards in web/index.html.)
 async function loadHostOptions() {
     let hosts = Object.keys(HOST_LABELS).filter((id) => id !== 'ntabacum');
     let metadata = Object.fromEntries(
@@ -260,7 +260,7 @@ function updateHostUI() {
     const highCaiRadio = objectiveRadios.find(radio => radio.value === 'high_cai');
 
     // high_cai is anchored to the nbenthamiana-only golden-set reference
-    // (Job 147) and has no BY-2 equivalent, so it is disabled for BY-2 the
+    // and has no BY-2 equivalent, so it is disabled for BY-2 the
     // same way feasibility_best is. Note: 'balanced' is not a selectable
     // objective radio in this UI (only feasibility_best/ramp/high_cai/
     // gc_target/assembly_friendly/viral_delivery exist) — the fallback
@@ -643,7 +643,7 @@ function renderResults() {
         elements.polyaValue.className = 'text-xl font-black text-amber-600 dark:text-amber-400 leading-none';
     }
 
-    // Validation Badges (registry-driven — Job 143-A)
+    // Validation Badges (registry-driven)
     elements.validationStatus.classList.remove('hidden');
     renderValidationChecks(validationRegistry, resultChecksFromResponse(res));
 

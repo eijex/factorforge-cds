@@ -65,8 +65,8 @@ jobs:
         run: |
           # release.py removes the [Unreleased] header on tagging (renamed to the new
           # version) and does not add a fresh one back, so 0 is a normal post-release
-          # state. Only 2+ is the actual defect (the Job 135 bug: a stray unbracketed
-          # "## Unreleased" coexisting with the bracketed one, or a literal duplicate).
+          # state. Only 2+ is the actual defect: a stray unbracketed
+          # "## Unreleased" coexisting with the bracketed one, or a literal duplicate.
           count=$(grep -c '^## \[Unreleased\]' CHANGELOG.md)
           if [ "$count" -gt 1 ]; then
             echo "Found $count '## [Unreleased]' headers in CHANGELOG.md, expected at most 1."
