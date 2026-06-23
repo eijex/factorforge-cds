@@ -44,8 +44,18 @@ Protein sequence (FASTA or plain text)
 
 ## Design Objectives
 
+The DP engine (`--engine dp`) supports one `--objective`:
+
 | Objective | Description |
 |-----------|-------------|
 | `feasibility_best` | Best achievable CAI/GC under synonymous constraints (default) |
+
+The profile engine (`--engine profile`) supports these `--profile` values
+(not DP `--objective` values — passing `gc_target` or `high_cai` to
+`--objective` always fails, since the DP engine only implements
+`feasibility_best`; see [Optimization Profiles](profiles.md)):
+
+| Profile | Description |
+|---------|-------------|
 | `gc_target` | GC-focused rule-based output |
 | `high_cai` | CAI-focused rule-based output |
