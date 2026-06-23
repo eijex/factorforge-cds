@@ -35,9 +35,9 @@ import argparse
 import re
 import subprocess
 import sys
-import urllib.request
-import json
 from pathlib import Path
+
+from packaging.version import Version
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -228,20 +228,6 @@ def build_targets(old: str, new: str) -> list[tuple[str, list[tuple[str, str]], 
     ]
 
 
-def _fetch_pypi_sha256(package: str, version: str) -> str | None:
-    """Fetch the sdist sha256 for a given PyPI package version."""
-    url = f"https://pypi.org/pypi/{package}/{version}/json"
-    try:
-        with urllib.request.urlopen(url, timeout=10) as resp:
-            data = json.loads(resp.read())
-        for entry in data.get("urls", []):
-            if entry.get("packagetype") == "sdist":
-                return entry["digests"]["sha256"]
-        return None
-    except Exception:
-        return None
-
-
 def _today() -> str:
     from datetime import date
     return date.today().isoformat()
@@ -335,25 +321,10 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
                 else:
                     print(f"  WARN: pattern not found in {rel_path}: {old_str!r}")
 
-        # Update recipes/meta.yaml sha256 via PyPI fetch
-        if rel_path == "recipes/meta.yaml" and not dry_run:
-            print(f"  Fetching sha256 for factorforge-cds {new} from PyPI...")
-            sha256 = _fetch_pypi_sha256("factorforge-cds", new)
-            if sha256:
-                old_sha_pattern = re.compile(r'(sha256:\s*)[0-9a-f]{64}')
-                updated = old_sha_pattern.sub(lambda m: f"{m.group(1)}{sha256}", content)
-                if updated != content:
-                    content = updated
-                    changes.append(f"  sha256 → {sha256}")
-                    print(f"  sha256 updated: {sha256}")
-            else:
-                placeholder = "FIXME-fetch-failed"
-                old_sha_pattern = re.compile(r'(sha256:\s*)[0-9a-f]{64}')
-                updated = old_sha_pattern.sub(lambda m: f"{m.group(1)}{placeholder}", content)
-                if updated != content:
-                    content = updated
-                    changes.append(f"  sha256 → {placeholder} (fetch failed — update manually)")
-                print(f"  WARN: could not fetch sha256 from PyPI for factorforge-cds {new} — set placeholder")
+        # NOTE: recipes/meta.yaml's sha256 is intentionally NOT touched here.
+        # PyPI does not have the new version yet at this point in the pipeline,
+        # so a fetch here always fails (see scripts/update_conda_recipe_sha.py,
+        # which updates the sha256 only after PyPI confirms the version is live).
 
         # Update CITATION.cff date-released and optional doi
         if rel_path == "CITATION.cff":
@@ -530,8 +501,9 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     print(" 11.  Wait for Zenodo to mint the new DOI (triggered by GitHub Release)")
     print("       Then update CITATION.cff doi:")
     print(f"         python scripts/release.py {new} --zenodo-doi 10.5281/zenodo.<NEW_RECORD_ID>")
-    print(" 12.  Push Bioconda fork branch (recipes/meta.yaml already bumped by this script)")
-    print("       → git push origin add-factorforge-cds  (or open/update PR on bioconda/bioconda-recipes)")
+    print(f" 12.  python scripts/update_conda_recipe_sha.py {new}  (only after PyPI confirms the sdist is live)")
+    print("       → commits on a dedicated branch, then push it: git push origin update-conda-recipe-sha-v" + new)
+    print("       → open/update PR on bioconda/bioconda-recipes")
     print(" 13.  Close completed GitHub Issues; close milestone if all done")
     print()
     print("  --- Post-release external audit ---")
@@ -694,83 +666,94 @@ def auto_release(
         sys.exit(1)
     print("  CHANGELOG [Unreleased]: has content")
 
-    # ── [1] VERSION BUMP ────────────────────────────────────
-    print(f"\n[1] Version bump: {old} -> {new}")
-    if not dry_run:
-        errors = bump(
-            old, new, dry_run=False, strict=False,
-            workspace=workspace, mcp=mcp, web=web_repo,
-        )
-        if errors:
-            print(f"  ABORT: {errors} bump error(s)")
-            sys.exit(1)
-    else:
-        print("  (skipped — dry run)")
-
-    # ── [1b] REGENERATE MANIFEST HASHES ─────────────────────
-    # The version bump above rewrites `current_parameter_registry.yaml`'s
-    # `version:` field, which is one of MANIFEST.json's hashed inputs — every
-    # release otherwise drifts this hash (this recurred across Jobs 129, 136,
-    # and again during the v3.2.3 release itself).
-    print("\n[1b] Regenerate MANIFEST.json provenance hashes")
-    if not dry_run:
-        _run_step("regen_manifest", ["python", "scripts/regen_manifest.py", "--write"])
-    else:
-        print("  (skipped — dry run)")
-
-    # ── [2] FREEZE EXAMPLE ──────────────────────────────────
-    print("\n[2] Regenerate frozen example")
-    if not dry_run:
-        _run_step("freeze", ["python", "examples/worked_example/run_example.py", "--freeze"])
-    else:
-        print("  (skipped — dry run)")
-
-    # ── [3] PUBLIC SURFACE AUDIT ────────────────────────────
-    print("\n[3] Public surface audit")
-    if audit_script and audit_script.exists():
+    # ── [1]-[6]: BUMP, FREEZE, AUDIT, TEST, CHANGELOG, WHAT'S NEW ───────────
+    # Wrapped together: steps [1]/[1b]/[2]/[5]/[6] write files, and any later
+    # failure in this pre-commit window must leave the working tree exactly as
+    # it was before this function started (verified by `git status --porcelain`
+    # in the AC1 dry-run/failing-test scenario).
+    try:
+        # ── [1] VERSION BUMP ────────────────────────────────
+        print(f"\n[1] Version bump: {old} -> {new}")
         if not dry_run:
-            r = subprocess.run(["python", str(audit_script), "--live"], cwd=str(ROOT))
-            if r.returncode != 0:
-                print("  ABORT: audit found critical issues — fix before releasing")
+            errors = bump(
+                old, new, dry_run=False, strict=False,
+                workspace=workspace, mcp=mcp, web=web_repo,
+            )
+            if errors:
+                print(f"  ABORT: {errors} bump error(s)")
                 sys.exit(1)
-            print("  audit: passed")
-        else:
-            print(f"  (dry run) would run: python {audit_script} --live")
-    else:
-        print("  SKIP: --audit-script not provided")
-        print("  Reminder: run audit manually before tagging")
-
-    # ── [4] TESTS ───────────────────────────────────────────
-    if not skip_tests:
-        print("\n[4] Test suite")
-        if not dry_run:
-            _run_step("pytest", ["python", "-m", "pytest", "tests/", "-q", "--tb=short"])
         else:
             print("  (skipped — dry run)")
-    else:
-        print("\n[4] Tests — skipped (--skip-tests)")
 
-    # ── [5] CHANGELOG ───────────────────────────────────────
-    print("\n[5] CHANGELOG.md: [Unreleased] -> [" + new + "]")
-    if not dry_run:
-        cl_changes = _changelog_move_unreleased(ROOT, old, new, dry_run=False)
-        for c in cl_changes:
-            print(c)
-    else:
-        print(f"  (dry run) would rename and update comparison links")
+        # ── [1b] REGENERATE MANIFEST HASHES ─────────────────
+        # The version bump above rewrites `current_parameter_registry.yaml`'s
+        # `version:` field, which is one of MANIFEST.json's hashed inputs — every
+        # release otherwise drifts this hash (this recurred across Jobs 129, 136,
+        # and again during the v3.2.3 release itself).
+        print("\n[1b] Regenerate MANIFEST.json provenance hashes")
+        if not dry_run:
+            _run_step("regen_manifest", ["python", "scripts/regen_manifest.py", "--write"])
+        else:
+            print("  (skipped — dry run)")
 
-    # ── [6] WHAT'S NEW AUTO-FILL ────────────────────────────
-    print("\n[6] What's New bullets (web/index.html)")
-    if not dry_run:
-        entries = _parse_changelog_section(ROOT, new)
-        wn = _update_web_whats_new_bullets(ROOT, new, entries, dry_run=False)
-        if wn:
-            for c in wn:
+        # ── [2] FREEZE EXAMPLE ──────────────────────────────
+        print("\n[2] Regenerate frozen example")
+        if not dry_run:
+            _run_step("freeze", ["python", "examples/worked_example/run_example.py", "--freeze"])
+        else:
+            print("  (skipped — dry run)")
+
+        # ── [3] PUBLIC SURFACE AUDIT ─────────────────────────
+        print("\n[3] Public surface audit")
+        if audit_script and audit_script.exists():
+            if not dry_run:
+                r = subprocess.run(["python", str(audit_script), "--live"], cwd=str(ROOT))
+                if r.returncode != 0:
+                    print("  ABORT: audit found critical issues — fix before releasing")
+                    sys.exit(1)
+                print("  audit: passed")
+            else:
+                print(f"  (dry run) would run: python {audit_script} --live")
+        else:
+            print("  SKIP: --audit-script not provided")
+            print("  Reminder: run audit manually before tagging")
+
+        # ── [4] TESTS ─────────────────────────────────────────
+        if not skip_tests:
+            print("\n[4] Test suite")
+            if not dry_run:
+                _run_step("pytest", ["python", "-m", "pytest", "tests/", "-q", "--tb=short"])
+            else:
+                print("  (skipped — dry run)")
+        else:
+            print("\n[4] Tests — skipped (--skip-tests)")
+
+        # ── [5] CHANGELOG ─────────────────────────────────────
+        print("\n[5] CHANGELOG.md: [Unreleased] -> [" + new + "]")
+        if not dry_run:
+            cl_changes = _changelog_move_unreleased(ROOT, old, new, dry_run=False)
+            for c in cl_changes:
                 print(c)
         else:
-            print("  NOTE: TODO placeholder not found — bullets may already be written")
-    else:
-        print("  (dry run) would auto-fill from CHANGELOG entries")
+            print(f"  (dry run) would rename and update comparison links")
+
+        # ── [6] WHAT'S NEW AUTO-FILL ──────────────────────────
+        print("\n[6] What's New bullets (web/index.html)")
+        if not dry_run:
+            entries = _parse_changelog_section(ROOT, new)
+            wn = _update_web_whats_new_bullets(ROOT, new, entries, dry_run=False)
+            if wn:
+                for c in wn:
+                    print(c)
+            else:
+                print("  NOTE: TODO placeholder not found — bullets may already be written")
+        else:
+            print("  (dry run) would auto-fill from CHANGELOG entries")
+    except SystemExit as exc:
+        if not dry_run:
+            print("\n  Cleaning up working tree after failure (git checkout -- .)")
+            subprocess.run(["git", "checkout", "--", "."], cwd=str(ROOT))
+        raise exc
 
     # ── [7] COMMIT ──────────────────────────────────────────
     print("\n[7] Git commit")
@@ -806,7 +789,7 @@ def auto_release(
         print(f"  1. docs/changelog.md — add a one-line summary entry for v{new}")
         print(f"  2. After Zenodo mints the new DOI:")
         print(f"       python scripts/release.py {new} --zenodo-doi 10.5281/zenodo.<ID>")
-        print(f"  3. Bioconda: cd <fork> && git push origin add-factorforge-cds")
+        print(f"  3. Bioconda: python scripts/update_conda_recipe_sha.py {new}  (after PyPI confirms the sdist is live), then push the branch it creates")
         cross = [r for r in [workspace, mcp, web_repo] if r]
         if cross:
             print("\nCross-repo commits (bump already applied, need separate push):")
@@ -860,6 +843,10 @@ def main() -> None:
     if old == new:
         print(f"Nothing to do — already at {new}")
         sys.exit(0)
+
+    if Version(new) < Version(old):
+        print(f"ERROR: new version {new} is older than current version {old} — refusing to downgrade")
+        sys.exit(1)
 
     workspace = Path(args.workspace) if args.workspace else None
     mcp = Path(args.mcp) if args.mcp else None

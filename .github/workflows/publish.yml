@@ -6,12 +6,9 @@ on:
       - "v*"
 
 jobs:
-  pypi:
-    name: Publish to PyPI
+  prepublish-check:
+    name: Pre-publish validation
     runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write
 
     steps:
       - uses: actions/checkout@v6
@@ -21,14 +18,87 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install build
-        run: pip install build
+      - name: Install build tools
+        run: pip install build twine
 
       - name: Build package
         run: python -m build
 
+      - name: twine check
+        run: twine check --strict dist/*
+
+      - name: Install built wheel in a fresh venv and smoke-test
+        run: |
+          python -m venv /tmp/prepublish-venv
+          /tmp/prepublish-venv/bin/pip install dist/*.whl
+          /tmp/prepublish-venv/bin/python -c "import factorforge"
+          /tmp/prepublish-venv/bin/factorforge --version
+
+      - name: Upload built distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  pypi:
+    name: Publish to PyPI
+    needs: prepublish-check
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+
+    steps:
+      - name: Download built distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+  post-publish-smoke:
+    # NOTE: release.yml's check-smoke-test job looks up this job by its exact
+    # `name:` string ("Post-publish PyPI smoke test") via listJobsForWorkflowRun
+    # to gate the GitHub Release. If you rename this job, update release.yml too.
+    name: Post-publish PyPI smoke test
+    needs: pypi
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Wait for exact version to appear on PyPI, install, and verify
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          for i in $(seq 1 20); do
+            if pip index versions factorforge-cds 2>/dev/null | grep -q "$VERSION"; then
+              echo "factorforge-cds==$VERSION is live on PyPI."
+              break
+            fi
+            echo "Waiting for factorforge-cds==$VERSION to appear on PyPI (attempt $i/20)..."
+            sleep 15
+          done
+
+          python -m venv /tmp/smoke-venv
+          /tmp/smoke-venv/bin/pip install "factorforge-cds==$VERSION"
+          /tmp/smoke-venv/bin/pip check
+          /tmp/smoke-venv/bin/python -c "
+          import importlib.metadata
+          installed = importlib.metadata.version('factorforge-cds')
+          assert installed == '$VERSION', f'expected $VERSION, got {installed}'
+          import factorforge
+          "
+          /tmp/smoke-venv/bin/factorforge --version
+          /tmp/smoke-venv/bin/factorforge --help
 
   docker:
     name: Build and push Docker image

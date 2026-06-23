@@ -1,22 +1,62 @@
 name: Release
 
+# Triggered by the Publish workflow's completion (not directly by the tag
+# push) so the GitHub Release is only created after the post-publish PyPI
+# smoke test has passed — see publish.yml's post-publish-smoke job. Gating
+# is keyed specifically on that job's conclusion (not the whole Publish
+# workflow's conclusion) so the pre-existing, unrelated "docker" job in
+# publish.yml can fail without blocking the Release.
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows: ["Publish"]
+    types:
+      - completed
 
 jobs:
-  release:
+  check-smoke-test:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion != 'cancelled' }}
+    outputs:
+      smoke_passed: ${{ steps.check.outputs.smoke_passed }}
+    steps:
+      - name: Check post-publish-smoke job conclusion
+        id: check
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { data } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+            });
+            const job = data.jobs.find(j => j.name === "Post-publish PyPI smoke test");
+            const passed = !!job && job.conclusion === "success";
+            core.setOutput("smoke_passed", passed ? "true" : "false");
+
+  release:
+    needs: check-smoke-test
+    runs-on: ubuntu-latest
+    if: ${{ needs.check-smoke-test.outputs.smoke_passed == 'true' }}
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Resolve tag for this commit
+        id: tag
+        run: |
+          TAG=$(git describe --tags --exact-match "${{ github.event.workflow_run.head_sha }}")
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Extract changelog entry
         id: changelog
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${{ steps.tag.outputs.version }}"
           # Extract the section for this version from CHANGELOG.md
           BODY=$(awk "/^## \[$VERSION\]/{found=1; next} found && /^## \[/{exit} found{print}" CHANGELOG.md)
           echo "body<<EOF" >> "$GITHUB_OUTPUT"
@@ -26,7 +66,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          name: "${{ github.ref_name }} — FactorForge"
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: "${{ steps.tag.outputs.tag }} — FactorForge"
           body: ${{ steps.changelog.outputs.body }}
           draft: false
           prerelease: false
