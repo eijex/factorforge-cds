@@ -34,6 +34,15 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Fixed
 
+- Web UI "View Predicted Structure → ESM Atlas" link used a URL scheme
+  (`esmatlas.com/explore?tab=fold&sequence=`) that ESM Atlas's router never
+  branches on, so it always landed on the generic explore screen instead of
+  a fold view regardless of sequence. Switched to the route ESM Atlas's own
+  navigation actually uses (`esmatlas.com/resources?action=fold&sequence=`),
+  confirmed against ESM Atlas's production JS bundle and verified live —
+  it now lands on the correct "Fold Sequence" tool (ESM Atlas's UI does not
+  support pre-filling the sequence box from a URL parameter, so users still
+  paste it manually after arriving).
 - Removed internal task-tracking references ("Job NNN") from the public changelog (`CHANGELOG.md`, `docs/changelog.md`, `web/index.html`) and from public docs (`docs/strategy/eijex-tool-layer-classification.md`, `docs/validation/RELEASE_GATE.md`, `reproducibility/benchmark_v0.5.1/README.md`). `scripts/audit_public_surface.py`'s `internal_reference` pattern now also matches `Job \d+` so future releases catch this automatically.
 - Removed the same internal task-tracking references ("Job NNN", "analysis NNN") from source-level comments, docstrings, and registry provenance fields (`src/`, `tests/`), and deleted `benchmarks/scripts/resume_job130_rerun.sh`, a one-off maintainer rerun script that hardcoded a local developer machine path. Empirical citations (CAI/GC benchmark numbers) were kept; only the internal ID labels were removed.
 - `/api/optimize` now rejects explicit `objective=feasibility_best` or

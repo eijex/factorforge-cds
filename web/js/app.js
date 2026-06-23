@@ -574,7 +574,7 @@ function updateStructureLinks() {
         elements.alphafoldLink.href = `https://alphafold.ebi.ac.uk/search/sequence/${encoded}`;
     }
     if (elements.esmatlasFoldLink) {
-        elements.esmatlasFoldLink.href = `https://esmatlas.com/explore?tab=fold&sequence=${encoded}`;
+        elements.esmatlasFoldLink.href = `https://esmatlas.com/resources?action=fold&sequence=${encoded}`;
     }
 }
 
