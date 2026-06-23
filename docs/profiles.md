@@ -15,11 +15,13 @@ Profiles apply to the profile engine (`--engine profile`).
 ## Stable Profiles
 
 These four profiles are fully supported and available via CLI, Python API, web app, and MCP.
+`high_cai` is N. benthamiana-only (see [Supported Hosts](#supported-hosts) above) —
+it is rejected for other hosts at the CLI, REST API, and web app.
 
 | Profile | Description |
 |---------|-------------|
 | `balanced` | CAI + GC balance — default for most sequence-design reviews |
-| `high_cai` | CAI-focused synonymous CDS candidate |
+| `high_cai` | CAI-focused synonymous CDS candidate. N. benthamiana-only; rejected for other hosts. |
 | `gc_target` | Targets a configurable GC percentage, defaulting to the host-profile midpoint (60% for *N. benthamiana*). Pass an explicit target to drive GC higher or lower. |
 | `assembly_friendly` | Golden Gate / MoClo workflows — avoids BsaI/BpiI Type IIS restriction sites via synonymous substitution. Does not yet score local GC uniformity or repeat patterns. |
 
