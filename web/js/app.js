@@ -99,6 +99,13 @@ const elements = {
     changelogModal: document.getElementById('changelogModal'),
     closeModal: document.getElementById('closeModal'),
     modalOverlay: document.getElementById('modalOverlay'),
+    linkoutConsentModal: document.getElementById('linkoutConsentModal'),
+    linkoutConsentOverlay: document.getElementById('linkoutConsentOverlay'),
+    linkoutConsentTitle: document.getElementById('linkoutConsentTitle'),
+    linkoutConsentBody: document.getElementById('linkoutConsentBody'),
+    linkoutConsentClose: document.getElementById('linkoutConsentClose'),
+    linkoutConsentCancel: document.getElementById('linkoutConsentCancel'),
+    linkoutConsentContinue: document.getElementById('linkoutConsentContinue'),
     inputTypeBadge: document.getElementById('inputTypeBadge'),
     toastContainer: document.getElementById('toastContainer'),
     logoIcon: document.getElementById('logoIcon'),
@@ -246,6 +253,23 @@ function initEventListeners() {
     elements.modalOverlay.addEventListener('click', toggleChangelog);
     elements.logoIcon.addEventListener('click', reloadPage);
     elements.logoTitle.addEventListener('click', reloadPage);
+
+    // Third-party structure linkout — gate navigation behind an explicit
+    // consent step naming the actual external operator (no result yet → no-op).
+    elements.alphafoldLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (elements.alphafoldLink.getAttribute('href') === '#') return;
+        openLinkoutConsent('alphafold', elements.alphafoldLink.href);
+    });
+    elements.esmatlasFoldLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (elements.esmatlasFoldLink.getAttribute('href') === '#') return;
+        openLinkoutConsent('esmatlas', elements.esmatlasFoldLink.href);
+    });
+    elements.linkoutConsentCancel.addEventListener('click', closeLinkoutConsent);
+    elements.linkoutConsentClose.addEventListener('click', closeLinkoutConsent);
+    elements.linkoutConsentOverlay.addEventListener('click', closeLinkoutConsent);
+    elements.linkoutConsentContinue.addEventListener('click', closeLinkoutConsent);
 }
 
 function reloadPage() {
@@ -576,6 +600,34 @@ function updateStructureLinks() {
     if (elements.esmatlasFoldLink) {
         elements.esmatlasFoldLink.href = `https://esmatlas.com/resources?action=fold&sequence=${encoded}`;
     }
+}
+
+// Third-party structure-prediction linkout consent. AlphaFold DB and ESM Atlas
+// have no data processing agreement with Eijex — this is a user-initiated
+// transfer, not a subprocessor relationship, so the gate names the actual
+// operator instead of implying an Eijex-controlled data flow.
+const LINKOUT_CONSENT_COPY = {
+    alphafold: {
+        title: 'Open AlphaFold DB?',
+        body: 'This will send your sequence to alphafold.ebi.ac.uk, operated by EMBL-EBI in partnership with Google DeepMind. Eijex does not control their logging, retention, or use of this data. Do not proceed if this sequence is confidential, proprietary, or controlled.'
+    },
+    esmatlas: {
+        title: 'Open ESM Atlas?',
+        body: 'This will send your sequence to esmatlas.com, operated by Meta Platforms, Inc. (Meta AI). Eijex does not control their logging, retention, or use of this data. Do not proceed if this sequence is confidential, proprietary, or controlled.'
+    }
+};
+
+function openLinkoutConsent(serviceKey, targetHref) {
+    const copy = LINKOUT_CONSENT_COPY[serviceKey];
+    if (!copy || !targetHref) return;
+    elements.linkoutConsentTitle.textContent = copy.title;
+    elements.linkoutConsentBody.textContent = copy.body;
+    elements.linkoutConsentContinue.href = targetHref;
+    elements.linkoutConsentModal.classList.remove('hidden');
+}
+
+function closeLinkoutConsent() {
+    elements.linkoutConsentModal.classList.add('hidden');
 }
 
 function getResultHostProfile(res) {
