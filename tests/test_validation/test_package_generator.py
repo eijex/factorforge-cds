@@ -26,7 +26,7 @@ def sample_result():
     seq = "ATGAAACCC"
     return WetLabResult(
         construct_id="CF-20260525-000000",
-        factorforge_version="3.2.3",
+        factorforge_version="3.2.4",
         host_profile="nbenthamiana",
         profile="balanced",
         sequence_hash="sha256:" + hashlib.sha256(seq.encode()).hexdigest(),
@@ -103,7 +103,7 @@ def test_cli_generates_package_without_raw_sequence(tmp_path):
             "--construct-id",
             "CF-20260525-000001",
             "--version",
-            "3.2.3",
+            "3.2.4",
             "--profile",
             "balanced",
             "--sequence",

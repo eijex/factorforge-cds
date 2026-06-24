@@ -70,7 +70,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.2.3 Release Notes
+                            v3.2.4 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -784,7 +784,7 @@
                     class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
             </div>
             <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
-                <!-- Version 3.2.3 -->
+                <!-- Version 3.2.4 -->
                 <div class="relative pl-8 border-l-2 border-emerald-500">
                     <div
                         class="absolute -left-[9px] top-0 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
@@ -792,6 +792,41 @@
                     <div class="flex items-center space-x-2 mb-2">
                         <span
                             class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.2.4</h3>
+                        <span class="text-slate-400 text-[10px]">2026-06-24</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                                                <li><b>Added:</b> "View Predicted Structure" (AlphaFold DB / ESM Atlas) buttons now show an explicit consent modal naming the actual external operator (EMBL-EBI/Google DeepMind for AlphaFold DB, Meta Platforms, Inc. for ESM Atlas) before the sequence is sent via URL, replacing the previous passive footnote-only disclosure.</li>
+                        <li><b>Added:</b> Runtime validation registry (`factorforge.validation_registry`) listing all 17 validation checks with per-execution-path enforcement metadata, and a canonical validation report builder (`factorforge.validation_report`) that scans the final returned CDS and reports results keyed by `check_id`. The web "Sequence Checks" panel and the `/api/optimize` response now expose all 9 advisory scanners plus restriction-site and MoClo-overhang results (previously only 3 of 9+ checks were visible). `validation.moclo`/`polya`/`gc` legacy fields are unchanged.</li>
+                        <li><b>Added:</b> `reproducibility/benchmark_v0.5.1/scripts/figures/make_cai_vs_multiconstraint_figure.py` regenerates the "CAI-only baseline versus constraint-aware design" scatter figure (mean CAI vs. corrected multi-constraint pass rate per method) from `benchmark_summary.frozen.json`. No generation script for this figure existed anywhere in the repository or its Git history; this is a reconstruction verified against the figure's existing per-method values, not a recovery of the original code.</li>
+                        <li><b>Docs:</b> Clarified that BY-2 (N. tabacum) experimental host support applies to</li>
+                        <li><b>Docs:</b> `docs/how-it-works.md`'s "Design Objectives" table listed `gc_target`/</li>
+                        <li><b>Docs:</b> `docs/profiles.md`'s "Stable Profiles" section claimed all four profiles</li>
+                        <li><b>Fixed:</b> Web UI "AA Preserved" badge in the Optimization Results panel displayed</li>
+                        <li><b>Fixed:</b> Success/info toast notifications (e.g. "History item loaded") were nearly</li>
+                        <li><b>Fixed:</b> `/api/optimize/compare` and `/api/optimize/batch` accepted a `host` or</li>
+                        <li><b>Fixed:</b> CLI `--objective` declared `gc_target` and `high_cai` as valid DP</li>
+                        <li><b>Fixed:</b> A direct library call (`RuleBasedOptimizer().optimize(profile="high_cai",</li>
+                        <li><b>Fixed:</b> Web UI "View Predicted Structure → ESM Atlas" link used a URL scheme</li>
+                        <li><b>Fixed:</b> Removed internal task-tracking references ("Job NNN") from the public changelog (`CHANGELOG.md`, `docs/changelog.md`, `web/index.html`) and from public docs (`docs/strategy/eijex-tool-layer-classification.md`, `docs/validation/RELEASE_GATE.md`, `reproducibility/benchmark_v0.5.1/README.md`). `scripts/audit_public_surface.py`'s `internal_reference` pattern now also matches `Job \d+` so future releases catch this automatically.</li>
+                        <li><b>Fixed:</b> Removed the same internal task-tracking references ("Job NNN", "analysis NNN") from source-level comments, docstrings, and registry provenance fields (`src/`, `tests/`), and deleted `benchmarks/scripts/resume_job130_rerun.sh`, a one-off maintainer rerun script that hardcoded a local developer machine path. Empirical citations (CAI/GC benchmark numbers) were kept; only the internal ID labels were removed.</li>
+                        <li><b>Fixed:</b> `/api/optimize` now rejects explicit `objective=feasibility_best` or</li>
+                        <li><b>Fixed:</b> Release provenance hashing now computed from the committed git blob (`git show HEAD:<path>`) instead of local working-tree bytes, fixing CRLF/LF drift on Windows that could silently produce incorrect SHA-256 values in `reproducibility/benchmark_v0.5.1/MANIFEST.json` and `tests/test_docs_consistency.py`.</li>
+                        <li><b>Fixed:</b> Public-surface DOI references (`README.md`, `docs/index.md`, `AGENTS.md`) switched from version-pinned Zenodo DOIs to the concept DOI, which always resolves to the latest release, so future releases no longer require manually updating these files.</li>
+                        <li><b>Fixed:</b> `AGENTS.md` no longer states a hardcoded "16 version-bearing files" count, which had gone stale; points at `scripts/release.py`'s `build_targets()` as the source of truth instead.</li>
+                        <li><b>Fixed:</b> `docs/rule-engine-roadmap.md`, `docs/validation.md`, `docs/how-it-works.md`, and `docs/factorforge-architecture.md` enumerated only 5-8 of the 9 default advisory RuleEngine scanners and omitted the MoClo overhang assembly-review check; all four now list the complete set. `rule-engine-roadmap.md` additionally mis-stated "Repeat patterns" as "Planned / Not yet implemented" (it is implemented and runs by default) and described an unused legacy GC-window calculation instead of the active `scan_gc_extremes` thresholds; both corrected. No runtime code changed.</li>
+                        <li><b>Fixed:</b> Web app "Sequence Checks" badge labeled "MoClo Overhang Check" actually reported a Type IIS restriction-site scan result, not MoClo overhang validity (the real MoClo overhang check lives in the opt-in construct-builder path and was never called here); label and changelog text corrected to "Restriction Site Check (Type IIS)". `validation.moclo` JSON field name kept unchanged for frontend compatibility.</li>
+                        <li><b>Added:</b> `scripts/audit_public_surface.py` and a CHANGELOG duplicate-`[Unreleased]`-header check now run on every push/PR in CI, instead of only when `release.py --auto --audit-script` is remembered.</li>
+                        <li><b>Added:</b> `scripts/regen_manifest.py` regenerates `reproducibility/benchmark_v0.5.1/MANIFEST.json` input hashes from committed git-blob content on demand.</li>
+                        <li><b>Changed:</b> Repositioned FactorForge as a claim-bounded pre-synthesis review harness across `README.md`, `ROADMAP.md`, `docs/index.md`, the new `docs/roadmap.md`, and `web/index.html`, separating the research-software journey from product roadmap themes without adding any new guarantees (expression, glycosylation, folding, yield, synthesis acceptance, regulatory approval).</li>
+                    </ul>
+                </div>
+                <!-- Version 3.2.3 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-300 dark:bg-slate-600 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
                         <h3 class="font-bold text-slate-800 dark:text-white">v3.2.3</h3>
                         <span class="text-slate-400 text-[10px]">2026-06-19</span>
                     </div>
