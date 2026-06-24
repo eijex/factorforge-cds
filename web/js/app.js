@@ -740,7 +740,8 @@ function getPrimaryResult(res) {
         },
         gc_window_min: gcWinMin,
         gc_window_max: gcWinMax,
-        aaPreserved: candidate.validator_status === 'pass' ? '✅ 100%' : '⚠️ Review'
+        aaPreserved: res.constraint_report && res.constraint_report.aa_identity === 1.0
+            ? '✅ 100%' : '⚠️ Review'
     };
 }
 
