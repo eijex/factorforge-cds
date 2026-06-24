@@ -4,6 +4,17 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.2.4 — 2026-06-24
+
+### Added
+- Runtime validation registry exposing all 17 sequence checks (9 advisory scanners + restriction-site + MoClo-overhang) via the web "Sequence Checks" panel and `/api/optimize` response
+- Explicit consent modal before sending sequences to AlphaFold DB / ESM Atlas structure-prediction links
+
+### Fixed
+- Web UI "AA Preserved" badge showed assembly/restriction-site review status instead of actual amino acid identity
+- `/api/optimize/compare` and `/api/optimize/batch` now reject `host`/`host_profile` fields with HTTP 400 instead of silently dropping them
+- `high_cai` profile and `feasibility_best` objective are now consistently disclosed/rejected for non-default hosts across CLI, REST, and web UI
+
 ## v3.2.3 — 2026-06-19
 
 ### Fixed
