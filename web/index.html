@@ -1232,6 +1232,29 @@
         </div>
     </div>
 
+    <!-- Third-Party Linkout Consent Modal -->
+    <div id="linkoutConsentModal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" id="linkoutConsentOverlay"></div>
+        <div
+            class="relative bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300 flex flex-col border border-slate-200 dark:border-slate-800">
+            <div
+                class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-slate-700 to-slate-900 text-white">
+                <h2 id="linkoutConsentTitle" class="text-lg font-bold">Leaving FactorForge</h2>
+                <button id="linkoutConsentClose"
+                    class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
+            </div>
+            <div class="p-6">
+                <p id="linkoutConsentBody" class="text-sm text-slate-600 dark:text-slate-300"></p>
+            </div>
+            <div class="p-4 flex gap-3 border-t border-slate-100 dark:border-slate-800">
+                <button id="linkoutConsentCancel"
+                    class="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-xl transition-all">Cancel</button>
+                <a id="linkoutConsentContinue" href="#" target="_blank" rel="noopener noreferrer"
+                    class="flex-1 py-2.5 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-all text-center">Continue</a>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-8">
         <div class="max-w-7xl mx-auto px-4 text-center">

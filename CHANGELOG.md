@@ -23,6 +23,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Added
 
+- "View Predicted Structure" (AlphaFold DB / ESM Atlas) buttons now show an explicit consent modal naming the actual external operator (EMBL-EBI/Google DeepMind for AlphaFold DB, Meta Platforms, Inc. for ESM Atlas) before the sequence is sent via URL, replacing the previous passive footnote-only disclosure.
 - Runtime validation registry (`factorforge.validation_registry`) listing all 17 validation checks with per-execution-path enforcement metadata, and a canonical validation report builder (`factorforge.validation_report`) that scans the final returned CDS and reports results keyed by `check_id`. The web "Sequence Checks" panel and the `/api/optimize` response now expose all 9 advisory scanners plus restriction-site and MoClo-overhang results (previously only 3 of 9+ checks were visible). `validation.moclo`/`polya`/`gc` legacy fields are unchanged.
 - `reproducibility/benchmark_v0.5.1/scripts/figures/make_cai_vs_multiconstraint_figure.py` regenerates the "CAI-only baseline versus constraint-aware design" scatter figure (mean CAI vs. corrected multi-constraint pass rate per method) from `benchmark_summary.frozen.json`. No generation script for this figure existed anywhere in the repository or its Git history; this is a reconstruction verified against the figure's existing per-method values, not a recovery of the original code.
 

@@ -97,3 +97,69 @@ test('clear input resets preview and sequence badges', async ({ page }) => {
   await expect(page.locator('#previewContainer')).toBeHidden();
   await expect(page.locator('#inputLenBadge')).toHaveText('0 bp');
 });
+
+async function fillAndOptimize(page) {
+  await page.route('**/api/optimize', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        optimized_sequence: MOCK_DNA,
+        original_length: SAMPLE_PROTEIN.length,
+        optimized_length: MOCK_DNA.length,
+        metrics: { cai: 0.91, gc_percent: 58.3, polya_signals: 0, length: MOCK_DNA.length },
+        profile: 'gc_target',
+        host_profile: 'nbenthamiana',
+        validation: { input_type: 'protein', polya: 'PASS', moclo: 'UNCHECKED', gc: 'PASS' }
+      })
+    });
+  });
+  await openApp(page);
+  await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  await page.locator('#optimizeBtn').click();
+  await expect(page.locator('#esmatlasFoldLink')).toHaveAttribute('href', /esmatlas\.com/);
+}
+
+test('third-party structure linkout is gated behind a consent modal (Cancel)', async ({ page }) => {
+  await fillAndOptimize(page);
+
+  await expect(page.locator('#linkoutConsentModal')).toHaveClass(/hidden/);
+
+  await page.locator('#esmatlasFoldLink').click();
+  await expect(page.locator('#linkoutConsentModal')).not.toHaveClass(/hidden/);
+  await expect(page.locator('#linkoutConsentBody')).toContainText('Meta Platforms, Inc.');
+  await expect(page.locator('#linkoutConsentBody')).not.toContainText('EvolutionaryScale');
+
+  await page.locator('#linkoutConsentCancel').click();
+  await expect(page.locator('#linkoutConsentModal')).toHaveClass(/hidden/);
+});
+
+test('third-party structure linkout consent (Continue) keeps the original AlphaFold DB URL', async ({ page }) => {
+  await fillAndOptimize(page);
+
+  const expectedHref = await page.locator('#alphafoldLink').getAttribute('href');
+  await page.locator('#alphafoldLink').click();
+  await expect(page.locator('#linkoutConsentModal')).not.toHaveClass(/hidden/);
+  await expect(page.locator('#linkoutConsentBody')).toContainText('EMBL-EBI');
+  await expect(page.locator('#linkoutConsentContinue')).toHaveAttribute('href', expectedHref);
+
+  await page.locator('#linkoutConsentCancel').click();
+});
+
+test('structure linkout buttons are no-ops before any optimization result', async ({ page }) => {
+  await openApp(page);
+
+  // The buttons live inside #resultsContainer, which stays hidden until a
+  // result renders — so this state is normally unreachable by a real click.
+  // dispatchEvent('click') exercises the JS guard directly
+  // (getAttribute('href') === '#') so a future markup change can't silently
+  // remove that protection, without requiring the element to be visible.
+  await expect(page.locator('#alphafoldLink')).toHaveAttribute('href', '#');
+  await page.locator('#alphafoldLink').dispatchEvent('click');
+  await expect(page.locator('#linkoutConsentModal')).toHaveClass(/hidden/);
+
+  await expect(page.locator('#esmatlasFoldLink')).toHaveAttribute('href', '#');
+  await page.locator('#esmatlasFoldLink').dispatchEvent('click');
+  await expect(page.locator('#linkoutConsentModal')).toHaveClass(/hidden/);
+});
