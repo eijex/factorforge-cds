@@ -100,6 +100,30 @@ body {
     background-color: rgba(59, 130, 246, 0.2) !important;
 }
 
+/* Toast notifications reuse the same bg-X-50/text-X-800 utility pairs as the
+   card-dimming rules above, but a toast needs to stay legible on its own —
+   the card rules turn the background into a low-alpha tint while leaving the
+   dark-on-light text class untouched, which is unreadable against a dark
+   page. Scope an opaque, high-contrast override to #toastContainer only so
+   the generic card dimming elsewhere (e.g. the privacy banner) is unaffected. */
+.dark #toastContainer .bg-emerald-50 {
+    background-color: #064e3b !important;
+    border-color: #34d399 !important;
+    color: #d1fae5 !important;
+}
+
+.dark #toastContainer .bg-blue-50 {
+    background-color: #1e3a8a !important;
+    border-color: #60a5fa !important;
+    color: #dbeafe !important;
+}
+
+.dark #toastContainer .bg-rose-50 {
+    background-color: #7f1d1d !important;
+    border-color: #fb7185 !important;
+    color: #fecaca !important;
+}
+
 /* Selection Background in Dark Mode Fix - Only for Cards, not Toggles */
 .dark input[name="objective"]:checked+div,
 .dark input[name="host"]:checked+div {

@@ -45,6 +45,12 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Fixed
 
+- Success/info toast notifications (e.g. "History item loaded") were nearly
+  invisible in dark mode — the generic `.dark .bg-emerald-50`/`.bg-blue-50`
+  card-dimming rules turned the toast background into a low-alpha tint while
+  the dark text color was left unchanged. Scoped an opaque, high-contrast
+  override to `#toastContainer` only; light mode and other card UIs (e.g.
+  the privacy banner) are unaffected.
 - `/api/optimize/compare` and `/api/optimize/batch` accepted a `host` or
   `host_profile` field in the request body but never read it, silently
   ignoring the caller's host intent and returning HTTP 200 with
