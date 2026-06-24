@@ -31,9 +31,40 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 - Clarified that BY-2 (N. tabacum) experimental host support applies to
   the `balanced`/`gc_target`/`assembly_friendly` rule-based profiles only;
   `high_cai` and `feasibility_best` remain N. benthamiana-only by design.
+- `docs/how-it-works.md`'s "Design Objectives" table listed `gc_target`/
+  `high_cai` as if they were working DP `--objective` values; passing either
+  to `--objective` always raised (the DP engine only implements
+  `feasibility_best`). Split the table into the DP engine's one real
+  objective and the profile engine's `--profile` values, with an explicit
+  note that the latter are not DP objectives.
+- `docs/profiles.md`'s "Stable Profiles" section claimed all four profiles
+  are "fully supported ... via CLI, Python API, web app, and MCP" without
+  disclosing that `high_cai` is N. benthamiana-only and rejected for other
+  hosts at the CLI/REST/web layers. Added that qualifier.
 
 ### Fixed
 
+- `/api/optimize/compare` and `/api/optimize/batch` accepted a `host` or
+  `host_profile` field in the request body but never read it, silently
+  ignoring the caller's host intent and returning HTTP 200 with
+  default-host output. Both endpoints now reject any request containing
+  either field with HTTP 400 (`HOST_NOT_SUPPORTED_ON_ENDPOINT`) instead of
+  silently dropping it.
+- CLI `--objective` declared `gc_target` and `high_cai` as valid DP
+  objective values via `click.Choice`, but the DP engine only ever
+  implements `feasibility_best` — passing either always raised
+  `DP engine currently supports --objective feasibility_best.`. Removed
+  both from the `click.Choice` so the CLI rejects them at the argument-parsing
+  stage with a clear "invalid choice" error instead of failing inside the
+  engine.
+- A direct library call (`RuleBasedOptimizer().optimize(profile="high_cai",
+  host=<non-default>)`) silently substituted N. benthamiana golden-set
+  output with no indication that the requested host was ignored (the
+  existing host/strategy compatibility guard only covers the REST/CLI/web
+  surfaces). Added a `logger.warning` at this call site; the host-invariant
+  output itself is unchanged (this is the documented design boundary, not a
+  bug) and the existing benchmark
+  `codon_table_path` injection path is unaffected.
 - Web UI "View Predicted Structure → ESM Atlas" link used a URL scheme
   (`esmatlas.com/explore?tab=fold&sequence=`) that ESM Atlas's router never
   branches on, so it always landed on the generic explore screen instead of

@@ -161,7 +161,7 @@ def list_engines():
 @click.option(
     "--objective",
     default="feasibility_best",
-    type=click.Choice(["feasibility_best", "gc_target", "high_cai"], case_sensitive=False),
+    type=click.Choice(["feasibility_best"], case_sensitive=False),
     help="DP objective",
 )
 @click.option("--gc-min", type=float, default=55.0, help="Minimum target GC percentage")
