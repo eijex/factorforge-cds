@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from factorforge.core.interfaces import OptimizationResult, OptimizerEngine
@@ -11,6 +12,8 @@ from .rules.reverse_translator import OptimizationProfile, ReverseTranslator
 from .rules.rule_engine import RuleEngine
 from .scoring import calculate_composite_score, compute_mfe_evidence
 from .validator import InputValidator
+
+logger = logging.getLogger(__name__)
 
 
 class RuleBasedOptimizer(OptimizerEngine):
@@ -92,6 +95,17 @@ class RuleBasedOptimizer(OptimizerEngine):
             raise ValueError(
                 f"Unknown profile: {profile_value}. Supported profiles: {supported}"
             ) from exc
+
+        if (
+            self._codon_table_path is None
+            and host != "nbenthamiana"
+            and profile_value == "high_cai"
+        ):
+            logger.warning(
+                "high_cai is anchored to the N. benthamiana golden set and "
+                "ignores the requested host=%s; output is host-invariant by design.",
+                host,
+            )
 
         if self._codon_table_path is not None or host == "nbenthamiana":
             # An injected design table (benchmark source-profile runs) is

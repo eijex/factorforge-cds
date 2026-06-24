@@ -125,6 +125,33 @@ def test_high_cai_is_host_invariant_by_design() -> None:
     assert NBENTHAMIANA_BASELINE_SEED42["high_cai"] == NTABACUM_BASELINE_SEED42["high_cai"]
 
 
+def test_high_cai_logs_warning_for_non_default_host(caplog: pytest.LogCaptureFixture) -> None:
+    """Library-direct calls don't reject high_cai+non-default-host (that
+    would conflict with the host-invariant-by-design contract above and the
+    benchmark's codon_table_path injection path) but should surface a
+    warning so silent host-invariance isn't mistaken for host-awareness."""
+    optimizer = RuleBasedOptimizer()
+    with caplog.at_level("WARNING"):
+        optimizer.optimize(WITNESS_PROTEIN, profile="high_cai", host="ntabacum", seed=42)
+    assert any("high_cai" in record.message and "ntabacum" in record.message for record in caplog.records)
+
+
+def test_high_cai_no_warning_for_default_host(caplog: pytest.LogCaptureFixture) -> None:
+    optimizer = RuleBasedOptimizer()
+    with caplog.at_level("WARNING"):
+        optimizer.optimize(WITNESS_PROTEIN, profile="high_cai", host="nbenthamiana", seed=42)
+    assert not caplog.records
+
+
+def test_no_warning_for_non_high_cai_profile_on_non_default_host(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    optimizer = RuleBasedOptimizer()
+    with caplog.at_level("WARNING"):
+        optimizer.optimize(WITNESS_PROTEIN, profile="balanced", host="ntabacum", seed=42)
+    assert not caplog.records
+
+
 def test_by2_genbank_organism_comes_from_feature_registry() -> None:
     exporter = SequenceExporter()
 

@@ -466,6 +466,15 @@ class handler(BaseHTTPRequestHandler):
     def handle_compare_request(self, data):
         """Handle POST /api/optimize/compare requests."""
         try:
+            if "host" in data or "host_profile" in data:
+                return 400, {
+                    "success": False,
+                    "error": (
+                        "host selection is not supported on this endpoint; "
+                        "use POST /api/optimize for host-specific design"
+                    ),
+                    "error_code": "HOST_NOT_SUPPORTED_ON_ENDPOINT",
+                }
             sequence = self.validate_compare_sequence(data.get("sequence", ""))
             profiles = self.validate_compare_profiles(data.get("profiles"))
             scan_mode = str(data.get("scan_mode", "fast")).lower()
@@ -532,6 +541,15 @@ class handler(BaseHTTPRequestHandler):
     def handle_batch_request(self, data):
         """Handle POST /api/optimize/batch requests."""
         try:
+            if "host" in data or "host_profile" in data:
+                return 400, {
+                    "success": False,
+                    "error": (
+                        "host selection is not supported on this endpoint; "
+                        "use POST /api/optimize for host-specific design"
+                    ),
+                    "error_code": "HOST_NOT_SUPPORTED_ON_ENDPOINT",
+                }
             profile = str(data.get("profile", "balanced")).strip()
             if profile not in VALID_PROFILES:
                 raise ValueError(f"Invalid profile. Must be one of: {', '.join(VALID_PROFILES)}")

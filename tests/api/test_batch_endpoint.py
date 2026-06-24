@@ -116,3 +116,25 @@ def test_batch_endpoint_rejects_invalid_profile() -> None:
 
     assert status_code == 400
     assert result["error"].startswith("Invalid profile. Must be one of:")
+
+
+def test_batch_endpoint_rejects_host_field() -> None:
+    h = _handler()
+
+    status_code, result = h.handle_batch_request(
+        {"sequences": [{"sequence": SAMPLE_PROTEIN}], "host": "by2"}
+    )
+
+    assert status_code == 400
+    assert result["error_code"] == "HOST_NOT_SUPPORTED_ON_ENDPOINT"
+
+
+def test_batch_endpoint_rejects_host_profile_field() -> None:
+    h = _handler()
+
+    status_code, result = h.handle_batch_request(
+        {"sequences": [{"sequence": SAMPLE_PROTEIN}], "host_profile": "by2"}
+    )
+
+    assert status_code == 400
+    assert result["error_code"] == "HOST_NOT_SUPPORTED_ON_ENDPOINT"

@@ -17,9 +17,9 @@ The central principle is:
 > received — separately.
 
 This registry is **documentation only**. It is not wired to runtime and does not
-gate or alter any optimization output. It is a draft produced by analysis 023
-(strategy-host-reference semantic contract audit) and is intended as the basis
-for a future, optionally runtime-enforced contract.
+gate or alter any optimization output. It is a draft produced by a strategy/host
+semantic contract audit and is intended as the basis for a future, optionally
+runtime-enforced contract.
 
 ## Verification Level Vocabulary
 
@@ -43,7 +43,7 @@ reference_asset:        # concrete file(s) / constant(s) the strategy reads
 code_location:          # primary implementing function(s)
 host_aware:             # true | false | partial   (does output change by host?)
 host_aware_note:        # why, in one line
-exposure:               # per-entry-point: supported | rejected | hidden | silently_dropped | not_applicable | unguarded
+exposure:               # per-entry-point: supported | rejected | hidden | silently_dropped | not_applicable | unguarded | warned
   python_api_profile:
   python_api_dp:
   cli_profile:
@@ -69,6 +69,7 @@ notes:
 - `silently_dropped` — the field is accepted at the wire level but ignored, returning HTTP 200 without acting on it. **This is the most dangerous value** and must be called out explicitly.
 - `unguarded` — reachable with no host/strategy compatibility guard, so an unsupported combination silently produces fixed-reference output under another name.
 - `not_applicable` — the entry point has no concept for this strategy.
+- `warned` — reachable with no rejection, but a log warning discloses the host-invariant substitution (chosen over rejection so the library boundary stays consistent with the host-invariant-by-design contract and existing tests).
 
 ## Strategy Contracts
 
@@ -121,7 +122,7 @@ exposure:
   rest_compare: supported
   rest_batch: supported
   web_ui_default_host: supported
-  web_ui_nondefault_host: supported   # BY-2 fallback target (Job 147)
+  web_ui_nondefault_host: supported   # BY-2 fallback target
   get_metadata_listed: true
 verification_level: behavioral_verified
 known_gaps:
@@ -168,26 +169,24 @@ reference_class: dedicated_golden_set
 reference_asset: "nbenthamiana_golden_set.json (load_golden_set() — no host parameter; always this one file)"
 code_location: "engines/profile/rules/reverse_translator.py::_high_cai_translate; engines/profile/utils.py::load_golden_set"
 host_aware: false
-host_aware_note: Intentionally host-invariant by design — anchored to the N. benthamiana high-expression golden set. No BY-2 golden set exists. This is a designed boundary, not a bug (confirmed Job 147, analysis 019).
+host_aware_note: Intentionally host-invariant by design — anchored to the N. benthamiana high-expression golden set. No BY-2 golden set exists. This is a designed boundary, not a bug.
 exposure:
-  python_api_profile: unguarded   # library-direct call has NO host guard (see Cross-Cutting Findings)
+  python_api_profile: warned      # logs a warning instead of rejecting (host-invariance is by design; rejecting would conflict with existing tests)
   python_api_dp: not_applicable
-  cli_profile: supported          # rejected for non-default host (Job 147)
-  cli_compare_profiles: supported # rejected for non-default host incl. in --compare-profiles list (Job 147)
-  cli_objective_dp: rejected      # always raises (dual-namespace)
-  rest_explicit: supported        # HTTP 400 for non-default host (Job 147)
+  cli_profile: supported          # rejected for non-default host
+  cli_compare_profiles: supported # rejected for non-default host incl. in --compare-profiles list
+  cli_objective_dp: rejected      # always raises (dual-namespace), and not a click.Choice value
+  rest_explicit: supported        # HTTP 400 for non-default host
   rest_implicit: not_applicable   # implicit path never resolves to high_cai
-  rest_compare: supported         # host field silently_dropped at this endpoint (see below)
-  rest_batch: supported           # host field silently_dropped at this endpoint (see below)
+  rest_compare: rejected          # any host/host_profile field is rejected (HTTP 400)
+  rest_batch: rejected            # same as above
   web_ui_default_host: supported
-  web_ui_nondefault_host: rejected # radio disabled (Job 147)
-  get_metadata_listed: true        # listed host-independently — discoverability gap (Job 147)
+  web_ui_nondefault_host: rejected # radio disabled
+  get_metadata_listed: true        # listed host-independently — discoverability gap (still open)
 verification_level: semantic_verified
 known_gaps:
-  - Listed in GET /api/optimize supported_profiles regardless of host (discoverability gap, Job 147).
-  - Library-direct (python_api_profile) call has no host guard — the Job 147 guard lives only in REST/CLI/web layers.
-  - At /api/optimize/compare and /batch the request-level host field is silently dropped, so a caller's host intent is ignored (HTTP 200).
-notes: The only profile-engine strategy that is host-invariant by design. Job 147 rejects it for non-default hosts at the three public surfaces (REST/CLI/web) but NOT at the library boundary.
+  - Listed in GET /api/optimize supported_profiles regardless of host (discoverability gap).
+notes: The only profile-engine strategy that is host-invariant by design. It is rejected for non-default hosts at the REST/CLI/web surfaces; the library boundary warns instead of silently staying quiet (python_api_profile), and /api/optimize/compare·/batch reject any host field outright instead of silently dropping it.
 ```
 
 ### ramp
@@ -199,7 +198,7 @@ reference_class: delegates_to
 reference_asset: "{host}_codons.json (via _balanced_translate + _apply_nterminal_ramp, both host-table based)"
 code_location: "engines/profile/rules/reverse_translator.py::_ramp_translate -> _balanced_translate + _apply_nterminal_ramp"
 host_aware: true
-host_aware_note: Implemented and host-aware (output differs by host, directly executed in analysis 023 STEP 2). NOT unimplemented — earlier drafts misclassified it.
+host_aware_note: Implemented and host-aware (output differs by host, confirmed by direct execution). NOT unimplemented — earlier drafts misclassified it.
 exposure:
   python_api_profile: supported
   python_api_dp: not_applicable
@@ -266,12 +265,12 @@ exposure:
   cli_profile: not_applicable
   cli_compare_profiles: not_applicable
   cli_objective_dp: supported     # the ONLY working --objective value
-  rest_explicit: supported        # HTTP 400 for non-default host (Job 147)
-  rest_implicit: supported        # for non-default host, disclosed resolve to 'balanced' (Job 147)
+  rest_explicit: supported        # HTTP 400 for non-default host
+  rest_implicit: supported        # for non-default host, disclosed resolve to 'balanced'
   rest_compare: not_applicable
   rest_batch: not_applicable
   web_ui_default_host: supported  # default selection
-  web_ui_nondefault_host: rejected # radio disabled (Job 147)
+  web_ui_nondefault_host: rejected # radio disabled
   get_metadata_listed: true        # supported_objectives: ["feasibility_best"]
 verification_level: semantic_verified
 known_gaps:
@@ -294,23 +293,26 @@ The strings `gc_target` and `high_cai` exist in **two unrelated namespaces**:
 The DP `--objective` `click.Choice` advertises three values but only
 `feasibility_best` ever succeeds. `docs/how-it-works.md`'s "Design Objectives"
 table mirrors this declaration and so describes two never-working values as if
-they were functional objectives (analysis 023 STEP 5, Finding 1).
+they were functional objectives.
 
-## Cross-Cutting Findings (analysis 023)
+## Cross-Cutting Findings
 
-1. **Library boundary has no host guard.** The Job 147
-   `UNSUPPORTED_STRATEGY_HOST_COMBINATION` rejection is implemented only at the
-   REST, CLI, and web layers. A direct
-   `EngineRegistry.get("profile").optimize(profile="high_cai", host="ntabacum")`
-   call silently returns N. benthamiana golden-set output. "Job 147 blocked the
-   combination" precisely means "blocked it at the three public surfaces."
+1. **Library boundary has a soft guard, not a hard one.** The
+   `UNSUPPORTED_STRATEGY_HOST_COMBINATION` rejection is implemented only at
+   the REST, CLI, and web layers. A direct
+   `RuleBasedOptimizer().optimize(profile="high_cai", host="ntabacum")` call
+   still returns N. benthamiana golden-set output (this is the host-invariant
+   design, not changed) — a `logger.warning` is emitted at this call site so
+   the silent substitution is at least observable, without rejecting
+   (rejecting would conflict with the host-invariant-by-design contract and
+   the existing `test_ntabacum_baseline_unchanged[high_cai]` /
+   `test_high_cai_is_host_invariant_by_design` tests).
 
-2. **`/api/optimize/compare` and `/api/optimize/batch` silently drop `host`.**
-   None of `handle_compare_request` / `handle_batch_request` /
-   `validate_compare_profiles` / `validate_batch_sequences` reference `host` at
-   all. A request body with `{"host": "by2", ...}` is accepted, ignored, and
-   answered HTTP 200 with default-host output. This is worse than "unsupported":
-   the field is silently dropped rather than rejected.
+2. **`/api/optimize/compare` and `/api/optimize/batch` reject `host` outright.**
+   Both handlers reject any request body containing `host` or `host_profile`
+   with HTTP 400 (`HOST_NOT_SUPPORTED_ON_ENDPOINT`) instead of silently
+   ignoring it. This is an API contract change: a request that previously got
+   a misleading HTTP 200 now gets an explicit 400.
 
 3. **Exposure policy is not single-sourced.** `ramp` and `viral_delivery` are
    each hidden in the web UI, rejected by REST `VALID_PROFILES`, and passed

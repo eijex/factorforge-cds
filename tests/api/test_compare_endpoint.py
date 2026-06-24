@@ -100,3 +100,25 @@ def test_compare_endpoint_rejects_too_many_profiles() -> None:
 
     assert status_code == 400
     assert result["error"] == "profiles must include at most 6 profiles"
+
+
+def test_compare_endpoint_rejects_host_field() -> None:
+    h = _handler()
+
+    status_code, result = h.handle_compare_request(
+        {"sequence": SAMPLE_PROTEIN, "profiles": ["balanced"], "host": "by2"}
+    )
+
+    assert status_code == 400
+    assert result["error_code"] == "HOST_NOT_SUPPORTED_ON_ENDPOINT"
+
+
+def test_compare_endpoint_rejects_host_profile_field() -> None:
+    h = _handler()
+
+    status_code, result = h.handle_compare_request(
+        {"sequence": SAMPLE_PROTEIN, "profiles": ["balanced"], "host_profile": "by2"}
+    )
+
+    assert status_code == 400
+    assert result["error_code"] == "HOST_NOT_SUPPORTED_ON_ENDPOINT"
