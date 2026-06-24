@@ -45,6 +45,13 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Fixed
 
+- Web UI "AA Preserved" badge in the Optimization Results panel displayed
+  `validator_status` (assembly/restriction-site review outcome) instead of
+  actual amino acid identity — a 33aa test sequence with a flagged
+  restriction site showed "⚠️ Review" even though its translated protein
+  was 100% identical to the input. The API already exposed the correct
+  value as `constraint_report.aa_identity`; `getPrimaryResult()` in
+  `web/js/app.js` now reads that field instead. No API contract change.
 - Success/info toast notifications (e.g. "History item loaded") were nearly
   invisible in dark mode — the generic `.dark .bg-emerald-50`/`.bg-blue-50`
   card-dimming rules turned the toast background into a low-alpha tint while
