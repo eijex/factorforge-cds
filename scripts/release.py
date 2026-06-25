@@ -685,17 +685,6 @@ def auto_release(
         else:
             print("  (skipped — dry run)")
 
-        # ── [1b] REGENERATE MANIFEST HASHES ─────────────────
-        # The version bump above rewrites `current_parameter_registry.yaml`'s
-        # `version:` field, which is one of MANIFEST.json's hashed inputs — every
-        # release otherwise drifts this hash (this recurred across Jobs 129, 136,
-        # and again during the v3.2.3 release itself).
-        print("\n[1b] Regenerate MANIFEST.json provenance hashes")
-        if not dry_run:
-            _run_step("regen_manifest", ["python", "scripts/regen_manifest.py", "--write"])
-        else:
-            print("  (skipped — dry run)")
-
         # ── [2] FREEZE EXAMPLE ──────────────────────────────
         print("\n[2] Regenerate frozen example")
         if not dry_run:
@@ -762,6 +751,31 @@ def auto_release(
         _run_step("git commit", ["git", "commit", "-m", f"chore: release v{new}"])
     else:
         print(f"  (dry run) git add -A && git commit -m 'chore: release v{new}'")
+
+    # ── [7b] REGENERATE MANIFEST HASHES ──────────────────────
+    # current_parameter_registry.yaml's `version:` field was rewritten by [1],
+    # but regen_manifest.py hashes `git show HEAD:<path>` (the committed blob,
+    # not working-tree bytes — intentional, avoids Windows CRLF drift). Running
+    # it before [7]'s commit means HEAD is still pre-bump, so the freshly
+    # written hash is already stale by the time it lands (recurred across Jobs
+    # 129, 136, and again during the v3.2.3 and v3.2.4 releases despite an
+    # earlier same-flow fix attempt). Run it here, after HEAD reflects the
+    # bump, and fold any resulting change into the same release commit via
+    # --amend (safe pre-tag, pre-push).
+    print("\n[7b] Regenerate MANIFEST.json provenance hashes (post-commit, HEAD-accurate)")
+    if not dry_run:
+        _run_step("regen_manifest", ["python", "scripts/regen_manifest.py", "--write"])
+        status = subprocess.run(
+            ["git", "status", "--porcelain"], cwd=str(ROOT), capture_output=True, text=True
+        ).stdout
+        if status.strip():
+            print("  MANIFEST.json changed post-commit — folding into release commit")
+            _run_step("git add", ["git", "add", "-A"])
+            _run_step("git commit --amend", ["git", "commit", "--amend", "--no-edit"])
+        else:
+            print("  MANIFEST.json: no change needed")
+    else:
+        print("  (skipped — dry run)")
 
     # ── [8] TAG ─────────────────────────────────────────────
     print("\n[8] Git tag")
