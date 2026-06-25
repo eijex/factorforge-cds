@@ -21,7 +21,7 @@ body:
     id: version
     attributes:
       label: FactorForge version
-      placeholder: "e.g. 3.2.4"
+      placeholder: "e.g. 3.2.5"
     validations:
       required: true
 
