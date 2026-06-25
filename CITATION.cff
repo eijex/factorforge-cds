@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: "If you use FactorForge in your research, please cite it using the metadata below."
 title: "FactorForge: constraint-aware CDS design and pre-synthesis sequence review for plant workflows"
-version: 3.2.4
-date-released: "2026-06-24"
+version: 3.2.5
+date-released: "2026-06-25"
 license: AGPL-3.0
 doi: "10.5281/zenodo.20826659"
 repository-code: "https://github.com/eijex/factorforge-cds"
