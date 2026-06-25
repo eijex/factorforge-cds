@@ -32,7 +32,7 @@ dev = [
     "pandas>=2.0",
     "pytest>=9.1.1",
     "pytest-cov>=4.0",
-    "ruff>=0.1",
+    "ruff>=0.15.18",
     "pyyaml>=6.0",
 ]
 ml = [
