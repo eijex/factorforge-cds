@@ -4,6 +4,12 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.2.5 — 2026-06-25
+
+### Fixed
+- The published Docker image's `POST /api/optimize` crashed with an `AttributeError` due to a routing bug in the local dev/Docker server (hosted web app and PyPI CLI were unaffected)
+- `CITATION.cff`'s `doi` field corrected to the v3.2.4 exact-release DOI
+
 ## v3.2.4 — 2026-06-24
 
 ### Added
