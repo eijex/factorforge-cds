@@ -17,23 +17,32 @@ ROOT = Path(__file__).parent
 sys.path.insert(0, str(ROOT / "src"))
 os.chdir(ROOT / "web")
 
+sys.path.insert(0, str(ROOT))
+from api.optimize import handler as OptimizeAPIHandler  # noqa: E402
 
-class FactorForgeHandler(SimpleHTTPRequestHandler):
-    """Serves web/ for GET and routes /api/* POST to the optimize handler."""
+
+class FactorForgeHandler(OptimizeAPIHandler, SimpleHTTPRequestHandler):
+    """Serves web/ for GET and routes /api/* to the optimize handler.
+
+    Inherits from OptimizeAPIHandler (not just delegating to it via an
+    unbound method call) so that self.validate_host / self.send_error_response
+    and any other instance methods the optimize handler relies on resolve
+    correctly. A previous version called `handler.do_POST(self)` with a
+    foreign `self`, which broke as soon as optimize.py's do_POST started
+    calling additional self.* methods not present on this class.
+    """
 
     def do_POST(self) -> None:
         if self.path == "/api/optimize":
-            from api.optimize import handler
-            handler.do_POST(self)
+            OptimizeAPIHandler.do_POST(self)
         else:
             self.send_error(404, "Not found")
 
     def do_GET(self) -> None:
         if self.path.startswith("/api/"):
-            from api.optimize import handler
-            handler.do_GET(self)
+            OptimizeAPIHandler.do_GET(self)
         else:
-            super().do_GET()
+            SimpleHTTPRequestHandler.do_GET(self)
 
     def log_message(self, fmt: str, *args: object) -> None:
         print(f"[FactorForge] {fmt % args}")

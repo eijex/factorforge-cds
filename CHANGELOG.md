@@ -23,6 +23,16 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Fixed
 
+- The published Docker image (`ghcr.io/eijex/factorforge-cds`) crashed on every
+  `POST /api/optimize` request with `AttributeError: 'FactorForgeHandler' object
+  has no attribute 'validate_host'`, returning an empty response. Root cause:
+  `scripts/serve.py` routed requests to the API handler via an unbound-method
+  call (`handler.do_POST(self)`) instead of real inheritance, which broke once
+  `do_POST` started calling `self.validate_host` / `self.send_error_response`
+  for host-parameter validation. The hosted web app (factorforge.eijex.com) and
+  the PyPI CLI were unaffected — only the Docker image and local
+  `python scripts/serve.py` dev server were broken. `FactorForgeHandler` now
+  properly inherits from the optimize API handler.
 - `CITATION.cff`'s `doi` field was left pointing at the v3.2.3 exact-release
   DOI (`10.5281/zenodo.20758131`) after the v3.2.4 release commit bumped
   `version`/`date-released` but not `doi`. Updated to the v3.2.4 exact-release
