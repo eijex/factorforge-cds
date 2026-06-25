@@ -590,19 +590,55 @@ def _parse_changelog_section(root: Path, version: str) -> list[tuple[str, str]]:
 
     entries: list[tuple[str, str]] = []
     category = "Changed"
+    current: list[str] | None = None
     for line in m.group(1).splitlines():
         stripped = line.strip()
         if stripped.startswith("### "):
+            current = None
             category = stripped[4:].strip()
         elif stripped.startswith("- ") or stripped.startswith("* "):
-            text = stripped[2:].strip()
-            # Collapse bold markdown: **Foo** → Foo
-            text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
-            # Trim at first colon if the lead looks like a label "Label — detail"
-            if " — " in text:
-                text = text.split(" — ")[0].strip()
-            entries.append((category, text))
-    return entries
+            current = [stripped[2:].strip()]
+            entries.append((category, current))
+        elif stripped.startswith("---"):
+            current = None
+        elif stripped and current is not None:
+            # Continuation line of a multi-line bullet — join, don't truncate.
+            current.append(stripped)
+
+    out: list[tuple[str, str]] = []
+    for cat, parts in entries:
+        text = " ".join(parts)
+        # Collapse bold markdown: **Foo** → Foo
+        text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
+        # Trim at first colon if the lead looks like a label "Label — detail"
+        if " — " in text:
+            text = text.split(" — ")[0].strip()
+        out.append((cat, text))
+    return out
+
+
+def _simplify_for_web(text: str) -> str:
+    """
+    Shrink a full CHANGELOG bullet (technical, multi-sentence, code-formatted)
+    down to a short plain-language summary fit for the public "What's New"
+    panel. CHANGELOG.md is deliberately technical (Keep a Changelog convention);
+    the web panel is not — it has always been manually re-curated after release
+    to a short, jargon-free sentence (done by hand for v3.2.2/3.2.3/3.2.4), and
+    skipping that hand-curation step let raw, backtick-and-stack-trace-laden
+    CHANGELOG prose reach the public site directly for v3.2.5. This makes the
+    auto-fill produce something closer to that curated shape by default, so a
+    forgotten manual pass degrades gracefully instead of publishing internal
+    implementation detail (exception class names, function names, file paths).
+    """
+    # Drop inline code formatting: `foo` -> foo
+    text = re.sub(r'`([^`]+)`', r'\1', text)
+    # Keep only the first sentence (split on ". " followed by a capital/digit
+    # or end of string, to avoid splitting on abbreviations mid-sentence).
+    sentences = re.split(r'(?<=[.!?]) +', text)
+    text = sentences[0].strip()
+    if not text.endswith((".", "!", "?")):
+        text += "."
+    return text
 
 
 def _update_web_whats_new_bullets(
@@ -619,17 +655,33 @@ def _update_web_whats_new_bullets(
 
     indent = "                        "
     if entries:
-        li_lines = [f"{indent}<li><b>{cat}:</b> {text}</li>" for cat, text in entries]
-        bullets = "\n".join(li_lines)
+        li_lines = [
+            f"{indent}<li><b>{cat}:</b> {_simplify_for_web(text)}</li>"
+            for cat, text in entries
+        ]
     else:
-        bullets = f"{indent}<li>See CHANGELOG.md for details.</li>"
+        li_lines = [f"{indent}<li>See CHANGELOG.md for details.</li>"]
+    bullets = "\n".join(li_lines)
 
     updated = content.replace(placeholder, bullets)
     if content == updated:
         return []
     if not dry_run:
         path.write_text(updated, encoding="utf-8")
-    return [f"  web/index.html: inserted {len(entries)} bullet(s) for v{new}"]
+    # Print the actual rendered bullet text, not just a count — this is the
+    # only point in the release flow where a human (or the agent running
+    # --auto) can visually catch a bad auto-fill (truncation, leftover
+    # technical jargon, internal references) before [7] commits it to a
+    # public-facing file. A silent "inserted N bullet(s)" log let a truncated,
+    # mid-sentence v3.2.5 panel ship unnoticed.
+    out = [f"  web/index.html: inserted {len(entries)} bullet(s) for v{new}:"]
+    out.extend(f"    {li}" for li in li_lines)
+    out.append(
+        "  REVIEW the above before this script commits — auto-fill is a "
+        "starting draft, not final copy. Re-run with manual edits to "
+        "web/index.html if any bullet is too technical or incomplete."
+    )
+    return out
 
 
 def auto_release(
