@@ -1,0 +1,447 @@
+{
+    "organism": "Solanum lycopersicum",
+    "source": "Kazusa CodonUsage Database (https://www.kazusa.or.jp/codon/) + NCBI S. lycopersicum CDS (SGN ITAG4.0 annotation, NCBI GCF_000188115.4)",
+    "description": "Codon usage frequencies for Solanum lycopersicum (tomato); Solanaceae family member related to N. benthamiana",
+    "total_cds": 34727,
+    "total_codons": 14218654,
+    "codons": {
+        "TTT": {
+            "aa": "F",
+            "frequency": 0.4706,
+            "per_thousand": 18.8
+        },
+        "TTC": {
+            "aa": "F",
+            "frequency": 0.5294,
+            "per_thousand": 21.2
+        },
+        "TTA": {
+            "aa": "L",
+            "frequency": 0.0839,
+            "per_thousand": 8.0
+        },
+        "TTG": {
+            "aa": "L",
+            "frequency": 0.1787,
+            "per_thousand": 17.0
+        },
+        "CTT": {
+            "aa": "L",
+            "frequency": 0.2183,
+            "per_thousand": 20.8
+        },
+        "CTC": {
+            "aa": "L",
+            "frequency": 0.1871,
+            "per_thousand": 17.8
+        },
+        "CTA": {
+            "aa": "L",
+            "frequency": 0.0892,
+            "per_thousand": 8.5
+        },
+        "CTG": {
+            "aa": "L",
+            "frequency": 0.2428,
+            "per_thousand": 23.1
+        },
+        "ATT": {
+            "aa": "I",
+            "frequency": 0.3660,
+            "per_thousand": 18.6
+        },
+        "ATC": {
+            "aa": "I",
+            "frequency": 0.4398,
+            "per_thousand": 22.4
+        },
+        "ATA": {
+            "aa": "I",
+            "frequency": 0.1942,
+            "per_thousand": 9.9
+        },
+        "ATG": {
+            "aa": "M",
+            "frequency": 1.0,
+            "per_thousand": 24.5
+        },
+        "GTT": {
+            "aa": "V",
+            "frequency": 0.2561,
+            "per_thousand": 15.5
+        },
+        "GTC": {
+            "aa": "V",
+            "frequency": 0.2479,
+            "per_thousand": 15.0
+        },
+        "GTA": {
+            "aa": "V",
+            "frequency": 0.1330,
+            "per_thousand": 8.1
+        },
+        "GTG": {
+            "aa": "V",
+            "frequency": 0.3630,
+            "per_thousand": 22.0
+        },
+        "TCT": {
+            "aa": "S",
+            "frequency": 0.1754,
+            "per_thousand": 13.3
+        },
+        "TCC": {
+            "aa": "S",
+            "frequency": 0.1995,
+            "per_thousand": 15.1
+        },
+        "TCA": {
+            "aa": "S",
+            "frequency": 0.1444,
+            "per_thousand": 11.0
+        },
+        "TCG": {
+            "aa": "S",
+            "frequency": 0.1009,
+            "per_thousand": 7.7
+        },
+        "AGT": {
+            "aa": "S",
+            "frequency": 0.1597,
+            "per_thousand": 12.1
+        },
+        "AGC": {
+            "aa": "S",
+            "frequency": 0.2201,
+            "per_thousand": 16.7
+        },
+        "CCT": {
+            "aa": "P",
+            "frequency": 0.2539,
+            "per_thousand": 11.4
+        },
+        "CCC": {
+            "aa": "P",
+            "frequency": 0.2884,
+            "per_thousand": 13.0
+        },
+        "CCA": {
+            "aa": "P",
+            "frequency": 0.2471,
+            "per_thousand": 11.1
+        },
+        "CCG": {
+            "aa": "P",
+            "frequency": 0.2106,
+            "per_thousand": 9.5
+        },
+        "ACT": {
+            "aa": "T",
+            "frequency": 0.2647,
+            "per_thousand": 14.6
+        },
+        "ACC": {
+            "aa": "T",
+            "frequency": 0.3294,
+            "per_thousand": 18.2
+        },
+        "ACA": {
+            "aa": "T",
+            "frequency": 0.2324,
+            "per_thousand": 12.8
+        },
+        "ACG": {
+            "aa": "T",
+            "frequency": 0.1735,
+            "per_thousand": 9.6
+        },
+        "GCT": {
+            "aa": "A",
+            "frequency": 0.2921,
+            "per_thousand": 23.4
+        },
+        "GCC": {
+            "aa": "A",
+            "frequency": 0.3497,
+            "per_thousand": 28.0
+        },
+        "GCA": {
+            "aa": "A",
+            "frequency": 0.2126,
+            "per_thousand": 17.0
+        },
+        "GCG": {
+            "aa": "A",
+            "frequency": 0.1456,
+            "per_thousand": 11.7
+        },
+        "TAT": {
+            "aa": "Y",
+            "frequency": 0.4531,
+            "per_thousand": 13.4
+        },
+        "TAC": {
+            "aa": "Y",
+            "frequency": 0.5469,
+            "per_thousand": 16.2
+        },
+        "TAA": {
+            "aa": "*",
+            "frequency": 0.4375,
+            "per_thousand": 0.7
+        },
+        "TAG": {
+            "aa": "*",
+            "frequency": 0.1875,
+            "per_thousand": 0.3
+        },
+        "CAT": {
+            "aa": "H",
+            "frequency": 0.4681,
+            "per_thousand": 10.7
+        },
+        "CAC": {
+            "aa": "H",
+            "frequency": 0.5319,
+            "per_thousand": 12.2
+        },
+        "CAA": {
+            "aa": "Q",
+            "frequency": 0.4588,
+            "per_thousand": 18.5
+        },
+        "CAG": {
+            "aa": "Q",
+            "frequency": 0.5412,
+            "per_thousand": 21.8
+        },
+        "AAT": {
+            "aa": "N",
+            "frequency": 0.4400,
+            "per_thousand": 19.9
+        },
+        "AAC": {
+            "aa": "N",
+            "frequency": 0.5600,
+            "per_thousand": 25.3
+        },
+        "AAA": {
+            "aa": "K",
+            "frequency": 0.4276,
+            "per_thousand": 24.8
+        },
+        "AAG": {
+            "aa": "K",
+            "frequency": 0.5724,
+            "per_thousand": 33.2
+        },
+        "GAT": {
+            "aa": "D",
+            "frequency": 0.4697,
+            "per_thousand": 25.9
+        },
+        "GAC": {
+            "aa": "D",
+            "frequency": 0.5303,
+            "per_thousand": 29.2
+        },
+        "GAA": {
+            "aa": "E",
+            "frequency": 0.4493,
+            "per_thousand": 30.6
+        },
+        "GAG": {
+            "aa": "E",
+            "frequency": 0.5507,
+            "per_thousand": 37.5
+        },
+        "TGT": {
+            "aa": "C",
+            "frequency": 0.4688,
+            "per_thousand": 7.5
+        },
+        "TGC": {
+            "aa": "C",
+            "frequency": 0.5313,
+            "per_thousand": 8.5
+        },
+        "TGA": {
+            "aa": "*",
+            "frequency": 0.3750,
+            "per_thousand": 0.6
+        },
+        "TGG": {
+            "aa": "W",
+            "frequency": 1.0,
+            "per_thousand": 13.1
+        },
+        "CGT": {
+            "aa": "R",
+            "frequency": 0.0994,
+            "per_thousand": 5.2
+        },
+        "CGC": {
+            "aa": "R",
+            "frequency": 0.1356,
+            "per_thousand": 7.1
+        },
+        "CGA": {
+            "aa": "R",
+            "frequency": 0.0916,
+            "per_thousand": 4.8
+        },
+        "CGG": {
+            "aa": "R",
+            "frequency": 0.1296,
+            "per_thousand": 6.8
+        },
+        "AGA": {
+            "aa": "R",
+            "frequency": 0.2760,
+            "per_thousand": 14.5
+        },
+        "AGG": {
+            "aa": "R",
+            "frequency": 0.2678,
+            "per_thousand": 14.0
+        },
+        "GGT": {
+            "aa": "G",
+            "frequency": 0.2157,
+            "per_thousand": 14.7
+        },
+        "GGC": {
+            "aa": "G",
+            "frequency": 0.3061,
+            "per_thousand": 20.8
+        },
+        "GGA": {
+            "aa": "G",
+            "frequency": 0.2583,
+            "per_thousand": 17.6
+        },
+        "GGG": {
+            "aa": "G",
+            "frequency": 0.2199,
+            "per_thousand": 15.0
+        }
+    },
+    "amino_acids": {
+        "A": {
+            "name": "Alanine",
+            "codons": ["GCT", "GCC", "GCA", "GCG"],
+            "preferred": "GCC"
+        },
+        "C": {
+            "name": "Cysteine",
+            "codons": ["TGT", "TGC"],
+            "preferred": "TGC"
+        },
+        "D": {
+            "name": "Aspartic acid",
+            "codons": ["GAT", "GAC"],
+            "preferred": "GAC"
+        },
+        "E": {
+            "name": "Glutamic acid",
+            "codons": ["GAA", "GAG"],
+            "preferred": "GAG"
+        },
+        "F": {
+            "name": "Phenylalanine",
+            "codons": ["TTT", "TTC"],
+            "preferred": "TTC"
+        },
+        "G": {
+            "name": "Glycine",
+            "codons": ["GGT", "GGC", "GGA", "GGG"],
+            "preferred": "GGC"
+        },
+        "H": {
+            "name": "Histidine",
+            "codons": ["CAT", "CAC"],
+            "preferred": "CAC"
+        },
+        "I": {
+            "name": "Isoleucine",
+            "codons": ["ATT", "ATC", "ATA"],
+            "preferred": "ATC"
+        },
+        "K": {
+            "name": "Lysine",
+            "codons": ["AAA", "AAG"],
+            "preferred": "AAG"
+        },
+        "L": {
+            "name": "Leucine",
+            "codons": ["TTA", "TTG", "CTT", "CTC", "CTA", "CTG"],
+            "preferred": "CTG"
+        },
+        "M": {
+            "name": "Methionine",
+            "codons": ["ATG"],
+            "preferred": "ATG"
+        },
+        "N": {
+            "name": "Asparagine",
+            "codons": ["AAT", "AAC"],
+            "preferred": "AAC"
+        },
+        "P": {
+            "name": "Proline",
+            "codons": ["CCT", "CCC", "CCA", "CCG"],
+            "preferred": "CCC"
+        },
+        "Q": {
+            "name": "Glutamine",
+            "codons": ["CAA", "CAG"],
+            "preferred": "CAG"
+        },
+        "R": {
+            "name": "Arginine",
+            "codons": ["CGT", "CGC", "CGA", "CGG", "AGA", "AGG"],
+            "preferred": "AGA"
+        },
+        "S": {
+            "name": "Serine",
+            "codons": ["TCT", "TCC", "TCA", "TCG", "AGT", "AGC"],
+            "preferred": "AGC"
+        },
+        "T": {
+            "name": "Threonine",
+            "codons": ["ACT", "ACC", "ACA", "ACG"],
+            "preferred": "ACC"
+        },
+        "V": {
+            "name": "Valine",
+            "codons": ["GTT", "GTC", "GTA", "GTG"],
+            "preferred": "GTG"
+        },
+        "W": {
+            "name": "Tryptophan",
+            "codons": ["TGG"],
+            "preferred": "TGG"
+        },
+        "Y": {
+            "name": "Tyrosine",
+            "codons": ["TAT", "TAC"],
+            "preferred": "TAC"
+        },
+        "*": {
+            "name": "Stop",
+            "codons": ["TAA", "TAG", "TGA"],
+            "preferred": "TAA"
+        }
+    },
+    "gc_content": {
+        "overall": 0.43,
+        "description": "S. lycopersicum CDS-based GC content: ~43% (ITAG4.0)"
+    },
+    "notes": [
+        "Derived from Solanum lycopersicum ITAG4.0 CDS annotation (NCBI GCF_000188115.4)",
+        "Frequencies are normalized within each amino acid family",
+        "Preferred codons are based on highest frequency within synonym group",
+        "Stop codons (TAA, TAG, TGA) included in codons table",
+        "S. lycopersicum is Solanaceae family, closely related to N. benthamiana and N. tabacum"
+    ]
+}
