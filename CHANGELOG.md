@@ -36,9 +36,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 - `CITATION.cff`'s `doi` field was left pointing at the v3.2.3 exact-release
   DOI (`10.5281/zenodo.20758131`) after the v3.2.4 release commit bumped
   `version`/`date-released` but not `doi`. Updated to the v3.2.4 exact-release
-  DOI (`10.5281/zenodo.20826659`), confirmed live on Zenodo. Found while
-  updating the FactorForge Paper 1 manuscript's Availability section to
-  cite the same DOI.
+  DOI (`10.5281/zenodo.20826659`), confirmed live on Zenodo.
 
 ---
 
