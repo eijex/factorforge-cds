@@ -9,6 +9,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src"))
 
+from factorforge.engines.profile import scoring
 from factorforge.engines.profile.scoring import (
     GC_DECAY_WIDTH,
     GC_OPT_MAX,
@@ -17,6 +18,8 @@ from factorforge.engines.profile.scoring import (
     ScoringConfig,
     calculate_composite_score,
     calculate_dinucleotide_score,
+    calculate_mfe,
+    compute_mfe_evidence,
     gc_band_score,
     normalize_mfe,
 )
@@ -249,6 +252,76 @@ class TestAssemblyFriendlyProfile:
         bal = PROFILE_SCORING_CONFIGS["balanced"]
         assert abs(bal.w_cai - 0.5) < 1e-6
         assert abs(bal.w_gc - 0.3) < 1e-6
+
+
+class TestMFEViennaBranches:
+    """Cover the ViennaRNA-present / ViennaRNA-absent branches that
+    normalize_mfe-only tests skip (most other tests call with
+    sequence=None, bypassing the MFE branch entirely)."""
+
+    SEQ = "ATG" + "GCT" * 30 + "TAA"
+
+    def test_mfe_computed_contributes_to_score(self, monkeypatch):
+        """With ViennaRNA available, MFE weight actually changes the score
+        relative to an otherwise-identical MFE-disabled config."""
+        monkeypatch.setattr(scoring, "_check_vienna_available", lambda: True)
+        monkeypatch.setattr(scoring, "calculate_mfe", lambda seq: -40.0)
+
+        cfg_with_mfe = ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.2, use_mfe=True)
+        cfg_without_mfe = ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.2, use_mfe=False)
+
+        score_with = calculate_composite_score(
+            cai=0.5, gc=60.0, sequence=self.SEQ, config=cfg_with_mfe
+        )
+        score_without = calculate_composite_score(
+            cai=0.5, gc=60.0, sequence=self.SEQ, config=cfg_without_mfe
+        )
+        assert score_with != score_without
+
+    def test_vienna_unavailable_sets_not_computed(self, monkeypatch):
+        """When ViennaRNA is unavailable, evidence reports not_computed
+        honestly rather than a misleading 0.0."""
+        monkeypatch.setattr(scoring, "_check_vienna_available", lambda: False)
+        ev = compute_mfe_evidence(self.SEQ, profile="balanced")
+        assert ev["mfe_kcal_mol"] is None
+        assert ev["mfe_status"] == "not_computed"
+        assert ev["mfe_used"] is False
+        assert ev["mfe_warning"] is not None
+
+    def test_mfe_failure_removes_weight(self, monkeypatch):
+        """If calculate_mfe raises/returns None, the MFE weight is dropped
+        (renormalized) rather than treated as a real 0.0 kcal/mol value."""
+        monkeypatch.setattr(scoring, "_check_vienna_available", lambda: True)
+        monkeypatch.setattr(scoring, "calculate_mfe", lambda seq: None)
+
+        cfg = ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.2, use_mfe=True)
+        score = calculate_composite_score(cai=1.0, gc=60.0, sequence=self.SEQ, config=cfg)
+        # With MFE dropped, score should equal CAI+GC-only scoring (renormalized).
+        cfg_no_mfe = ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.2, use_mfe=False)
+        score_no_mfe = calculate_composite_score(
+            cai=1.0, gc=60.0, sequence=self.SEQ, config=cfg_no_mfe
+        )
+        assert score == pytest.approx(score_no_mfe)
+
+    def test_effective_weights_are_renormalized(self):
+        """CAI/GC weights scale up to compensate when MFE is disabled,
+        and still sum to 1.0."""
+        cfg = ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.2, use_mfe=False)
+        assert cfg.w_mfe == 0.0
+        assert abs((cfg.w_cai + cfg.w_gc) - 1.0) < 1e-6
+
+    def test_use_mfe_false_never_calls_vienna(self, monkeypatch):
+        """use_mfe=False must never invoke ViennaRNA at all, not just
+        zero-weight it after computing."""
+        called = []
+        monkeypatch.setattr(scoring, "_check_vienna_available", lambda: True)
+        monkeypatch.setattr(
+            scoring, "calculate_mfe", lambda seq: called.append(seq) or -40.0
+        )
+
+        cfg = ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.0, use_mfe=False)
+        calculate_composite_score(cai=0.5, gc=60.0, sequence=self.SEQ, config=cfg)
+        assert called == []
 
 
 if __name__ == "__main__":
