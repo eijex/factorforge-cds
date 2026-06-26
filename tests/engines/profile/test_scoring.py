@@ -114,17 +114,17 @@ class TestNormalizeMFE:
     """Test MFE normalization."""
 
     def test_zero_mfe_gives_one(self):
-        """MFE = 0 (no structure) → normalized = 1.0."""
+        """MFE = 0 (no structure) → above the [-0.40, -0.15] clamp ceiling → normalized = 1.0."""
         assert normalize_mfe(0.0, 300) == 1.0
 
     def test_very_negative_mfe_gives_zero(self):
-        """Very negative MFE → normalized ≈ 0.0."""
-        result = normalize_mfe(-150.0, 300)  # -0.5 kcal/mol/nt
+        """Very negative MFE → below the [-0.40, -0.15] clamp floor → normalized ≈ 0.0."""
+        result = normalize_mfe(-150.0, 300)  # -0.5 kcal/mol/nt, below the -0.40 floor
         assert abs(result) < 0.01
 
     def test_moderate_mfe(self):
-        """Moderate MFE → intermediate value."""
-        result = normalize_mfe(-75.0, 300)  # -0.25 kcal/mol/nt
+        """Moderate MFE at the clamp midpoint → intermediate value."""
+        result = normalize_mfe(-82.5, 300)  # -0.275 kcal/mol/nt, midpoint of [-0.40, -0.15]
         assert 0.4 < result < 0.6
 
     def test_zero_length_returns_neutral(self):
