@@ -59,6 +59,11 @@ jobs:
         if: matrix.python-version == '3.11' && matrix.os == 'ubuntu-latest'
         run: python scripts/audit_public_surface.py
 
+      - name: CITATION.cff DOI sync check (warn-only)
+        if: matrix.python-version == '3.11' && matrix.os == 'ubuntu-latest'
+        run: python scripts/check_citation_doi.py
+        continue-on-error: true
+
       - name: CHANGELOG duplicate-Unreleased-header check
         if: matrix.python-version == '3.11' && matrix.os == 'ubuntu-latest'
         shell: bash

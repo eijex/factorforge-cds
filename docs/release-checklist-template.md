@@ -60,6 +60,11 @@ GitHub Actions then auto-publishes: **PyPI + Docker + GitHub Release + Zenodo**
   python scripts/release.py X.Y.Z --zenodo-doi 10.5281/zenodo.<NEW_RECORD_ID>
   git add CITATION.cff && git commit -m "chore: update Zenodo DOI for vX.Y.Z" && git push
   ```
+  This step has been missed on three consecutive releases (v3.2.3, v3.2.4,
+  v3.2.5). CI now runs `scripts/check_citation_doi.py` (warn-only) on
+  every push to catch a stale DOI after the fact — but it does not
+  replace running this step, since CI only warns, it doesn't block the
+  merge.
 
 - [ ] Bioconda (`recipes/meta.yaml` already bumped by `--auto`):
   ```bash
