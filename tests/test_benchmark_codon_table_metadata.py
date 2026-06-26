@@ -113,6 +113,30 @@ def test_smoke_summary_contains_codon_table_fields(tmp_path):
     assert data["codon_table_id"] == "nbenthamiana_legacy_kazusa_sgn_v101"
 
 
+def test_smoke_summary_contains_vienna_rna_active(tmp_path):
+    """Every future run must record whether ViennaRNA (and thus MFE-weighted
+    candidate selection) was active, per analysis 011's provenance-gap finding."""
+    from benchmarks.run_benchmark import run
+
+    out_csv = tmp_path / "results.csv"
+    out_md = tmp_path / "summary.md"
+    run(
+        dataset="synthetic",
+        mode="smoke",
+        out_csv=out_csv,
+        out_md=out_md,
+        proteins_fasta=ROOT / "tests" / "fixtures" / "small_proteins.fasta",
+        native_fasta=ROOT / "tests" / "fixtures" / "small_native_cds.fasta",
+    )
+    summary_json = tmp_path / "benchmark_summary.json"
+    data = json.loads(summary_json.read_text(encoding="utf-8"))
+    assert isinstance(data.get("vienna_rna_active"), bool), (
+        "vienna_rna_active must be a bool recording whether ViennaRNA was "
+        "available (and therefore could affect MFE-weighted candidate "
+        "selection) during this benchmark run"
+    )
+
+
 # --- raw FASTA / genome files must not be committed ---
 
 def test_no_raw_genome_fasta_committed():
