@@ -26,16 +26,14 @@ Use this shape for public experimental feedback. Keep private, unpublished, iden
 
 | Field | Purpose |
 | --- | --- |
-| `factorforge_version` | Version used to generate the CDS |
-| `optimization_profile` | Public optimization profile name |
-| `host_organism` | Host organism or expression system |
+| `version` | FactorForge version used to generate the CDS |
+| `profile` | Public optimization profile used |
+| `host` | Host context |
 | `protein_class` | Coarse non-confidential protein class |
-| `expression_system_assay_type` | Assay or measurement type |
-| `harvest_timepoint` | Coarse harvest timepoint |
-| `replicate_category` | Coarse replicate category |
+| `assay_category` | Coarse assay category |
 | `comparison_result` | Improved, equivalent, reduced, inconclusive, no control, or not reported |
 | `expression_result` | Signal observed, no signal observed, inconclusive, not measured, or not reported |
-| `institution_disclosure` | Anonymous, disclosed, or not provided |
+| `replicate_category` | Coarse replicate category |
 | `non_confidential_notes` | Additional non-sensitive context |
 
 Do not include submitter identity, private contact information, raw sequences, sequence hashes, internal batch IDs, confidential construct identifiers, private customer names, patient data, exact confidential process parameters, or unpublished construct-identifying labels.

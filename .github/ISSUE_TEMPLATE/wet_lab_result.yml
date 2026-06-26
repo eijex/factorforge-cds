@@ -1,6 +1,7 @@
 name: Public-safe Wet-lab Feedback Summary
 description: Share a non-confidential experimental feedback summary for maintainer review
-labels: ["wet-lab", "needs-triage"]
+title: "[Wet-lab feedback]: "
+labels: ["wet-lab", "user-feedback", "needs-triage"]
 body:
   - type: markdown
     attributes:
