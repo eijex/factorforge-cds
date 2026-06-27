@@ -17,6 +17,12 @@ Before each release, maintainers run lint/tests, update version-bearing files,
 verify package and Docker smoke tests, and check public documentation for
 version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
+> **Pre-1.0-style exception (v3.3.0):** the *N. benthamiana* default
+> codon-reference/GC-band change below is a breaking change shipped under a
+> Minor bump rather than Major. This is a deliberate, one-off exception for
+> pre-1.0-maturity defaults recalibration, not a change to the policy table
+> above — future breaking API/engine changes still require a Major bump.
+
 ---
 
 ## [Unreleased]
@@ -54,6 +60,16 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   (`web/index.html`, `web/js/app.js`) now read the active band from
   `GET /api/optimize`'s `host_metadata` instead of a hardcoded value, so the
   UI cannot drift out of sync with the production default again.
+
+### Fixed
+
+- **Unbounded MFE computation on long sequences (algorithmic-complexity DoS)**
+  — `calculate_mfe()` had no input-length guard before invoking ViennaRNA's
+  `RNA.fold()` (O(n³) time), so a single request near the existing API length
+  limits could occupy a worker indefinitely. Sequences longer than 1000 nt now
+  skip global MFE folding (logged explicitly) and fall back to the existing
+  neutral-weight scoring path used when ViennaRNA is unavailable; no other
+  caller-visible behavior changes for sequences at or under the limit.
 
 ## [3.2.6] — 2026-06-27
 

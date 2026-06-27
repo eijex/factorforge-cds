@@ -142,6 +142,20 @@ def _check_vienna_available() -> bool:
     return _vienna_available
 
 
+# 170-fix: ViennaRNA's RNA.fold() uses Zuker's MFE algorithm, O(n^3) time /
+# O(n^2) memory — there was previously no length guard anywhere in the
+# calculate_mfe() call chain, so a single request at/under the existing
+# public API length limits (5000aa/15000bp) could pin a CPU core for minutes
+# (algorithmic-complexity DoS, CWE-407; confirmed via faulthandler stack
+# traces + an isolated RNA.fold() timing curve: 1000nt ~2.2s, 2000nt ~9.8s,
+# 3000nt ~24.6s). calculate_mfe() is called twice per optimize() call
+# (once for scoring, once independently for compute_mfe_evidence()
+# provenance), so the real per-request cost is ~2x this curve. 1000nt
+# (~333aa) keeps worst-case cost to roughly 4-5s even with that doubling,
+# while still covering most realistic single-protein CDS design requests.
+MFE_MAX_SEQUENCE_LENGTH = 1000
+
+
 def calculate_mfe(sequence: str) -> float | None:
     """
     Calculate minimum free energy (MFE) using ViennaRNA.
@@ -150,9 +164,20 @@ def calculate_mfe(sequence: str) -> float | None:
         sequence: DNA or RNA sequence.
 
     Returns:
-        MFE in kcal/mol, or None if ViennaRNA is not available.
+        MFE in kcal/mol, or None if ViennaRNA is not available or the
+        sequence exceeds MFE_MAX_SEQUENCE_LENGTH.
     """
     if not _check_vienna_available():
+        return None
+
+    if len(sequence) > MFE_MAX_SEQUENCE_LENGTH:
+        logger.warning(
+            "Sequence length (%d nt) exceeds MFE_MAX_SEQUENCE_LENGTH (%d nt); "
+            "skipping global MFE calculation to avoid an unbounded ViennaRNA "
+            "RNA.fold() runtime (O(n^3)). MFE scoring falls back to a neutral, "
+            "zero-weighted contribution for this candidate (170-fix).",
+            len(sequence), MFE_MAX_SEQUENCE_LENGTH,
+        )
         return None
 
     try:
@@ -392,6 +417,14 @@ def compute_mfe_evidence(
         reason = "MFE was not computed because no sequence was provided."
     elif not _check_vienna_available():
         reason = "MFE was not computed because ViennaRNA is unavailable in this environment."
+    elif len(sequence) > MFE_MAX_SEQUENCE_LENGTH:
+        # 170-fix: distinguish a deliberate length-based skip from an actual
+        # fold failure — the generic "computation failed" message below would
+        # otherwise mislead a caller into thinking something is broken.
+        reason = (
+            f"MFE was skipped because the sequence ({len(sequence)} nt) exceeds "
+            f"the {MFE_MAX_SEQUENCE_LENGTH} nt limit for global MFE folding."
+        )
     else:
         mfe_value = calculate_mfe(sequence)
         if mfe_value is None:
