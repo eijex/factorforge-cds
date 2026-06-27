@@ -85,11 +85,20 @@ class TestCompositeScore:
         score_off_target = calculate_composite_score(cai=0.5, gc=30.0, profile="gc_target", target_gc=50.0)
         assert score_at_target > score_off_target
 
-    def test_unknown_profile_falls_back_to_balanced(self):
-        """Unknown profile name falls back to balanced config."""
-        score = calculate_composite_score(cai=0.8, gc=42.5, profile="nonexistent_profile")
-        expected = calculate_composite_score(cai=0.8, gc=42.5, profile="balanced")
-        assert score == expected
+    def test_unknown_profile_raises(self):
+        """Unknown profile name raises, rather than silently using balanced."""
+        with pytest.raises(ValueError, match="Unknown profile"):
+            calculate_composite_score(cai=0.8, gc=42.5, profile="nonexistent_profile")
+
+    def test_target_gc_rejected_for_non_gc_profile(self):
+        """target_gc kwarg is only valid for the gc_target profile."""
+        with pytest.raises(ValueError, match="target_gc"):
+            calculate_composite_score(cai=0.8, gc=60.0, profile="balanced", target_gc=30.0)
+
+    def test_negative_weight_rejected(self):
+        """ScoringConfig rejects negative weights."""
+        with pytest.raises(ValueError, match="w_gc"):
+            ScoringConfig(w_cai=2.0, w_gc=-1.0, w_mfe=0.0, use_mfe=False)
 
     def test_explicit_config_overrides_profile(self):
         """Explicit ScoringConfig overrides profile."""
