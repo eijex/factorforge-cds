@@ -61,7 +61,14 @@ def test_sfgfp_sequence_no_x_residues():
 # ---------------------------------------------------------------------------
 
 def test_run_example_deterministic():
-    """run_example.py (no --freeze) must exit 0 when frozen outputs exist."""
+    """run_example.py (no --freeze) must exit 0 when frozen outputs exist.
+
+    Job 168 / v3.3.0 (_analysis/025): this script is explicitly pinned to the
+    legacy v1 codon reference (GC 55-65%) regardless of the engine's current
+    production default, so this reproducibility check stays valid forever.
+    See run_example_v2_smoke.py / test_run_example_v2_smoke_succeeds for the
+    current-default (v2) path.
+    """
     result = subprocess.run(
         [sys.executable, str(EXAMPLE_DIR / "run_example.py")],
         capture_output=True,
@@ -72,6 +79,26 @@ def test_run_example_deterministic():
         f"run_example.py exited {result.returncode}\nstdout:{result.stdout}\nstderr:{result.stderr}"
     )
     assert "OK" in result.stdout, "expected 'OK' in output"
+
+
+def test_run_example_v2_smoke_succeeds():
+    """run_example_v2_smoke.py (current production default) must exit 0.
+
+    No frozen-output comparison — this only checks that the v2 path runs
+    end-to-end and reports correct provenance (Job 168 / v3.3.0, _analysis/025).
+    """
+    result = subprocess.run(
+        [sys.executable, str(EXAMPLE_DIR / "run_example_v2_smoke.py")],
+        capture_output=True,
+        text=True,
+        cwd=str(ROOT),
+    )
+    assert result.returncode == 0, (
+        f"run_example_v2_smoke.py exited {result.returncode}\n"
+        f"stdout:{result.stdout}\nstderr:{result.stderr}"
+    )
+    assert "OK" in result.stdout
+    assert "nbenthamiana_nbev11_hc_v2" in result.stdout
 
 
 # ---------------------------------------------------------------------------

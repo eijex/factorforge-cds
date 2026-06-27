@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministic sfGFP worked example for FactorForge.
+"""Deterministic sfGFP worked example for FactorForge — PINNED TO LEGACY v1.
 
 Usage:
     python run_example.py           # verify frozen output matches current run
@@ -8,6 +8,14 @@ Usage:
 Profile: assembly_friendly | Seed: 320 | Host: N. benthamiana
 Scoring contract: v1.1 (multi_constraint_pass = biological_pass AND assembly_pass AND gc_in_target_range)
 Reference: Pédelacq et al. 2006, Nat Biotechnol 24:79-88, PMID 16369541 | PDB:2B3P
+
+Job 168 / v3.3.0 (_analysis/025) changed FactorForge's production-default
+codon reference and GC band for N. benthamiana. This worked example is
+explicitly pinned to the historical legacy codon reference (GC 55-65%) so
+the frozen design_package.json/validation_summary.json below remain valid
+forever, independent of future changes to the production default. See
+run_example_v2_smoke.py for a current-default smoke check (no frozen
+comparison; verifies the v2 path runs and reports correct provenance only).
 """
 import argparse
 import hashlib
@@ -22,14 +30,19 @@ sys.path.insert(0, str(ROOT / "src"))
 import factorforge as _ff  # noqa: E402
 from factorforge.engines.profile.optimizer import RuleBasedOptimizer  # noqa: E402
 from factorforge.engines.profile.rules.domesticator import Domesticator  # noqa: E402
+from factorforge.engines.profile.rules.rule_engine import RuleEngine  # noqa: E402
+from factorforge.engines.profile.utils import load_golden_set  # noqa: E402
 from factorforge.utils.sequence_validator import validate_cds_output  # noqa: E402
 
 PROFILE = "assembly_friendly"
 SEED = 320
-GC_MIN = 55.0  # N. benthamiana benchmark config (scoring_contract v1.1)
+GC_MIN = 55.0  # legacy v1 N. benthamiana band (scoring_contract v1.1) — pinned, see module docstring
 GC_MAX = 65.0
+LEGACY_CODON_TABLE_PATH = ROOT / "src" / "factorforge" / "data" / "nbenthamiana_codons.json"
 
-_DOM = Domesticator()
+_DOM = Domesticator(
+    codon_table=json.loads(LEGACY_CODON_TABLE_PATH.read_text(encoding="utf-8"))
+)
 REGISTRY_PATH = ROOT / "src" / "factorforge" / "registry" / "current_parameter_registry.yaml"
 
 
@@ -161,8 +174,28 @@ def main() -> None:
     args = parser.parse_args()
 
     aa_seq = load_sfgfp_aa()
-    optimizer = RuleBasedOptimizer()
-    result = optimizer.optimize(aa_seq, profile=PROFILE, seed=SEED)
+    # Pin to the legacy v1 codon reference explicitly (see module docstring) —
+    # both the translator (via codon_table_path) and the rule_engine used for
+    # scan_all()/violations counts, so this stays decoupled from whatever the
+    # production default codon table currently is.
+    legacy_table = json.loads(LEGACY_CODON_TABLE_PATH.read_text(encoding="utf-8"))
+    optimizer = RuleBasedOptimizer(codon_table_path=str(LEGACY_CODON_TABLE_PATH))
+    optimizer.rule_engine = RuleEngine(codon_table=legacy_table)
+    # RuleBasedOptimizer ties golden_set_path to codon_table_path when a
+    # table is injected (benchmark source-profile contract), but the
+    # original frozen run used the bundled golden set (no injection at all).
+    # Restore that for an exact legacy pin.
+    optimizer.translator.golden_set_table = load_golden_set()
+    optimizer.translator.golden_ref_weights = optimizer.translator._build_ref_weights(
+        optimizer.translator.golden_set_table
+    )
+    # GC-target and codon-reference are independent axes (_analysis/025) —
+    # injecting the legacy table does not by itself pin the GC band, which
+    # defaults from the active host (now 40-47% for nbenthamiana). Pin the
+    # band explicitly too so this example reproduces true legacy v1 behavior.
+    result = optimizer.optimize(
+        aa_seq, profile=PROFILE, seed=SEED, target_gc_min=GC_MIN, target_gc_max=GC_MAX
+    )
 
     design_pkg = build_design_package(result, aa_seq)
     val_summary = build_validation_summary(design_pkg)

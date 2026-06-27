@@ -18,6 +18,7 @@ for _path in (ROOT, ROOT / "src"):
         sys.path.insert(0, _path_str)
 
 from benchmarks.config import load_benchmark_config  # noqa: E402
+from factorforge.engines.profile.utils import get_data_path  # noqa: E402
 from benchmarks.scoring import score_cds  # noqa: E402
 from benchmarks.baselines.random_synonymous import random_synonymous_cds  # noqa: E402
 from benchmarks.baselines.greedy_cai import greedy_cai_cds  # noqa: E402
@@ -61,15 +62,83 @@ def _ok(row: dict) -> dict:
     return row
 
 
+def _resolve_active_default_reference(root: Path) -> dict:
+    """Resolve the codon reference the FactorForge engine actually uses by
+    default (no --codon-table-path override), by fact rather than a
+    hardcoded label.
+
+    Job 168 / v3.3.0 (_analysis/025): the no-flag benchmark path keeps its
+    original design intent of tracking the current product default; this
+    only makes the resulting summary label reflect that default truthfully
+    instead of assuming it is always "legacy_packaged".
+    """
+    pointer_path = root / "data" / "reference" / "active_codon_reference.json"
+    if pointer_path.exists():
+        pointer = json.loads(pointer_path.read_text(encoding="utf-8"))
+        return {
+            "profile_id": pointer["active_codon_table_id"],
+            "table_path": root / pointer["file"],
+            "manifest_path": root / pointer["manifest"],
+        }
+    # No pointer file: fall back to the historically bundled legacy reference.
+    return {
+        "profile_id": "legacy_packaged",
+        "table_path": root / "src" / "factorforge" / "data" / "nbenthamiana_codons.json",
+        "manifest_path": root / "data" / "reference" / "codon_table_manifest.json",
+    }
+
+
+def _resolve_manifest_for_table_path(table_path: Path, root: Path) -> Path | None:
+    """Find the schema-conformant manifest for an explicitly-given codon table
+    path, by matching it against known assets (legacy or current active
+    default) — never by assuming "current active" just because no manifest
+    was supplied. Returns None for genuinely unknown/custom tables rather
+    than mislabeling them with an unrelated asset's manifest facts.
+    """
+    table_path = Path(table_path).resolve()
+    legacy_path = (root / "src" / "factorforge" / "data" / "nbenthamiana_codons.json").resolve()
+    if table_path == legacy_path:
+        return root / "data" / "reference" / "codon_table_manifest.json"
+    default_ref = _resolve_active_default_reference(root)
+    if table_path == default_ref["table_path"].resolve():
+        return default_ref["manifest_path"]
+    return None
+
+
 def run(dataset: str, mode: str, out_csv: Path, out_md: Path,
         proteins_fasta: Path, native_fasta: Path,
         limit: int | None = None, progress_every: int = 500,
         seed: int | None = None,
         codon_weights: dict[str, float] | None = None,
-        source_profile_id: str = "legacy_packaged",
+        source_profile_id: str | None = None,
         source_table_sha256: str | None = None,
         source_manifest_sha256: str | None = None,
+        source_manifest_path: Path | None = None,
         codon_table_path: Path | None = None) -> None:
+    # Job 168 / v3.3.0 (_analysis/025): resolve no-flag defaults here (not
+    # only in main()) so every caller of run() — CLI, tests, aggregate
+    # scripts — gets fact-derived provenance instead of a stale literal.
+    if codon_table_path is None and source_profile_id is None:
+        _default_ref = _resolve_active_default_reference(ROOT)
+        source_profile_id = _default_ref["profile_id"]
+        if source_table_sha256 is None and _default_ref["table_path"].exists():
+            source_table_sha256 = hashlib.sha256(_default_ref["table_path"].read_bytes()).hexdigest()
+        if source_manifest_path is None:
+            source_manifest_path = _default_ref["manifest_path"]
+        if source_manifest_sha256 is None and source_manifest_path.exists():
+            source_manifest_sha256 = hashlib.sha256(source_manifest_path.read_bytes()).hexdigest()
+    elif source_profile_id is None:
+        source_profile_id = "legacy_packaged"
+
+    if codon_table_path is not None and source_manifest_path is None:
+        # Explicit override: only attach a manifest if the given path
+        # matches a known asset with a schema-conformant manifest. Otherwise
+        # leave it unresolved — _write_summary() falls back to source_profile_id
+        # as the literal codon_table_id rather than guessing.
+        source_manifest_path = _resolve_manifest_for_table_path(codon_table_path, ROOT)
+        if source_manifest_path is not None and source_manifest_sha256 is None and source_manifest_path.exists():
+            source_manifest_sha256 = hashlib.sha256(source_manifest_path.read_bytes()).hexdigest()
+
     cfg = load_benchmark_config()
     proteins = _read_fasta(proteins_fasta)
     natives = _read_fasta(native_fasta)
@@ -151,6 +220,8 @@ def run(dataset: str, mode: str, out_csv: Path, out_md: Path,
         source_profile_id=source_profile_id,
         source_table_sha256=source_table_sha256,
         source_manifest_sha256=source_manifest_sha256,
+        source_manifest_path=source_manifest_path,
+        is_explicit_override=codon_table_path is not None,
     )
 
 
@@ -170,27 +241,55 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
                    seed: int | None = None,
                    source_profile_id: str = "legacy_packaged",
                    source_table_sha256: str | None = None,
-                   source_manifest_sha256: str | None = None) -> None:
+                   source_manifest_sha256: str | None = None,
+                   source_manifest_path: Path | None = None,
+                   is_explicit_override: bool = False) -> None:
     methods = sorted({r["method"] for r in rows})
-    # Compute codon table metadata for MD
-    _repo_root_md = out_md.parent.parent.parent.parent
-    _manifest_path_md = _repo_root_md / "data" / "reference" / "codon_table_manifest.json"
-    _codon_table_path_md = _repo_root_md / "src" / "factorforge" / "data" / "nbenthamiana_codons.json"
-    ct_sha256 = (
-        hashlib.sha256(_codon_table_path_md.read_bytes()).hexdigest()
-        if _codon_table_path_md.exists()
-        else None
-    )
-    active_table_sha256 = source_table_sha256 or ct_sha256
-    if _manifest_path_md.exists():
-        _m = json.loads(_manifest_path_md.read_text(encoding="utf-8"))
-        _ct_id_md = _m.get("codon_table_id", "nbenthamiana_legacy_kazusa_sgn_v101")
-        _ct_ss_md = _m.get("source_status", "legacy_metadata_only")
-        _ct_bp_md = _m.get("build_path_status", "incomplete")
-        _ct_sha_md = ct_sha256 or _m.get("sha256", "")
+    # Resolve codon table metadata for MD from the manifest that is actually
+    # active for this run (legacy override or current production default),
+    # not a hardcoded legacy assumption (Job 168 / v3.3.0, _analysis/025).
+    # Use the module-level ROOT constant, not out_md's ancestors — out_md may
+    # be a tmp_path in tests/smoke runs and not sit 4 levels under repo root.
+    _repo_root_md = ROOT
+    if source_manifest_path is not None:
+        _manifest_path_md: Path | None = source_manifest_path
+    elif not is_explicit_override:
+        _resolved = _resolve_active_default_reference(_repo_root_md)
+        _manifest_path_md = _resolved["manifest_path"]
     else:
-        _ct_id_md, _ct_ss_md, _ct_bp_md, _ct_sha_md = (
-            "nbenthamiana_legacy_kazusa_sgn_v101", "legacy_metadata_only", "incomplete", ""
+        # Explicit override to a table with no known schema-conformant
+        # manifest (e.g. qld183_v103/nbev11_cds_all derived candidates) —
+        # do not guess; use the literal facts the caller already supplied.
+        _manifest_path_md = None
+    ct_sha256 = source_table_sha256
+    active_table_sha256 = source_table_sha256
+    if _manifest_path_md is not None and _manifest_path_md.exists():
+        _m = json.loads(_manifest_path_md.read_text(encoding="utf-8"))
+        _ct_id_md = _m.get("codon_table_id", source_profile_id)
+        _ct_ss_md = _m.get("source_status", "unknown")
+        _ct_bp_md = _m.get("build_path_status", "unknown")
+        _ct_sha_md = ct_sha256 or _m.get("sha256", "")
+        _ct_asset_type_md = _m.get("asset_type", "unknown")
+    else:
+        _ct_id_md, _ct_ss_md, _ct_bp_md, _ct_sha_md, _ct_asset_type_md = (
+            source_profile_id, "unknown", "unknown", ct_sha256 or "",
+            "legacy_packaged" if source_profile_id == "legacy_packaged" else "unknown",
+        )
+    if _ct_asset_type_md == "legacy_packaged":
+        _codon_table_note = (
+            "> **Codon table note:** This run used the legacy FactorForge codon reference "
+            "labeled as derived from Kazusa CodonUsage Database and SGN genome v1.0.1-era resources. "
+            "The original authoritative build path for this table is incomplete/not verified. "
+            "Scores are interpretable as an archived legacy-codon-reference (contract v1) historical "
+            "record (see _analysis/025), not a freshly rebuilt SGN QLD183 v103 codon-usage reconstruction. "
+            "Note: this 'contract v1/v2' refers to the codon-reference asset generation, a separate "
+            "concept from the frozen scoring_contract_version 1.1 pass/fail definition below."
+        )
+    else:
+        _codon_table_note = (
+            f"> **Codon table note:** This run used codon reference `{_ct_id_md}` "
+            "(codon-reference contract v2; NbeV1.1 LAB-strain genome-derived). "
+            "Job 168 / v3.3.0 (_analysis/025) — see data/reference/active_codon_reference.json."
         )
 
     lines = [
@@ -214,12 +313,7 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
         f"- codon_table_source_status: {_ct_ss_md}",
         f"- codon_table_build_path_status: {_ct_bp_md}",
         "",
-        "> **Codon table note:** The current N. benthamiana codon table is a legacy FactorForge reference "
-        "labeled as derived from Kazusa CodonUsage Database and SGN genome v1.0.1-era resources. "
-        "The original authoritative build path for the current JSON codon table is incomplete/not verified. "
-        "The formal benchmark dataset uses SGN QLD183 v103 records; therefore CAI and codon-usage metrics "
-        "should be interpreted as scores against the configured FactorForge codon reference, "
-        "not as a de novo SGN QLD183 v103 codon-usage reconstruction.",
+        _codon_table_note,
         "", f"> {CLAIM}", "",
         "| method | multi_constraint_pass_rate | biological_pass_rate | assembly_pass_rate | gc_in_range_rate | mean_cai |",
         "|---|---|---|---|---|---|",
@@ -266,19 +360,9 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
             "mean_cai": round(sum(r["cai"] for r in ok if r["cai"] is not None) / max(1, sum(1 for r in ok if r["cai"] is not None)), 4),
         }
 
-    # Compute codon table sha256 and read manifest at runtime
-    # out_md is benchmarks/results/v3.2.0/benchmark_summary.md → 4 levels up = repo root
-    repo_root = out_md.parent.parent.parent.parent
-    manifest_path = repo_root / "data" / "reference" / "codon_table_manifest.json"
-    if manifest_path.exists():
-        _manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        ct_id = _manifest.get("codon_table_id", "nbenthamiana_legacy_kazusa_sgn_v101")
-        ct_source_status = _manifest.get("source_status", "legacy_metadata_only")
-        ct_build_path_status = _manifest.get("build_path_status", "incomplete")
-    else:
-        ct_id = "nbenthamiana_legacy_kazusa_sgn_v101"
-        ct_source_status = "legacy_metadata_only"
-        ct_build_path_status = "incomplete"
+    # Reuse the manifest facts already resolved above (active default or
+    # explicit override) instead of re-reading a hardcoded legacy path.
+    ct_id, ct_source_status, ct_build_path_status = _ct_id_md, _ct_ss_md, _ct_bp_md
 
     try:
         _git_commit = subprocess.check_output(
@@ -339,7 +423,8 @@ def main(default_mode: str = "formal") -> None:
                     help="Random seed for FactorForge profiles (default: non-deterministic). "
                          "Use --seed 320 for reproducible formal runs.")
     ap.add_argument("--codon-table-path", default=None,
-                    help="Path to source-profile codon table JSON. If omitted, uses legacy nbenthamiana_codons.json.")
+                    help="Path to source-profile codon table JSON. If omitted, tracks the current "
+                         "FactorForge production default (see data/reference/active_codon_reference.json).")
     ap.add_argument("--source-profile-id", default=None,
                     help="Source profile identifier (required if --codon-table-path is provided).")
     ap.add_argument("--source-profile-manifest", default=None,
@@ -348,10 +433,28 @@ def main(default_mode: str = "formal") -> None:
     if args.codon_table_path and not args.source_profile_id:
         raise SystemExit("ERROR: --source-profile-id is required when --codon-table-path is provided")
 
+    root = Path(__file__).resolve().parents[1]
     codon_weights = None
-    active_profile_id = "legacy_packaged"
-    active_table_sha256 = None
-    active_manifest_sha256 = None
+    active_manifest_path: Path | None = None
+
+    if not args.codon_table_path:
+        # Job 168 / v3.3.0 (_analysis/025): label this run by the fact of
+        # what the engine actually defaults to, instead of assuming legacy.
+        _default_ref = _resolve_active_default_reference(root)
+        active_profile_id = _default_ref["profile_id"]
+        active_manifest_path = _default_ref["manifest_path"]
+        active_table_sha256 = (
+            hashlib.sha256(_default_ref["table_path"].read_bytes()).hexdigest()
+            if _default_ref["table_path"].exists() else None
+        )
+        active_manifest_sha256 = (
+            hashlib.sha256(active_manifest_path.read_bytes()).hexdigest()
+            if active_manifest_path.exists() else None
+        )
+    else:
+        active_profile_id = "legacy_packaged"
+        active_table_sha256 = None
+        active_manifest_sha256 = None
 
     if args.codon_table_path:
         from factorforge.analysis.metrics import load_codon_usage_table
@@ -364,6 +467,7 @@ def main(default_mode: str = "formal") -> None:
             manifest_path = Path(args.source_profile_manifest)
             manifest_bytes = manifest_path.read_bytes()
             active_manifest_sha256 = hashlib.sha256(manifest_bytes).hexdigest()
+            active_manifest_path = manifest_path
             manifest_data = json.loads(manifest_bytes)
             expected_sha = manifest_data.get("codon_profile_sha256")
             if expected_sha and expected_sha != active_table_sha256:
@@ -376,7 +480,6 @@ def main(default_mode: str = "formal") -> None:
         table = load_codon_usage_table(table_path)
         codon_weights = table.codon_weights
         active_profile_id = args.source_profile_id
-    root = Path(__file__).resolve().parents[1]
     if args.dataset == "synthetic":
         proteins = root / "tests" / "fixtures" / "small_proteins.fasta"
         native = root / "tests" / "fixtures" / "small_native_cds.fasta"
@@ -392,6 +495,7 @@ def main(default_mode: str = "formal") -> None:
         source_profile_id=active_profile_id,
         source_table_sha256=active_table_sha256,
         source_manifest_sha256=active_manifest_sha256,
+        source_manifest_path=active_manifest_path,
         codon_table_path=Path(args.codon_table_path) if args.codon_table_path else None)
 
 

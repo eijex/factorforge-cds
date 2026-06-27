@@ -74,3 +74,59 @@ def test_aa_identity_policy_sync():
     # registry says identity must be 1.0 — passing case confirms
     ok = validate_cds_output("MKT", "ATGAAAACC")
     assert ok["passed"] and ok["aa_identity"] == registry_val
+
+
+# ── codon_reference source-of-truth sync (Job 168 / v3.3.0, _analysis/025) ────
+
+def test_codon_reference_active_sync_with_active_reference_file():
+    """registry's codon_reference.active block must match
+    data/reference/active_codon_reference.json (the file run_benchmark.py
+    reads at runtime) — both describe "what is the current production
+    default", and must not drift apart."""
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    registry_active = _resolve("codon_reference.active")
+    active_ref = json.loads(
+        (root / "data" / "reference" / "active_codon_reference.json").read_text(encoding="utf-8")
+    )
+    assert registry_active["id"] == active_ref["active_codon_table_id"]
+    assert registry_active["asset_type"] == active_ref["active_asset_type"]
+    assert registry_active["codon_reference_contract_version"] == active_ref[
+        "codon_reference_contract_version"
+    ]
+    # active_codon_reference.json doesn't carry sha256 directly — cross-check
+    # via the file it points at instead.
+    import hashlib
+    table_path = root / active_ref["file"]
+    assert registry_active["sha256"] == hashlib.sha256(table_path.read_bytes()).hexdigest()
+
+
+def test_codon_reference_active_sync_with_v2_manifest():
+    """registry's codon_reference.active block must match the schema-conformant
+    v2 manifest file's facts (asset_type, sha256, source_status)."""
+    import json
+    from pathlib import Path
+
+    registry_active = _resolve("codon_reference.active")
+    manifest = json.loads(
+        (Path(__file__).resolve().parents[1] / "data" / "reference"
+         / "codon_table_manifest_nbev11_hc_v2.json").read_text(encoding="utf-8")
+    )
+    assert registry_active["id"] == manifest["codon_table_id"]
+    assert registry_active["sha256"] == manifest["sha256"]
+    assert registry_active["asset_type"] == manifest["asset_type"]
+    assert registry_active["source_status"] == manifest["source_status"]
+
+
+def test_codon_reference_active_table_sha256_matches_production_default():
+    """The sha256 recorded for the active codon_reference must match the
+    actual file the production engine resolves to by default."""
+    from factorforge.engines.profile.utils import get_data_path, resolve_host_codon_table_path
+    import hashlib
+
+    registry_active = _resolve("codon_reference.active")
+    resolved_path = resolve_host_codon_table_path("nbenthamiana", get_data_path())
+    actual_sha256 = hashlib.sha256(resolved_path.read_bytes()).hexdigest()
+    assert registry_active["sha256"] == actual_sha256

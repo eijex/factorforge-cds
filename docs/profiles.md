@@ -22,7 +22,7 @@ it is rejected for other hosts at the CLI, REST API, and web app.
 |---------|-------------|
 | `balanced` | CAI + GC balance — default for most sequence-design reviews |
 | `high_cai` | CAI-focused synonymous CDS candidate. N. benthamiana-only; rejected for other hosts. |
-| `gc_target` | Targets a configurable GC percentage, defaulting to the host-profile midpoint (60% for *N. benthamiana*). Pass an explicit target to drive GC higher or lower. |
+| `gc_target` | Targets a configurable GC percentage, defaulting to the host-profile midpoint (43.5% for *N. benthamiana*). Pass an explicit target to drive GC higher or lower. |
 | `assembly_friendly` | Golden Gate / MoClo workflows — avoids BsaI/BpiI Type IIS restriction sites via synonymous substitution. Does not yet score local GC uniformity or repeat patterns. |
 
 ## Usage

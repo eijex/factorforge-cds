@@ -13,6 +13,7 @@ from factorforge.engines.profile import scoring
 from factorforge.engines.profile.scoring import (
     GC_DECAY_WIDTH,
     GC_OPT_MAX,
+    GC_OPT_MID,
     GC_OPT_MIN,
     PROFILE_SCORING_CONFIGS,
     ScoringConfig,
@@ -60,7 +61,7 @@ class TestCompositeScore:
 
     def test_perfect_cai_perfect_gc(self):
         """Perfect CAI and optimal GC should produce a high score."""
-        score = calculate_composite_score(cai=1.0, gc=60.0, profile="balanced")
+        score = calculate_composite_score(cai=1.0, gc=GC_OPT_MID, profile="balanced")
         assert score > 0.9
 
     def test_zero_cai(self):
@@ -76,9 +77,11 @@ class TestCompositeScore:
 
     def test_high_cai_profile_weights(self):
         """High-CAI profile weights CAI more heavily."""
-        # Use GC off-optimal so gc_target (w_gc=0.7) is penalized more than high_cai (w_gc=0.1)
-        score_hcai = calculate_composite_score(cai=0.95, gc=42.5, profile="high_cai")
-        score_gc = calculate_composite_score(cai=0.95, gc=42.5, profile="gc_target")
+        # Use GC off-optimal (outside the band, decay_width past GC_OPT_MAX) so
+        # gc_target (w_gc=0.7) is penalized more than high_cai (w_gc=0.1).
+        off_optimal_gc = GC_OPT_MAX + GC_DECAY_WIDTH / 2
+        score_hcai = calculate_composite_score(cai=0.95, gc=off_optimal_gc, profile="high_cai")
+        score_gc = calculate_composite_score(cai=0.95, gc=off_optimal_gc, profile="gc_target")
         # High-CAI should be higher because it weights CAI at 0.8 vs gc_target's 0.1
         assert score_hcai > score_gc
 
@@ -180,9 +183,10 @@ class TestGCBandScore:
 
     def test_composite_score_uses_band_not_point(self):
         """GC inside band → higher gc contribution than same distance from gc_opt."""
-        # GC=55 is at the lower boundary (score=1.0 with band, was 0.9 with old /50 formula)
-        score_at_min = calculate_composite_score(cai=0.8, gc=55.0, profile="balanced")
-        score_at_mid = calculate_composite_score(cai=0.8, gc=60.0, profile="balanced")
+        # GC_OPT_MIN is at the lower boundary; GC_OPT_MID is the band midpoint.
+        # Both fall inside [GC_OPT_MIN, GC_OPT_MAX] (score=1.0 with band scoring).
+        score_at_min = calculate_composite_score(cai=0.8, gc=GC_OPT_MIN, profile="balanced")
+        score_at_mid = calculate_composite_score(cai=0.8, gc=GC_OPT_MID, profile="balanced")
         # Both inside band → same GC component → scores equal
         assert score_at_min == score_at_mid
 

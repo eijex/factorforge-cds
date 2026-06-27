@@ -27,7 +27,31 @@ status).
 
 | Check | Covered | Notes |
 |-------|---------|-------|
-| GC% range | Yes | Host-dependent; default *N. benthamiana*: 55-65%. A configured target metric, not a hard gate outside the benchmark scoring contract. |
+| GC% range | Yes | Host-dependent; default *N. benthamiana*: 40-47% (native genome-composition reference band, v3.3.0+). *N. tabacum* (BY-2): 55-65% (unchanged, no host-specific composition analysis yet). This range is a genome-composition reference band, not a wet-lab validated expression optimum. A configured target metric, not a hard gate outside the benchmark scoring contract. |
+
+### Codon Reference Contract (v1 / v2)
+
+`codon_reference_contract_version` tracks which **codon usage table and GC
+reference band** a result was generated against — distinct from
+`scoring_contract_version` (currently `v1.1`), which defines the unrelated
+`multi_constraint_pass` pass/fail formula (`biological_pass AND assembly_pass
+AND gc_in_target_range`). A v1→v2 codon-reference change does not change what
+"pass" means; it changes the codon table and GC band a result is scored
+against.
+
+| Contract version | Codon reference asset | GC reference band (*N. benthamiana*) | Status |
+|---|---|---|---|
+| `v1` | `nbenthamiana_legacy_kazusa_sgn_v101` (legacy, circular-derived) | 55-65% | `legacy_packaged` — preserved for reproducing pre-v3.3.0 results (e.g. `examples/worked_example`) |
+| `v2` | `nbenthamiana_nbev11_hc_v2` (NbeV1.1 LAB-strain, native genome-composition anchor; `_analysis/025`) | 40-47% | `official_packaged` — current production default |
+
+The active default is recorded in `data/reference/active_codon_reference.json`
+and synchronized with `current_parameter_registry.yaml`'s `codon_reference.active`
+block (see `tests/test_registry_production_sync.py` for the sync guard). Pass
+an explicit `codon_table_path` (Python API `RuleBasedOptimizer(codon_table_path=...)`,
+or the benchmark script's `--codon-table-path` / `--source-profile-id`) to pin
+a result to a specific contract version regardless of the current default. The
+CLI and REST API do not currently expose a codon-table override; they always
+use the active default.
 
 **Advisory sequence-risk scans** (all 9 run by default; findings are reported, never gating):
 

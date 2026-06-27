@@ -110,7 +110,14 @@ def test_smoke_summary_contains_codon_table_fields(tmp_path):
     ]:
         assert field in data, f"Missing codon table field in smoke summary JSON: {field}"
 
-    assert data["codon_table_id"] == "nbenthamiana_legacy_kazusa_sgn_v101"
+    # No --codon-table-path override ⇒ codon_table_id must reflect whichever
+    # asset is actually the current production default (Job 168 / v3.3.0,
+    # _analysis/025 — see data/reference/active_codon_reference.json), not a
+    # hardcoded legacy literal.
+    active_ref = json.loads(
+        (ROOT / "data" / "reference" / "active_codon_reference.json").read_text(encoding="utf-8")
+    )
+    assert data["codon_table_id"] == active_ref["active_codon_table_id"]
 
 
 def test_smoke_summary_contains_vienna_rna_active(tmp_path):

@@ -24,5 +24,8 @@
     "target_reference": "SGN QLD183 v103",
     "expected_effect": "Codon weights, CAI scores, profile rankings, and benchmark results may change."
   },
-  "claim_boundary": "This codon table is a configured in-silico FactorForge reference for codon-usage scoring and optimization. It is not wet-lab validation, yield prediction, or expression-success evidence."
+  "claim_boundary": "This codon table is a configured in-silico FactorForge reference for codon-usage scoring and optimization. It is not wet-lab validation, yield prediction, or expression-success evidence.",
+  "asset_type": "legacy_packaged",
+  "terminal_stop_policy": "included_in_frequency_model",
+  "promotion_note": "Job 168 / v3.3.0 (_analysis/025): demoted from canonical production default. Preserved unmodified for v3.2.2 frozen benchmark reproducibility (archived output interpretation only, not guaranteed exact rerun). See data/reference/active_codon_reference.json for the current production default."
 }

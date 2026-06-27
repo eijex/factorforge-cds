@@ -106,11 +106,11 @@ notes: Reference (default) host-aware strategy; the template the others are comp
 ```yaml
 id: gc_target
 display_name: GC Target
-reference_class: host_table_plus_fixed_constant
-reference_asset: "{host}_codons.json (codon choice) + GC_OPT_MID=60.0 (scoring.py:22, default target when target_gc unset)"
+reference_class: host_table_plus_host_aware_constant
+reference_asset: "{host}_codons.json (codon choice) + resolve_host_gc_mid(host) (scoring.py, default target when target_gc unset; Job 168 / v3.3.0)"
 code_location: "engines/profile/rules/reverse_translator.py::_gc_target_translate"
-host_aware: partial
-host_aware_note: Codon selection is host-aware, but the default GC target is a single N. benthamiana-calibrated constant (already flagged TODO in code at reverse_translator.py:453-454).
+host_aware: full
+host_aware_note: Codon selection and the default GC target are both host-aware as of Job 168 (v3.3.0) — the default resolves via resolve_host_gc_mid(self.host) instead of a single fixed constant (43.5% for N. benthamiana, 60.0% for by2/ntabacum pending host-specific composition analysis).
 exposure:
   python_api_profile: supported
   python_api_dp: not_applicable

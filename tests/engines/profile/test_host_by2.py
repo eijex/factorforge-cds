@@ -72,16 +72,19 @@ def test_nbenthamiana_and_by2_hosts_both_produce_valid_sequences() -> None:
 
 WITNESS_PROTEIN = "MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQ"
 
-# Pinned 2026-06-23 by running the pre-guard code directly (seed=42 fixes
-# balanced/assembly_friendly non-determinism, confirmed by running each
-# combination twice and comparing). These are not derived by hand. The
-# host/strategy compatibility guard below must not change any of these
-# values — it only adds rejection/disclosure around the existing engine,
-# never touches profile output.
+# nbenthamiana balanced/gc_target/assembly_friendly re-pinned 2026-06-27 (Job
+# 168 / v3.3.0, _analysis/025): production default codon reference migrated
+# legacy -> NbeV1.1 LAB-strain (nbev11_cds_hc) and GC band 55-65% -> 40-47%,
+# which legitimately changes these outputs. Re-derived by running the live
+# engine directly (seed=42 fixes non-determinism, confirmed by running each
+# combination twice and comparing) — not hand-edited. high_cai is unaffected
+# (golden-set reference untouched by the migration) and keeps its original
+# 2026-06-23 pin. The host/strategy compatibility guard does not change any
+# of these values — it only adds rejection/disclosure around the engine.
 NBENTHAMIANA_BASELINE_SEED42 = {
-    "balanced": "ATGAAGACCGCCTACATCGCCAAGCAGCGGCAGATCAGCTTCGTCAAGAGCCATTTCAGCAGGCAGCTGGAAGAGAGGCTGGGACTGATCGAGGTGCAG",
-    "gc_target": "ATGAAGACCGCCTACATCGCCAAGCAGCGCCAGATCAGCTTCGTGAAGAGCCACTTCAGCCGCCAGCTGGAGGAGAGGCTGGGACTTATCGAGGTGCAG",
-    "assembly_friendly": "ATGAAAACCGCCTACATCGCCAAGCAGAGGCAGATCAGCTTCGTGAAAAGCCACTTCAGCCGGCAGCTCGAGGAGAGGCTGGGCCTCATCGAGGTGCAG",
+    "balanced": "ATGAAAACAGCTTATATTGCCAAGCAAAGACAAATCTCTTTTGTTAAGTCCCATTTTTCCCGACAACTTGAGGAAAGGCTTGGACTTATTGAAGTCCAA",
+    "gc_target": "ATGAAGACCGCTTACATCGCTAAACAGAGACAAATCTCCTTCGTGAAGTCTCATTTCTCCAGACAGCTTGAAGAGAGACTTGGACTTATCGAAGTGCAA",
+    "assembly_friendly": "ATGAAAACTGCATATATTGCTAAGCAAAGACAAATTAGTTTTGTGAAATCTCATTTCTCTAGGCAACTTGAAGAGCGGCTTGGACTTATCGAAGTTCAG",
     "high_cai": "ATGAAAACTGCTTATATTGCTAAACAAAGACAAATTTCTTTCGTTAAATCTCATTTCTCTAGACAACTTGAAGAAAGACTTGGTCTTATTGAAGTTCAA",
 }
 NTABACUM_BASELINE_SEED42 = {

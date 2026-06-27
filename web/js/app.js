@@ -14,6 +14,23 @@ const HOST_LABELS = {
     by2: 'Tobacco BY-2',
     ntabacum: 'Tobacco BY-2'
 };
+// GC reference band per host. Populated live from GET /api/optimize's
+// host_metadata[host].gc_range (api/optimize.py's _default_gc_constraints /
+// resolve_host_gc_range — the single source of truth, registry-synced).
+// OFFLINE_GC_RANGES is only a same-values fallback for offline/dev mode when
+// the API is unreachable (Job 168 / v3.3.0, _analysis/025) — never the other
+// way around, so this file must not be the place a future band change is made.
+const OFFLINE_GC_RANGES = {
+    nbenthamiana: { gc_min: 40.0, gc_max: 47.0 },
+    by2: { gc_min: 55.0, gc_max: 65.0 },
+    ntabacum: { gc_min: 55.0, gc_max: 65.0 }
+};
+let hostGcRanges = {};
+
+function getGcRange(hostId) {
+    return hostGcRanges[hostId] || OFFLINE_GC_RANGES[hostId] || OFFLINE_GC_RANGES.nbenthamiana;
+}
+
 let validationRegistry = [];
 
 // State Management
@@ -93,6 +110,7 @@ const elements = {
     customRestrictionResults: document.getElementById('customRestrictionResults'),
     customRestrictionResultsBody: document.getElementById('customRestrictionResultsBody'),
     gcChart: document.getElementById('gcChart'),
+    gcZoneLabel: document.getElementById('gcZoneLabel'),
     historyList: document.getElementById('historyList'),
     clearHistory: document.getElementById('clearHistory'),
     changelogBtn: document.getElementById('changelogBtn'),
@@ -127,11 +145,14 @@ function caiBucket(cai) {
     if (cai < 0.9) return '0.8-0.9';
     return '>0.9';
 }
-function gcBucket(gc) {
-    if (gc < 40) return '<40';
-    if (gc < 55) return '40-55';
-    if (gc < 65) return '55-65';
-    return '>65';
+function gcBucket(gc, hostId = state.host) {
+    // Host-aware telemetry bucketing (Job 168 / v3.3.0) — boundaries follow
+    // the resolved reference band for the host instead of a fixed 55-65
+    // assumption, so BY-2 and N. benthamiana don't get mislabeled buckets.
+    const { gc_min, gc_max } = getGcRange(hostId);
+    if (gc < gc_min) return `<${gc_min}`;
+    if (gc <= gc_max) return `${gc_min}-${gc_max}`;
+    return `>${gc_max}`;
 }
 function trackEvent(name, data) {
     try { window.va?.('event', { name, data }); } catch (_) {}
@@ -167,6 +188,11 @@ async function loadHostOptions() {
             }
             if (data.host_metadata && typeof data.host_metadata === 'object') {
                 metadata = data.host_metadata;
+                Object.entries(metadata).forEach(([id, meta]) => {
+                    if (meta && meta.gc_range) {
+                        hostGcRanges[id] = meta.gc_range;
+                    }
+                });
             }
             if (Array.isArray(data.validation_checks)) {
                 validationRegistry = data.validation_checks;
@@ -374,7 +400,7 @@ function toggleTheme() {
     showToast(`${isDark ? 'Dark' : 'Light'} mode enabled`, 'info');
 
     // Re-render chart if it exists to update colors
-    if (state.results) renderGCGraph(state.results.optimized_sequence);
+    if (state.results) renderGCGraph(state.results.optimized_sequence, getResultHostProfile(state.results));
 }
 
 // Handler Functions
@@ -505,7 +531,10 @@ async function runOptimization() {
         if (state.objective === 'feasibility_best') {
             payload.objective = 'feasibility_best';
             payload.host_profile = state.host;
-            payload.constraints = { gc_min: 55.0, gc_max: 65.0 };
+            // Host-aware default (Job 168 / v3.3.0) — previously hardcoded to
+            // the legacy 55-65 band, which silently overrode the server's
+            // resolve_host_gc_range() default for every feasibility_best run.
+            payload.constraints = getGcRange(state.host);
         } else {
             payload.profile = state.objective;
         }
@@ -551,7 +580,7 @@ async function runOptimization() {
                 objective: state.objective,
                 host: getResultHostProfile(data),
                 cai_bucket: caiBucket(primary.metrics.cai ?? 0),
-                gc_bucket: gcBucket(primary.metrics.gc_percent ?? 0),
+                gc_bucket: gcBucket(primary.metrics.gc_percent ?? 0, getResultHostProfile(data)),
                 success: true,
             });
         }
@@ -703,7 +732,7 @@ function renderResults() {
     elements.optimizedSequence.textContent = formatSequence(primary.optimized_sequence);
 
     // Render GC Graph
-    renderGCGraph(primary.optimized_sequence);
+    renderGCGraph(primary.optimized_sequence, getResultHostProfile(res));
     renderCandidateComparison(res);
     renderCustomRestrictionResults(res);
 
@@ -973,7 +1002,7 @@ function formatSequence(seq) {
     return seq.match(/.{1,60}/g).join('\n');
 }
 
-function renderGCGraph(seq) {
+function renderGCGraph(seq, hostId = state.host) {
     const windowSize = 50;
     const data = [];
     const labels = [];
@@ -991,6 +1020,12 @@ function renderGCGraph(seq) {
     const textColor = isDark ? '#94a3b8' : '#475569';
     const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
     const n = labels.length;
+    // Host-aware reference band (Job 168 / v3.3.0) — previously hardcoded to
+    // 55/65 for every host, which mislabeled the N. benthamiana v2 default.
+    const { gc_min: bandMin, gc_max: bandMax } = getGcRange(hostId);
+    if (elements.gcZoneLabel) {
+        elements.gcZoneLabel.textContent = `Reference Band ${bandMin}–${bandMax}%`;
+    }
 
     const ctx = elements.gcChart.getContext('2d');
     chartInstance = new Chart(ctx, {
@@ -999,8 +1034,8 @@ function renderGCGraph(seq) {
             labels: labels,
             datasets: [
                 {
-                    label: 'Target Max (65%)',
-                    data: Array(n).fill(65),
+                    label: `Target Max (${bandMax}%)`,
+                    data: Array(n).fill(bandMax),
                     borderColor: 'rgba(16, 185, 129, 0.35)',
                     borderWidth: 1,
                     borderDash: [4, 4],
@@ -1009,8 +1044,8 @@ function renderGCGraph(seq) {
                     tension: 0
                 },
                 {
-                    label: 'Target Min (55%)',
-                    data: Array(n).fill(55),
+                    label: `Target Min (${bandMin}%)`,
+                    data: Array(n).fill(bandMin),
                     borderColor: 'rgba(16, 185, 129, 0.35)',
                     borderWidth: 1,
                     borderDash: [4, 4],
