@@ -23,6 +23,7 @@ from benchmarks.baselines.random_synonymous import random_synonymous_cds  # noqa
 from benchmarks.baselines.greedy_cai import greedy_cai_cds  # noqa: E402
 from benchmarks.baselines.native_reference import native_reference_cds  # noqa: E402
 from factorforge.engines.profile.optimizer import RuleBasedOptimizer  # noqa: E402
+from factorforge.engines.profile.scoring import _check_vienna_available  # noqa: E402
 from factorforge import __version__ as FF_VERSION  # noqa: E402
 
 FACTORFORGE_PROFILES = ["balanced", "high_cai", "gc_target", "assembly_friendly"]
@@ -316,6 +317,7 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
             "CAI and codon-usage metrics are computed against the configured FactorForge codon reference. "
             "The current codon table is not a freshly rebuilt SGN QLD183 v103 codon table."
         ),
+        "vienna_rna_active": _check_vienna_available(),
     }, indent=2), encoding="utf-8")
     summary = json.loads(summary_json.read_text(encoding="utf-8"))
     if summary.get("design_table_sha256") != summary.get("score_table_sha256"):
