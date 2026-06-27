@@ -15,6 +15,7 @@ from factorforge.engines.profile.scoring import (
     GC_OPT_MAX,
     GC_OPT_MID,
     GC_OPT_MIN,
+    MFE_MAX_SEQUENCE_LENGTH,
     PROFILE_SCORING_CONFIGS,
     ScoringConfig,
     calculate_composite_score,
@@ -335,6 +336,76 @@ class TestMFEViennaBranches:
         cfg = ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.0, use_mfe=False)
         calculate_composite_score(cai=0.5, gc=60.0, sequence=self.SEQ, config=cfg)
         assert called == []
+
+
+class TestMFELengthGuard:
+    """170-fix: calculate_mfe() must not attempt RNA.fold() on sequences long
+    enough to make ViennaRNA's O(n^3) Zuker MFE algorithm a multi-second-to-
+    multi-minute cost (confirmed via faulthandler + an isolated RNA.fold()
+    timing curve: 1000nt~2.2s, 2000nt~9.8s, 3000nt~24.6s on the dev machine) —
+    reachable by an unauthenticated request within the existing public API
+    length limits (5000aa/15000bp), i.e. an algorithmic-complexity DoS
+    (CWE-407) before this guard existed."""
+
+    def test_sequence_at_cutoff_is_not_skipped(self, monkeypatch):
+        """Exactly MFE_MAX_SEQUENCE_LENGTH must still attempt the fold."""
+        monkeypatch.setattr(scoring, "_check_vienna_available", lambda: True)
+        import types
+        monkeypatch.setitem(
+            sys.modules, "RNA", types.SimpleNamespace(fold=lambda seq: (None, -10.0))
+        )
+
+        seq = "ATG" * (MFE_MAX_SEQUENCE_LENGTH // 3)
+        result = calculate_mfe(seq[:MFE_MAX_SEQUENCE_LENGTH])
+        assert result == -10.0
+
+    def test_sequence_over_cutoff_returns_none_without_folding(self, monkeypatch, caplog):
+        """One nucleotide over the cutoff must skip RNA.fold() entirely and
+        log a warning explaining why (so a future 'MFE score looks wrong for
+        long sequences' bug report has an immediate, discoverable answer)."""
+        monkeypatch.setattr(scoring, "_check_vienna_available", lambda: True)
+
+        def fail_if_called(*_args, **_kwargs):
+            raise AssertionError("RNA.fold() must not be called above the length cutoff")
+
+        import types
+        monkeypatch.setitem(
+            sys.modules, "RNA", types.SimpleNamespace(fold=fail_if_called)
+        )
+
+        seq = "A" * (MFE_MAX_SEQUENCE_LENGTH + 1)
+        with caplog.at_level("WARNING"):
+            result = calculate_mfe(seq)
+        assert result is None
+        assert any(
+            "MFE_MAX_SEQUENCE_LENGTH" in record.message for record in caplog.records
+        )
+
+    def test_compute_mfe_evidence_length_skip_is_not_mislabeled_as_failure(self):
+        """170-fix follow-up (Opus review): a length-based skip must not be
+        reported via the generic 'MFE computation failed' message — that
+        wording implies a fold error, which would misdirect a caller
+        debugging why MFE is missing for a long sequence."""
+        seq = "A" * (MFE_MAX_SEQUENCE_LENGTH + 1)
+        ev = compute_mfe_evidence(seq, profile="balanced")
+        assert ev["mfe_used"] is False
+        assert ev["mfe_warning"] is not None
+        assert "failed" not in ev["mfe_warning"].lower()
+        assert str(MFE_MAX_SEQUENCE_LENGTH) in ev["mfe_warning"]
+
+    def test_over_cutoff_drops_mfe_weight_like_vienna_unavailable(self):
+        """Above the cutoff, calculate_composite_score must behave exactly
+        like the pre-existing 'ViennaRNA unavailable' path (weight dropped,
+        renormalized) — no new state, just reusing the existing fallback."""
+        long_seq = "ATG" + "GCT" * ((MFE_MAX_SEQUENCE_LENGTH // 3) + 1) + "TAA"
+        cfg = ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.2, use_mfe=True)
+        score = calculate_composite_score(cai=1.0, gc=60.0, sequence=long_seq, config=cfg)
+
+        cfg_no_mfe = ScoringConfig(w_cai=0.5, w_gc=0.3, w_mfe=0.2, use_mfe=False)
+        score_no_mfe = calculate_composite_score(
+            cai=1.0, gc=60.0, sequence=long_seq, config=cfg_no_mfe
+        )
+        assert score == pytest.approx(score_no_mfe)
 
 
 if __name__ == "__main__":
