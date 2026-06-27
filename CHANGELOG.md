@@ -21,6 +21,17 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
+### Breaking
+
+- **Default *N. benthamiana* GC reference band changed (55-65% → 40-47%)** —
+  any caller relying on the previous default GC target/band (library calls
+  without an explicit `target_gc`/`target_gc_min`/`target_gc_max`, or REST/CLI
+  calls without explicit `gc_min`/`gc_max`) will now see different output GC%
+  for *N. benthamiana*. Pass explicit GC constraints to preserve the old
+  behavior. *N. tabacum* (BY-2) is unaffected (its 55-65% default is
+  unchanged). See `docs/validation.md`'s Codon Reference Contract section for
+  the full v1/v2 comparison.
+
 ### Changed
 
 - **Codon-reference computational scoring calibration update (*N. benthamiana*)**
