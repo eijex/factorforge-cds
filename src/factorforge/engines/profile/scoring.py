@@ -139,24 +139,34 @@ def normalize_mfe(mfe: float, seq_length: int) -> float:
     """
     Normalize MFE to 0-1 range where 1 = no structure (favorable).
 
-    Uses empirical scaling: MFE per nucleotide typically ranges from
-    -0.5 to 0.0 kcal/mol/nt for mRNA coding sequences.
+    Clamp range calibrated empirically in analysis 011
+    (eijex-workspace/_analysis/2026-06-26/011-mfe-clamp-calibration):
+    measured MFE/nt across 135 FactorForge outputs (N. benthamiana +
+    BY-2 hosts, 5 profiles) ranged -0.4064 to -0.1338 (combined 5th/95th
+    percentile -0.3839/-0.1760). The range below widens that empirical
+    percentile by a margin on both sides to avoid saturating ~10% of
+    future sequences at the score floor/ceiling.
 
     Args:
         mfe: Minimum free energy in kcal/mol.
         seq_length: Sequence length in nucleotides.
 
     Returns:
-        Normalized MFE score (0-1, higher = less structured = better for translation).
+        Normalized MFE score (0-1) under this computational normalization,
+        where a higher value represents a less negative whole-CDS MFE/nt.
+        This is a Tier-0 computational heuristic only (see
+        eijex-validationHub/docs/CLAIM_EVIDENCE_BENCHMARK_MODEL.md §4) — no
+        biological interpretation (translation efficiency, mRNA stability,
+        or expression outcome) is implied or validated.
     """
     if seq_length == 0:
         return 0.5
 
     mfe_per_nt = mfe / seq_length
-    # Clamp to expected range [-0.5, 0.0]
-    clamped = max(-0.5, min(0.0, mfe_per_nt))
-    # Map to [0, 1] where 0.0 kcal/mol/nt → 1.0 and -0.5 → 0.0
-    return 1.0 + (clamped / 0.5)
+    # Clamp to empirically calibrated range [-0.40, -0.15] (analysis 011)
+    clamped = max(-0.40, min(-0.15, mfe_per_nt))
+    # Map to [0, 1] where -0.15 kcal/mol/nt → 1.0 and -0.40 → 0.0
+    return (clamped + 0.40) / 0.25
 
 
 def gc_band_score(
