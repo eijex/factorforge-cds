@@ -19,6 +19,24 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
+## [Unreleased]
+
+### Changed
+
+- Aligned the public-safe wet-lab feedback intake surface with the actual
+  GitHub issue template: `docs/feedback-inbox.md` and `docs/validation.md`
+  field lists now match `.github/ISSUE_TEMPLATE/wet_lab_result.yml` exactly,
+  removing references to fields that were never collected
+  (`harvest_timepoint`, `institution_disclosure`,
+  `expression_system_assay_type`, approximate yield range). No change to the
+  public-safe disclosure warnings or confirmation checkboxes.
+- Disabled blank GitHub issues (`blank_issues_enabled: false`) to reduce the
+  chance of sensitive wet-lab/construct details landing in an untemplated
+  public issue; structured templates (bug/feature/idea/wet-lab) already
+  cover the general cases, and the email contact link remains available.
+- Added a default issue title and the `user-feedback` label to
+  `wet_lab_result.yml`.
+
 ## [3.2.5] — 2026-06-25
 
 ### Fixed
