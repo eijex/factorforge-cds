@@ -192,7 +192,8 @@ class OptimizationPipeline:
             cai = translator.calculate_cai(optimized_dna)
             gc = translator.calculate_gc_content(optimized_dna)
             score = calculate_composite_score(
-                cai=cai, gc=gc, sequence=optimized_dna, profile=effective_profile
+                cai=cai, gc=gc, sequence=optimized_dna, profile=effective_profile,
+                host=effective_host,
             )
             candidate_metrics = {"cai": cai, "gc": gc, "score": score}
         else:
@@ -244,6 +245,7 @@ class OptimizationPipeline:
                     gc=candidate_metrics["gc"],
                     sequence=optimized_dna,
                     profile=effective_profile,
+                    host=effective_host,
                 )
                 logger.info(
                     f"Dinucleotide reduction [{dinu_fix['mode']}]: "

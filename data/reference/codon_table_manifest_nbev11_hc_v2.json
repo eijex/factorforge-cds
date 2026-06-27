@@ -1,0 +1,27 @@
+{
+  "codon_table_id": "nbenthamiana_nbev11_hc_v2",
+  "species": "Nicotiana benthamiana",
+  "ncbi_taxid": 4100,
+  "file": "src/factorforge/data/profiles/nbev11_cds_hc_derived_codons.json",
+  "sha256": "686f12f2881b00a45246670e6c73e10d2254854577c5323ceb19a9ee58ee87dd",
+  "source_label": "NbeV1.1 LAB-strain genome, high-confidence CDS subset (Kurotani et al. 2023, Plant and Cell Physiology 64(2):248, PMC9977260; transcripts_h via nbenthamiana.jp/NbenBase)",
+  "source_status": "verified",
+  "build_path_status": "complete",
+  "authoritative_build_script_available": true,
+  "isoform_policy": "longest_isoform_per_gene_locus (scripts/build_codon_profile.py, verified in Job 168 STEP 1 / _analysis/025 STEP 1 — identical policy applied to nbev11_cds_all and qld183_v103)",
+  "known_limitations": [
+    "Source genome strain provenance is described by the original authors as \"might be one of the distributed laboratory accessions\" — not a 100% confirmed exact match to any single wet-lab partner's specific LAB strain isolate. Currently the closest identified public proxy for the intended LAB-strain context (see _analysis/025).",
+    "qld183_v103_derived (Ranawaka et al. 2023, Nature Plants 9(9):1558-1571) remains a valid genome-derived comparison/sensitivity-analysis reference but was withdrawn as the canonical migration candidate due to wild-accession (QLD183) vs LAB-strain mismatch.",
+    "nbev11_cds_all_derived (same source genome, unfiltered gene set) is empirically near-identical to this high-confidence subset (overall GC 43.11% vs 42.76%, <0.4pt difference) — this asset was selected over _all on theoretical annotation-quality grounds, not because of a measured material difference."
+  ],
+  "not_authoritative_build_scripts": [
+    {
+      "path": "archive/v3-ml-prototype/scripts/1_data_preparation/build_codon_table.py",
+      "reason": "Expression-weighted ML prototype script; requires expression input (quant.sf/TPM) and produces CSV output, not the current production JSON format. Not used for this asset."
+    }
+  ],
+  "claim_boundary": "This codon table is a configured in-silico FactorForge reference for codon-usage scoring and optimization, genome-derived from a high-confidence N. benthamiana gene model subset. It is not wet-lab validation, yield prediction, or expression-success evidence. AT-rich native composition is not equivalent to expression-superior composition.",
+  "asset_type": "official_packaged",
+  "terminal_stop_policy": "excluded_from_frequency_model",
+  "promotion_note": "Job 168 / v3.3.0 (_analysis/025): promoted experimental_candidate -> official_packaged on 2026-06-27 after STEP 4 passed in full — production-path consistency check (metrics/reverse_translator/rule_engine/domesticator/CLI/Python API/REST), host-isolation verification (BY-2 confirmed independent of this band), benchmark provenance matrix (no-flag/explicit-legacy/explicit-custom, all 3 scenarios consistent), registry<->manifest<->active_codon_reference.json sha256 synchronization tests, full pytest suite (0 in-scope failures; 4 pre-existing baseline-reproduced exclusions tracked separately in eijex-workspace Fix job 170-fix, unrelated to this asset), and a public-surface audit pass (including a rule enhancement to catch stale GC-band claims). Replaces nbenthamiana_legacy_kazusa_sgn_v101 (now legacy_packaged) as the production default. Limitations carried forward unchanged: not a wet-lab validated expression optimum; exact source LAB-strain accession identity not 100% confirmed (see known_limitations); intended for LAB-strain-oriented N. benthamiana design, not a universal N. benthamiana optimum."
+}

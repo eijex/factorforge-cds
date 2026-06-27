@@ -12,15 +12,42 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 # GC band for N. benthamiana codon-optimized sequences.
-# Benchmark (internal, n=49): balanced profile output average GC% = 60.1%
-# (range 55-71%). The genome-wide average (~42%) reflects all genes, not the
-# high-expression codon table which exhibits 3rd-position GC bias.
-# These constants define the acceptable band — sequences within [GC_OPT_MIN, GC_OPT_MAX]
-# receive full GC score; outside the band the score decays linearly.
-GC_OPT_MIN = 55.0
-GC_OPT_MAX = 65.0
-GC_OPT_MID = 60.0  # kept for gc_target point-scoring and viral_delivery centering
+# Native genome-composition anchor (_analysis/025 STEP 2: 004 endogenous CDS
+# n=10 measured range 40-47%; cross-checked against nbev11_cds_hc/all and
+# qld183_v103 derived-asset GC ~42.8-43.1% and external ground truth ~44%).
+# NOT an empirically validated expression optimum — this is a composition
+# anchor, not a target to maximize toward. Sequences within [GC_OPT_MIN,
+# GC_OPT_MAX] receive full GC score; outside the band the score decays linearly.
+GC_OPT_MIN = 40.0
+GC_OPT_MAX = 47.0
+GC_OPT_MID = 43.5  # kept for gc_target point-scoring and viral_delivery centering
 GC_DECAY_WIDTH = 20.0  # percentage points outside band before score reaches 0.0
+
+# Job 168 / v3.3.0 (_analysis/025) scoped the genome-composition re-derivation
+# to N. benthamiana only. Other hosts (e.g. ntabacum/BY-2) keep the pre-v3.3.0
+# global default (55-65%, internal benchmark n=49 avg GC=60.1%) until they get
+# their own host-specific genome-composition analysis — they must NOT silently
+# inherit GC_OPT_MIN/MAX, which is an N.-benthamiana-specific anchor.
+GC_RANGE_DEFAULT: tuple[float, float] = (55.0, 65.0)
+GC_RANGES_BY_HOST: dict[str, tuple[float, float]] = {
+    "nbenthamiana": (GC_OPT_MIN, GC_OPT_MAX),
+}
+
+
+def resolve_host_gc_range(host: str | None) -> tuple[float, float]:
+    """Resolve the (gc_min, gc_max) composition band for a host.
+
+    nbenthamiana uses the _analysis/025 native genome-composition anchor.
+    Any other host (including unknown ones) keeps the pre-v3.3.0 global
+    default band until it gets its own host-specific analysis.
+    """
+    return GC_RANGES_BY_HOST.get(host or "nbenthamiana", GC_RANGE_DEFAULT)
+
+
+def resolve_host_gc_mid(host: str | None) -> float:
+    """Resolve the GC band midpoint for a host (see resolve_host_gc_range)."""
+    gc_min, gc_max = resolve_host_gc_range(host)
+    return (gc_min + gc_max) / 2
 
 # ViennaRNA availability cache
 _vienna_available: bool | None = None
@@ -225,6 +252,7 @@ def calculate_composite_score(
     sequence: str | None = None,
     config: ScoringConfig | None = None,
     profile: str | None = None,
+    host: str | None = None,
     **kwargs: Any,
 ) -> float:
     """Calculate multidimensional composite score.
@@ -270,7 +298,15 @@ def calculate_composite_score(
         tgt = float(kwargs["target_gc"])
         gc_score = gc_band_score(gc, tgt - 5.0, tgt + 5.0, config.gc_decay_width)
     else:
-        gc_score = gc_band_score(gc, config.gc_min, config.gc_max, config.gc_decay_width)
+        gc_min, gc_max = config.gc_min, config.gc_max
+        # Profiles that haven't customized the band (still on the
+        # GC_OPT_MIN/MAX default) follow the active host's composition band.
+        # Profiles with an explicit band override (e.g. viral_delivery) keep
+        # it regardless of host — that override is profile-specific, not a
+        # host default.
+        if (gc_min, gc_max) == (GC_OPT_MIN, GC_OPT_MAX):
+            gc_min, gc_max = resolve_host_gc_range(host)
+        gc_score = gc_band_score(gc, gc_min, gc_max, config.gc_decay_width)
 
     # Component 3: MFE (optional)
     mfe_score = 0.5  # neutral default

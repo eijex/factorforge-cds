@@ -46,11 +46,27 @@ class TestCodonTableLoading:
         assert len(translator.aa_to_codons["M"]) == 1
         assert translator.aa_to_codons["M"][0][0] == "ATG"
 
-    def test_codon_frequencies_sum_to_one(self, translator):
-        """Test that codon frequencies sum to ~1.0 for each AA"""
+    def test_codon_frequencies_sum_to_one_for_sense_codons(self, translator):
+        """Sense amino-acid families: synonymous codon frequencies sum to ~1.0.
+
+        Stop family (*) is excluded — genome-derived tables built via
+        scripts/build_codon_profile.py trim the terminal stop codon before
+        counting, so '*' legitimately has zero frequency mass (Job 168 /
+        v3.3.0, _analysis/025; terminal_stop_policy: excluded_from_frequency_model
+        in the codon-table manifest). The stop codon is never reverse-translated
+        as part of CDS body generation, so this has no functional effect.
+        """
         for aa, codons in translator.aa_to_codons.items():
+            if aa == "*":
+                continue
             total_freq = sum(freq for _, freq in codons)
             assert 0.99 <= total_freq <= 1.01, f"AA {aa} frequencies sum to {total_freq}"
+
+    def test_stop_codon_frequencies_excluded_from_frequency_model(self, translator):
+        """Stop family frequencies are all 0.0 — excluded by design, not a data bug."""
+        stop_codons = translator.aa_to_codons.get("*", [])
+        assert stop_codons, "stop codon entry must still be present in aa_to_codons"
+        assert all(freq == 0.0 for _, freq in stop_codons)
 
 
 class TestCAICalculation:
@@ -182,17 +198,25 @@ class TestGCTargetProfile:
         assert 45.0 <= gc <= 55.0
 
     def test_gc_target_default_uses_host_midpoint(self, translator, sample_protein):
-        """Without explicit target_gc, gc_target defaults to host midpoint (GC_OPT_MID=60),
-        NOT the legacy 42.5%."""
-        from factorforge.engines.profile.scoring import GC_OPT_MID
+        """Without explicit target_gc, gc_target defaults to the active host's
+        composition midpoint (resolve_host_gc_mid(self.host)).
+
+        Job 168 / v3.3.0 (_analysis/025) corrected this midpoint for
+        nbenthamiana from a circularly-derived 60% (calibrated from the
+        legacy engine's own GC-rich output, not from genome biology) to the
+        native genome-composition anchor GC_OPT_MID=43.5%. This test now
+        asserts the corrected, host-resolved value rather than a hardcoded
+        constant, so it tracks whichever value is currently configured
+        instead of re-encoding either the old or the new number by hand.
+        """
+        from factorforge.engines.profile.scoring import resolve_host_gc_mid
 
         dna = translator.reverse_translate(
             sample_protein, profile=OptimizationProfile.GC_TARGET
         )
         gc = translator.calculate_gc_content(dna)
-        # Default should drive GC toward the host midpoint (60%), well above legacy 42.5%
-        assert abs(gc - GC_OPT_MID) <= 10.0
-        assert gc > 50.0  # explicitly not the old 42.5% behavior
+        expected_mid = resolve_host_gc_mid(translator.host)
+        assert abs(gc - expected_mid) <= 10.0
 
     def test_gc_target_explicit_low_still_supported(self, translator, sample_protein):
         """Users wanting low GC can still request it explicitly."""

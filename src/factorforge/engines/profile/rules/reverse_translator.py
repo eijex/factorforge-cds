@@ -15,12 +15,16 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, cast
 
-from factorforge.engines.profile.scoring import GC_OPT_MID, calculate_composite_score
+from factorforge.engines.profile.scoring import (
+    calculate_composite_score,
+    resolve_host_gc_range,
+)
 from factorforge.engines.profile.utils import (
     build_aa_to_codons_map,
     calculate_gc,
     get_data_path,
     load_golden_set,
+    resolve_host_codon_table_path,
 )
 from factorforge.utils.exceptions import EmptyCandidateError
 
@@ -66,7 +70,7 @@ class ReverseTranslator:
         if codon_table_path is None:
             # Use centralized data path management
             data_dir = get_data_path()
-            codon_table_path = data_dir / f"{host}_codons.json"
+            codon_table_path = resolve_host_codon_table_path(host, data_dir)
 
         self.codon_table: dict[str, Any] = self._load_codon_table(codon_table_path)
         self.aa_to_codons: dict[str, list[tuple[str, float]]] = self._build_aa_to_codons_map()
@@ -370,10 +374,15 @@ class ReverseTranslator:
         Balanced profile: CAI first, GC balanced
 
         - Preferred codon ratio: 70%
-        - Target GC: 55-65% (internal benchmark: avg output 60.1%)
+        - Target GC: host composition band (nbenthamiana: 40-47%, native
+          genome-composition anchor; see _analysis/025 STEP 2 and
+          engines/profile/scoring.py GC_OPT_MIN/MAX. Not an empirically
+          validated expression optimum. Other hosts: resolve_host_gc_range()
+          default, unchanged from pre-v3.3.0 behavior.)
         """
-        target_gc_min = kwargs.get("target_gc_min", 55)
-        target_gc_max = kwargs.get("target_gc_max", 65)
+        _host_gc_min, _host_gc_max = resolve_host_gc_range(self.host)
+        target_gc_min = kwargs.get("target_gc_min", _host_gc_min)
+        target_gc_max = kwargs.get("target_gc_max", _host_gc_max)
         preferred_ratio = kwargs.get("preferred_ratio", 0.7)
         max_attempts = kwargs.get("max_gc_attempts", 10)
         if max_attempts < 1:
@@ -443,19 +452,19 @@ class ReverseTranslator:
         """GC-Target profile: drive global GC toward a configurable target.
 
         Targets the caller-supplied ``target_gc`` if provided, otherwise the
-        host-profile GC midpoint (GC_OPT_MID = 60% for N. benthamiana). To target
-        a lower GC (e.g. for specific vector requirements), pass target_gc explicitly.
+        active host's composition midpoint (resolve_host_gc_range(self.host);
+        43.5% for nbenthamiana since v3.3.0 / _analysis/025, 60.0% for other
+        hosts pending their own host-specific analysis). To target a different
+        GC (e.g. for specific vector requirements), pass target_gc explicitly.
 
         - GC constraint first
         - CAI may be sacrificed
         - Balance local window GC (50 bp)
-
-        TODO: GC_OPT_MID is currently a single N. benthamiana-calibrated constant.
-        When per-host GC profiles are added, source the default from the active host.
         """
         target_gc = kwargs.get("target_gc")
         if target_gc is None:
-            target_gc = GC_OPT_MID
+            _host_gc_min, _host_gc_max = resolve_host_gc_range(self.host)
+            target_gc = (_host_gc_min + _host_gc_max) / 2
 
         dna_seq: list[str] = []
 
@@ -507,9 +516,14 @@ class ReverseTranslator:
             raise ValueError("max_attempts must be >= 1")
         last_seq = ""
 
+        balanced_kwargs = {
+            k: v for k, v in kwargs.items() if k in ("target_gc_min", "target_gc_max", "max_gc_attempts")
+        }
+        balanced_kwargs["preferred_ratio"] = 0.6
+
         for attempt in range(max_attempts):
             # Start with Balanced strategy
-            dna_seq = self._balanced_translate(protein_seq, preferred_ratio=0.6)
+            dna_seq = self._balanced_translate(protein_seq, **balanced_kwargs)
             last_seq = dna_seq
 
             # Check restriction sites (forward + reverse complement)
@@ -710,6 +724,7 @@ class ReverseTranslator:
                 gc=gc,
                 sequence=dna_seq,
                 profile=profile.value,
+                host=self.host,
                 **kwargs,
             )
             return {"sequence": dna_seq, "cai": cai, "gc": gc, "score": score}

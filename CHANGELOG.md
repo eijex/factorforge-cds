@@ -19,6 +19,31 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
+## [Unreleased]
+
+### Changed
+
+- **Codon-reference computational scoring calibration update (*N. benthamiana*)**
+  — the default codon usage table and GC reference band were recalibrated
+  from a legacy, circularly-derived reference to a native genome-composition
+  anchor: GC reference band 55-65% → 40-47% (`GC_OPT_MID` 60% → 43.5%). This
+  is a computational scoring/codon-choice change, not a wet-lab finding; it
+  does not assert anything about expression, yield, or any other biological
+  outcome. The legacy reference remains available
+  (`codon_reference_contract_version: v1`, see `docs/validation.md` for the
+  full v1/v2 contract table) and is what `examples/worked_example` continues
+  to reproduce, so existing pinned results remain reproducible.
+- *N. tabacum* (BY-2) keeps its pre-existing GC reference band (55-65%)
+  unchanged — it now resolves independently of the *N. benthamiana* default
+  instead of silently inheriting it, fixing a latent host-isolation gap.
+- `gc_target`'s default target (when `target_gc` is not explicitly passed)
+  now resolves to the active host's reference-band midpoint instead of a
+  single fixed constant, so it tracks the calibration above per host.
+- The web app's GC reference-band labels, charts, and default GC bucketing
+  (`web/index.html`, `web/js/app.js`) now read the active band from
+  `GET /api/optimize`'s `host_metadata` instead of a hardcoded value, so the
+  UI cannot drift out of sync with the production default again.
+
 ## [3.2.6] — 2026-06-27
 
 ### Changed

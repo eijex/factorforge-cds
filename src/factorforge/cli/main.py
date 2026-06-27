@@ -164,8 +164,8 @@ def list_engines():
     type=click.Choice(["feasibility_best"], case_sensitive=False),
     help="DP objective",
 )
-@click.option("--gc-min", type=float, default=55.0, help="Minimum target GC percentage")
-@click.option("--gc-max", type=float, default=65.0, help="Maximum target GC percentage")
+@click.option("--gc-min", type=float, default=40.0, help="Minimum target GC percentage")
+@click.option("--gc-max", type=float, default=47.0, help="Maximum target GC percentage")
 @click.option("--template", "construct_template", help="Construct template name")
 @click.option("--output", "-o", help="Output file")
 @click.option("--format", "output_format", default="fasta", help="Output format (fasta, genbank)")

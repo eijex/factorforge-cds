@@ -98,7 +98,10 @@ class CodonUsageTable:
 
 
 def _default_codon_table_path() -> Path:
-    return get_data_path() / "nbenthamiana_codons.json"
+    # Job 168 / v3.3.0 (_analysis/025): production default switched from the
+    # legacy Kazusa/SGN-derived table to the NbeV1.1 LAB-strain high-confidence
+    # derived table. See data/reference/active_codon_reference.json.
+    return get_data_path() / "profiles" / "nbev11_cds_hc_derived_codons.json"
 
 
 def load_codon_usage_table(path: Path | None = None) -> CodonUsageTable:

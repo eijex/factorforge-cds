@@ -122,12 +122,16 @@ class RuleBasedOptimizer(OptimizerEngine):
             cai = translator.calculate_cai(optimized_dna)
             gc = translator.calculate_gc_content(optimized_dna)
             score = calculate_composite_score(
-                cai=cai, gc=gc, sequence=optimized_dna, profile=profile_value
+                cai=cai, gc=gc, sequence=optimized_dna, profile=profile_value, host=host
             )
             candidates = [{"sequence": optimized_dna, "cai": cai, "gc": gc, "score": score}]
         else:
+            translate_kwargs = {
+                k: v for k, v in kwargs.items()
+                if k not in ("scan_mode", "scan_include", "scan_exclude")
+            }
             candidates = translator.generate_candidates(
-                processed_seq, profile=opt_profile, n=1, seed=seed
+                processed_seq, profile=opt_profile, n=1, seed=seed, **translate_kwargs
             )
             if not candidates:
                 raise ValueError("No candidates generated for input sequence.")

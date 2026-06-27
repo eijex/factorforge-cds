@@ -115,6 +115,23 @@ def calculate_dinucleotide_ratio(sequence: str, dinucleotide: str = "CG") -> flo
     return observed / expected
 
 
+# Job 168 / v3.3.0 (_analysis/025): host -> production-default codon table file
+# overrides. nbenthamiana moved from the legacy {host}_codons.json convention to
+# the NbeV1.1 LAB-strain derived table. See data/reference/active_codon_reference.json.
+# The legacy file itself (nbenthamiana_codons.json) is left untouched on disk for
+# historical benchmark replay (benchmarks/run_benchmark.py --codon-table-path).
+_HOST_CODON_TABLE_OVERRIDES: dict[str, str] = {
+    "nbenthamiana": "profiles/nbev11_cds_hc_derived_codons.json",
+}
+
+
+def resolve_host_codon_table_path(host: str, codon_tables_dir: Path) -> Path:
+    """Resolve the production-default codon table file path for a host."""
+    override = _HOST_CODON_TABLE_OVERRIDES.get(host)
+    filename = override or f"{host}_codons.json"
+    return codon_tables_dir / filename
+
+
 def load_codon_table(organism: str, codon_tables_dir: Path) -> dict[str, Any]:
     """Load codon usage table for organism.
 
@@ -128,8 +145,10 @@ def load_codon_table(organism: str, codon_tables_dir: Path) -> dict[str, Any]:
     Raises:
         FileNotFoundError: If codon table file not found.
     """
-    filename = organism if organism.endswith(".json") else f"{organism}_codons.json"
-    codon_table_path = codon_tables_dir / filename
+    if organism.endswith(".json"):
+        codon_table_path = codon_tables_dir / organism
+    else:
+        codon_table_path = resolve_host_codon_table_path(organism, codon_tables_dir)
 
     with open(codon_table_path, "r", encoding="utf-8") as handle:
         return cast(dict[str, Any], json.load(handle))

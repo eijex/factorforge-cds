@@ -358,10 +358,12 @@ class RuleEngine:
 
         This is a LOCAL synthesis/extreme-window guard (default 25-75% over a
         50 bp window), NOT the global GC target. Global GC is governed separately
-        by the scoring band (GC_OPT_MIN/MAX, ~55-65%) and the API/DP gc_min/gc_max
-        constraints. The wide 25-75% band intentionally flags only synthesis-hostile
-        local windows; narrowing it toward the global optimum would raise false
-        positives against the engine's own output distribution (internal benchmark: 55-71%).
+        by the scoring band (GC_OPT_MIN/MAX, native genome-composition anchor
+        ~40-47%, see _analysis/025 STEP 2) and the API/DP gc_min/gc_max
+        constraints. The wide 25-75% local band is an independent synthesis/
+        hairpin-risk guard (registry `gc_extreme_local_window`), not derived from
+        or coupled to the global GC target — narrowing it is a separate decision
+        from the global band retarget and is out of scope here.
 
         Args:
             seq: DNA sequence

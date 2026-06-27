@@ -2,6 +2,13 @@
 
 This tutorial walks through a complete synonymous CDS design workflow using Green Fluorescent Protein (GFP) as an example target, showing how to go from an amino acid sequence to a *Nicotiana benthamiana*-oriented CDS candidate.
 
+> **Historical v1 example output (pre-v3.3.0).** The CAI/GC%/target-range values shown
+> below were captured under the legacy codon reference and its 55-65% GC reference
+> band. Re-running the commands today uses the current default (NbeV1.1 LAB-strain
+> codon reference, 40-47% GC reference band per `_analysis/025`) and will produce
+> different metrics. The walkthrough mechanics (commands, profile comparison,
+> Python API) are unaffected.
+
 ## Prerequisites
 
 ```bash
@@ -92,7 +99,7 @@ assembly_friendly   0.779   57.18    0.905
 |---------|----------|
 | `balanced` | General *N. benthamiana* CDS design review; good CAI with GC% in target range |
 | `high_cai` | CAI-focused comparison; note GC% may fall outside 55–65% range |
-| `gc_target` | When GC% must hit a specific value (defaults to the host midpoint of 60%; pass `--target-gc` for other values, e.g. specific vector requirements) |
+| `gc_target` | When GC% must hit a specific value (defaults to the host midpoint, currently 43.5% for *N. benthamiana*; pass `--target-gc` for other values, e.g. specific vector requirements) |
 | `assembly_friendly` | MoClo / Golden Gate workflows; avoids problematic restriction sites |
 
 For most *N. benthamiana* sequence-design tasks, `balanced` is the recommended starting profile.

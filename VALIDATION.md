@@ -14,7 +14,7 @@ This file tracks manually reviewed, non-confidential wet-lab feedback summaries.
 |-------|---------|-------|
 | Internal stop codons | Yes | Hard fail |
 | Amino acid identity | Yes | Hard fail |
-| GC% range | Yes | Host-dependent; default *N. benthamiana*: 55-65% |
+| GC% range | Yes | Host-dependent; default *N. benthamiana*: 40-47% (native genome-composition reference band, v3.3.0+, not a wet-lab validated expression optimum). *N. tabacum* (BY-2): 55-65% (unchanged). |
 | Forbidden restriction sites | Yes | BsaI, BsmBI, BpiI (Golden Gate) |
 | Invalid codons | Yes | Hard fail |
 | Protein folding | No | Requires wet-lab validation |

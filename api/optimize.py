@@ -28,6 +28,7 @@ try:
     from factorforge.engines.profile.rules.domesticator import Domesticator
     from factorforge.engines.profile.rules.rule_engine import RuleEngine
     from factorforge.engines.profile.utils import get_data_path, load_codon_table
+    from factorforge.engines.profile.scoring import resolve_host_gc_range
     from factorforge.analysis.metrics import load_codon_usage_table
     from factorforge.analysis.feasibility import analyze_feasibility
     from factorforge.analysis.metrics import (
@@ -101,6 +102,20 @@ HOST_METADATA = {
 }
 DEFAULT_GC_MIN = 55.0
 DEFAULT_GC_MAX = 65.0
+
+
+def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[str, float]:
+    """Host-aware default gc_min/gc_max (Job 168 / v3.3.0, _analysis/025).
+
+    nbenthamiana defaults to the native genome-composition band (40-47%);
+    other hosts (by2/ntabacum) keep the pre-v3.3.0 global default
+    (DEFAULT_GC_MIN/MAX, 55-65%) until they get their own host-specific
+    composition analysis.
+    """
+    if FACTORFORGE_AVAILABLE:
+        gc_min, gc_max = resolve_host_gc_range(internal_host)
+        return {"gc_min": gc_min, "gc_max": gc_max}
+    return {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX}
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
     "product": "3.2.6",
@@ -211,7 +226,7 @@ class handler(BaseHTTPRequestHandler):
                 }
 
             return_candidates = bool(data.get("return_candidates", True))
-            constraints = self.parse_constraints(data.get("constraints", {}))
+            constraints = self.parse_constraints(data.get("constraints", {}), host=internal_host)
             use_template = data.get("use_template", False)
             kozak = data.get("kozak", False)
             dinuc = data.get("dinuc", False)
@@ -282,6 +297,13 @@ class handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         """Handle GET requests (health check)"""
+        # host_metadata is the single source of truth for web/js/app.js GC
+        # band labels/thresholds (Job 168 / v3.3.0) — the static UI must not
+        # hardcode 55-65 or 40-47 anywhere, since each host's band can differ.
+        host_metadata_with_gc = {
+            public_host: {**meta, "gc_range": _default_gc_constraints(HOST_MAP[public_host])}
+            for public_host, meta in HOST_METADATA.items()
+        }
         health_info = {
             "status": "healthy",
             "service": "FactorForge API",
@@ -295,7 +317,7 @@ class handler(BaseHTTPRequestHandler):
             },
             "supported_profiles": VALID_PROFILES,
             "supported_hosts": VALID_HOSTS,
-            "host_metadata": HOST_METADATA,
+            "host_metadata": host_metadata_with_gc,
             "supported_objectives": VALID_OBJECTIVES,
             "mock_enabled": ENABLE_MOCK,
             "engine_versions": ENGINE_VERSIONS,
@@ -320,12 +342,13 @@ class handler(BaseHTTPRequestHandler):
         self.send_cors_headers()
         self.end_headers()
 
-    def parse_constraints(self, constraints):
-        """Parse v1 constraints with defaults."""
+    def parse_constraints(self, constraints, host=DEFAULT_HOST_PROFILE):
+        """Parse v1 constraints with host-aware defaults."""
         constraints = constraints or {}
+        default_gc = _default_gc_constraints(host)
         try:
-            gc_min = float(constraints.get("gc_min", DEFAULT_GC_MIN))
-            gc_max = float(constraints.get("gc_max", DEFAULT_GC_MAX))
+            gc_min = float(constraints.get("gc_min", default_gc["gc_min"]))
+            gc_max = float(constraints.get("gc_max", default_gc["gc_max"]))
         except (TypeError, ValueError):
             raise ValueError("constraints.gc_min and constraints.gc_max must be numeric")
         return {"gc_min": gc_min, "gc_max": gc_max}
@@ -627,7 +650,7 @@ class handler(BaseHTTPRequestHandler):
     ):
         """Run actual FactorForge v3.x profile optimization."""
         try:
-            constraints = constraints or {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX}
+            constraints = constraints or _default_gc_constraints(host)
             if objective == DEFAULT_OBJECTIVE:
                 return self.optimize_feasibility_best(
                     sequence=sequence,
@@ -1134,7 +1157,7 @@ class handler(BaseHTTPRequestHandler):
                 "recommendation_reason",
                 "Custom restriction-site domesticated candidate",
             ),
-            constraints=constraints or {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX},
+            constraints=constraints or _default_gc_constraints(host),
             host=host,
         )
         candidate.update(updated)
@@ -1168,7 +1191,7 @@ class handler(BaseHTTPRequestHandler):
         type_iis_sites = Domesticator().scan_restriction_sites(dna_sequence, "golden_gate")
         assembly_pass = len(type_iis_sites) == 0
         gc_percent = calculate_gc(dna_sequence)
-        active_constraints = constraints or {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX}
+        active_constraints = constraints or _default_gc_constraints(host)
         validation_report = build_validation_report(
             dna_sequence,
             gc_percent=gc_percent,
@@ -1256,7 +1279,7 @@ class handler(BaseHTTPRequestHandler):
     ):
         """Generate mock result for testing (when FactorForge is not available)"""
         logger.warning("Generating mock result - FactorForge engine not available")
-        constraints = constraints or {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX}
+        constraints = constraints or _default_gc_constraints(host_profile)
 
         # Determine if input is DNA or Protein
         is_protein = not re.match(r"^[ACGT]+$", sequence)

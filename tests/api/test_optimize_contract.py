@@ -37,7 +37,22 @@ def _post_optimize(payload: dict) -> tuple[int, dict]:
 def test_parse_constraints_defaults() -> None:
     h = _handler()
 
-    assert h.parse_constraints({}) == {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX}
+    # No host ⇒ defaults to nbenthamiana, whose default band is the
+    # _analysis/025 composition anchor (Job 168 / v3.3.0), not the
+    # module-level DEFAULT_GC_MIN/MAX (which is now only the fallback for
+    # hosts without their own analysis, e.g. by2/ntabacum).
+    assert h.parse_constraints({}) == optimize_api._default_gc_constraints("nbenthamiana")
+
+
+def test_parse_constraints_defaults_for_non_nbenthamiana_host_unchanged() -> None:
+    h = _handler()
+
+    # by2/ntabacum has no host-specific analysis (Job 168 scope: nbenthamiana
+    # only) — it must keep the pre-v3.3.0 global default unchanged.
+    assert h.parse_constraints({}, host="ntabacum") == {
+        "gc_min": DEFAULT_GC_MIN,
+        "gc_max": DEFAULT_GC_MAX,
+    }
 
 
 def test_feasibility_best_response_includes_candidate_contract() -> None:
@@ -186,11 +201,24 @@ def test_design_package_aa_identity_uses_cds_validator_result() -> None:
 
 def test_design_package_codon_rarity_clusters_use_rule_scan() -> None:
     h = _handler()
+    optimized_sequence = "ATGCTACTACTA"
+
+    # Whether a run of CTA codons counts as "rare" depends on the active
+    # production codon-usage table's relative-adaptiveness weight for CTA
+    # (Job 168 / v3.3.0 migrated nbenthamiana's default — see
+    # data/reference/active_codon_reference.json). Derive the expected count
+    # from the live rule engine instead of hardcoding it, so this test keeps
+    # verifying that add_design_package_fields actually wires through to
+    # RuleEngine.scan_rare_codon_runs rather than re-encoding a stale
+    # rarity-classification assumption that drifts with the active table.
+    from factorforge.engines.profile.rules.rule_engine import RuleEngine
+
+    expected_clusters = len(RuleEngine().scan_rare_codon_runs(optimized_sequence))
 
     result = h.add_design_package_fields(
         response={
             "success": True,
-            "optimized_sequence": "ATGCTACTACTA",
+            "optimized_sequence": optimized_sequence,
             "metrics": {"cai": 0.8, "gc_percent": 16.7},
             "validation": {"polya": "PASS", "moclo": "UNCHECKED", "gc": "PASS"},
         },
@@ -203,7 +231,7 @@ def test_design_package_codon_rarity_clusters_use_rule_scan() -> None:
         constraints={"gc_min": 40.0, "gc_max": 55.0},
     )
 
-    assert result["constraint_report"]["codon_rarity_clusters"] == 1
+    assert result["constraint_report"]["codon_rarity_clusters"] == expected_clusters
 
 
 def test_legacy_gc_validation_uses_request_constraints() -> None:
@@ -488,3 +516,72 @@ def test_invalid_host_error_contract_unchanged() -> None:
     assert result["success"] is False
     assert isinstance(result["error"], str)
     assert "Invalid host" in result["error"]
+
+
+# ── host_metadata.gc_range web sync (Job 168 / v3.3.0, STEP 4.1) ─────────────
+# web/js/app.js must never hardcode a GC reference band — it reads
+# host_metadata[host].gc_range from this GET response at runtime. These tests
+# guard the response itself, plus the offline-only fallback literal in app.js,
+# against drifting away from resolve_host_gc_range (the single source of truth).
+
+
+def _get_optimize() -> dict:
+    request_handler = _handler()
+    request_handler.headers = {}
+    request_handler.wfile = BytesIO()
+    responses: list[int] = []
+    headers: list[tuple[str, str]] = []
+    request_handler.send_response = responses.append
+    request_handler.send_header = lambda key, value: headers.append((key, value))
+    request_handler.end_headers = lambda: None
+
+    handler.do_GET(request_handler)
+
+    request_handler.wfile.seek(0)
+    return json.loads(request_handler.wfile.read().decode("utf-8"))
+
+
+def test_host_metadata_gc_range_matches_resolve_host_gc_range() -> None:
+    from factorforge.engines.profile.scoring import resolve_host_gc_range
+
+    data = _get_optimize()
+    nb_min, nb_max = resolve_host_gc_range("nbenthamiana")
+    by2_min, by2_max = resolve_host_gc_range("ntabacum")
+
+    assert data["host_metadata"]["nbenthamiana"]["gc_range"] == {
+        "gc_min": nb_min,
+        "gc_max": nb_max,
+    }
+    assert data["host_metadata"]["by2"]["gc_range"] == {"gc_min": by2_min, "gc_max": by2_max}
+
+
+def test_appjs_offline_gc_fallback_matches_resolve_host_gc_range() -> None:
+    """app.js's OFFLINE_GC_RANGES is a same-values offline/dev fallback only
+    (used when GET /api/optimize is unreachable) — it must mirror the live
+    resolver, not drift into its own competing source of truth."""
+    import re
+    from pathlib import Path
+
+    from factorforge.engines.profile.scoring import resolve_host_gc_range
+
+    app_js = (Path(__file__).resolve().parents[2] / "web" / "js" / "app.js").read_text(
+        encoding="utf-8"
+    )
+    match = re.search(
+        r"const OFFLINE_GC_RANGES = \{(.*?)\n\};", app_js, re.DOTALL
+    )
+    assert match is not None, "OFFLINE_GC_RANGES literal not found in web/js/app.js"
+    block = match.group(1)
+
+    for host_id, internal_host in (("nbenthamiana", "nbenthamiana"), ("by2", "ntabacum")):
+        host_match = re.search(
+            rf"{host_id}:\s*\{{\s*gc_min:\s*([\d.]+),\s*gc_max:\s*([\d.]+)",
+            block,
+        )
+        assert host_match is not None, f"OFFLINE_GC_RANGES.{host_id} not found"
+        js_min, js_max = float(host_match.group(1)), float(host_match.group(2))
+        py_min, py_max = resolve_host_gc_range(internal_host)
+        assert (js_min, js_max) == (py_min, py_max), (
+            f"OFFLINE_GC_RANGES.{host_id} ({js_min}, {js_max}) != "
+            f"resolve_host_gc_range({internal_host!r}) ({py_min}, {py_max})"
+        )
