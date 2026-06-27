@@ -45,7 +45,12 @@ class ScoringConfig:
     use_mfe: bool = True
 
     def __post_init__(self) -> None:
-        """Normalize weights to sum to 1.0."""
+        """Validate inputs, then normalize weights to sum to 1.0."""
+        for field_name in ("w_cai", "w_gc", "w_mfe", "w_dinuc", "w_syncodonlm"):
+            if getattr(self, field_name) < 0:
+                raise ValueError(f"{field_name} must be >= 0, got {getattr(self, field_name)}")
+        if self.gc_min > self.gc_max:
+            raise ValueError(f"gc_min ({self.gc_min}) must be <= gc_max ({self.gc_max})")
         self._normalize()
 
     def _normalize(self) -> None:
@@ -248,7 +253,12 @@ def calculate_composite_score(
         profile_name = (profile or "balanced").lower()
         config = PROFILE_SCORING_CONFIGS.get(profile_name)
         if config is None:
-            config = PROFILE_SCORING_CONFIGS["balanced"]
+            supported = ", ".join(sorted(PROFILE_SCORING_CONFIGS))
+            raise ValueError(
+                f"Unknown profile: {profile_name}. Supported profiles: {supported}"
+            )
+        if "target_gc" in kwargs and profile_name != "gc_target":
+            raise ValueError("target_gc is only valid for the gc_target profile")
 
     # Component 1: CAI (already 0-1)
     cai_score = max(0.0, min(1.0, cai))
