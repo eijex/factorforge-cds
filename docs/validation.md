@@ -86,12 +86,10 @@ Public-safe summaries may include:
 - Host organism.
 - Optimization profile.
 - Protein class.
-- Expression system / assay type.
-- Harvest timepoint.
+- Coarse assay category.
 - Replicate category.
 - Comparison result.
 - Expression result.
-- Approximate yield range.
 - Non-confidential notes only.
 
 Submission channels:
