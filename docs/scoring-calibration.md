@@ -41,8 +41,10 @@ def gc_band_score(
 
 The function returns a full score inside `[gc_min, gc_max]`. Outside the band,
 the score decays linearly to `0.0` over `decay_width` percentage points. For the
-current plant default, the accepted band is `55.0` to `65.0` GC with a
-`20.0`-point decay width.
+current *N. benthamiana* default (native genome-composition reference band,
+v3.3.0+), the accepted band is `40.0` to `47.0` GC with a `20.0`-point decay
+width. *N. tabacum* (BY-2) keeps the prior `55.0` to `65.0` band, resolved
+independently via `resolve_host_gc_range()`.
 
 ## Composite Score Weights
 
