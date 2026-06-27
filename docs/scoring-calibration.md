@@ -66,8 +66,7 @@ field to `benchmark_summary.json`, recording whether ViennaRNA bindings were
 available (and therefore could affect MFE-weighted candidate selection) during
 that run. This field was added going forward only — it cannot be
 retroactively populated for historical benchmark archives where ViennaRNA
-availability at run time was never recorded (see
-`eijex-workspace/_analysis/2026-06-26/011-mfe-clamp-calibration/`).
+availability at run time was never recorded.
 
 Future host-specific scoring configuration should live in host profile YAML.
 That migration should include snapshot tests so changes to CAI, GC, MFE, and
