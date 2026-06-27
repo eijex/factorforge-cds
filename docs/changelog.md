@@ -4,6 +4,12 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.2.6 — 2026-06-27
+
+### Changed
+- Aligned the public-safe wet-lab feedback intake surface with the actual GitHub issue template, removing fields that were never collected
+- Disabled blank GitHub issues to reduce the chance of sensitive wet-lab/construct details landing in an untemplated public issue
+
 ## v3.2.5 — 2026-06-25
 
 ### Fixed
