@@ -4,6 +4,17 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.2.7 — 2026-06-29
+
+### Changed
+- Recalibrated the MFE-score normalization clamp from `[-0.5, 0.0]` to `[-0.40, -0.15]` based on a measured MFE distribution (n=135) showing the wider clamp was range-compressing scoring discriminability
+
+### Fixed
+- `calculate_composite_score()` now raises on an unrecognized profile name instead of silently falling back to `balanced`; `ScoringConfig` rejects negative weights and `gc_min > gc_max` (library-direct callers only — no product-path behavior change)
+
+### Added
+- Benchmark runs now record whether ViennaRNA bindings were active, going forward
+
 ## v3.2.6 — 2026-06-27
 
 ### Changed
