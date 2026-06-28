@@ -25,6 +25,52 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
+## [Unreleased]
+
+### Breaking
+
+- **Default *N. benthamiana* GC reference band changed (55-65% → 40-47%)** —
+  any caller relying on the previous default GC target/band (library calls
+  without an explicit `target_gc`/`target_gc_min`/`target_gc_max`, or REST/CLI
+  calls without explicit `gc_min`/`gc_max`) will now see different output GC%
+  for *N. benthamiana*. Pass explicit GC constraints to preserve the old
+  behavior. *N. tabacum* (BY-2) is unaffected (its 55-65% default is
+  unchanged). See `docs/validation.md`'s Codon Reference Contract section for
+  the full v1/v2 comparison.
+
+### Changed
+
+- **Codon-reference computational scoring calibration update (*N. benthamiana*)**
+  — the default codon usage table and GC reference band were recalibrated
+  from a legacy, circularly-derived reference to a native genome-composition
+  anchor: GC reference band 55-65% → 40-47% (`GC_OPT_MID` 60% → 43.5%). This
+  is a computational scoring/codon-choice change, not a wet-lab finding; it
+  does not assert anything about expression, yield, or any other biological
+  outcome. The legacy reference remains available
+  (`codon_reference_contract_version: v1`, see `docs/validation.md` for the
+  full v1/v2 contract table) and is what `examples/worked_example` continues
+  to reproduce, so existing pinned results remain reproducible.
+- *N. tabacum* (BY-2) keeps its pre-existing GC reference band (55-65%)
+  unchanged — it now resolves independently of the *N. benthamiana* default
+  instead of silently inheriting it, fixing a latent host-isolation gap.
+- `gc_target`'s default target (when `target_gc` is not explicitly passed)
+  now resolves to the active host's reference-band midpoint instead of a
+  single fixed constant, so it tracks the calibration above per host.
+- The web app's GC reference-band labels, charts, and default GC bucketing
+  (`web/index.html`, `web/js/app.js`) now read the active band from
+  `GET /api/optimize`'s `host_metadata` instead of a hardcoded value, so the
+  UI cannot drift out of sync with the production default again.
+
+### Fixed
+
+- **Unbounded MFE computation on long sequences (algorithmic-complexity DoS)**
+  — `calculate_mfe()` had no input-length guard before invoking ViennaRNA's
+  `RNA.fold()` (O(n³) time), so a single request near the existing API length
+  limits could occupy a worker indefinitely. Sequences longer than 1000 nt now
+  skip global MFE folding (logged explicitly) and fall back to the existing
+  neutral-weight scoring path used when ViennaRNA is unavailable; no other
+  caller-visible behavior changes for sequences at or under the limit.
+
 ## [3.2.7] — 2026-06-29
 
 ### Changed
