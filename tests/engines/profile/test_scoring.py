@@ -381,11 +381,12 @@ class TestMFELengthGuard:
             "MFE_MAX_SEQUENCE_LENGTH" in record.message for record in caplog.records
         )
 
-    def test_compute_mfe_evidence_length_skip_is_not_mislabeled_as_failure(self):
+    def test_compute_mfe_evidence_length_skip_is_not_mislabeled_as_failure(self, monkeypatch):
         """170-fix follow-up (Opus review): a length-based skip must not be
         reported via the generic 'MFE computation failed' message — that
         wording implies a fold error, which would misdirect a caller
         debugging why MFE is missing for a long sequence."""
+        monkeypatch.setattr(scoring, "_check_vienna_available", lambda: True)
         seq = "A" * (MFE_MAX_SEQUENCE_LENGTH + 1)
         ev = compute_mfe_evidence(seq, profile="balanced")
         assert ev["mfe_used"] is False
