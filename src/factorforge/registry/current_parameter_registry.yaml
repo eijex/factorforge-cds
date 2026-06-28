@@ -1,6 +1,6 @@
 registry:
   name: factorforge_current_parameter_registry
-  version: "3.2.6"
+  version: "3.2.7"
   status: canonical
   owner: factorforge-cds
   last_reviewed: "2026-06-10"
