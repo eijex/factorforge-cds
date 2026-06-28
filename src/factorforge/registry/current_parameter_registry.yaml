@@ -162,6 +162,36 @@ parameters:
       provenance: "BY-2 host addition; experimental only — Nagata et al. (1992) BY-2 cell line."
       visibility: public
       permission: publish_allowed
+    sf9:
+      display_name: "Sf9 / S. frugiperda"
+      scientific_name: "Spodoptera frugiperda"
+      ncbi_taxonomy_id: 7108
+      ncbi_taxonomy_curie: "NCBITaxon:7108"
+      status: experimental
+      claim_level: experimental_setting
+      evidence_status: experimental
+      release_status: experimental
+      owner_job: "023"
+      source: "NCBI Taxonomy Browser NCBITaxon:7108; codon table is PLACEHOLDER — awaiting verified CDS dataset"
+      rationale: "Sf9 insect cell line (Lepidoptera); primary BEVS host. Codon table uses placeholder frequencies derived from Lepidoptera genome surveys."
+      provenance: "Issue #23 insect host addition; placeholder codon table until authoritative S. frugiperda CDS build is available."
+      visibility: public
+      permission: publish_allowed
+    tni:
+      display_name: "Tni / T. ni (High Five)"
+      scientific_name: "Trichoplusia ni"
+      ncbi_taxonomy_id: 7111
+      ncbi_taxonomy_curie: "NCBITaxon:7111"
+      status: experimental
+      claim_level: experimental_setting
+      evidence_status: experimental
+      release_status: experimental
+      owner_job: "023"
+      source: "NCBI Taxonomy Browser NCBITaxon:7111; codon table is PLACEHOLDER — awaiting verified CDS dataset (ref: Tnms42 genome GCF_003590095.1)"
+      rationale: "Tni High Five insect cell line (BTI-Tn5B1-4, Lepidoptera); widely used for secreted protein in BEVS. Codon table uses placeholder frequencies."
+      provenance: "Issue #23 insect host addition; placeholder codon table until authoritative T. ni CDS build is available."
+      visibility: public
+      permission: publish_allowed
 
 codon_reference:
   active:
