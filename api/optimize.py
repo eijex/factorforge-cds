@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.2.6
+Product Version: 3.2.7
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -118,9 +118,9 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
     return {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX}
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": "3.2.6",
-    "rule_engine": "3.2.6",
-    "dp_engine": "3.2.6",
+    "product": "3.2.7",
+    "rule_engine": "3.2.7",
+    "dp_engine": "3.2.7",
 }
 # Valid characters: ACGT (DNA) or standard 20 Amino Acids (Protein) + * (Stop)
 VALID_AA = "ACDEFGHIKLMNPQRSTVWY"

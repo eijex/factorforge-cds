@@ -1,6 +1,6 @@
 # FactorForge Benchmark
 
-FactorForge v3.2.6 provides a reproducible in-silico benchmark foundation for CDS design quality.
+FactorForge v3.2.7 provides a reproducible in-silico benchmark foundation for CDS design quality.
 
 ## What is tested
 - amino-acid identity preservation

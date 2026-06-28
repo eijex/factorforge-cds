@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initEventListeners();
     updateHostUI();
     renderHistory();
-    console.log('FactorForge v3.2.6 Engaged');
+    console.log('FactorForge v3.2.7 Engaged');
 });
 
 // Fetches supported_hosts/host_metadata from GET /api/optimize and renders the
@@ -1313,7 +1313,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.2.6';
+        const version = state.results.engine_versions?.product || '3.2.7';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }

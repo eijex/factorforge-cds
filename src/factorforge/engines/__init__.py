@@ -13,7 +13,7 @@ def register_builtin_engines() -> None:
         "profile",
         RuleBasedOptimizer,
         metadata={
-            "version": "3.2.6",
+            "version": "3.2.7",
             "engine_type": "profile_rule_based",
             "role": "stable_profile_engine",
             "stable": True,
