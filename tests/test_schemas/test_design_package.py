@@ -10,7 +10,7 @@ def minimal_payload() -> dict:
         "created_at": "2026-05-25T00:00:00Z",
         "cds_design": {
             "engine": "factorforge_cds",
-            "product_version": "3.2.7",
+            "product_version": "3.2.8",
             "host_profile": "nbenthamiana",
             "objective": "feasibility_best",
             "cai": 0.91,

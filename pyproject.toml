@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "factorforge-cds"
-version = "3.2.7"
+version = "3.2.8"
 description = "FactorForge - open-source CDS design and pre-synthesis sequence review engine by Eijex."
 readme = "README.md"
 license = "AGPL-3.0-only"

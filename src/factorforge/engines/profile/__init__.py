@@ -5,7 +5,7 @@ Production system (2026)
 Plant-specific rule-based optimization
 """
 
-__version__ = "3.2.7"
+__version__ = "3.2.8"
 
 from .optimizer import RuleBasedOptimizer
 from .pipeline import OptimizationPipeline
