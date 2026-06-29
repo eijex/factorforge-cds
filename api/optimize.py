@@ -107,10 +107,11 @@ DEFAULT_GC_MAX = 65.0
 def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[str, float]:
     """Host-aware default gc_min/gc_max (Job 168 / v3.3.0, _analysis/025).
 
-    nbenthamiana defaults to the native genome-composition band (40-47%);
-    other hosts (by2/ntabacum) keep the pre-v3.3.0 global default
-    (DEFAULT_GC_MIN/MAX, 55-65%) until they get their own host-specific
-    composition analysis.
+    Resolves per-host via resolve_host_gc_range(). nbenthamiana's native
+    genome-composition band (40-47%) was provisionally reverted to the
+    legacy global default (55-65%) on 2026-06-29 pending an MFE
+    re-sensitivity + 2x2 factorial recheck — see scoring.py's GC_OPT_MIN/MAX
+    comment. All hosts currently resolve to the same band as a result.
     """
     if FACTORFORGE_AVAILABLE:
         gc_min, gc_max = resolve_host_gc_range(internal_host)

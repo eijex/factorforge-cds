@@ -82,10 +82,14 @@ def test_run_example_deterministic():
 
 
 def test_run_example_v2_smoke_succeeds():
-    """run_example_v2_smoke.py (current production default) must exit 0.
+    """run_example_v2_smoke.py (tracks whatever the current production
+    default actually is) must exit 0 and report a provenance ID that matches
+    data/reference/active_codon_reference.json — not hardcoded to v2, since
+    the default was provisionally reverted to v1 on 2026-06-29 pending an MFE
+    re-sensitivity + 2x2 factorial recheck (Job 168 / v3.3.0, _analysis/025).
 
-    No frozen-output comparison — this only checks that the v2 path runs
-    end-to-end and reports correct provenance (Job 168 / v3.3.0, _analysis/025).
+    No frozen-output comparison — this only checks that the current-default
+    path runs end-to-end and reports correct provenance.
     """
     result = subprocess.run(
         [sys.executable, str(EXAMPLE_DIR / "run_example_v2_smoke.py")],
@@ -98,7 +102,8 @@ def test_run_example_v2_smoke_succeeds():
         f"stdout:{result.stdout}\nstderr:{result.stderr}"
     )
     assert "OK" in result.stdout
-    assert "nbenthamiana_nbev11_hc_v2" in result.stdout
+    active_ref = _load(ROOT / "data" / "reference" / "active_codon_reference.json")
+    assert active_ref["active_codon_table_id"] in result.stdout
 
 
 # ---------------------------------------------------------------------------

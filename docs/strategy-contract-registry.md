@@ -107,10 +107,10 @@ notes: Reference (default) host-aware strategy; the template the others are comp
 id: gc_target
 display_name: GC Target
 reference_class: host_table_plus_host_aware_constant
-reference_asset: "{host}_codons.json (codon choice) + resolve_host_gc_mid(host) (scoring.py, default target when target_gc unset; Job 168 / v3.3.0)"
+reference_asset: "{host}_codons.json (codon choice) + resolve_host_gc_mid(host) (scoring.py, default target when target_gc unset; v3.3.0)"
 code_location: "engines/profile/rules/reverse_translator.py::_gc_target_translate"
 host_aware: full
-host_aware_note: Codon selection and the default GC target are both host-aware as of Job 168 (v3.3.0) — the default resolves via resolve_host_gc_mid(self.host) instead of a single fixed constant (43.5% for N. benthamiana, 60.0% for by2/ntabacum pending host-specific composition analysis).
+host_aware_note: Codon selection and the default GC target are both host-aware as of v3.3.0 — the default resolves via resolve_host_gc_mid(self.host) instead of a single fixed constant. Currently 60.0% for every host (N. benthamiana's native-composition band, 40-47%/43.5%, was provisionally reverted on 2026-06-29 pending an MFE re-sensitivity + 2x2 factorial recheck — see scoring.py's GC_OPT_MIN/MAX comment), so all hosts coincide on the legacy band for now; the per-host resolution mechanism stays in place for when that recheck concludes.
 exposure:
   python_api_profile: supported
   python_api_dp: not_applicable

@@ -12,7 +12,7 @@ This table lists all 9 advisory sequence-risk scanners run by `RuleEngine.scan_a
 | Rule | Current status | Notes |
 |------|---------------|-------|
 | Homopolymer | Implemented | Two thresholds: expression-context review (>=6 nt) vs synthesis (>=8 nt) |
-| Local GC extremes | Implemented | 50-nt sliding window, 25-75% threshold (synthesis guard). Distinct from `GC_OPT_MID` (43.5% for *N. benthamiana*, v3.3.0+; a scoring target) and from the 60-nt/30-nt-step GC-window calculation in the archived `analysis/metrics.py` validation path, which is not part of the active default scan. |
+| Local GC extremes | Implemented | 50-nt sliding window, 25-75% threshold (synthesis guard). Distinct from `GC_OPT_MID` (60%, a scoring target) and from the 60-nt/30-nt-step GC-window calculation in the archived `analysis/metrics.py` validation path, which is not part of the active default scan. |
 | Rare codon run | Implemented | w < 0.3, min_run=3 default |
 | Restriction sites (assembly review) | Implemented | Configurable site list; halts the production design pipeline when unresolvable |
 | PolyA motifs | Implemented | Heuristic; false positive risk noted |

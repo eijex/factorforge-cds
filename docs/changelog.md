@@ -4,6 +4,11 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.2.8 — 2026-06-29
+
+### Reverted
+- Default *N. benthamiana* GC reference band / codon-reference table reverted to legacy (55-65% GC), undoing a default-codon-reference promotion that shipped in v3.2.7. The newer candidate reference remains available, not deleted, pending an MFE re-sensitivity + 2x2 factorial recheck
+
 ## v3.2.7 — 2026-06-29
 
 ### Changed
@@ -11,6 +16,7 @@ FactorForge v3.0+ is the current public release line.
 
 ### Fixed
 - `calculate_composite_score()` now raises on an unrecognized profile name instead of silently falling back to `balanced`; `ScoringConfig` rejects negative weights and `gc_min > gc_max` (library-direct callers only — no product-path behavior change)
+- Guarded `calculate_mfe()` against unbounded ViennaRNA `RNA.fold()` runtime on long sequences (algorithmic-complexity DoS); sequences over 1000nt now skip MFE folding instead of risking an indefinite worker hang (correction: this also shipped in v3.2.7 but was undocumented here at release time)
 
 ### Added
 - Benchmark runs now record whether ViennaRNA bindings were active, going forward

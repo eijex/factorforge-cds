@@ -103,21 +103,41 @@ def test_codon_reference_active_sync_with_active_reference_file():
     assert registry_active["sha256"] == hashlib.sha256(table_path.read_bytes()).hexdigest()
 
 
-def test_codon_reference_active_sync_with_v2_manifest():
+def test_codon_reference_active_sync_with_legacy_manifest():
     """registry's codon_reference.active block must match the schema-conformant
-    v2 manifest file's facts (asset_type, sha256, source_status)."""
+    legacy (v1) manifest file's facts (asset_type, sha256, source_status) — v1
+    is the production default again as of the v3.2.7 GC-band/codon-reference
+    revert, pending an MFE re-sensitivity + 2x2 factorial recheck of v2."""
     import json
     from pathlib import Path
 
     registry_active = _resolve("codon_reference.active")
     manifest = json.loads(
         (Path(__file__).resolve().parents[1] / "data" / "reference"
-         / "codon_table_manifest_nbev11_hc_v2.json").read_text(encoding="utf-8")
+         / "codon_table_manifest.json").read_text(encoding="utf-8")
     )
     assert registry_active["id"] == manifest["codon_table_id"]
     assert registry_active["sha256"] == manifest["sha256"]
     assert registry_active["asset_type"] == manifest["asset_type"]
     assert registry_active["source_status"] == manifest["source_status"]
+
+
+def test_codon_reference_candidate_sync_with_v2_manifest():
+    """registry's codon_reference.candidate block (the provisionally
+    un-promoted v2 asset) must stay in sync with its own manifest file even
+    while not active."""
+    import json
+    from pathlib import Path
+
+    registry_candidate = _resolve("codon_reference.candidate")
+    manifest = json.loads(
+        (Path(__file__).resolve().parents[1] / "data" / "reference"
+         / "codon_table_manifest_nbev11_hc_v2.json").read_text(encoding="utf-8")
+    )
+    assert registry_candidate["id"] == manifest["codon_table_id"]
+    assert registry_candidate["sha256"] == manifest["sha256"]
+    assert registry_candidate["asset_type"] == manifest["asset_type"]
+    assert registry_candidate["source_status"] == manifest["source_status"]
 
 
 def test_codon_reference_active_table_sha256_matches_production_default():

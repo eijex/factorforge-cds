@@ -27,7 +27,7 @@ status).
 
 | Check | Covered | Notes |
 |-------|---------|-------|
-| GC% range | Yes | Host-dependent; default *N. benthamiana*: 40-47% (native genome-composition reference band, v3.3.0+). *N. tabacum* (BY-2): 55-65% (unchanged, no host-specific composition analysis yet). This range is a genome-composition reference band, not a wet-lab validated expression optimum. A configured target metric, not a hard gate outside the benchmark scoring contract. |
+| GC% range | Yes | Host-dependent; default *N. benthamiana*: 55-65% (legacy engine-output-calibrated band, `v1`; see Codon Reference Contract below). *N. tabacum* (BY-2): 55-65% (unchanged). This range is a configured target metric, not a hard gate outside the benchmark scoring contract. |
 
 ### Codon Reference Contract (v1 / v2)
 
@@ -41,8 +41,8 @@ against.
 
 | Contract version | Codon reference asset | GC reference band (*N. benthamiana*) | Status |
 |---|---|---|---|
-| `v1` | `nbenthamiana_legacy_kazusa_sgn_v101` (legacy, circular-derived) | 55-65% | `legacy_packaged` — preserved for reproducing pre-v3.3.0 results (e.g. `examples/worked_example`) |
-| `v2` | `nbenthamiana_nbev11_hc_v2` (NbeV1.1 LAB-strain, native genome-composition anchor; `_analysis/025`) | 40-47% | `official_packaged` — current production default |
+| `v1` | `nbenthamiana_legacy_kazusa_sgn_v101` (legacy, circular-derived) | 55-65% | `legacy_packaged` — current production default (restored 2026-06-29 pending an MFE re-sensitivity + 2x2 factorial recheck of `v2`) |
+| `v2` | `nbenthamiana_nbev11_hc_v2` (NbeV1.1 LAB-strain, native genome-composition anchor; `_analysis/025`) | 40-47% | `official_packaged` — provisional candidate, not currently the production default |
 
 The active default is recorded in `data/reference/active_codon_reference.json`
 and synchronized with `current_parameter_registry.yaml`'s `codon_reference.active`

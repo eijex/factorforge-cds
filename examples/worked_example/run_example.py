@@ -191,8 +191,9 @@ def main() -> None:
     )
     # GC-target and codon-reference are independent axes (_analysis/025) —
     # injecting the legacy table does not by itself pin the GC band, which
-    # defaults from the active host (now 40-47% for nbenthamiana). Pin the
-    # band explicitly too so this example reproduces true legacy v1 behavior.
+    # defaults from the active host. Pin the band explicitly too so this
+    # example reproduces true legacy v1 behavior regardless of whatever the
+    # active host default happens to be.
     result = optimizer.optimize(
         aa_seq, profile=PROFILE, seed=SEED, target_gc_min=GC_MIN, target_gc_max=GC_MAX
     )

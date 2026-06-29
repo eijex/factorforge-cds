@@ -12,22 +12,26 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 # GC band for N. benthamiana codon-optimized sequences.
-# Native genome-composition anchor (_analysis/025 STEP 2: 004 endogenous CDS
-# n=10 measured range 40-47%; cross-checked against nbev11_cds_hc/all and
-# qld183_v103 derived-asset GC ~42.8-43.1% and external ground truth ~44%).
-# NOT an empirically validated expression optimum — this is a composition
-# anchor, not a target to maximize toward. Sequences within [GC_OPT_MIN,
-# GC_OPT_MAX] receive full GC score; outside the band the score decays linearly.
-GC_OPT_MIN = 40.0
-GC_OPT_MAX = 47.0
-GC_OPT_MID = 43.5  # kept for gc_target point-scoring and viral_delivery centering
+# Benchmark (internal, n=49): balanced profile output average GC% = 60.1%
+# (range 55-71%). The genome-wide average (~42%) reflects all genes, not the
+# high-expression codon table which exhibits 3rd-position GC bias.
+# These constants define the acceptable band — sequences within [GC_OPT_MIN, GC_OPT_MAX]
+# receive full GC score; outside the band the score decays linearly.
+#
+# Job 168/v3.3.0 (released as part of v3.2.7, see CHANGELOG) moved this band to
+# 40-47% (native genome-composition anchor, _analysis/025). Provisionally
+# reverted here pending an MFE re-sensitivity + 2x2 factorial recheck
+# (_analysis, scope TBD as of 2026-06-29) — see eijex-workspace
+# _version/factorforge-version-sequencing-plan.md. Not a rejection of the
+# 40-47% anchor, just not yet re-confirmed as the production default.
+GC_OPT_MIN = 55.0
+GC_OPT_MAX = 65.0
+GC_OPT_MID = 60.0  # kept for gc_target point-scoring and viral_delivery centering
 GC_DECAY_WIDTH = 20.0  # percentage points outside band before score reaches 0.0
 
-# Job 168 / v3.3.0 (_analysis/025) scoped the genome-composition re-derivation
-# to N. benthamiana only. Other hosts (e.g. ntabacum/BY-2) keep the pre-v3.3.0
-# global default (55-65%, internal benchmark n=49 avg GC=60.1%) until they get
-# their own host-specific genome-composition analysis — they must NOT silently
-# inherit GC_OPT_MIN/MAX, which is an N.-benthamiana-specific anchor.
+# Host-isolation fix (Job 168/v3.3.0, kept): ntabacum/BY-2 must not silently
+# inherit whatever band nbenthamiana uses. Both currently resolve to the same
+# GC_RANGE_DEFAULT band pending the nbenthamiana re-check above.
 GC_RANGE_DEFAULT: tuple[float, float] = (55.0, 65.0)
 GC_RANGES_BY_HOST: dict[str, tuple[float, float]] = {
     "nbenthamiana": (GC_OPT_MIN, GC_OPT_MAX),

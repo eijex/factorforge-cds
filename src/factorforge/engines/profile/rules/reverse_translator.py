@@ -374,11 +374,12 @@ class ReverseTranslator:
         Balanced profile: CAI first, GC balanced
 
         - Preferred codon ratio: 70%
-        - Target GC: host composition band (nbenthamiana: 40-47%, native
-          genome-composition anchor; see _analysis/025 STEP 2 and
-          engines/profile/scoring.py GC_OPT_MIN/MAX. Not an empirically
-          validated expression optimum. Other hosts: resolve_host_gc_range()
-          default, unchanged from pre-v3.3.0 behavior.)
+        - Target GC: host composition band, resolved via
+          resolve_host_gc_range() (engines/profile/scoring.py
+          GC_OPT_MIN/MAX). nbenthamiana currently uses the legacy 55-65%
+          band; the native genome-composition anchor (40-47%, _analysis/025)
+          was provisionally reverted on 2026-06-29 pending an MFE
+          re-sensitivity + 2x2 factorial recheck.
         """
         _host_gc_min, _host_gc_max = resolve_host_gc_range(self.host)
         target_gc_min = kwargs.get("target_gc_min", _host_gc_min)

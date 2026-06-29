@@ -115,14 +115,13 @@ def calculate_dinucleotide_ratio(sequence: str, dinucleotide: str = "CG") -> flo
     return observed / expected
 
 
-# Job 168 / v3.3.0 (_analysis/025): host -> production-default codon table file
-# overrides. nbenthamiana moved from the legacy {host}_codons.json convention to
-# the NbeV1.1 LAB-strain derived table. See data/reference/active_codon_reference.json.
-# The legacy file itself (nbenthamiana_codons.json) is left untouched on disk for
-# historical benchmark replay (benchmarks/run_benchmark.py --codon-table-path).
-_HOST_CODON_TABLE_OVERRIDES: dict[str, str] = {
-    "nbenthamiana": "profiles/nbev11_cds_hc_derived_codons.json",
-}
+# Job 168 / v3.3.0 (_analysis/025) introduced a host -> production-default
+# codon table file override mechanism and pointed nbenthamiana at the NbeV1.1
+# LAB-strain derived table (released as part of v3.2.7). Provisionally
+# reverted to empty (falls back to the legacy {host}_codons.json convention)
+# pending an MFE re-sensitivity + 2x2 factorial recheck. The NbeV1.1 table
+# remains on disk and selectable; see data/reference/active_codon_reference.json.
+_HOST_CODON_TABLE_OVERRIDES: dict[str, str] = {}
 
 
 def resolve_host_codon_table_path(host: str, codon_tables_dir: Path) -> Path:

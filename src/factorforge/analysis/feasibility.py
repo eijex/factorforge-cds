@@ -14,18 +14,19 @@ from factorforge.analysis.metrics import (
 )
 
 
-# DEFAULT_CAI_TARGET=0.82 aligns with industry practice (>0.8) and is achievable
-# (internal benchmark, n=49, avg CAI=0.76).
-# DEFAULT_GC_LOW/HIGH = native genome-composition anchor for N. benthamiana CDS
-# (_analysis/025 STEP 2: 004 endogenous n=10 measured range 40-47%, cross-checked
-# against nbev11_cds_hc/all and qld183_v103 derived-asset GC ~42.8-43.1% and
-# external ground truth ~44%). NOT an empirically validated expression optimum —
-# this is a composition anchor, not a target to maximize toward.
+# Defaults calibrated to nbenthamiana profile engine output distribution
+# (internal benchmark, n=49): avg CAI=0.76, avg GC=60.1% (range 55-71%).
+# DEFAULT_CAI_TARGET=0.82 aligns with industry practice (>0.8) and is achievable.
 # Exported as named constants so tests/test_registry_production_sync.py can
 # strictly compare them against the registry (single source of truth).
+#
+# DEFAULT_GC_LOW/HIGH provisionally reverted from the Job 168/v3.3.0
+# native-genome-composition anchor (40-47%, released as part of v3.2.7) back
+# to the legacy engine-output-calibrated band, pending an MFE re-sensitivity +
+# 2x2 factorial recheck. See scoring.py's GC_OPT_MIN/MAX comment.
 DEFAULT_CAI_TARGET: float = 0.82
-DEFAULT_GC_LOW: float = 40.0
-DEFAULT_GC_HIGH: float = 47.0
+DEFAULT_GC_LOW: float = 55.0
+DEFAULT_GC_HIGH: float = 65.0
 
 
 AA_TO_CODONS: dict[str, list[str]] = {}
@@ -120,11 +121,7 @@ def analyze_feasibility(
     if not protein:
         raise ValueError("protein_sequence must not be empty")
 
-    # Default exploration ranges: genome-grounded native anchor first, then
-    # progressively wider windows. (55.0, 65.0) is retained ONLY as an explicit
-    # non-native/high-GC option (matches legacy engine-output-calibrated band) —
-    # callers must opt in explicitly to it, it is not the production default.
-    ranges = gc_ranges or [(40.0, 47.0), (35.0, 50.0), (55.0, 65.0)]
+    ranges = gc_ranges or [(55.0, 65.0), (50.0, 65.0), (40.0, 65.0)]
     normalized_ranges = [
         (_normalize_gc_bound(low), _normalize_gc_bound(high)) for low, high in ranges
     ]
