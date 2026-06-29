@@ -27,8 +27,6 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
-## [3.2.8] — 2026-06-29
-
 ### Reverted
 
 - **Default *N. benthamiana* GC reference band / codon-reference table,
