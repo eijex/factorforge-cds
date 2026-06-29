@@ -53,7 +53,7 @@
         },
         "gc_in_target_range": {
           "type": "boolean",
-          "description": "Primitive: true if gc_percent is within the host-specific target range (e.g., 40-47% for N. benthamiana, v3.3.0+; 55-65% for N. tabacum/BY-2)."
+          "description": "Primitive: true if gc_percent is within the host-specific target range (e.g., 55-65% for N. benthamiana and N. tabacum/BY-2)."
         },
         "multi_constraint_pass": {
           "type": "boolean",

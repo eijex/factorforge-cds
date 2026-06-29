@@ -27,49 +27,25 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
-### Breaking
+## [3.2.8] — 2026-06-29
 
-- **Default *N. benthamiana* GC reference band changed (55-65% → 40-47%)** —
-  any caller relying on the previous default GC target/band (library calls
-  without an explicit `target_gc`/`target_gc_min`/`target_gc_max`, or REST/CLI
-  calls without explicit `gc_min`/`gc_max`) will now see different output GC%
-  for *N. benthamiana*. Pass explicit GC constraints to preserve the old
-  behavior. *N. tabacum* (BY-2) is unaffected (its 55-65% default is
-  unchanged). See `docs/validation.md`'s Codon Reference Contract section for
-  the full v1/v2 comparison.
+### Reverted
 
-### Changed
-
-- **Codon-reference computational scoring calibration update (*N. benthamiana*)**
-  — the default codon usage table and GC reference band were recalibrated
-  from a legacy, circularly-derived reference to a native genome-composition
-  anchor: GC reference band 55-65% → 40-47% (`GC_OPT_MID` 60% → 43.5%). This
-  is a computational scoring/codon-choice change, not a wet-lab finding; it
-  does not assert anything about expression, yield, or any other biological
-  outcome. The legacy reference remains available
-  (`codon_reference_contract_version: v1`, see `docs/validation.md` for the
-  full v1/v2 contract table) and is what `examples/worked_example` continues
-  to reproduce, so existing pinned results remain reproducible.
-- *N. tabacum* (BY-2) keeps its pre-existing GC reference band (55-65%)
-  unchanged — it now resolves independently of the *N. benthamiana* default
-  instead of silently inheriting it, fixing a latent host-isolation gap.
-- `gc_target`'s default target (when `target_gc` is not explicitly passed)
-  now resolves to the active host's reference-band midpoint instead of a
-  single fixed constant, so it tracks the calibration above per host.
-- The web app's GC reference-band labels, charts, and default GC bucketing
-  (`web/index.html`, `web/js/app.js`) now read the active band from
-  `GET /api/optimize`'s `host_metadata` instead of a hardcoded value, so the
-  UI cannot drift out of sync with the production default again.
-
-### Fixed
-
-- **Unbounded MFE computation on long sequences (algorithmic-complexity DoS)**
-  — `calculate_mfe()` had no input-length guard before invoking ViennaRNA's
-  `RNA.fold()` (O(n³) time), so a single request near the existing API length
-  limits could occupy a worker indefinitely. Sequences longer than 1000 nt now
-  skip global MFE folding (logged explicitly) and fall back to the existing
-  neutral-weight scoring path used when ViennaRNA is unavailable; no other
-  caller-visible behavior changes for sequences at or under the limit.
+- **Default *N. benthamiana* GC reference band / codon-reference table,
+  reverted to legacy (`v1`, 55-65% GC band)** — v3.2.7 (released earlier the
+  same day) inadvertently shipped a default-codon-reference promotion
+  (legacy `v1` → native genome-composition anchor `v2`, 40-47% GC band) that
+  had been merged to `main` ahead of, and independently of, v3.2.7's own
+  intended scope (a release-process gap: this repo has no release branches,
+  so any code on `main` ships in the next tag regardless of which work item
+  it was scoped to). That promotion is reverted here, restoring `v1` as the
+  production default, pending an MFE re-sensitivity + 2x2 factorial recheck
+  of the `v2` candidate. `v2` is not deleted — it remains available and
+  selectable (`codon_reference_contract_version: v2`), see
+  `docs/validation.md`'s Codon Reference Contract section. Any caller that
+  adapted to the v3.2.7 default (40-47%) will see the band move back to
+  55-65% for *N. benthamiana*; pass explicit GC constraints to pin a
+  specific band regardless of the production default.
 
 ## [3.2.7] — 2026-06-29
 
@@ -83,6 +59,13 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   scoring discriminability. This is a Tier-0 computational heuristic
   recalibration, not a biologically validated constant — docstrings updated
   accordingly.
+- **Correction (added 2026-06-29, post-release):** this release also shipped
+  a default *N. benthamiana* GC reference band / codon-reference change
+  (legacy → native genome-composition anchor, 55-65% → 40-47%) that was not
+  documented here at release time — it was scoped to unrelated, separately
+  in-progress work that happened to already be on `main`. That change is
+  reverted in v3.2.8; see that section for detail. v3.2.7 as originally
+  published does contain it.
 
 ### Fixed
 
@@ -95,6 +78,16 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   reaching this function, so there is no behavior change for existing
   callers — this only closes a gap for direct library users of the scoring
   module.
+- **Correction (added 2026-06-29, post-release): Unbounded MFE computation on
+  long sequences (algorithmic-complexity DoS)** — also shipped in this
+  release, not documented here at release time (same cause as above).
+  `calculate_mfe()` had no input-length guard before invoking ViennaRNA's
+  `RNA.fold()` (O(n³) time), so a single request near the existing API length
+  limits could occupy a worker indefinitely. Sequences longer than 1000 nt
+  now skip global MFE folding (logged explicitly) and fall back to the
+  existing neutral-weight scoring path used when ViennaRNA is unavailable; no
+  other caller-visible behavior changes for sequences at or under the limit.
+  Not reverted in v3.2.8 — this fix is independent of the GC-band revert.
 
 ### Added
 

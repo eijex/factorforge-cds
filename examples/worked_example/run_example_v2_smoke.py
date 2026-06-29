@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
-"""Current-default (v2) sfGFP smoke check for FactorForge.
+"""Current-default sfGFP smoke check for FactorForge.
 
 Job 168 / v3.3.0 (_analysis/025) introduced a new production-default codon
 reference (NbeV1.1 LAB-strain, GC 40-47%) for N. benthamiana, replacing the
-legacy reference that run_example.py is pinned to.
+legacy reference that run_example.py is pinned to. That promotion was
+provisionally reverted on 2026-06-29 pending an MFE re-sensitivity + 2x2
+factorial recheck (see data/reference/active_codon_reference.json) — this
+script does not hardcode which one is active; it tracks whatever the engine
+currently resolves to.
 
 This script does NOT compare against a frozen artifact — it only verifies
 that the current production default runs successfully end-to-end and
 reports the provenance facts (resolved asset ID, contract version, GC band)
 a reader needs to interpret the output correctly. Promoting this to a
-frozen, version-pinned worked example (worked_example_v2_nbev11_hc/) is a
-separate, deliberate follow-up decision — not a byproduct of this job.
+frozen, version-pinned worked example is a separate, deliberate follow-up
+decision — not a byproduct of this job.
 
 Usage:
     python run_example_v2_smoke.py
@@ -52,8 +56,9 @@ def main() -> None:
         sys.exit(1)
 
     active_ref = json.loads(ACTIVE_REFERENCE_PATH.read_text(encoding="utf-8"))
+    contract_version = active_ref["codon_reference_contract_version"]
 
-    print("OK: current-default (v2) run completed successfully.")
+    print(f"OK: current-default ({contract_version}) run completed successfully.")
     print("\nProvenance:")
     print(f"  active_codon_table_id:        {active_ref['active_codon_table_id']}")
     print(f"  active_asset_type:            {active_ref['active_asset_type']}")

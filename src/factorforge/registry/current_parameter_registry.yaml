@@ -83,14 +83,14 @@ parameters:
       visibility: public
       permission: publish_allowed
     gc_range_nbenthamiana_global:
-      value: [40.0, 47.0]
+      value: [55.0, 65.0]
       unit: percent
       claim_level: optimization_target
       evidence_status: internal_benchmark
       release_status: stable
-      source: "src/factorforge/engines/profile/scoring.py; native N. benthamiana genome composition anchor (n=10 native CDS, _analysis/004; cross-validated against nbev11_cds_hc/_all and qld183_v103 derived asset GC, _analysis/025)"
-      rationale: "Native genome-composition anchor, not an empirically validated expression optimum. Replaces the prior 55-65% band, which was calibrated from the legacy engine's own GC-rich output rather than from genome biology (documented-but-circular regime, _analysis/025)."
-      provenance: "Job 168 / v3.3.0 (_analysis/025): GC-target re-derivation. Prior value (55.0-65.0, n=49 avg GC=60.1% internal benchmark) retained as the explicit non-native high-GC option in feasibility.py's gc_ranges list; not deleted, demoted."
+      source: "src/factorforge/engines/profile/scoring.py; internal benchmark n=49 avg GC=60.1%"
+      rationale: "Aligned with host codon-table output distribution. Not a wet-lab validated optimum."
+      provenance: "Internal benchmark N. benthamiana CDS distribution (n=49, avg GC=60.1%); GC parameter fix. Job 168/v3.3.0's native genome-composition anchor (40.0-47.0, _analysis/025) was released as part of v3.2.7 and provisionally reverted to this value pending an MFE re-sensitivity + 2x2 factorial recheck; the candidate value remains available, see codon_reference.candidate below."
       visibility: public
       permission: publish_allowed
     gc_extreme_local_window:
@@ -165,6 +165,19 @@ parameters:
 
 codon_reference:
   active:
+    id: nbenthamiana_legacy_kazusa_sgn_v101
+    asset_type: legacy_packaged
+    codon_reference_contract_version: v1
+    species: Nicotiana benthamiana
+    ncbi_taxid: 4100
+    source_label: "Kazusa CodonUsage Database + SGN genome v1.0.1"
+    source_status: legacy_metadata_only
+    build_path_status: incomplete
+    authoritative_build_script_available: false
+    sha256: "ddbd0a41da88109a709bca0304581e29bd0a756e4db1c51809d5002e9b2d5e8c"
+    claim_boundary: "Configured in-silico codon reference only; not wet-lab validation or yield prediction."
+    note: "Job 168 / v3.3.0 (_analysis/025) promoted nbenthamiana_nbev11_hc_v2 (see codon_reference.candidate below) to production default and released it as part of v3.2.7. Provisionally reverted to this asset (restored as production default) pending an MFE re-sensitivity + 2x2 factorial recheck of the v2 candidate. See data/reference/active_codon_reference.json and data/reference/codon_table_manifest.json."
+  candidate:
     id: nbenthamiana_nbev11_hc_v2
     asset_type: official_packaged
     codon_reference_contract_version: v2
@@ -177,17 +190,4 @@ codon_reference:
     isoform_policy: "longest_isoform_per_gene_locus (scripts/build_codon_profile.py)"
     sha256: "686f12f2881b00a45246670e6c73e10d2254854577c5323ceb19a9ee58ee87dd"
     claim_boundary: "Configured in-silico codon reference only; not wet-lab validation or yield prediction. Native AT-rich composition is not equivalent to expression-superior composition."
-    note: "Job 168 / v3.3.0 (_analysis/025): promoted to production default, replacing the legacy asset below. Promoted experimental_candidate -> official_packaged on 2026-06-27 after full STEP 4 verification; see data/reference/active_codon_reference.json and data/reference/codon_table_manifest_nbev11_hc_v2.json."
-  legacy:
-    id: nbenthamiana_legacy_kazusa_sgn_v101
-    asset_type: legacy_packaged
-    codon_reference_contract_version: v1
-    species: Nicotiana benthamiana
-    ncbi_taxid: 4100
-    source_label: "Kazusa CodonUsage Database + SGN genome v1.0.1"
-    source_status: legacy_metadata_only
-    build_path_status: incomplete
-    authoritative_build_script_available: false
-    sha256: "ddbd0a41da88109a709bca0304581e29bd0a756e4db1c51809d5002e9b2d5e8c"
-    claim_boundary: "Configured in-silico codon reference only; not wet-lab validation or yield prediction."
-    note: "Demoted from canonical production default in Job 168 / v3.3.0 (_analysis/025). Preserved unmodified for v3.2.2 frozen benchmark reproducibility (archived output interpretation only, not guaranteed exact rerun — see _analysis/025 STEP findings on non-deterministic reseeding). See data/reference/codon_table_manifest.json for full disclosure."
+    note: "Promoted to production default in Job 168 / v3.3.0 (_analysis/025) and shipped as part of v3.2.7 on 2026-06-29. Provisionally un-promoted (not deleted) pending an MFE re-sensitivity + 2x2 factorial recheck; see data/reference/codon_table_manifest_nbev11_hc_v2.json."

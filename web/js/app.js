@@ -18,10 +18,10 @@ const HOST_LABELS = {
 // host_metadata[host].gc_range (api/optimize.py's _default_gc_constraints /
 // resolve_host_gc_range — the single source of truth, registry-synced).
 // OFFLINE_GC_RANGES is only a same-values fallback for offline/dev mode when
-// the API is unreachable (Job 168 / v3.3.0, _analysis/025) — never the other
+// the API is unreachable (v3.3.0) — never the other
 // way around, so this file must not be the place a future band change is made.
 const OFFLINE_GC_RANGES = {
-    nbenthamiana: { gc_min: 40.0, gc_max: 47.0 },
+    nbenthamiana: { gc_min: 55.0, gc_max: 65.0 },
     by2: { gc_min: 55.0, gc_max: 65.0 },
     ntabacum: { gc_min: 55.0, gc_max: 65.0 }
 };
@@ -146,7 +146,7 @@ function caiBucket(cai) {
     return '>0.9';
 }
 function gcBucket(gc, hostId = state.host) {
-    // Host-aware telemetry bucketing (Job 168 / v3.3.0) — boundaries follow
+    // Host-aware telemetry bucketing (v3.3.0) — boundaries follow
     // the resolved reference band for the host instead of a fixed 55-65
     // assumption, so BY-2 and N. benthamiana don't get mislabeled buckets.
     const { gc_min, gc_max } = getGcRange(hostId);
@@ -531,7 +531,7 @@ async function runOptimization() {
         if (state.objective === 'feasibility_best') {
             payload.objective = 'feasibility_best';
             payload.host_profile = state.host;
-            // Host-aware default (Job 168 / v3.3.0) — previously hardcoded to
+            // Host-aware default (v3.3.0) — previously hardcoded to
             // the legacy 55-65 band, which silently overrode the server's
             // resolve_host_gc_range() default for every feasibility_best run.
             payload.constraints = getGcRange(state.host);
@@ -1020,7 +1020,7 @@ function renderGCGraph(seq, hostId = state.host) {
     const textColor = isDark ? '#94a3b8' : '#475569';
     const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
     const n = labels.length;
-    // Host-aware reference band (Job 168 / v3.3.0) — previously hardcoded to
+    // Host-aware reference band (v3.3.0) — previously hardcoded to
     // 55/65 for every host, which mislabeled the N. benthamiana v2 default.
     const { gc_min: bandMin, gc_max: bandMax } = getGcRange(hostId);
     if (elements.gcZoneLabel) {

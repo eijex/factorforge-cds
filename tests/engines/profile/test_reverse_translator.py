@@ -62,9 +62,19 @@ class TestCodonTableLoading:
             total_freq = sum(freq for _, freq in codons)
             assert 0.99 <= total_freq <= 1.01, f"AA {aa} frequencies sum to {total_freq}"
 
-    def test_stop_codon_frequencies_excluded_from_frequency_model(self, translator):
-        """Stop family frequencies are all 0.0 — excluded by design, not a data bug."""
-        stop_codons = translator.aa_to_codons.get("*", [])
+    def test_stop_codon_frequencies_excluded_from_frequency_model(self):
+        """Stop family frequencies are all 0.0 in the NbeV1.1/v2 table — excluded
+        by design, not a data bug. This is a v2-specific table policy
+        (terminal_stop_policy: excluded_from_frequency_model); the legacy/v1
+        table (currently the production default, see active_codon_reference.json)
+        uses included_in_frequency_model instead, so this test targets the v2
+        table explicitly rather than relying on it being the default."""
+        from factorforge.engines.profile.utils import get_data_path
+
+        v2_translator = ReverseTranslator(
+            codon_table_path=get_data_path() / "profiles" / "nbev11_cds_hc_derived_codons.json"
+        )
+        stop_codons = v2_translator.aa_to_codons.get("*", [])
         assert stop_codons, "stop codon entry must still be present in aa_to_codons"
         assert all(freq == 0.0 for _, freq in stop_codons)
 
