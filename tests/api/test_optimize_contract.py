@@ -116,6 +116,46 @@ def test_legacy_profile_response_keeps_old_fields_and_adds_candidates() -> None:
     assert result["validation"]["moclo"] == expected_moclo
 
 
+def test_balanced_api_response_exposes_gc_target_observation() -> None:
+    h = _handler()
+
+    result = h.optimize_sequence(
+        "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+        "balanced",
+        False,
+        False,
+        False,
+        objective=None,
+        return_candidates=False,
+        constraints={"gc_min": 40.0, "gc_max": 47.0},
+    )
+
+    metrics = result["metrics"]
+    assert metrics["requested_gc_min_percent"] == 40.0
+    assert metrics["requested_gc_max_percent"] == 47.0
+    assert metrics["gc_target_reached"] == (40.0 <= metrics["gc_percent"] <= 47.0)
+
+
+def test_non_balanced_api_response_omits_gc_target_observation() -> None:
+    h = _handler()
+
+    result = h.optimize_sequence(
+        "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+        "gc_target",
+        False,
+        False,
+        False,
+        objective=None,
+        return_candidates=False,
+        constraints={"gc_min": 40.0, "gc_max": 47.0},
+    )
+
+    metrics = result["metrics"]
+    assert "gc_target_reached" not in metrics
+    assert "requested_gc_min_percent" not in metrics
+    assert "requested_gc_max_percent" not in metrics
+
+
 def test_candidate_with_type_iis_conflict_is_not_reported_as_pass() -> None:
     h = _handler()
     table = optimize_api.load_codon_usage_table()
