@@ -18,10 +18,14 @@ verify package and Docker smoke tests, and check public documentation for
 version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 > **Pre-1.0-style exception (v3.3.0):** the *N. benthamiana* default
-> codon-reference/GC-band change below is a breaking change shipped under a
-> Minor bump rather than Major. This is a deliberate, one-off exception for
-> pre-1.0-maturity defaults recalibration, not a change to the policy table
-> above — future breaking API/engine changes still require a Major bump.
+> codon-reference/GC-band change tracked as v3.3.0 is a breaking change
+> intended to ship under a Minor bump rather than Major. This is a
+> deliberate, one-off exception for pre-1.0-maturity defaults recalibration,
+> not a change to the policy table above — future breaking API/engine
+> changes still require a Major bump. **Status as of v3.2.8 (2026-06-29):**
+> that change inadvertently shipped early, under v3.2.7's Patch bump (a
+> release-process gap, not an intentional exception), and was reverted in
+> v3.2.8 pending further validation — see both versions' entries below.
 
 ---
 
