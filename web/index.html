@@ -796,7 +796,7 @@
                         <span class="text-slate-400 text-[10px]">2026-06-29</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
-                                                <li><b>Changed:</b> MFE-score normalization clamp recalibration.</li>
+                                                <li><b>Changed:</b> MFE-score normalization clamp recalibration. This is a Tier-0 computational heuristic adjustment, not a biologically validated constant.</li>
                         <li><b>Fixed:</b> calculate_composite_score() previously fell back silently to the balanced profile on an unrecognized profile name, and allowed target_gc to leak into non-gc_target profiles unused.</li>
                         <li><b>Added:</b> benchmarks/run_benchmark.py now records a vienna_rna_active: bool field in benchmark_summary.json, capturing whether ViennaRNA bindings were available (and therefore could affect MFE-weighted candidate selection) during that run.</li>
                     </ul>
