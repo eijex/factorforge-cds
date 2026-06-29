@@ -40,6 +40,49 @@ def test_optimize_profiles(optimizer, sample_protein, profile):
     assert "score" in result.metrics
 
 
+@pytest.mark.parametrize(
+    ("protein", "target_gc_min", "target_gc_max", "seed"),
+    [
+        ("MAKL", 55.0, 65.0, 174),
+        ("MSKGEELFTGVVPILVELD", 40.0, 47.0, 174),
+        ("GGGGKKKK", 30.0, 70.0, 174),
+    ],
+)
+def test_balanced_gc_target_reached_matches_achieved_gc(
+    optimizer, protein, target_gc_min, target_gc_max, seed
+):
+    """Balanced GC target flag is a direct observation of achieved GC%.
+
+    This is a fixed-fixture logic test, not a sampling-rate estimate.
+    """
+    result = optimizer.optimize(
+        protein,
+        profile="balanced",
+        target_gc_min=target_gc_min,
+        target_gc_max=target_gc_max,
+        seed=seed,
+        scan_mode="fast",
+    )
+    achieved_gc_percent = result.metrics["gc_percent"]
+
+    assert result.metrics["gc_content"] == achieved_gc_percent
+    assert result.metrics["requested_gc_min_percent"] == target_gc_min
+    assert result.metrics["requested_gc_max_percent"] == target_gc_max
+    assert result.metrics["gc_target_reached"] == (
+        target_gc_min <= achieved_gc_percent <= target_gc_max
+    )
+
+
+@pytest.mark.parametrize("profile", ["high_cai", "gc_target", "assembly_friendly"])
+def test_gc_target_reached_metrics_are_balanced_only(optimizer, sample_protein, profile):
+    """GC target attainment fields are scoped to balanced profile output."""
+    result = optimizer.optimize(sample_protein, profile=profile, seed=174, scan_mode="fast")
+
+    assert "gc_target_reached" not in result.metrics
+    assert "requested_gc_min_percent" not in result.metrics
+    assert "requested_gc_max_percent" not in result.metrics
+
+
 def test_optimize_invalid_input(optimizer):
     """Reject invalid input"""
     with pytest.raises(ValueError):

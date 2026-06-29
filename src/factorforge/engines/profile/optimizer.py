@@ -10,7 +10,7 @@ from factorforge.core.interfaces import OptimizationResult, OptimizerEngine
 from .exporter import SequenceExporter
 from .rules.reverse_translator import OptimizationProfile, ReverseTranslator
 from .rules.rule_engine import RuleEngine
-from .scoring import calculate_composite_score, compute_mfe_evidence
+from .scoring import calculate_composite_score, compute_mfe_evidence, resolve_host_gc_range
 from .validator import InputValidator
 
 logger = logging.getLogger(__name__)
@@ -157,6 +157,22 @@ class RuleBasedOptimizer(OptimizerEngine):
             "score": candidates[0]["score"],
             "violations": sum(len(v) for v in scan_results.values()),
         }
+        if profile_value == "balanced":
+            host_gc_min, host_gc_max = resolve_host_gc_range(host)
+            requested_gc_min_percent = float(kwargs.get("target_gc_min", host_gc_min))
+            requested_gc_max_percent = float(kwargs.get("target_gc_max", host_gc_max))
+            achieved_gc_percent = metrics["gc_percent"]
+            metrics.update(
+                {
+                    "gc_target_reached": (
+                        requested_gc_min_percent
+                        <= achieved_gc_percent
+                        <= requested_gc_max_percent
+                    ),
+                    "requested_gc_min_percent": requested_gc_min_percent,
+                    "requested_gc_max_percent": requested_gc_max_percent,
+                }
+            )
         # MFE provenance: expose whether MFE was actually computed so downstream
         # artifacts (API response, Design Package) never report an uncomputed
         # MFE as a misleading 0.0 (016 audit). Score value is unchanged.

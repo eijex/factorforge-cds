@@ -698,6 +698,17 @@ class handler(BaseHTTPRequestHandler):
             # Extract metrics safely
             cai = float(result.metrics.get("cai", 0.0))
             gc_percent = float(result.metrics.get("gc_percent", 0.0))
+            gc_target_observation = {}
+            if profile == "balanced":
+                requested_gc_min_percent = float(constraints["gc_min"])
+                requested_gc_max_percent = float(constraints["gc_max"])
+                gc_target_observation = {
+                    "gc_target_reached": (
+                        requested_gc_min_percent <= gc_percent <= requested_gc_max_percent
+                    ),
+                    "requested_gc_min_percent": requested_gc_min_percent,
+                    "requested_gc_max_percent": requested_gc_max_percent,
+                }
             polya_warnings = int(result.metrics.get("polya_warnings", 0))
             table = load_codon_usage_table()
             general_cai = calculate_cai(result.sequence, table.codon_weights)
@@ -743,6 +754,7 @@ class handler(BaseHTTPRequestHandler):
                     "mfe_status": mfe_status,
                     "mfe_used": mfe_used,
                     "mfe_warning": mfe_warning,
+                    **gc_target_observation,
                 },
                 "profile": profile,
                 "use_template": use_template,

@@ -380,6 +380,9 @@ class ReverseTranslator:
           band; the native genome-composition anchor (40-47%, _analysis/025)
           was provisionally reverted on 2026-06-29 pending an MFE
           re-sensitivity + 2x2 factorial recheck.
+        - GC target requests are best-effort sampling targets, not guarantees:
+          achieved GC can be dominated by the codon table's frequency-weighted
+          sampling distribution.
         """
         _host_gc_min, _host_gc_max = resolve_host_gc_range(self.host)
         target_gc_min = kwargs.get("target_gc_min", _host_gc_min)

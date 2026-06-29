@@ -29,6 +29,16 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- Exposed `gc_target_reached`, `requested_gc_min_percent`, and
+  `requested_gc_max_percent` as additive balanced-profile engine/API response
+  metrics so callers can distinguish requested GC bands from achieved GC
+  content. This is an evidence field only; it does not change sequence
+  generation or enforce GC target attainment.
+
 ## [3.2.8] — 2026-06-29
 
 ### Reverted
