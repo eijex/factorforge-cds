@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
-  "policy_version": "2026-06-30-job-177",
-  "active_default_reference_id": "nbenthamiana_legacy_kazusa_sgn_v101",
+  "policy_version": "2026-06-30-nbev11-default-activation",
+  "active_default_reference_id": "nbenthamiana_nbev11_hc_v2",
   "activation_principles": [
     "reference file presence != product activation",
     "research comparator != public default",
@@ -11,8 +11,8 @@
   "references": [
     {
       "reference_id": "nbenthamiana_legacy_kazusa_sgn_v101",
-      "tier": "production_enabled",
-      "activation_status": "enabled",
+      "tier": "historical_reproduction",
+      "activation_status": "historical_only",
       "codon_table_path": "src/factorforge/data/nbenthamiana_codons.json",
       "checksum_sha256": "ddbd0a41da88109a709bca0304581e29bd0a756e4db1c51809d5002e9b2d5e8c",
       "source_name": "Kazusa CodonUsage Database + SGN genome v1.0.1",
@@ -32,37 +32,38 @@
       "license_or_redistribution_status": "legacy metadata only; redistribution status not fully reconstructed",
       "known_limitations": [
         "Authoritative build script and exact source extraction command are incomplete.",
-        "Restored as the current v3.2.8 production baseline after the Job 172 revert; this is not a biological superiority claim."
+        "Retained as a historical v3.2.x comparator after NbeV1.1 HC activation; this is not a biological inferiority or superiority claim."
       ],
       "intended_use": [
-        "Current production baseline codon-reference for N. benthamiana profile-engine scoring and generation.",
-        "Historical continuity for v3.2.x result interpretation."
+        "Historical continuity comparator for v3.2.x result interpretation.",
+        "Sensitivity/reference-provenance analysis where legacy behavior must be reproduced."
       ],
       "not_for": [
+        "Current N. benthamiana production default after NbeV1.1 HC activation.",
         "Wet-lab validation or yield prediction.",
-        "Claiming expression superiority over other reference tables."
+        "Claiming expression superiority or inferiority relative to other reference tables."
       ],
       "claim_boundary": "Configured in-silico codon reference only; not wet-lab validation, yield prediction, or expression-success evidence.",
       "public_exposure": {
-        "python_library": "current default through existing N. benthamiana production paths",
-        "cli": "current default through existing N. benthamiana production paths",
-        "rest_api": "current default through existing N. benthamiana production paths",
-        "web_ui": "current default; no reference selector introduced by this manifest",
+        "python_library": "historical comparator/replay path only, not the current default",
+        "cli": "historical comparator metadata only unless an explicit replay/import path is enabled",
+        "rest_api": "not accepted as an override through public optimize paths",
+        "web_ui": "collapsed historical comparator disclosure; not selectable",
         "mcp": "may be reported as current baseline metadata only if surfaced",
-        "docs_examples": "may be described as current configured baseline with claim boundary",
-        "manuscript": "historical/current software baseline only; not a validated biological optimum"
+        "docs_examples": "may be described as historical comparator with claim boundary",
+        "manuscript": "historical software baseline/comparator only; not a validated biological optimum"
       },
       "activation_evidence": {
         "validation_dataset": "current v3.2.8 revert baseline; no new activation in Job 177",
         "analysis_plan": "not applicable to legacy baseline restoration",
         "reviewer_signoff": "Job 172 revert and Job 176/177 policy gates"
       },
-      "notes": "This entry records the current production baseline without changing defaults."
+      "notes": "Retained as historical comparator after NbeV1.1 HC activation."
     },
     {
       "reference_id": "nbenthamiana_nbev11_hc_v2",
-      "tier": "experimental_candidate",
-      "activation_status": "disabled",
+      "tier": "production_enabled",
+      "activation_status": "enabled",
       "codon_table_path": "src/factorforge/data/profiles/nbev11_cds_hc_derived_codons.json",
       "checksum_sha256": "686f12f2881b00a45246670e6c73e10d2254854577c5323ceb19a9ee58ee87dd",
       "source_name": "NbeV1.1 LAB-strain genome high-confidence CDS subset",
@@ -83,32 +84,32 @@
       "known_limitations": [
         "Native AT-rich composition is not equivalent to expression-superior composition.",
         "Exact match to a specific wet-lab partner LAB isolate is not guaranteed.",
-        "Promoted in Job 168 and shipped in v3.2.7, then provisionally un-promoted by Job 172 pending additional re-sensitivity and factorial checks."
+        "Activated as the current N. benthamiana software default with explicit claim boundaries; activation is not wet-lab validation."
       ],
       "intended_use": [
-        "Candidate/research comparator for v3.3.0 reference-provenance evaluation.",
-        "Controlled benchmark input after analysis plan is frozen."
+        "Current production-default codon reference for N. benthamiana profile-engine scoring and generation.",
+        "Provenance-tracked genome-derived baseline for public software outputs."
       ],
       "not_for": [
-        "Current production default without explicit activation gate approval.",
-        "Claims of wet-lab validation, expression improvement, or biological superiority."
+        "Claims of wet-lab validation, expression improvement, yield prediction, or biological superiority.",
+        "Assuming exact identity to any specific partner LAB isolate."
       ],
-      "claim_boundary": "Genome-derived in-silico candidate reference only; not wet-lab validation, yield prediction, or expression-success evidence.",
+      "claim_boundary": "Genome-derived in-silico software default only; not wet-lab validation, yield prediction, expression-success evidence, or biological-superiority evidence.",
       "public_exposure": {
-        "python_library": "not public default; explicit research/internal path only until activation gate",
-        "cli": "must not be listed as production option until activation gate",
-        "rest_api": "must be rejected or unavailable through public optimize paths until activation gate",
-        "web_ui": "hidden or disabled/pending evidence only; not selectable",
-        "mcp": "not exposed as selectable production reference until activation gate",
-        "docs_examples": "framework/candidate provenance only; no performance claim",
-        "manuscript": "may be described as provenance-tracked candidate/research comparator only"
+        "python_library": "current default through N. benthamiana production paths",
+        "cli": "current default through N. benthamiana production paths",
+        "rest_api": "current default through public optimize paths; overrides remain unsupported",
+        "web_ui": "current default metadata; no reference selector introduced by this activation",
+        "mcp": "may be reported as current default metadata only if surfaced",
+        "docs_examples": "may be described as current configured genome-derived baseline with claim boundary",
+        "manuscript": "current software default only; not a validated biological optimum"
       },
       "activation_evidence": {
-        "validation_dataset": "pending locked validation corpus",
-        "analysis_plan": "pending frozen analysis plan",
-        "reviewer_signoff": "pending activation review"
+        "validation_dataset": "NbeV1.1 high-confidence CDS-derived codon-profile build with checksum-pinned manifest",
+        "analysis_plan": "activation aligned across runtime default, GC band, API/UI metadata, tests, docs, and manuscript wording",
+        "reviewer_signoff": "user-approved B-path activation on 2026-06-30"
       },
-      "notes": "Candidate remains packaged for analysis but disabled for production selection."
+      "notes": "Activated as current N. benthamiana production default; public overrides remain unsupported."
     },
     {
       "reference_id": "nbenthamiana_nbev11_all_cds_v2",

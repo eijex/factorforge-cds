@@ -57,7 +57,7 @@ It was developed as part of the v3 ML prototype and requires expression-level in
 The v3.2.0 formal benchmark uses:
 
 - **Benchmark dataset**: SGN QLD183 v103 CDS records (N=49,257)
-- **Codon table**: `nbenthamiana_legacy_kazusa_sgn_v101` (Kazusa + SGN v1.0.1)
+- **Codon table**: `nbenthamiana_nbev11_hc_v2` (NbeV1.1 high-confidence CDS-derived current software default); legacy `nbenthamiana_legacy_kazusa_sgn_v101` retained as historical comparator
 
 Using a codon table derived from one genome version while benchmarking on another is standard practice in codon optimization. The codon table is the *scoring reference*, not the benchmark dataset itself. CAI values reflect how well each sequence matches the configured FactorForge reference.
 
@@ -78,7 +78,7 @@ A full rebuild of the N. benthamiana codon table from SGN QLD183 v103 is planned
 - **Expected effect**: Codon weights, CAI scores, profile rankings, and benchmark results may change
 - **Deliverables**: New `codon_table_id`, updated manifest, old vs. new codon weight diff, re-run benchmark (seed=320)
 
-Until the rebuild is complete, all results should be interpreted against the current `nbenthamiana_legacy_kazusa_sgn_v101` reference.
+Current production results should be interpreted against the active `nbenthamiana_nbev11_hc_v2` software reference unless a controlled research/benchmark path explicitly pins a comparator table.
 
 ---
 

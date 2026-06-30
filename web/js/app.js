@@ -21,7 +21,7 @@ const HOST_LABELS = {
 // the API is unreachable (v3.3.0) — never the other
 // way around, so this file must not be the place a future band change is made.
 const OFFLINE_GC_RANGES = {
-    nbenthamiana: { gc_min: 55.0, gc_max: 65.0 },
+    nbenthamiana: { gc_min: 40.0, gc_max: 47.0 },
     by2: { gc_min: 55.0, gc_max: 65.0 },
     ntabacum: { gc_min: 55.0, gc_max: 65.0 }
 };

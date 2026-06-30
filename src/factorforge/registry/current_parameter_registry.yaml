@@ -83,14 +83,14 @@ parameters:
       visibility: public
       permission: publish_allowed
     gc_range_nbenthamiana_global:
-      value: [55.0, 65.0]
+      value: [40.0, 47.0]
       unit: percent
       claim_level: optimization_target
-      evidence_status: internal_benchmark
+      evidence_status: genome_derived_software_default
       release_status: stable
-      source: "src/factorforge/engines/profile/scoring.py; internal benchmark n=49 avg GC=60.1%"
-      rationale: "Aligned with host codon-table output distribution. Not a wet-lab validated optimum."
-      provenance: "Internal benchmark N. benthamiana CDS distribution (n=49, avg GC=60.1%); GC parameter fix. Job 168/v3.3.0's native genome-composition anchor (40.0-47.0, _analysis/025) was released as part of v3.2.7 and provisionally reverted to this value pending an MFE re-sensitivity + 2x2 factorial recheck; the candidate value remains available, see codon_reference.candidate below."
+      source: "src/factorforge/engines/profile/scoring.py; data/reference/codon_table_manifest_nbev11_hc_v2.json"
+      rationale: "Aligned with the current NbeV1.1 high-confidence CDS-derived software default. Not a wet-lab validated optimum."
+      provenance: "NbeV1.1 high-confidence CDS-derived native composition anchor (_analysis/025; 40.0-47.0) activated as current N. benthamiana production default after v3.2.8 rollback. This is a provenance-tracked in-silico default, not expression/yield prediction or biological-superiority evidence."
       visibility: public
       permission: publish_allowed
     gc_extreme_local_window:
@@ -165,19 +165,6 @@ parameters:
 
 codon_reference:
   active:
-    id: nbenthamiana_legacy_kazusa_sgn_v101
-    asset_type: legacy_packaged
-    codon_reference_contract_version: v1
-    species: Nicotiana benthamiana
-    ncbi_taxid: 4100
-    source_label: "Kazusa CodonUsage Database + SGN genome v1.0.1"
-    source_status: legacy_metadata_only
-    build_path_status: incomplete
-    authoritative_build_script_available: false
-    sha256: "ddbd0a41da88109a709bca0304581e29bd0a756e4db1c51809d5002e9b2d5e8c"
-    claim_boundary: "Configured in-silico codon reference only; not wet-lab validation or yield prediction."
-    note: "Job 168 / v3.3.0 (_analysis/025) promoted nbenthamiana_nbev11_hc_v2 (see codon_reference.candidate below) to production default and released it as part of v3.2.7. Provisionally reverted to this asset (restored as production default) pending an MFE re-sensitivity + 2x2 factorial recheck of the v2 candidate. See data/reference/active_codon_reference.json and data/reference/codon_table_manifest.json."
-  candidate:
     id: nbenthamiana_nbev11_hc_v2
     asset_type: experimental_candidate
     codon_reference_contract_version: v2
@@ -189,5 +176,18 @@ codon_reference:
     authoritative_build_script_available: true
     isoform_policy: "longest_isoform_per_gene_locus (scripts/build_codon_profile.py)"
     sha256: "686f12f2881b00a45246670e6c73e10d2254854577c5323ceb19a9ee58ee87dd"
-    claim_boundary: "Configured in-silico codon reference only; not wet-lab validation or yield prediction. Native AT-rich composition is not equivalent to expression-superior composition."
-    note: "Promoted to production default in Job 168 / v3.3.0 (_analysis/025) and shipped as part of v3.2.7 on 2026-06-29. Provisionally un-promoted (not deleted) to experimental_candidate / research-comparator status pending an MFE re-sensitivity + 2x2 factorial recheck; see data/reference/reference_policy_manifest.json and data/reference/codon_table_manifest_nbev11_hc_v2.json. Not a public selectable option."
+    claim_boundary: "Configured in-silico codon reference only; not wet-lab validation, yield prediction, expression-success evidence, or biological-superiority evidence."
+    note: "Activated as the current N. benthamiana production software default after v3.2.8 rollback. Public overrides remain unsupported. See data/reference/active_codon_reference.json and data/reference/codon_table_manifest_nbev11_hc_v2.json."
+  historical_comparator:
+    id: nbenthamiana_legacy_kazusa_sgn_v101
+    asset_type: legacy_packaged
+    codon_reference_contract_version: v1
+    species: Nicotiana benthamiana
+    ncbi_taxid: 4100
+    source_label: "Kazusa CodonUsage Database + SGN genome v1.0.1"
+    source_status: legacy_metadata_only
+    build_path_status: incomplete
+    authoritative_build_script_available: false
+    sha256: "ddbd0a41da88109a709bca0304581e29bd0a756e4db1c51809d5002e9b2d5e8c"
+    claim_boundary: "Historical in-silico comparator only; not wet-lab validation, yield prediction, or biological-superiority evidence."
+    note: "Retained for v3.2.x continuity and sensitivity interpretation after NbeV1.1 HC activation. See data/reference/codon_table_manifest.json. Not a public selectable option."
