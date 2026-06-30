@@ -20,21 +20,56 @@ test('loads the main web UI', async ({ page }) => {
   await expect(page.locator('#optimizeBtn')).toBeVisible();
 });
 
-test('discloses codon reference policy without enabling disabled selectors', async ({ page }) => {
+test('discloses codon reference policy as compact current default plus collapsed assets', async ({ page }) => {
   await openApp(page);
 
   const policy = page.locator('#codonReferencePolicy');
   await expect(policy).toBeVisible();
-  await expect(policy).toContainText('Legacy Kazusa/SGN composite');
+  await expect(policy).toContainText('Current default: Legacy Kazusa/SGN composite');
   await expect(policy).toContainText('Selected');
-  await expect(policy).toContainText('NbeV1.1 HC CDS-derived');
-  await expect(policy).toContainText('Experimental candidate');
-  await expect(policy).toContainText('NbeV1.1 all-CDS');
-  await expect(policy).toContainText('QLD183 v103 CDS-derived');
-  await expect(policy).toContainText('Research comparator');
-  await expect(policy).toContainText('Tobacco BY-2 packaged table');
-  await expect(policy).toContainText('not enabled in this public UI');
+
+  const packagedAssets = page.locator('#packagedReferenceAssets');
+  await expect(packagedAssets).not.toHaveAttribute('open', '');
+  await expect(packagedAssets.getByText('NbeV1.1 HC CDS-derived')).toBeHidden();
+
+  await packagedAssets.locator('summary').click();
+  await expect(packagedAssets).toHaveAttribute('open', '');
+  await expect(packagedAssets).toContainText('NbeV1.1 HC CDS-derived');
+  await expect(packagedAssets).toContainText('Experimental candidate');
+  await expect(packagedAssets).toContainText('NbeV1.1 all-CDS');
+  await expect(packagedAssets).toContainText('QLD183 v103 CDS-derived');
+  await expect(packagedAssets).toContainText('Research comparator');
+  await expect(packagedAssets).toContainText('Tobacco BY-2 packaged table');
+  await expect(packagedAssets).toContainText('not enabled in this public UI');
   await expect(policy.locator('input, select, button')).toHaveCount(0);
+});
+
+test('keeps non-default design objectives collapsed until requested', async ({ page }) => {
+  await openApp(page);
+
+  const objectives = page.locator('#designObjectivePolicy');
+  await expect(objectives).toContainText('Feasibility Best');
+  await expect(page.locator('input[name="objective"][value="feasibility_best"]')).toBeChecked();
+
+  const implemented = page.locator('#implementedObjectives');
+  const experimental = page.locator('#experimentalObjectives');
+  await expect(implemented).not.toHaveAttribute('open', '');
+  await expect(experimental).not.toHaveAttribute('open', '');
+  await expect(implemented.getByText('High CAI')).toBeHidden();
+  await expect(experimental.getByText("5' Ramp")).toBeHidden();
+
+  await implemented.locator('summary').click();
+  await expect(implemented).toHaveAttribute('open', '');
+  await expect(implemented).toContainText('High CAI');
+  await expect(implemented).toContainText('GC Target');
+  await expect(implemented).toContainText('Assembly Friendly');
+
+  await experimental.locator('summary').click();
+  await expect(experimental).toHaveAttribute('open', '');
+  await expect(experimental).toContainText("5' Ramp");
+  await expect(experimental).toContainText('Viral Delivery');
+  await expect(page.locator('input[name="objective"][value="ramp"]')).toBeDisabled();
+  await expect(page.locator('input[name="objective"][value="viral_delivery"]')).toBeDisabled();
 });
 
 test('updates sequence metadata for protein input', async ({ page }) => {

@@ -207,10 +207,16 @@
                     </h2>
 
                     <!-- radio button group -->
-                    <div class="space-y-3 mb-8">
-                        <p class="text-xs font-extrabold text-slate-600 uppercase tracking-widest mb-4">Design
-                            Objective
-                        </p>
+                    <div id="designObjectivePolicy" class="space-y-3 mb-8">
+                        <div class="flex items-start justify-between gap-3 mb-3">
+                            <div>
+                                <p class="text-xs font-extrabold text-slate-600 uppercase tracking-widest">Design
+                                    Objective
+                                </p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Current default first; alternatives and not-enabled objectives are disclosed separately.</p>
+                            </div>
+                            <span class="shrink-0 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 text-[9px] font-extrabold uppercase tracking-wider dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/50">current default</span>
+                        </div>
 
                         <label id="feasibilityBestOption" class="block relative group">
                             <input type="radio" name="objective" value="feasibility_best" checked class="peer sr-only">
@@ -218,7 +224,8 @@
                                 id="feasibilityBestCard"
                                 class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
                                 <span class="flex items-center text-sm font-bold text-slate-800">
-                                    Feasibility Best (Recommended)
+                                    Feasibility Best
+                                    <span class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800/50">Recommended</span>
                                     <span id="feasibilityBestHostBadge"
                                         class="hidden ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">N. benthamiana only</span>
                                     <span class="tooltip-container">
@@ -226,112 +233,119 @@
                                         <span class="tooltip-text">Dynamic-programming candidate with maximum CAI inside the requested GC range when feasible.</span>
                                     </span>
                                 </span>
-                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Constraint-based CDS design with comparison candidates</span>
+                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Current default: constraint-based CDS design for <i>N. benthamiana</i> with comparison candidates.</span>
                                 <div
                                     class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
                                     ✓</div>
                             </div>
                         </label>
 
-                        <label class="block relative group cursor-not-allowed">
-                            <input type="radio" name="objective" value="ramp" class="peer sr-only" disabled>
-                            <div
-                                class="p-4 profile-card rounded-xl cursor-not-allowed opacity-60 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-                                <span class="flex items-center text-sm font-bold text-slate-800">
-                                    5' Ramp
-                                    <span
-                                        class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">Experimental</span>
-                                    <span class="tooltip-container">
-                                        <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Experimental N-terminal codon-ramp heuristic for design review. Disabled until reviewed evidence supports public use.</span>
-                                    </span>
-                                </span>
-                                <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">Experimental N-terminal ramp heuristic</span>
-                                <span class="block text-[10px] text-amber-600 dark:text-amber-400 mt-1">Pending wet-lab validation before enabling</span>
-                                <div
-                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
-                                    ✓</div>
-                            </div>
-                        </label>
+                        <details id="implementedObjectives" class="disclosure-card rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900 dark:border-slate-800">
+                            <summary class="cursor-pointer select-none px-4 py-3 text-xs font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                                Show alternative implemented objectives
+                            </summary>
+                            <div class="px-3 pb-3 space-y-3" aria-label="Alternative implemented objectives">
+                                <label id="highCaiOption" class="block relative group">
+                                    <input type="radio" name="objective" value="high_cai" class="peer sr-only">
+                                    <div
+                                        id="highCaiCard"
+                                        class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
+                                        <span class="flex items-center text-sm font-bold text-slate-800">
+                                            High CAI
+                                            <span id="highCaiHostBadge"
+                                                class="hidden ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">N. benthamiana only</span>
+                                            <span class="tooltip-container">
+                                                <span class="info-icon">i</span>
+                                                <span class="tooltip-text">Profile-engine comparison that favors high codon adaptation index.</span>
+                                            </span>
+                                        </span>
+                                        <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Compare against CAI-focused rule-based output.</span>
+                                        <div
+                                            class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
+                                            ✓</div>
+                                    </div>
+                                </label>
 
-                        <label id="highCaiOption" class="block relative group">
-                            <input type="radio" name="objective" value="high_cai" class="peer sr-only">
-                            <div
-                                id="highCaiCard"
-                                class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
-                                <span class="flex items-center text-sm font-bold text-slate-800">
-                                    High CAI
-                                    <span id="highCaiHostBadge"
-                                        class="hidden ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">N. benthamiana only</span>
-                                    <span class="tooltip-container">
-                                        <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Profile-engine comparison that favors high codon adaptation index.</span>
-                                    </span>
-                                </span>
-                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Compare against CAI-focused rule-based output</span>
-                                <div
-                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
-                                    ✓</div>
-                            </div>
-                        </label>
+                                <label class="block relative group">
+                                    <input type="radio" name="objective" value="gc_target" class="peer sr-only">
+                                    <div
+                                        class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
+                                        <span class="flex items-center text-sm font-bold text-slate-800">
+                                            GC Target
+                                            <span class="tooltip-container">
+                                                <span class="info-icon">i</span>
+                                                <span class="tooltip-text">Profile-engine comparison that prioritizes proximity to the active host GC band.</span>
+                                            </span>
+                                        </span>
+                                        <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Compare against GC-focused rule-based output.</span>
+                                        <div
+                                            class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
+                                            ✓</div>
+                                    </div>
+                                </label>
 
-                        <label class="block relative group">
-                            <input type="radio" name="objective" value="gc_target" class="peer sr-only">
-                            <div
-                                class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
-                                <span class="flex items-center text-sm font-bold text-slate-800">
-                                    GC Target
-                                    <span class="tooltip-container">
-                                        <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Profile-engine comparison that prioritizes global GC proximity for N. benthamiana.</span>
-                                    </span>
-                                </span>
-                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Compare against GC-focused rule-based output</span>
-                                <div
-                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
-                                    ✓</div>
+                                <label class="block relative group">
+                                    <input type="radio" name="objective" value="assembly_friendly" class="peer sr-only">
+                                    <div
+                                        class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
+                                        <span class="flex items-center text-sm font-bold text-slate-800">
+                                            Assembly Friendly
+                                            <span class="tooltip-container">
+                                                <span class="info-icon">i</span>
+                                                <span class="tooltip-text">Domesticator: automatically removes BsaI, BpiI, and BsmBI sites via synonymous substitution.</span>
+                                            </span>
+                                        </span>
+                                        <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Golden Gate oriented Type IIS review; not a construct-assembly guarantee.</span>
+                                        <div
+                                            class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
+                                            ✓</div>
+                                    </div>
+                                </label>
                             </div>
-                        </label>
+                        </details>
 
-                        <label class="block relative group">
-                            <input type="radio" name="objective" value="assembly_friendly" class="peer sr-only">
-                            <div
-                                class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
-                                <span class="flex items-center text-sm font-bold text-slate-800">
-                                    Assembly Friendly
-                                    <span class="tooltip-container">
-                                        <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Domesticator: Automatically removes BsaI, BpiI, and
-                                            BsmBI sites via synonymous substitution.</span>
-                                    </span>
-                                </span>
-                                <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Golden Gate friendly (BsaI/BsmBI/BpiI removed)</span>
-                                <div
-                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
-                                    ✓</div>
-                            </div>
-                        </label>
+                        <details id="experimentalObjectives" class="disclosure-card rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900 dark:border-slate-800">
+                            <summary class="cursor-pointer select-none px-4 py-3 text-xs font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                                Show experimental objectives not enabled
+                            </summary>
+                            <div class="px-3 pb-3 space-y-3" aria-label="Experimental objectives not enabled">
+                                <label class="block relative group cursor-not-allowed">
+                                    <input type="radio" name="objective" value="ramp" class="peer sr-only" disabled>
+                                    <div
+                                        class="p-4 profile-card rounded-xl cursor-not-allowed opacity-60 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
+                                        <span class="flex items-center text-sm font-bold text-slate-800">
+                                            5' Ramp
+                                            <span
+                                                class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">Experimental</span>
+                                            <span class="tooltip-container">
+                                                <span class="info-icon">i</span>
+                                                <span class="tooltip-text">Experimental N-terminal codon-ramp heuristic for design review. Disabled until reviewed evidence supports public use.</span>
+                                            </span>
+                                        </span>
+                                        <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">Experimental N-terminal ramp heuristic.</span>
+                                        <span class="block text-[10px] text-amber-600 dark:text-amber-400 mt-1">Pending activation gate before enabling.</span>
+                                    </div>
+                                </label>
 
-                        <label class="block relative group cursor-not-allowed">
-                            <input type="radio" name="objective" value="viral_delivery" class="peer sr-only" disabled>
-                            <div
-                                class="p-4 profile-card rounded-xl cursor-not-allowed opacity-60 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-                                <span class="flex items-center text-sm font-bold text-slate-800">
-                                    Viral Delivery
-                                    <span
-                                        class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">Experimental</span>
-                                    <span class="tooltip-container">
-                                        <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Experimental TRV-oriented sequence-context profile. GC target ~47.5% based on TRV genome composition (Peccoud et al. 2024).</span>
-                                    </span>
-                                </span>
-                                <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">TRV-oriented sequence-context review</span>
-                                <span class="block text-[10px] text-amber-600 dark:text-amber-400 mt-1">Pending wet-lab validation before enabling</span>
-                                <div
-                                    class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">
-                                    ✓</div>
+                                <label class="block relative group cursor-not-allowed">
+                                    <input type="radio" name="objective" value="viral_delivery" class="peer sr-only" disabled>
+                                    <div
+                                        class="p-4 profile-card rounded-xl cursor-not-allowed opacity-60 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
+                                        <span class="flex items-center text-sm font-bold text-slate-800">
+                                            Viral Delivery
+                                            <span
+                                                class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">Experimental</span>
+                                            <span class="tooltip-container">
+                                                <span class="info-icon">i</span>
+                                                <span class="tooltip-text">Experimental TRV-oriented sequence-context profile. Disabled until reviewed evidence supports public use.</span>
+                                            </span>
+                                        </span>
+                                        <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">TRV-oriented sequence-context review.</span>
+                                        <span class="block text-[10px] text-amber-600 dark:text-amber-400 mt-1">Pending activation gate before enabling.</span>
+                                    </div>
+                                </label>
                             </div>
-                        </label>
+                        </details>
                     </div>
 
                     <!-- Host Selector -->
@@ -349,7 +363,7 @@
                         <div class="flex items-start justify-between gap-3 mb-4">
                             <div>
                                 <p class="text-[10px] font-extrabold text-slate-600 uppercase tracking-widest">Codon Reference</p>
-                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Packaged reference assets are visible for provenance; only evidence-gated defaults are selectable.</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Current production default first; packaged assets are provenance/comparator disclosures, not selectors.</p>
                             </div>
                             <span class="shrink-0 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 text-[9px] font-extrabold uppercase tracking-wider dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/50">v3.2.8 default</span>
                         </div>
@@ -357,43 +371,48 @@
                             <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/80 dark:bg-emerald-900/20 dark:border-emerald-800/50">
                                 <div class="flex items-center justify-between gap-3">
                                     <div>
-                                        <p class="text-sm font-black text-slate-900 dark:text-slate-100">Legacy Kazusa/SGN composite</p>
-                                        <p class="text-xs text-slate-700 dark:text-slate-400 mt-1">Active production-enabled baseline for <i>N. benthamiana</i>; preserved for v3.2.8 continuity.</p>
+                                        <p class="text-sm font-black text-slate-900 dark:text-slate-100">Current default: Legacy Kazusa/SGN composite</p>
+                                        <p class="text-xs text-slate-700 dark:text-slate-400 mt-1">Production-enabled baseline for <i>N. benthamiana</i>; preserved for v3.2.8 continuity.</p>
                                     </div>
                                     <span class="shrink-0 px-2 py-1 rounded-md bg-emerald-600 text-white text-[9px] font-extrabold uppercase tracking-wider">Selected</span>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-1 gap-2" aria-label="Reference assets not currently selectable">
-                                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 opacity-80 dark:bg-slate-900 dark:border-slate-800">
-                                    <div class="flex items-center justify-between gap-2">
-                                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">NbeV1.1 HC CDS-derived</p>
-                                        <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-bold uppercase dark:bg-amber-900/30 dark:text-amber-300">Experimental candidate</span>
+                            <details id="packagedReferenceAssets" class="disclosure-card rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900 dark:border-slate-800">
+                                <summary class="cursor-pointer select-none px-4 py-3 text-xs font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+                                    Show packaged reference assets
+                                </summary>
+                                <div class="px-3 pb-3 space-y-2" aria-label="Reference assets not currently selectable">
+                                    <div class="p-3 rounded-xl border border-slate-200 bg-white opacity-80 dark:bg-slate-900 dark:border-slate-800">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <p class="text-xs font-bold text-slate-800 dark:text-slate-200">NbeV1.1 HC CDS-derived</p>
+                                            <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-bold uppercase dark:bg-amber-900/30 dark:text-amber-300">Experimental candidate</span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1">Packaged for provenance and controlled comparison; pending activation gate, not a public selector.</p>
                                     </div>
-                                    <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1">Packaged for provenance and controlled comparison; pending activation gate, not a public selector.</p>
-                                </div>
-                                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 opacity-80 dark:bg-slate-900 dark:border-slate-800">
-                                    <div class="flex items-center justify-between gap-2">
-                                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">NbeV1.1 all-CDS</p>
-                                        <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-600 text-[9px] font-bold uppercase dark:bg-slate-800 dark:text-slate-300">Research comparator</span>
+                                    <div class="p-3 rounded-xl border border-slate-200 bg-white opacity-80 dark:bg-slate-900 dark:border-slate-800">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <p class="text-xs font-bold text-slate-800 dark:text-slate-200">NbeV1.1 all-CDS</p>
+                                            <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-600 text-[9px] font-bold uppercase dark:bg-slate-800 dark:text-slate-300">Research comparator</span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1">Analysis-only comparator for annotation-scope sensitivity; not a recommended production reference.</p>
                                     </div>
-                                    <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1">Analysis-only comparator for annotation-scope sensitivity; not a recommended production reference.</p>
-                                </div>
-                                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 opacity-80 dark:bg-slate-900 dark:border-slate-800">
-                                    <div class="flex items-center justify-between gap-2">
-                                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">QLD183 v103 CDS-derived</p>
-                                        <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-600 text-[9px] font-bold uppercase dark:bg-slate-800 dark:text-slate-300">Research comparator</span>
+                                    <div class="p-3 rounded-xl border border-slate-200 bg-white opacity-80 dark:bg-slate-900 dark:border-slate-800">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <p class="text-xs font-bold text-slate-800 dark:text-slate-200">QLD183 v103 CDS-derived</p>
+                                            <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-600 text-[9px] font-bold uppercase dark:bg-slate-800 dark:text-slate-300">Research comparator</span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1">Accession/source-sensitivity comparator only; not a production default.</p>
                                     </div>
-                                    <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1">Accession/source-sensitivity comparator only; not the LAB-strain-oriented default.</p>
-                                </div>
-                                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 opacity-80 dark:bg-slate-900 dark:border-slate-800">
-                                    <div class="flex items-center justify-between gap-2">
-                                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Tobacco BY-2 packaged table</p>
-                                        <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-bold uppercase dark:bg-amber-900/30 dark:text-amber-300">Experimental candidate</span>
+                                    <div class="p-3 rounded-xl border border-slate-200 bg-white opacity-80 dark:bg-slate-900 dark:border-slate-800">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Tobacco BY-2 packaged table</p>
+                                            <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-bold uppercase dark:bg-amber-900/30 dark:text-amber-300">Experimental candidate</span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1">Experimental host-context asset; visible for transparency, disabled for production selection.</p>
                                     </div>
-                                    <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1">Experimental host-context asset; visible for transparency, disabled for production selection.</p>
+                                    <p class="text-[10px] text-slate-500 dark:text-slate-400">Custom or partner-specific reference tables require a separate import/activation gate and are not enabled in this public UI.</p>
                                 </div>
-                            </div>
-                            <p class="text-[10px] text-slate-500 dark:text-slate-400">Custom or partner-specific reference tables require a separate import/activation gate and are not enabled in this public UI.</p>
+                            </details>
                         </div>
                     </div>
 

@@ -91,6 +91,9 @@ const elements = {
     highCaiOption: document.getElementById('highCaiOption'),
     highCaiCard: document.getElementById('highCaiCard'),
     highCaiHostBadge: document.getElementById('highCaiHostBadge'),
+    implementedObjectives: document.getElementById('implementedObjectives'),
+    experimentalObjectives: document.getElementById('experimentalObjectives'),
+    packagedReferenceAssets: document.getElementById('packagedReferenceAssets'),
     useTemplateCheck: document.getElementById('useTemplate'),
     kozakToggle: document.getElementById('toggleKozak'),
     dinucToggle: document.getElementById('toggleDinuc'),
@@ -334,6 +337,13 @@ function updateHostUI() {
         if (fallback) {
             fallback.checked = true;
             state.objective = fallback.value;
+            // The compact UX keeps alternative objectives collapsed by default.
+            // If host switching selects a hidden fallback, open that disclosure so
+            // the visible UI still shows the active objective rather than a
+            // disabled default card only.
+            if (elements.implementedObjectives && fallback.closest('#implementedObjectives')) {
+                elements.implementedObjectives.open = true;
+            }
         }
     }
 
