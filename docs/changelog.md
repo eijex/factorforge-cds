@@ -7,7 +7,7 @@ FactorForge v3.0+ is the current public release line.
 ## v3.2.8 — 2026-06-29
 
 ### Reverted
-- Default *N. benthamiana* GC reference band / codon-reference table reverted to legacy (55-65% GC), undoing a default-codon-reference promotion that shipped in v3.2.7. The newer candidate reference remains available, not deleted, pending an MFE re-sensitivity + 2x2 factorial recheck
+- Default *N. benthamiana* GC reference band / codon-reference table reverted to legacy (55-65% GC), undoing a default-codon-reference promotion that shipped in v3.2.7. Newer candidate/reference-comparator assets remain packaged for provenance and research comparison, but are not public production defaults or selectable UI options pending an MFE re-sensitivity + 2x2 factorial recheck
 
 ## v3.2.7 — 2026-06-29
 
