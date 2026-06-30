@@ -5,9 +5,8 @@ Background: `scripts/release.py` supports `--zenodo-doi` to update
 CITATION.cff, but that flag can only be run *after* Zenodo asynchronously
 mints a new DOI following a GitHub Release — it cannot happen inside the
 same release command. That manual follow-up step has been forgotten on
-three consecutive releases (v3.2.3, v3.2.4, v3.2.5; see Job 166 in
-eijex-workspace). This script detects the drift in CI instead of relying
-on someone noticing by chance.
+three consecutive releases (v3.2.3, v3.2.4, v3.2.5). This script detects
+the drift in CI instead of relying on someone noticing by chance.
 
 Warn-only by default (`--strict` to fail CI on mismatch) — querying
 Zenodo over the network is a new external dependency for the CI pipeline,
@@ -19,7 +18,6 @@ from __future__ import annotations
 
 import argparse
 import re
-import sys
 import urllib.error
 import urllib.request
 from pathlib import Path

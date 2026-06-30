@@ -9,7 +9,7 @@ Profile: assembly_friendly | Seed: 320 | Host: N. benthamiana
 Scoring contract: v1.1 (multi_constraint_pass = biological_pass AND assembly_pass AND gc_in_target_range)
 Reference: Pédelacq et al. 2006, Nat Biotechnol 24:79-88, PMID 16369541 | PDB:2B3P
 
-Job 168 / v3.3.0 (_analysis/025) changed FactorForge's production-default
+v3.3.0 reference-policy update changed FactorForge's production-default
 codon reference and GC band for N. benthamiana. This worked example is
 explicitly pinned to the historical legacy codon reference (GC 55-65%) so
 the frozen design_package.json/validation_summary.json below remain valid
@@ -189,7 +189,7 @@ def main() -> None:
     optimizer.translator.golden_ref_weights = optimizer.translator._build_ref_weights(
         optimizer.translator.golden_set_table
     )
-    # GC-target and codon-reference are independent axes (_analysis/025) —
+    # GC-target and codon-reference are independent axes (reference-policy audit) —
     # injecting the legacy table does not by itself pin the GC band, which
     # defaults from the active host. Pin the band explicitly too so this
     # example reproduces true legacy v1 behavior regardless of whatever the

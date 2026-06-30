@@ -42,7 +42,7 @@ against.
 | Contract version | Codon reference asset | GC reference band (*N. benthamiana*) | Status |
 |---|---|---|---|
 | `v1` | `nbenthamiana_legacy_kazusa_sgn_v101` (legacy, circular-derived) | 55-65% | historical comparator retained for v3.2.x continuity and sensitivity interpretation; not the current default |
-| `v2` | `nbenthamiana_nbev11_hc_v2` (NbeV1.1 LAB-strain, native genome-composition anchor; `_analysis/025`) | 40-47% | current production software default; public overrides remain disabled; not experimental validation or comparative biological-performance evidence |
+| `v2` | `nbenthamiana_nbev11_hc_v2` (NbeV1.1 LAB-strain, native genome-composition anchor; `reference-policy audit`) | 40-47% | current production software default; public overrides remain disabled; not experimental validation or comparative biological-performance evidence |
 
 The active default is recorded in `data/reference/active_codon_reference.json`
 and synchronized with `current_parameter_registry.yaml`'s `codon_reference.active`

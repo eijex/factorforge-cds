@@ -50,7 +50,7 @@ ROOT = Path(__file__).parent.parent
 
 
 def build_workspace_targets(old: str, new: str, workspace: Path) -> list[tuple[Path, list[tuple[str, str]], bool]]:
-    """Optional cross-repo targets in the eijex-workspace (planning/tracking repo)."""
+    """Optional cross-repo targets in a private planning/tracking repo."""
     return [
         (workspace / "README.md", [
             (f"FactorForge v{old}", f"FactorForge v{new}"),
@@ -358,7 +358,7 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     print(f"\n{'[DRY RUN] ' if dry_run else ''}{'─' * 40}")
     print(f"Files modified: {total_changes}")
 
-    # Workspace targets (eijex-workspace or other tracking repo)
+    # Workspace targets (private planning/tracking repo)
     if workspace is not None:
         if not workspace.is_dir():
             print(f"  WARN: --workspace path not found: {workspace}")
@@ -488,7 +488,7 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     print("  6. Wait for CI to pass (github.com/eijex/factorforge-cds/actions)")
     print()
     print("  --- Public surface audit (before tagging) ---")
-    print(f"  6a. python scripts/audit_public_surface.py --live")
+    print("  6a. python scripts/audit_public_surface.py --live")
     print("        → fix any findings before tagging")
     print()
     print("  --- Tag & publish ---")
@@ -507,7 +507,7 @@ def bump(old: str, new: str, dry_run: bool = False, strict: bool = False, worksp
     print(" 13.  Close completed GitHub Issues; close milestone if all done")
     print()
     print("  --- Post-release external audit ---")
-    print(f" 14.  python scripts/audit_public_surface.py --external \\")
+    print(" 14.  python scripts/audit_public_surface.py --external \\")
     print(f"        --url https://pypi.org/project/factorforge-cds/{new}/")
     print("        → confirms no policy violations leaked into published surfaces")
 
@@ -563,7 +563,7 @@ def _changelog_move_unreleased(root: Path, old: str, new: str, dry_run: bool) ->
         new_unreleased = f"[Unreleased]: {full_base_url}v{new}...HEAD"
         version_link = f"[{new}]: {full_base_url}v{old}...v{new}"
         content = content.replace(old_link, f"{new_unreleased}\n{version_link}", 1)
-        changes.append(f"  comparison links updated")
+        changes.append("  comparison links updated")
 
     if not changes:
         return []
@@ -776,7 +776,7 @@ def auto_release(
             for c in cl_changes:
                 print(c)
         else:
-            print(f"  (dry run) would rename and update comparison links")
+            print("  (dry run) would rename and update comparison links")
 
         # ── [6] WHAT'S NEW AUTO-FILL ──────────────────────────
         print("\n[6] What's New bullets (web/index.html)")
@@ -853,7 +853,7 @@ def auto_release(
         print("\nGitHub Actions (automatic): PyPI + Docker + GitHub Release + Zenodo")
         print("\nPost-release (3 manual items):")
         print(f"  1. docs/changelog.md — add a one-line summary entry for v{new}")
-        print(f"  2. After Zenodo mints the new DOI:")
+        print("  2. After Zenodo mints the new DOI:")
         print(f"       python scripts/release.py {new} --zenodo-doi 10.5281/zenodo.<ID>")
         print(f"  3. Bioconda: python scripts/update_conda_recipe_sha.py {new}  (after PyPI confirms the sdist is live), then push the branch it creates")
         cross = [r for r in [workspace, mcp, web_repo] if r]

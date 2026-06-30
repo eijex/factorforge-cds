@@ -5,7 +5,7 @@ Covers the benchmark contract: when a source-profile codon table is
 injected, the CAI-dependent profiles must re-design against it, while the product
 engine path (no injection) must remain byte-identical to the bundled reference.
 
-Job 168 / v3.3.0 (_analysis/025) made the production default itself one of
+v3.3.0 reference-policy update made the production default itself one of
 the candidate source-profile tables (nbev11_cds_hc_derived_codons.json).
 These tests therefore check provenance (resolved asset path/sha256, and
 whether the engine actually re-designed against it) rather than asserting

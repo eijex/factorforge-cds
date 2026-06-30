@@ -98,7 +98,7 @@ class CodonUsageTable:
 
 
 def _default_codon_table_path() -> Path:
-    # Job 168 / v3.3.0 (_analysis/025): production default switched from the
+    # v3.3.0 reference-policy update: production default switched from the
     # legacy Kazusa/SGN-derived table to the NbeV1.1 LAB-strain high-confidence
     # derived table. See data/reference/active_codon_reference.json.
     return get_data_path() / "profiles" / "nbev11_cds_hc_derived_codons.json"

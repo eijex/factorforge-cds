@@ -111,8 +111,8 @@ def test_smoke_summary_contains_codon_table_fields(tmp_path):
         assert field in data, f"Missing codon table field in smoke summary JSON: {field}"
 
     # No --codon-table-path override ⇒ codon_table_id must reflect whichever
-    # asset is actually the current production default (Job 168 / v3.3.0,
-    # _analysis/025 — see data/reference/active_codon_reference.json), not a
+    # asset is actually the current production default (v3.3.0 reference-policy update,
+    # reference-policy audit — see data/reference/active_codon_reference.json), not a
     # hardcoded legacy literal.
     active_ref = json.loads(
         (ROOT / "data" / "reference" / "active_codon_reference.json").read_text(encoding="utf-8")
@@ -148,9 +148,6 @@ def test_smoke_summary_contains_vienna_rna_active(tmp_path):
 
 def test_no_raw_genome_fasta_committed():
     """Raw genome/CDS/protein FASTA files must not be committed to the repo."""
-    forbidden_patterns = ["*.fasta", "*.fa", "*.fna", "*.fastq"]
-    allowed_fixtures = ROOT / "tests" / "fixtures"
-
     import subprocess
     result = subprocess.run(
         ["git", "ls-files", "--", "*.fasta", "*.fa", "*.fna", "*.fastq"],
@@ -168,6 +165,6 @@ def test_no_raw_genome_fasta_committed():
         if p and not any(p.startswith(pfx) for pfx in allowed_prefixes)
     ]
     assert not committed, (
-        f"Raw FASTA/genome files must not be committed outside allowed locations:\n"
+        "Raw FASTA/genome files must not be committed outside allowed locations:\n"
         + "\n".join(committed)
     )

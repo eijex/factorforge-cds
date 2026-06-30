@@ -27,5 +27,5 @@
   "claim_boundary": "This codon table is a configured in-silico FactorForge reference for codon-usage scoring and optimization. It is not wet-lab validation, yield prediction, or expression-success evidence.",
   "asset_type": "legacy_packaged",
   "terminal_stop_policy": "included_in_frequency_model",
-  "promotion_note": "Demoted from canonical production default in Job 168 / v3.3.0 (_analysis/025), shipped as part of v3.2.7. Restored as production default pending an MFE re-sensitivity + 2x2 factorial recheck of the v2 candidate (data/reference/codon_table_manifest_nbev11_hc_v2.json). See data/reference/active_codon_reference.json for the current production default."
+  "promotion_note": "Legacy packaged reference retained as a historical comparator after the v3.3.0 NbeV1.1 high-confidence CDS-derived default activation. See data/reference/active_codon_reference.json for the current production default."
 }

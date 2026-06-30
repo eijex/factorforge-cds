@@ -376,10 +376,9 @@ class ReverseTranslator:
         - Preferred codon ratio: 70%
         - Target GC: host composition band, resolved via
           resolve_host_gc_range() (engines/profile/scoring.py
-          GC_OPT_MIN/MAX). nbenthamiana currently uses the legacy 55-65%
-          band; the native genome-composition anchor (40-47%, _analysis/025)
-          was provisionally reverted on 2026-06-29 pending an MFE
-          re-sensitivity + 2x2 factorial recheck.
+          GC_OPT_MIN/MAX). N. benthamiana currently uses the NbeV1.1
+          high-confidence CDS-derived native-composition band (40-47%);
+          other hosts retain their configured defaults.
         - GC target requests are best-effort sampling targets, not guarantees:
           achieved GC can be dominated by the codon table's frequency-weighted
           sampling distribution.
@@ -457,7 +456,7 @@ class ReverseTranslator:
 
         Targets the caller-supplied ``target_gc`` if provided, otherwise the
         active host's composition midpoint (resolve_host_gc_range(self.host);
-        43.5% for nbenthamiana since v3.3.0 / _analysis/025, 60.0% for other
+        43.5% for nbenthamiana since v3.3.0 / reference-policy audit, 60.0% for other
         hosts pending their own host-specific analysis). To target a different
         GC (e.g. for specific vector requirements), pass target_gc explicitly.
 

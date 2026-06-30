@@ -20,7 +20,7 @@ test('loads the main web UI', async ({ page }) => {
   await expect(page.locator('#optimizeBtn')).toBeVisible();
 });
 
-test('discloses codon reference policy as compact current default plus collapsed assets', async ({ page }) => {
+test('discloses codon reference policy as current default plus non-selector note', async ({ page }) => {
   await openApp(page);
 
   const policy = page.locator('#codonReferencePolicy');
@@ -29,18 +29,12 @@ test('discloses codon reference policy as compact current default plus collapsed
   await expect(policy).toContainText('Selected');
 
   const packagedAssets = page.locator('#packagedReferenceAssets');
-  await expect(packagedAssets).not.toHaveAttribute('open', '');
-  await expect(packagedAssets.getByText('Legacy Kazusa/SGN composite')).toBeHidden();
-
-  await packagedAssets.locator('summary').click();
-  await expect(packagedAssets).toHaveAttribute('open', '');
-  await expect(packagedAssets).toContainText('Legacy Kazusa/SGN composite');
-  await expect(packagedAssets).toContainText('Historical comparator');
-  await expect(packagedAssets).toContainText('NbeV1.1 all-CDS');
-  await expect(packagedAssets).toContainText('QLD183 v103 CDS-derived');
-  await expect(packagedAssets).toContainText('Research comparator');
-  await expect(packagedAssets).toContainText('Tobacco BY-2 packaged table');
-  await expect(packagedAssets).toContainText('not enabled in this public UI');
+  await expect(packagedAssets).toContainText('not shown as public product choices');
+  await expect(packagedAssets).toContainText('provenance, reproducibility, and controlled internal sensitivity analysis');
+  await expect(packagedAssets).not.toContainText('Legacy Kazusa/SGN composite');
+  await expect(packagedAssets).not.toContainText('NbeV1.1 all-CDS');
+  await expect(packagedAssets).not.toContainText('QLD183 v103 CDS-derived');
+  await expect(packagedAssets).not.toContainText('Tobacco BY-2 packaged table');
   await expect(policy.locator('input, select, button')).toHaveCount(0);
 });
 

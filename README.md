@@ -60,7 +60,7 @@ FactorForge outputs are **in-silico only** and have not been experimentally vali
 ## Citing
 
 ```
-FactorForge v3.2.8 (2026). Open-source constraint-based CDS design engine.
+FactorForge v3.3.0 (2026). Open-source constraint-based CDS design engine.
 Eijex. https://github.com/eijex/factorforge-cds
 ```
 

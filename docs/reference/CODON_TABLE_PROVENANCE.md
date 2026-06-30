@@ -8,32 +8,32 @@ This document discloses the provenance status of that table and the limitations 
 
 ---
 
-## Current Codon Table
+## Current Production Codon Reference
 
 | Field | Value |
 |-------|-------|
-| **ID** | `nbenthamiana_legacy_kazusa_sgn_v101` |
+| **ID** | `nbenthamiana_nbev11_hc_v2` |
 | **Species** | *Nicotiana benthamiana* |
 | **NCBI TaxID** | 4100 |
 | **File** | `src/factorforge/data/nbenthamiana_codons.json` |
-| **SHA-256** | `ddbd0a41da88109a709bca0304581e29bd0a756e4db1c51809d5002e9b2d5e8c` |
-| **Source label** | Kazusa CodonUsage Database + SGN genome v1.0.1 |
-| **Source status** | `legacy_metadata_only` |
-| **Build path status** | `incomplete` |
-| **Authoritative build script** | Not available |
+| **SHA-256** | See `data/reference/active_codon_reference.json` and `data/reference/codon_table_manifest_nbev11_hc_v2.json` |
+| **Source label** | NbeV1.1 high-confidence CDS-derived native-composition anchor |
+| **Source status** | `official_packaged` / active production software default |
+| **Build path status** | Manifested and checksum-guarded |
+| **Authoritative build script** | `scripts/build_codon_profile.py` with `strict_nuclear_cds_v1` filtering |
 
 ---
 
 ## Provenance Disclosure
 
-The current N. benthamiana codon table is a legacy FactorForge reference labeled as derived from Kazusa CodonUsage Database and SGN genome v1.0.1-era resources. The original authoritative build path for the current JSON codon table is incomplete/not verified. The formal benchmark dataset uses SGN QLD183 v103 records; therefore CAI and codon-usage metrics should be interpreted as scores against the configured FactorForge codon reference, not as a de novo SGN QLD183 v103 codon-usage reconstruction.
+The current *N. benthamiana* production software default is `nbenthamiana_nbev11_hc_v2`, an NbeV1.1 high-confidence CDS-derived codon-reference asset with the default GC policy band aligned to 40-47%. The legacy Kazusa/SGN v1.0.1-era table is retained as historical comparator/provenance data, not the public product default. The formal benchmark dataset uses SGN QLD183 v103 records; therefore CAI and codon-usage metrics should be interpreted as scores against the configured FactorForge codon reference, not as comparative biological-performance evidence.
 
 ---
 
 ## Known Limitations
 
-1. The original script or exact command used to generate the current JSON codon table is not available or not verified.
-2. The current codon table is not a freshly rebuilt SGN QLD183 v103 codon table.
+1. The current production default is an in-silico software reference, not wet-lab validation, expression-output prediction, or comparative biological-performance evidence.
+2. The legacy Kazusa/SGN composite remains packaged for historical continuity but is not the public product default.
 3. Benchmark CAI scores should be interpreted against the configured FactorForge codon reference.
 
 ---
@@ -69,14 +69,14 @@ This codon table is a configured in-silico FactorForge reference for codon-usage
 
 ---
 
-## Planned Rebuild — v3.3.0
+## v3.3.0 Default Activation
 
-A full rebuild of the N. benthamiana codon table from SGN QLD183 v103 is planned for FactorForge v3.3.0:
+FactorForge v3.3.0 activates `nbenthamiana_nbev11_hc_v2` as the current *N. benthamiana* production software default:
 
-- **Target reference**: SGN QLD183 v103
-- **Approach**: Download CDS with documented script, apply explicit filtering rules, compute codon frequencies
-- **Expected effect**: Codon weights, CAI scores, profile rankings, and benchmark results may change
-- **Deliverables**: New `codon_table_id`, updated manifest, old vs. new codon weight diff, re-run benchmark (seed=320)
+- **Active reference**: NbeV1.1 high-confidence CDS-derived codon usage
+- **Default GC policy band**: 40-47%
+- **Policy**: Public API/UI codon-reference overrides remain unsupported
+- **Comparator assets**: Legacy Kazusa/SGN, NbeV1.1 all-CDS, QLD183 v103, and other research/candidate assets remain retained for provenance and controlled analysis only
 
 Current production results should be interpreted against the active `nbenthamiana_nbev11_hc_v2` software reference unless a controlled research/benchmark path explicitly pins a comparator table.
 

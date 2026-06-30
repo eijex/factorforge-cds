@@ -2,12 +2,12 @@
 
 FactorForge development direction and planned work.
 
-> Current release: **v3.2.8** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current release: **v3.3.0** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
 
-## Current Focus (v3.2.x)
+## Current Focus (v3.3.x)
 
 Public-claim alignment, wet-lab feedback intake, and stability. The core engine is feature-complete for the current public scope; this track keeps public documentation, package metadata, web UI, Docker/GHCR references, and citation archives aligned with the same in-silico CDS design boundary.
 
