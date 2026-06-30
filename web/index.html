@@ -344,6 +344,59 @@
                         </div>
                     </div>
 
+                    <!-- Codon Reference Policy -->
+                    <div id="codonReferencePolicy" class="mb-8 border-t border-slate-100 pt-6">
+                        <div class="flex items-start justify-between gap-3 mb-4">
+                            <div>
+                                <p class="text-[10px] font-extrabold text-slate-600 uppercase tracking-widest">Codon Reference</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Packaged reference assets are visible for provenance; only evidence-gated defaults are selectable.</p>
+                            </div>
+                            <span class="shrink-0 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 text-[9px] font-extrabold uppercase tracking-wider dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/50">v3.2.8 default</span>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/80 dark:bg-emerald-900/20 dark:border-emerald-800/50">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div>
+                                        <p class="text-sm font-black text-slate-900 dark:text-slate-100">Legacy Kazusa/SGN composite</p>
+                                        <p class="text-xs text-slate-700 dark:text-slate-400 mt-1">Active production-enabled baseline for <i>N. benthamiana</i>; preserved for v3.2.8 continuity.</p>
+                                    </div>
+                                    <span class="shrink-0 px-2 py-1 rounded-md bg-emerald-600 text-white text-[9px] font-extrabold uppercase tracking-wider">Selected</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 gap-2" aria-label="Reference assets not currently selectable">
+                                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 opacity-80 dark:bg-slate-900 dark:border-slate-800">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">NbeV1.1 HC CDS-derived</p>
+                                        <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-bold uppercase dark:bg-amber-900/30 dark:text-amber-300">Experimental candidate</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1">Packaged for provenance and controlled comparison; pending activation gate, not a public selector.</p>
+                                </div>
+                                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 opacity-80 dark:bg-slate-900 dark:border-slate-800">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">NbeV1.1 all-CDS</p>
+                                        <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-600 text-[9px] font-bold uppercase dark:bg-slate-800 dark:text-slate-300">Research comparator</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1">Analysis-only comparator for annotation-scope sensitivity; not a recommended production reference.</p>
+                                </div>
+                                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 opacity-80 dark:bg-slate-900 dark:border-slate-800">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">QLD183 v103 CDS-derived</p>
+                                        <span class="px-2 py-0.5 rounded bg-slate-200 text-slate-600 text-[9px] font-bold uppercase dark:bg-slate-800 dark:text-slate-300">Research comparator</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1">Accession/source-sensitivity comparator only; not the LAB-strain-oriented default.</p>
+                                </div>
+                                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 opacity-80 dark:bg-slate-900 dark:border-slate-800">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Tobacco BY-2 packaged table</p>
+                                        <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-bold uppercase dark:bg-amber-900/30 dark:text-amber-300">Experimental candidate</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1">Experimental host-context asset; visible for transparency, disabled for production selection.</p>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-slate-500 dark:text-slate-400">Custom or partner-specific reference tables require a separate import/activation gate and are not enabled in this public UI.</p>
+                        </div>
+                    </div>
+
                     <!-- Advanced Settings -->
                     <div class="mb-8 border-t border-slate-100 pt-6">
                         <p class="text-[10px] font-extrabold text-slate-600 uppercase tracking-widest mb-4">Advanced
