@@ -46,12 +46,13 @@ against.
 
 The active default is recorded in `data/reference/active_codon_reference.json`
 and synchronized with `current_parameter_registry.yaml`'s `codon_reference.active`
-block (see `tests/test_registry_production_sync.py` for the sync guard). Pass
-an explicit `codon_table_path` (Python API `RuleBasedOptimizer(codon_table_path=...)`,
-or the benchmark script's `--codon-table-path` / `--source-profile-id`) to pin
-a result to a specific contract version regardless of the current default. The
-CLI and REST API do not currently expose a codon-table override; they always
-use the active default.
+block (see `tests/test_registry_production_sync.py` for the sync guard). Public
+CLI and REST API optimize endpoints do **not** expose a codon-reference override;
+they always use the active default and reject request fields such as
+`codon_reference`, `codon_table_id`, or `codon_table_path`. Python/benchmark
+research paths can still pass an explicit `codon_table_path` for controlled
+comparator runs, but those packaged assets are not public production options
+unless a separate activation gate enables them.
 
 **Advisory sequence-risk scans** (all 9 run by default; findings are reported, never gating):
 

@@ -14,10 +14,10 @@ def _handler() -> handler:
     return object.__new__(handler)
 
 
-def _post_optimize(payload: dict) -> tuple[int, dict]:
+def _post_api(path: str, payload: dict) -> tuple[int, dict]:
     request_handler = _handler()
     body = json.dumps(payload).encode("utf-8")
-    request_handler.path = "/api/optimize"
+    request_handler.path = path
     request_handler.headers = {"Content-Length": str(len(body))}
     request_handler.rfile = BytesIO(body)
     request_handler.wfile = BytesIO()
@@ -32,6 +32,84 @@ def _post_optimize(payload: dict) -> tuple[int, dict]:
     request_handler.wfile.seek(0)
     response_body = json.loads(request_handler.wfile.read().decode("utf-8"))
     return responses[0], response_body
+
+
+def _post_optimize(payload: dict) -> tuple[int, dict]:
+    return _post_api("/api/optimize", payload)
+
+
+def test_public_api_rejects_codon_reference_override_fields() -> None:
+    status_code, result = _post_optimize(
+        {
+            "sequence": "MSKGEELFTGVVPILVELD",
+            "profile": "balanced",
+            "codon_reference": "nbenthamiana_nbev11_hc_v2",
+        }
+    )
+
+    assert status_code == 400
+    assert result["error_code"] == "REFERENCE_OVERRIDE_NOT_SUPPORTED"
+    assert result["forbidden_fields"] == ["codon_reference"]
+    assert result["reference_policy"]["override_supported"] is False
+    assert result["reference_policy"]["selectable_reference_ids"] == []
+    assert (
+        result["reference_policy"]["active_default_reference_id"]
+        == "nbenthamiana_legacy_kazusa_sgn_v101"
+    )
+
+
+def test_compare_and_batch_reject_reference_override_fields() -> None:
+    compare_status, compare_result = _post_api(
+        "/api/optimize/compare",
+        {
+            "sequence": "MSKGEELFTGVVPILVELD",
+            "profiles": ["balanced"],
+            "codon_table_id": "nbenthamiana_nbev11_hc_v2",
+        },
+    )
+    batch_status, batch_result = _post_api(
+        "/api/optimize/batch",
+        {
+            "sequences": [{"id": "seq1", "sequence": "MSKGEELFTGVVPILVELD"}],
+            "profile": "balanced",
+            "codon_table_path": "src/factorforge/data/profiles/nbev11_cds_hc_derived_codons.json",
+        },
+    )
+
+    assert compare_status == 400
+    assert compare_result["error_code"] == "REFERENCE_OVERRIDE_NOT_SUPPORTED"
+    assert compare_result["forbidden_fields"] == ["codon_table_id"]
+    assert batch_status == 400
+    assert batch_result["error_code"] == "REFERENCE_OVERRIDE_NOT_SUPPORTED"
+    assert batch_result["forbidden_fields"] == ["codon_table_path"]
+
+
+def test_public_reference_policy_metadata_does_not_advertise_disabled_selectors() -> None:
+    metadata = optimize_api._public_reference_policy_metadata()
+
+    assert metadata["override_supported"] is False
+    assert metadata["selectable_reference_ids"] == []
+    assert metadata["active_default"] == {
+        "reference_id": "nbenthamiana_legacy_kazusa_sgn_v101",
+        "tier": "production_enabled",
+        "activation_status": "enabled",
+        "claim_boundary": metadata["active_default"]["claim_boundary"],
+    }
+    assert metadata["activation_status_counts"]["enabled"] == 1
+    assert metadata["activation_status_counts"]["disabled"] >= 1
+    assert metadata["activation_status_counts"]["research_only"] >= 1
+    assert metadata["disabled_or_research_only_count"] >= 3
+    assert "codon_reference" in metadata["forbidden_override_fields"]
+
+
+def test_get_optimize_exposes_public_reference_policy_metadata() -> None:
+    data = _get_optimize()
+    policy = data["reference_policy"]
+
+    assert policy["override_supported"] is False
+    assert policy["selectable_reference_ids"] == []
+    assert policy["active_default_reference_id"] == "nbenthamiana_legacy_kazusa_sgn_v101"
+    assert policy["active_default"]["activation_status"] == "enabled"
 
 
 def test_parse_constraints_defaults() -> None:
