@@ -25,7 +25,7 @@ keywords:
   - constraint satisfaction
 abstract: >
   FactorForge is an open-source, constraint-aware coding sequence (CDS) design
-  and pre-synthesis sequence review engine for plant molecular expression
+  and pre-synthesis sequence review tool for plant molecular expression
   workflows, with primary support for Nicotiana benthamiana and experimental
   Tobacco BY-2 host context. It scores and ranks synonymous CDS candidates using
   a dynamic programming feasibility engine, reporting Codon Adaptation Index

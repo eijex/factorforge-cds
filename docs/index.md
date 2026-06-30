@@ -1,6 +1,6 @@
 # FactorForge
 
-**Open-source constraint-based CDS design and pre-synthesis sequence review engine for plant CDS workflows, with primary support for *Nicotiana benthamiana* (Tobacco BY-2: experimental).**
+**Open-source constraint-based CDS design and pre-synthesis sequence review for plant CDS workflows, with primary support for *Nicotiana benthamiana* (Tobacco BY-2: experimental).**
 
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](https://github.com/eijex/factorforge-cds/blob/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/factorforge-cds.svg)](https://pypi.org/project/factorforge-cds/)
