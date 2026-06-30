@@ -1,0 +1,144 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "reference_policy_manifest.schema.json",
+  "title": "FactorForge Reference Policy Manifest",
+  "description": "Activation and exposure policy manifest for codon-reference assets. Asset presence is separated from product activation.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "policy_version",
+    "active_default_reference_id",
+    "activation_principles",
+    "references"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "policy_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "active_default_reference_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "activation_principles": {
+      "type": "array",
+      "minItems": 4,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "references": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/definitions/reference"}
+    }
+  },
+  "definitions": {
+    "reference": {
+      "type": "object",
+      "required": [
+        "reference_id",
+        "tier",
+        "activation_status",
+        "codon_table_path",
+        "checksum_sha256",
+        "source_name",
+        "source_url",
+        "source_doi_or_accession",
+        "source_version",
+        "date_accessed_or_built",
+        "organism",
+        "strain_or_cultivar",
+        "sequence_scope",
+        "license_or_redistribution_status",
+        "intended_use",
+        "not_for",
+        "claim_boundary",
+        "public_exposure",
+        "activation_evidence"
+      ],
+      "properties": {
+        "reference_id": {"type": "string", "minLength": 1},
+        "tier": {
+          "type": "string",
+          "enum": [
+            "production_enabled",
+            "historical_reproduction",
+            "research_comparator",
+            "experimental_candidate",
+            "packaged_asset",
+            "custom_user_provided"
+          ]
+        },
+        "activation_status": {
+          "type": "string",
+          "enum": ["enabled", "disabled", "research_only", "historical_only", "packaged_only"]
+        },
+        "codon_table_path": {"type": "string", "minLength": 1},
+        "checksum_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "source_name": {"type": "string", "minLength": 1},
+        "source_url": {"type": "string", "minLength": 1},
+        "source_doi_or_accession": {"type": "string", "minLength": 1},
+        "source_version": {"type": "string", "minLength": 1},
+        "date_accessed_or_built": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+        "organism": {"type": "string", "minLength": 1},
+        "ncbi_taxid": {"type": "integer", "minimum": 1},
+        "strain_or_cultivar": {"type": "string", "minLength": 1},
+        "tissue_or_sample_scope": {"type": "string"},
+        "sequence_scope": {
+          "type": "string",
+          "enum": ["CDS", "transcript", "genome", "mixed", "unknown"]
+        },
+        "isoform_policy": {"type": "string"},
+        "extraction_method": {"type": "string"},
+        "normalization_method": {"type": "string"},
+        "manual_curation": {"type": "boolean"},
+        "license_or_redistribution_status": {"type": "string", "minLength": 1},
+        "known_limitations": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "intended_use": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "not_for": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "claim_boundary": {"type": "string", "minLength": 1},
+        "public_exposure": {
+          "type": "object",
+          "required": ["python_library", "cli", "rest_api", "web_ui", "mcp", "docs_examples", "manuscript"],
+          "properties": {
+            "python_library": {"type": "string", "minLength": 1},
+            "cli": {"type": "string", "minLength": 1},
+            "rest_api": {"type": "string", "minLength": 1},
+            "web_ui": {"type": "string", "minLength": 1},
+            "mcp": {"type": "string", "minLength": 1},
+            "docs_examples": {"type": "string", "minLength": 1},
+            "manuscript": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": false
+        },
+        "activation_evidence": {
+          "type": "object",
+          "required": ["validation_dataset", "analysis_plan", "reviewer_signoff"],
+          "properties": {
+            "validation_dataset": {"type": "string"},
+            "analysis_plan": {"type": "string"},
+            "reviewer_signoff": {"type": "string"}
+          },
+          "additionalProperties": false
+        },
+        "notes": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
