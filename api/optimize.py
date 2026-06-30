@@ -200,7 +200,7 @@ def _reject_reference_override_fields(data: dict[str, Any]) -> dict[str, Any] | 
 
 
 def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[str, float]:
-    """Host-aware default gc_min/gc_max (Job 168 / v3.3.0, _analysis/025).
+    """Host-aware default gc_min/gc_max (v3.3.0 reference-policy update).
 
     Resolves per-host via resolve_host_gc_range(). nbenthamiana uses the
     v3.3.0 NbeV1.1 high-confidence CDS-derived native-composition band
@@ -400,7 +400,7 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         """Handle GET requests (health check)"""
         # host_metadata is the single source of truth for web/js/app.js GC
-        # band labels/thresholds (Job 168 / v3.3.0) — the static UI must not
+        # band labels/thresholds (v3.3.0 reference-policy update) — the static UI must not
         # hardcode 55-65 or 40-47 anywhere, since each host's band can differ.
         host_metadata_with_gc = {
             public_host: {**meta, "gc_range": _default_gc_constraints(HOST_MAP[public_host])}

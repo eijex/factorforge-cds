@@ -76,7 +76,7 @@ def test_aa_identity_policy_sync():
     assert ok["passed"] and ok["aa_identity"] == registry_val
 
 
-# ── codon_reference source-of-truth sync (Job 168 / v3.3.0, _analysis/025) ────
+# ── codon_reference source-of-truth sync (v3.3.0 reference-policy update) ────
 
 def test_codon_reference_active_sync_with_active_reference_file():
     """registry's codon_reference.active block must match

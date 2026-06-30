@@ -116,7 +116,7 @@ def test_parse_constraints_defaults() -> None:
     h = _handler()
 
     # No host ⇒ defaults to nbenthamiana, whose default band is the
-    # _analysis/025 composition anchor (Job 168 / v3.3.0), not the
+    # NbeV1.1 native-composition anchor (v3.3.0 reference-policy update), not the
     # module-level DEFAULT_GC_MIN/MAX (which is now only the fallback for
     # hosts without their own analysis, e.g. by2/ntabacum).
     assert h.parse_constraints({}) == optimize_api._default_gc_constraints("nbenthamiana")
@@ -125,7 +125,7 @@ def test_parse_constraints_defaults() -> None:
 def test_parse_constraints_defaults_for_non_nbenthamiana_host_unchanged() -> None:
     h = _handler()
 
-    # by2/ntabacum has no host-specific analysis (Job 168 scope: nbenthamiana
+    # by2/ntabacum has no host-specific analysis (v3.3.0 reference-policy update scope: nbenthamiana
     # only) — it must keep the pre-v3.3.0 global default unchanged.
     assert h.parse_constraints({}, host="ntabacum") == {
         "gc_min": DEFAULT_GC_MIN,
@@ -323,7 +323,7 @@ def test_design_package_codon_rarity_clusters_use_rule_scan() -> None:
 
     # Whether a run of CTA codons counts as "rare" depends on the active
     # production codon-usage table's relative-adaptiveness weight for CTA
-    # (Job 168 / v3.3.0 migrated nbenthamiana's default — see
+    # (v3.3.0 reference-policy update migrated nbenthamiana's default — see
     # data/reference/active_codon_reference.json). Derive the expected count
     # from the live rule engine instead of hardcoding it, so this test keeps
     # verifying that add_design_package_fields actually wires through to
@@ -444,7 +444,6 @@ def test_get_health_check_exposes_validation_registry() -> None:
     h = _handler()
     responses: list[int] = []
     headers: list[tuple[str, str]] = []
-    sent: dict[str, object] = {}
     h.path = "/api/optimize"
     h.send_response = responses.append
     h.send_header = lambda key, value: headers.append((key, value))
@@ -636,7 +635,7 @@ def test_invalid_host_error_contract_unchanged() -> None:
     assert "Invalid host" in result["error"]
 
 
-# ── host_metadata.gc_range web sync (Job 168 / v3.3.0, STEP 4.1) ─────────────
+# ── host_metadata.gc_range web sync (v3.3.0 reference-policy update, STEP 4.1) ─────────────
 # web/js/app.js must never hardcode a GC reference band — it reads
 # host_metadata[host].gc_range from this GET response at runtime. These tests
 # guard the response itself, plus the offline-only fallback literal in app.js,

@@ -18,7 +18,6 @@ for _path in (ROOT, ROOT / "src"):
         sys.path.insert(0, _path_str)
 
 from benchmarks.config import load_benchmark_config  # noqa: E402
-from factorforge.engines.profile.utils import get_data_path  # noqa: E402
 from benchmarks.scoring import score_cds  # noqa: E402
 from benchmarks.baselines.random_synonymous import random_synonymous_cds  # noqa: E402
 from benchmarks.baselines.greedy_cai import greedy_cai_cds  # noqa: E402
@@ -67,7 +66,7 @@ def _resolve_active_default_reference(root: Path) -> dict:
     default (no --codon-table-path override), by fact rather than a
     hardcoded label.
 
-    Job 168 / v3.3.0 (_analysis/025): the no-flag benchmark path keeps its
+    v3.3.0 reference-policy update: the no-flag benchmark path keeps its
     original design intent of tracking the current product default; this
     only makes the resulting summary label reflect that default truthfully
     instead of assuming it is always "legacy_packaged".
@@ -115,7 +114,7 @@ def run(dataset: str, mode: str, out_csv: Path, out_md: Path,
         source_manifest_sha256: str | None = None,
         source_manifest_path: Path | None = None,
         codon_table_path: Path | None = None) -> None:
-    # Job 168 / v3.3.0 (_analysis/025): resolve no-flag defaults here (not
+    # v3.3.0 reference-policy update: resolve no-flag defaults here (not
     # only in main()) so every caller of run() — CLI, tests, aggregate
     # scripts — gets fact-derived provenance instead of a stale literal.
     if codon_table_path is None and source_profile_id is None:
@@ -247,7 +246,7 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
     methods = sorted({r["method"] for r in rows})
     # Resolve codon table metadata for MD from the manifest that is actually
     # active for this run (legacy override or current production default),
-    # not a hardcoded legacy assumption (Job 168 / v3.3.0, _analysis/025).
+    # not a hardcoded legacy assumption (v3.3.0 reference-policy update).
     # Use the module-level ROOT constant, not out_md's ancestors — out_md may
     # be a tmp_path in tests/smoke runs and not sit 4 levels under repo root.
     _repo_root_md = ROOT
@@ -281,7 +280,7 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
             "labeled as derived from Kazusa CodonUsage Database and SGN genome v1.0.1-era resources. "
             "The original authoritative build path for this table is incomplete/not verified. "
             "Scores are interpretable as an archived legacy-codon-reference (contract v1) historical "
-            "record (see _analysis/025), not a freshly rebuilt SGN QLD183 v103 codon-usage reconstruction. "
+            "record (see the reference-policy audit), not a freshly rebuilt SGN QLD183 v103 codon-usage reconstruction. "
             "Note: this 'contract v1/v2' refers to the codon-reference asset generation, a separate "
             "concept from the frozen scoring_contract_version 1.1 pass/fail definition below."
         )
@@ -289,7 +288,7 @@ def _write_summary(rows, out_md: Path, dataset: str, mode: str, cfg,
         _codon_table_note = (
             f"> **Codon table note:** This run used codon reference `{_ct_id_md}` "
             "(codon-reference contract v2; NbeV1.1 LAB-strain genome-derived). "
-            "Job 168 / v3.3.0 (_analysis/025) — see data/reference/active_codon_reference.json."
+            "v3.3.0 reference-policy update — see data/reference/active_codon_reference.json."
         )
 
     lines = [
@@ -438,7 +437,7 @@ def main(default_mode: str = "formal") -> None:
     active_manifest_path: Path | None = None
 
     if not args.codon_table_path:
-        # Job 168 / v3.3.0 (_analysis/025): label this run by the fact of
+        # v3.3.0 reference-policy update: label this run by the fact of
         # what the engine actually defaults to, instead of assuming legacy.
         _default_ref = _resolve_active_default_reference(root)
         active_profile_id = _default_ref["profile_id"]

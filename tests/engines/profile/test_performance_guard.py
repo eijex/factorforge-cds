@@ -48,18 +48,18 @@ def test_fast_scan_mode_faster_than_full_on_long_input() -> None:
 
 @pytest.mark.skip(
     reason=(
-        "170-fix: this is a separate, pre-existing performance issue, not the "
-        "unbounded-hang bug 170-fix addresses. calculate_mfe() runs twice per "
+        "This is a separate, pre-existing performance issue, not the "
+        "unbounded-hang bug the length guard addresses. calculate_mfe() runs twice per "
         "optimize() call (once for scoring, once for compute_mfe_evidence() "
         "provenance) even for sequences under MFE_MAX_SEQUENCE_LENGTH, so a "
         "moderate-length sequence (sample_protein.fasta is 717nt, well under "
         "the 1000nt cutoff) still pays ~2x the ViennaRNA RNA.fold() cost per "
         "call. Confirmed via git-stash baseline comparison that this 2.0s p95 "
-        "threshold already failed before Job 168/170-fix existed. Fixing it "
+        "threshold already failed before the reference-policy/performance fixes. Fixing it "
         "requires de-duplicating the two calculate_mfe() call sites (threading "
         "a precomputed value through calculate_composite_score()'s signature "
         "and reverse_translator.py's _build_candidate()), deliberately deferred "
-        "as a separate, lower-priority follow-up to keep 170-fix scoped to the "
+        "as a separate, lower-priority follow-up to keep the length guard scoped to the "
         "DoS-relevant unbounded-length issue only."
     )
 )

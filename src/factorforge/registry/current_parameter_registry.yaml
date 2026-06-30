@@ -90,7 +90,7 @@ parameters:
       release_status: stable
       source: "src/factorforge/engines/profile/scoring.py; data/reference/codon_table_manifest_nbev11_hc_v2.json"
       rationale: "Aligned with the current NbeV1.1 high-confidence CDS-derived software default. Not a wet-lab validated optimum."
-      provenance: "NbeV1.1 high-confidence CDS-derived native composition anchor (_analysis/025; 40.0-47.0) activated as current N. benthamiana production default after v3.2.8 rollback. This is a provenance-tracked in-silico default, not expression/yield prediction or biological-superiority evidence."
+      provenance: "NbeV1.1 high-confidence CDS-derived native composition anchor (reference-policy audit; 40.0-47.0) activated as current N. benthamiana production default after v3.2.8 rollback. This is a provenance-tracked in-silico default, not expression/yield prediction or biological-superiority evidence."
       visibility: public
       permission: publish_allowed
     gc_extreme_local_window:

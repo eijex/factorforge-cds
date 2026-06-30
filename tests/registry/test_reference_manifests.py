@@ -1,6 +1,6 @@
 """Reference policy manifest guardrails.
 
-These tests enforce the Job 176/177 split between packaged codon-reference
+These tests enforce the reference-policy split between packaged codon-reference
 assets and production activation.
 """
 from __future__ import annotations

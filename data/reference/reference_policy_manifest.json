@@ -56,7 +56,7 @@
       "activation_evidence": {
         "validation_dataset": "v3.2.8 rollback/stable legacy-reference baseline retained for historical replay",
         "analysis_plan": "not applicable to legacy baseline restoration",
-        "reviewer_signoff": "Job 172 revert and Job 176/177 policy gates"
+        "reviewer_signoff": "maintainer-reviewed reference-policy gate"
       },
       "notes": "Retained as historical comparator after NbeV1.1 HC activation."
     },
