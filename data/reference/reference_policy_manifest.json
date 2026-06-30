@@ -40,10 +40,10 @@
       ],
       "not_for": [
         "Current N. benthamiana production default after NbeV1.1 HC activation.",
-        "Wet-lab validation or yield prediction.",
-        "Claiming expression superiority or inferiority relative to other reference tables."
+        "Experimental validation or performance evidence.",
+        "Claiming comparative biological performance relative to other reference tables."
       ],
-      "claim_boundary": "Configured in-silico codon reference only; not wet-lab validation, yield prediction, or expression-success evidence.",
+      "claim_boundary": "Configured in-silico codon reference only; not experimental validation or biological-performance evidence.",
       "public_exposure": {
         "python_library": "historical comparator/replay path only, not the current default",
         "cli": "historical comparator metadata only unless an explicit replay/import path is enabled",
@@ -91,10 +91,10 @@
         "Provenance-tracked genome-derived baseline for public software outputs."
       ],
       "not_for": [
-        "Claims of wet-lab validation, expression improvement, yield prediction, or biological superiority.",
+        "Claims of experimental validation or comparative biological performance.",
         "Assuming exact identity to any specific partner LAB isolate."
       ],
-      "claim_boundary": "Genome-derived in-silico software default only; not wet-lab validation, yield prediction, expression-success evidence, or biological-superiority evidence.",
+      "claim_boundary": "Genome-derived in-silico software default only; not experimental validation or comparative biological-performance evidence.",
       "public_exposure": {
         "python_library": "current default through N. benthamiana production paths",
         "cli": "current default through N. benthamiana production paths",
@@ -241,7 +241,7 @@
         "General N. benthamiana reference substitution.",
         "Production/wet-lab validation claim."
       ],
-      "claim_boundary": "Experimental host-associated packaged table only; not production validation or yield prediction.",
+      "claim_boundary": "Experimental host-associated packaged table only; not production validation or performance evidence.",
       "public_exposure": {
         "python_library": "experimental host path only where existing code permits it",
         "cli": "must retain experimental/non-default framing",

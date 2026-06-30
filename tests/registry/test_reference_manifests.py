@@ -81,8 +81,8 @@ def test_nbev11_reference_is_active_default(policy_manifest) -> None:
     active = refs["nbenthamiana_nbev11_hc_v2"]
     assert active["tier"] == "production_enabled"
     assert active["activation_status"] == "enabled"
-    assert "not wet-lab validation" in active["claim_boundary"].lower()
-
+    assert "not experimental validation" in active["claim_boundary"].lower()
+    assert "comparative biological-performance" in active["claim_boundary"].lower()
 
 def test_research_comparators_are_research_only(policy_manifest) -> None:
     refs = {entry["reference_id"]: entry for entry in policy_manifest["references"]}
