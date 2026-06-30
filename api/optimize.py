@@ -102,6 +102,101 @@ HOST_METADATA = {
 }
 DEFAULT_GC_MIN = 55.0
 DEFAULT_GC_MAX = 65.0
+FORBIDDEN_REFERENCE_OVERRIDE_FIELDS = {
+    "codon_reference",
+    "codon_reference_id",
+    "codon_table_id",
+    "codon_table_path",
+    "reference_id",
+    "reference_tier",
+}
+REFERENCE_POLICY_MANIFEST_PATH = os.path.join(
+    os.path.dirname(__file__), "..", "data", "reference", "reference_policy_manifest.json"
+)
+
+
+def _load_reference_policy_manifest() -> dict[str, Any] | None:
+    """Load the reference activation policy manifest if available."""
+    try:
+        with open(REFERENCE_POLICY_MANIFEST_PATH, encoding="utf-8") as handle:
+            manifest = json.load(handle)
+        if isinstance(manifest, dict):
+            return manifest
+    except (OSError, json.JSONDecodeError) as exc:
+        logger.warning("Reference policy manifest unavailable: %s", exc)
+    return None
+
+
+def _public_reference_policy_metadata() -> dict[str, Any]:
+    """Public-safe reference metadata for API/UI/MCP consumers.
+
+    This intentionally does not list disabled or research-only references as
+    selectable values. The manifest remains the private/source-of-truth policy
+    table; public surfaces only receive active-default metadata and counts.
+    """
+    manifest = _load_reference_policy_manifest()
+    base: dict[str, Any] = {
+        "override_supported": False,
+        "forbidden_override_fields": sorted(FORBIDDEN_REFERENCE_OVERRIDE_FIELDS),
+        "selectable_reference_ids": [],
+    }
+    if not manifest:
+        return base
+
+    references = manifest.get("references", [])
+    active_id = manifest.get("active_default_reference_id")
+    active_entry = next(
+        (entry for entry in references if entry.get("reference_id") == active_id), None
+    )
+    status_counts: dict[str, int] = {}
+    tier_counts: dict[str, int] = {}
+    for entry in references:
+        status = str(entry.get("activation_status", "unknown"))
+        tier = str(entry.get("tier", "unknown"))
+        status_counts[status] = status_counts.get(status, 0) + 1
+        tier_counts[tier] = tier_counts.get(tier, 0) + 1
+
+    metadata = {
+        **base,
+        "policy_version": manifest.get("policy_version"),
+        "active_default_reference_id": active_id,
+        "active_default": {
+            "reference_id": active_id,
+            "tier": active_entry.get("tier") if active_entry else None,
+            "activation_status": active_entry.get("activation_status") if active_entry else None,
+            "claim_boundary": active_entry.get("claim_boundary") if active_entry else None,
+        },
+        "activation_status_counts": status_counts,
+        "tier_counts": tier_counts,
+        "disabled_or_research_only_count": sum(
+            1
+            for entry in references
+            if entry.get("activation_status") in {"disabled", "research_only"}
+        ),
+    }
+    return metadata
+
+
+def _reject_reference_override_fields(data: dict[str, Any]) -> dict[str, Any] | None:
+    """Reject public product requests that try to override codon reference.
+
+    Disabled/research-only codon-reference assets may exist on disk for
+    benchmark/provenance work, but public API/CLI/UI/MCP surfaces must not
+    expose a selector until a separate activation gate enables one.
+    """
+    forbidden = sorted(FORBIDDEN_REFERENCE_OVERRIDE_FIELDS.intersection(data))
+    if not forbidden:
+        return None
+    return {
+        "error": (
+            "Public codon-reference overrides are not supported. "
+            "Reference assets may be packaged for provenance or research comparison, "
+            "but only the active production default is used by public optimize endpoints."
+        ),
+        "error_code": "REFERENCE_OVERRIDE_NOT_SUPPORTED",
+        "forbidden_fields": forbidden,
+        "reference_policy": _public_reference_policy_metadata(),
+    }
 
 
 def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[str, float]:
@@ -143,6 +238,14 @@ class handler(BaseHTTPRequestHandler):
             content_length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(content_length).decode("utf-8")
             data = json.loads(body)
+            if not isinstance(data, dict):
+                self.send_error_response(400, "Request body must be a JSON object")
+                return
+
+            reference_override_error = _reject_reference_override_fields(data)
+            if reference_override_error is not None:
+                self.send_error_response(400, reference_override_error)
+                return
 
             logger.info(
                 f"Received optimization request: sequence_length={len(data.get('sequence', ''))}"
@@ -325,6 +428,7 @@ class handler(BaseHTTPRequestHandler):
             "validation_registry_version": VALIDATION_REGISTRY_VERSION,
             "validation_report_schema_version": VALIDATION_REPORT_SCHEMA_VERSION,
             "validation_checks": public_badge_checks(),
+            "reference_policy": _public_reference_policy_metadata(),
         }
 
         if FACTORFORGE_AVAILABLE:

@@ -33,10 +33,15 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Added
 
+- Added public REST API reference-exposure guardrails: optimize/compare/batch
+  requests now reject codon-reference override fields, while GET `/api/optimize`
+  exposes public-safe reference-policy metadata showing that overrides are not
+  supported and only the active production default is in use.
 - Added a reference-policy manifest, schema, validator script, and tests that
   separate codon-reference asset presence from production activation. The guard
   records current/candidate/research codon-reference tiers, validates checksums,
   and fails on accidental default or candidate activation drift.
+
 - Exposed `gc_target_reached`, `requested_gc_min_percent`, and
   `requested_gc_max_percent` as additive balanced-profile engine/API response
   metrics so callers can distinguish requested GC bands from achieved GC
