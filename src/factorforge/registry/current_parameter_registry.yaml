@@ -1,6 +1,6 @@
 registry:
   name: factorforge_current_parameter_registry
-  version: "3.2.8"
+  version: "3.3.0"
   status: canonical
   owner: factorforge-cds
   last_reviewed: "2026-06-10"
@@ -166,7 +166,7 @@ parameters:
 codon_reference:
   active:
     id: nbenthamiana_nbev11_hc_v2
-    asset_type: experimental_candidate
+    asset_type: official_packaged
     codon_reference_contract_version: v2
     species: Nicotiana benthamiana
     ncbi_taxid: 4100

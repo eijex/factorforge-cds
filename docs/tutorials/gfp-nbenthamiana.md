@@ -43,7 +43,7 @@ factorforge optimize gfp.fasta --engine profile --profile balanced --host by2
 Expected output:
 
 ```
-Optimizing with Profile-based v3.2.8...
+Optimizing with Profile-based v3.3.0...
 Saved to: gfp_optimized.fasta
 Metrics:
   - cai: 0.769

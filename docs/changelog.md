@@ -6,6 +6,8 @@ FactorForge v3.0+ is the current public release line.
 
 ## Unreleased
 
+## v3.3.0 — 2026-07-01
+
 ### Changed
 - Activated NbeV1.1 high-confidence CDS-derived codon usage as the current *N. benthamiana* software default with a 40-47% GC policy band. Public reference overrides remain disabled; the legacy Kazusa/SGN composite is retained as a historical comparator. This is an in-silico software-default change only, not experimental validation or comparative biological-performance evidence.
 
