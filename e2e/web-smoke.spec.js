@@ -25,17 +25,17 @@ test('discloses codon reference policy as compact current default plus collapsed
 
   const policy = page.locator('#codonReferencePolicy');
   await expect(policy).toBeVisible();
-  await expect(policy).toContainText('Current default: Legacy Kazusa/SGN composite');
+  await expect(policy).toContainText('Current default: NbeV1.1 HC CDS-derived');
   await expect(policy).toContainText('Selected');
 
   const packagedAssets = page.locator('#packagedReferenceAssets');
   await expect(packagedAssets).not.toHaveAttribute('open', '');
-  await expect(packagedAssets.getByText('NbeV1.1 HC CDS-derived')).toBeHidden();
+  await expect(packagedAssets.getByText('Legacy Kazusa/SGN composite')).toBeHidden();
 
   await packagedAssets.locator('summary').click();
   await expect(packagedAssets).toHaveAttribute('open', '');
-  await expect(packagedAssets).toContainText('NbeV1.1 HC CDS-derived');
-  await expect(packagedAssets).toContainText('Experimental candidate');
+  await expect(packagedAssets).toContainText('Legacy Kazusa/SGN composite');
+  await expect(packagedAssets).toContainText('Historical comparator');
   await expect(packagedAssets).toContainText('NbeV1.1 all-CDS');
   await expect(packagedAssets).toContainText('QLD183 v103 CDS-derived');
   await expect(packagedAssets).toContainText('Research comparator');

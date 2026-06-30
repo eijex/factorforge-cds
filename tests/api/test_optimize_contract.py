@@ -54,7 +54,7 @@ def test_public_api_rejects_codon_reference_override_fields() -> None:
     assert result["reference_policy"]["selectable_reference_ids"] == []
     assert (
         result["reference_policy"]["active_default_reference_id"]
-        == "nbenthamiana_legacy_kazusa_sgn_v101"
+        == "nbenthamiana_nbev11_hc_v2"
     )
 
 
@@ -90,7 +90,7 @@ def test_public_reference_policy_metadata_does_not_advertise_disabled_selectors(
     assert metadata["override_supported"] is False
     assert metadata["selectable_reference_ids"] == []
     assert metadata["active_default"] == {
-        "reference_id": "nbenthamiana_legacy_kazusa_sgn_v101",
+        "reference_id": "nbenthamiana_nbev11_hc_v2",
         "tier": "production_enabled",
         "activation_status": "enabled",
         "claim_boundary": metadata["active_default"]["claim_boundary"],
@@ -108,7 +108,7 @@ def test_get_optimize_exposes_public_reference_policy_metadata() -> None:
 
     assert policy["override_supported"] is False
     assert policy["selectable_reference_ids"] == []
-    assert policy["active_default_reference_id"] == "nbenthamiana_legacy_kazusa_sgn_v101"
+    assert policy["active_default_reference_id"] == "nbenthamiana_nbev11_hc_v2"
     assert policy["active_default"]["activation_status"] == "enabled"
 
 

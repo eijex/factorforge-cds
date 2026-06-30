@@ -48,6 +48,15 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   content. This is an evidence field only; it does not change sequence
   generation or enforce GC target attainment.
 
+### Changed
+
+- Activated NbeV1.1 high-confidence CDS-derived codon usage as the current
+  *N. benthamiana* software default and aligned the default GC policy band to
+  40-47%. Public REST/UI reference overrides remain disabled; the legacy
+  Kazusa/SGN composite remains packaged as a historical comparator. This is
+  a provenance-tracked in-silico default, not wet-lab validation, yield
+  prediction, expression-success evidence, or biological-superiority evidence.
+
 ## [3.2.8] — 2026-06-29
 
 ### Reverted

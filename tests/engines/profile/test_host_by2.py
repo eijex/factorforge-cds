@@ -72,21 +72,18 @@ def test_nbenthamiana_and_by2_hosts_both_produce_valid_sequences() -> None:
 
 WITNESS_PROTEIN = "MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQ"
 
-# nbenthamiana balanced/gc_target/assembly_friendly were re-pinned 2026-06-27
-# (Job 168 / v3.3.0) when the production default migrated legacy -> NbeV1.1,
-# then re-pinned back to the legacy-table values on 2026-06-29 when that
-# migration was provisionally reverted (shipped in v3.2.7, reverted pending
-# an MFE re-sensitivity + 2x2 factorial recheck). Re-derived by running the
-# live engine directly (seed=42 fixes non-determinism, confirmed by running
-# each combination twice and comparing) — not hand-edited. high_cai is
-# unaffected (golden-set reference untouched by either migration) and keeps
-# its original 2026-06-23 pin. The host/strategy compatibility guard does not
-# change any of these values — it only adds rejection/disclosure around the
+# nbenthamiana balanced/gc_target/assembly_friendly were re-pinned 2026-06-30
+# when NbeV1.1 HC CDS-derived codon usage became the current software default.
+# Re-derived by running the live engine directly (seed=42 fixes
+# non-determinism, confirmed by full test execution) — not hand-edited.
+# high_cai is unaffected (golden-set reference untouched by this migration) and
+# keeps its original 2026-06-23 pin. The host/strategy compatibility guard does
+# not change any of these values — it only adds rejection/disclosure around the
 # engine.
 NBENTHAMIANA_BASELINE_SEED42 = {
-    "balanced": "ATGAAGACCGCCTACATCGCCAAGCAGCGGCAGATCAGCTTCGTCAAGAGCCATTTCAGCAGGCAGCTGGAAGAGAGGCTGGGACTGATCGAGGTGCAG",
-    "gc_target": "ATGAAGACCGCCTACATCGCCAAGCAGCGCCAGATCAGCTTCGTGAAGAGCCACTTCAGCCGCCAGCTGGAGGAGAGGCTGGGACTTATCGAGGTGCAG",
-    "assembly_friendly": "ATGAAAACCGCCTACATCGCCAAGCAGAGGCAGATCAGCTTCGTGAAAAGCCACTTCAGCCGGCAGCTCGAGGAGAGGCTGGGCCTCATCGAGGTGCAG",
+    "balanced": "ATGAAAACAGCTTATATTGCCAAGCAAAGACAAATCTCTTTTGTTAAGTCCCATTTTTCCCGACAACTTGAGGAAAGGCTTGGACTTATTGAAGTCCAA",
+    "gc_target": "ATGAAGACCGCTTACATCGCTAAACAGAGACAAATCTCCTTCGTGAAGTCTCATTTCTCCAGACAGCTTGAAGAGAGACTTGGACTTATCGAAGTGCAA",
+    "assembly_friendly": "ATGAAAACTGCATATATTGCTAAGCAAAGACAAATTAGTTTTGTGAAATCTCATTTCTCTAGGCAACTTGAAGAGCGGCTTGGACTTATCGAAGTTCAG",
     "high_cai": "ATGAAAACTGCTTATATTGCTAAACAAAGACAAATTTCTTTCGTTAAATCTCATTTCTCTAGACAACTTGAAGAAAGACTTGGTCTTATTGAAGTTCAA",
 }
 NTABACUM_BASELINE_SEED42 = {

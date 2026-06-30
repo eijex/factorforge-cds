@@ -11,27 +11,20 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-# GC band for N. benthamiana codon-optimized sequences.
-# Benchmark (internal, n=49): balanced profile output average GC% = 60.1%
-# (range 55-71%). The genome-wide average (~42%) reflects all genes, not the
-# high-expression codon table which exhibits 3rd-position GC bias.
-# These constants define the acceptable band — sequences within [GC_OPT_MIN, GC_OPT_MAX]
-# receive full GC score; outside the band the score decays linearly.
-#
-# Job 168/v3.3.0 (released as part of v3.2.7, see CHANGELOG) moved this band to
-# 40-47% (native genome-composition anchor, _analysis/025). Provisionally
-# reverted here pending an MFE re-sensitivity + 2x2 factorial recheck
-# (_analysis, scope TBD as of 2026-06-29) — see eijex-workspace
-# _version/factorforge-version-sequencing-plan.md. Not a rejection of the
-# 40-47% anchor, just not yet re-confirmed as the production default.
-GC_OPT_MIN = 55.0
-GC_OPT_MAX = 65.0
-GC_OPT_MID = 60.0  # kept for gc_target point-scoring and viral_delivery centering
+# GC band for the current N. benthamiana software-default codon reference.
+# NbeV1.1 high-confidence CDS-derived codon usage anchors the public default
+# to the native genome-derived composition band. This is a configured
+# in-silico reference/GC policy, not wet-lab validation or expression/yield
+# prediction. Sequences inside [GC_OPT_MIN, GC_OPT_MAX] receive full GC score;
+# outside the band the score decays linearly.
+GC_OPT_MIN = 40.0
+GC_OPT_MAX = 47.0
+GC_OPT_MID = 43.5  # kept for gc_target point-scoring and viral_delivery centering
 GC_DECAY_WIDTH = 20.0  # percentage points outside band before score reaches 0.0
 
-# Host-isolation fix (Job 168/v3.3.0, kept): ntabacum/BY-2 must not silently
-# inherit whatever band nbenthamiana uses. Both currently resolve to the same
-# GC_RANGE_DEFAULT band pending the nbenthamiana re-check above.
+# Host-isolation fix: ntabacum/BY-2 must not silently inherit the NbeV1.1
+# N. benthamiana band. Other hosts keep the pre-v3.3.0 global default until
+# they get their own host-specific analysis.
 GC_RANGE_DEFAULT: tuple[float, float] = (55.0, 65.0)
 GC_RANGES_BY_HOST: dict[str, tuple[float, float]] = {
     "nbenthamiana": (GC_OPT_MIN, GC_OPT_MAX),

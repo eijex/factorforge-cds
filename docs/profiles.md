@@ -6,7 +6,7 @@ Profiles apply to the profile engine (`--engine profile`).
 
 | Host flag | Species | Codon table | Notes |
 |-----------|---------|-------------|-------|
-| `nbenthamiana` (default) | *Nicotiana benthamiana* | Legacy Kazusa/SGN composite production baseline; QLD183/NbeV1.1 assets are packaged comparators or candidates, not production defaults | Stable sequence-level design profile for agroinfiltration workflows |
+| `nbenthamiana` (default) | *Nicotiana benthamiana* | NbeV1.1 high-confidence CDS-derived current software default; legacy Kazusa/SGN composite retained as historical comparator | Stable sequence-level design profile for agroinfiltration workflows; in-silico default only, not wet-lab validation or yield prediction |
 | `by2` ⚠️ Experimental | *N. tabacum* BY-2 | 1,534 Kazusa CDS (2007) | **Experimental.** Uses *N. tabacum* codon usage as proxy. Not wet-lab validated for BY-2 expression. |
 
 !!! warning "BY-2 host is experimental"
@@ -22,7 +22,7 @@ it is rejected for other hosts at the CLI, REST API, and web app.
 |---------|-------------|
 | `balanced` | CAI + GC balance — default for most sequence-design reviews |
 | `high_cai` | CAI-focused synonymous CDS candidate. N. benthamiana-only; rejected for other hosts. |
-| `gc_target` | Targets a configurable GC percentage, defaulting to the active host GC-band midpoint (currently 60% for the legacy *N. benthamiana* production baseline). Pass an explicit target to drive GC higher or lower. |
+| `gc_target` | Targets a configurable GC percentage, defaulting to the active host GC-band midpoint (currently 43.5% for the NbeV1.1 HC CDS-derived *N. benthamiana* software default). Pass an explicit target to drive GC higher or lower. |
 | `assembly_friendly` | Golden Gate / MoClo workflows — avoids BsaI/BpiI Type IIS restriction sites via synonymous substitution. Does not yet score local GC uniformity or repeat patterns. |
 
 ## Usage

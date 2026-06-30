@@ -100,7 +100,7 @@ HOST_METADATA = {
         ),
     },
 }
-DEFAULT_GC_MIN = 55.0
+DEFAULT_GC_MIN = 55.0  # fallback for hosts without a host-specific GC analysis
 DEFAULT_GC_MAX = 65.0
 FORBIDDEN_REFERENCE_OVERRIDE_FIELDS = {
     "codon_reference",

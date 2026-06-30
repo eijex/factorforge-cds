@@ -46,7 +46,7 @@ def test_reference_policy_manifest_validates_against_schema(policy_manifest, pol
 
 def test_reference_policy_manifest_passes_live_validator() -> None:
     manifest = validator.validate_all(POLICY_MANIFEST_PATH, POLICY_SCHEMA_PATH)
-    assert manifest["active_default_reference_id"] == "nbenthamiana_legacy_kazusa_sgn_v101"
+    assert manifest["active_default_reference_id"] == "nbenthamiana_nbev11_hc_v2"
 
 
 def test_required_activation_principles_are_present(policy_manifest) -> None:
@@ -76,12 +76,12 @@ def test_non_production_references_are_not_enabled(policy_manifest) -> None:
             assert entry["activation_status"] != "enabled", entry["reference_id"]
 
 
-def test_candidate_reference_is_disabled(policy_manifest) -> None:
+def test_nbev11_reference_is_active_default(policy_manifest) -> None:
     refs = {entry["reference_id"]: entry for entry in policy_manifest["references"]}
-    candidate = refs["nbenthamiana_nbev11_hc_v2"]
-    assert candidate["tier"] == "experimental_candidate"
-    assert candidate["activation_status"] == "disabled"
-    assert "not wet-lab validation" in candidate["claim_boundary"].lower()
+    active = refs["nbenthamiana_nbev11_hc_v2"]
+    assert active["tier"] == "production_enabled"
+    assert active["activation_status"] == "enabled"
+    assert "not wet-lab validation" in active["claim_boundary"].lower()
 
 
 def test_research_comparators_are_research_only(policy_manifest) -> None:

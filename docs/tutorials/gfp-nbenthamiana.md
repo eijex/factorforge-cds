@@ -91,8 +91,8 @@ assembly_friendly   0.779   57.18    0.905
 | Profile | Best for |
 |---------|----------|
 | `balanced` | General *N. benthamiana* CDS design review; good CAI with GC% in target range |
-| `high_cai` | CAI-focused comparison; note GC% may fall outside 55–65% range |
-| `gc_target` | When GC% must hit a specific value (defaults to the host midpoint of 60%; pass `--target-gc` for other values, e.g. specific vector requirements) |
+| `high_cai` | CAI-focused comparison; note GC% may fall outside the active host GC range |
+| `gc_target` | When GC% must hit a specific value (defaults to the host midpoint of 43.5% for the current NbeV1.1 software default; pass `--target-gc` for other values, e.g. specific vector requirements) |
 | `assembly_friendly` | MoClo / Golden Gate workflows; avoids problematic restriction sites |
 
 For most *N. benthamiana* sequence-design tasks, `balanced` is the recommended starting profile.

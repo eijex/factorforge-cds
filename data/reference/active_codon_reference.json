@@ -1,17 +1,23 @@
 {
-  "active_codon_table_id": "nbenthamiana_legacy_kazusa_sgn_v101",
-  "active_asset_type": "legacy_packaged",
-  "codon_reference_contract_version": "v1",
-  "file": "src/factorforge/data/nbenthamiana_codons.json",
-  "manifest": "data/reference/codon_table_manifest.json",
-  "gc_range": [55.0, 65.0],
-  "effective_from": "v3.2.8 (reverted from v3.3.0/v3.2.7)",
-  "candidate": {
-    "codon_table_id": "nbenthamiana_nbev11_hc_v2",
-    "manifest": "data/reference/codon_table_manifest_nbev11_hc_v2.json",
-    "gc_range": [40.0, 47.0],
-    "codon_reference_contract_version": "v2",
-    "status": "promoted in Job 168/v3.3.0, shipped in v3.2.7 (2026-06-29), provisionally un-promoted pending an MFE re-sensitivity + 2x2 factorial recheck"
-  },
-  "note": "Job 168 / v3.3.0 (_analysis/025) promoted v2 (see 'candidate' above) to production default and it shipped as part of v3.2.7. Reverted to v1 here pending re-validation. This file is the single source of truth for 'what is the current production-default codon reference', and is read at runtime by benchmarks/run_benchmark.py (no --codon-table-path override) to label historical-replay runs by fact instead of a hardcoded assumption. The actual production engine default is set independently in engines/profile/utils.py's _HOST_CODON_TABLE_OVERRIDES (consumed by engines/profile/rules/rule_engine.py, rules/domesticator.py, rules/reverse_translator.py) and must be kept in sync with this file's 'file' field by whoever changes either one. analysis/metrics.py, analysis/feasibility.py, engines/profile/scoring.py, cli/main.py, and registry/current_parameter_registry.yaml carry the matching GC-band/codon-table-path values as their own static defaults."
+  "active_codon_table_id": "nbenthamiana_nbev11_hc_v2",
+  "active_asset_type": "experimental_candidate",
+  "codon_reference_contract_version": "v2",
+  "file": "src/factorforge/data/profiles/nbev11_cds_hc_derived_codons.json",
+  "manifest": "data/reference/codon_table_manifest_nbev11_hc_v2.json",
+  "gc_range": [
+    40.0,
+    47.0
+  ],
+  "effective_from": "unreleased activation update after v3.2.8 rollback",
+  "note": "NbeV1.1 high-confidence CDS-derived codon reference is the current production default for N. benthamiana software paths. This is a provenance-tracked in-silico default, not wet-lab validation, expression/yield prediction, or a biological-superiority claim. The legacy Kazusa/SGN composite remains packaged as a historical comparator. Keep this file synchronized with engines/profile/utils.py _HOST_CODON_TABLE_OVERRIDES, scoring/feasibility GC defaults, registry/current_parameter_registry.yaml, API metadata, UI copy, docs, and manuscript wording.",
+  "legacy_comparator": {
+    "codon_table_id": "nbenthamiana_legacy_kazusa_sgn_v101",
+    "manifest": "data/reference/codon_table_manifest.json",
+    "gc_range": [
+      55.0,
+      65.0
+    ],
+    "codon_reference_contract_version": "v1",
+    "status": "historical comparator retained for v3.2.x continuity and sensitivity interpretation"
+  }
 }
