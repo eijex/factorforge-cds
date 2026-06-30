@@ -54,8 +54,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   *N. benthamiana* software default and aligned the default GC policy band to
   40-47%. Public REST/UI reference overrides remain disabled; the legacy
   Kazusa/SGN composite remains packaged as a historical comparator. This is
-  a provenance-tracked in-silico default, not wet-lab validation, yield
-  prediction, expression-success evidence, or biological-superiority evidence.
+  a provenance-tracked in-silico default, not experimental validation or comparative biological-performance evidence.
 
 ## [3.2.8] — 2026-06-29
 
