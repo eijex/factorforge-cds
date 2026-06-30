@@ -40,7 +40,7 @@
     },
     "parameter_registry": {
       "path": "src/factorforge/registry/current_parameter_registry.yaml",
-      "sha256": "7726efb5895341bc1920a372225371320d2c81dbe9dd77918c103adf07de8208"
+      "sha256": "06a740dd91c0c56f397fb80129ba3486ef8ae948d7821adff8357fdfe1164002"
     }
   },
   "outputs": {
