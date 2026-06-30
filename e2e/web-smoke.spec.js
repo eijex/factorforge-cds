@@ -20,6 +20,23 @@ test('loads the main web UI', async ({ page }) => {
   await expect(page.locator('#optimizeBtn')).toBeVisible();
 });
 
+test('discloses codon reference policy without enabling disabled selectors', async ({ page }) => {
+  await openApp(page);
+
+  const policy = page.locator('#codonReferencePolicy');
+  await expect(policy).toBeVisible();
+  await expect(policy).toContainText('Legacy Kazusa/SGN composite');
+  await expect(policy).toContainText('Selected');
+  await expect(policy).toContainText('NbeV1.1 HC CDS-derived');
+  await expect(policy).toContainText('Experimental candidate');
+  await expect(policy).toContainText('NbeV1.1 all-CDS');
+  await expect(policy).toContainText('QLD183 v103 CDS-derived');
+  await expect(policy).toContainText('Research comparator');
+  await expect(policy).toContainText('Tobacco BY-2 packaged table');
+  await expect(policy).toContainText('not enabled in this public UI');
+  await expect(policy.locator('input, select, button')).toHaveCount(0);
+});
+
 test('updates sequence metadata for protein input', async ({ page }) => {
   await openApp(page);
 
