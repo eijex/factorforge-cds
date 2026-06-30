@@ -286,6 +286,25 @@ input[name="host"]:checked+div div:last-child {
     box-shadow: none;
 }
 
+/* Disclosure cards keep candidate/experimental surfaces available without
+   visually competing with the current production path. */
+.disclosure-card summary {
+    list-style-position: outside;
+}
+
+.disclosure-card summary::marker {
+    color: #059669;
+}
+
+.disclosure-card[open] summary {
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 0.75rem;
+}
+
+.dark .disclosure-card[open] summary {
+    border-bottom-color: #334155;
+}
+
 /* Disabled (Experimental / unavailable) cards: clearly greyed out so they are
    visually distinct from enabled-but-unselected cards. */
 .profile-card.cursor-not-allowed {

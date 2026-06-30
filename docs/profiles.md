@@ -6,7 +6,7 @@ Profiles apply to the profile engine (`--engine profile`).
 
 | Host flag | Species | Codon table | Notes |
 |-----------|---------|-------------|-------|
-| `nbenthamiana` (default) | *Nicotiana benthamiana* | 49,257 SGN CDS (QLD183 v103) | Stable sequence-level design profile for agroinfiltration workflows |
+| `nbenthamiana` (default) | *Nicotiana benthamiana* | Legacy Kazusa/SGN composite production baseline; QLD183/NbeV1.1 assets are packaged comparators or candidates, not production defaults | Stable sequence-level design profile for agroinfiltration workflows |
 | `by2` ⚠️ Experimental | *N. tabacum* BY-2 | 1,534 Kazusa CDS (2007) | **Experimental.** Uses *N. tabacum* codon usage as proxy. Not wet-lab validated for BY-2 expression. |
 
 !!! warning "BY-2 host is experimental"
@@ -22,7 +22,7 @@ it is rejected for other hosts at the CLI, REST API, and web app.
 |---------|-------------|
 | `balanced` | CAI + GC balance — default for most sequence-design reviews |
 | `high_cai` | CAI-focused synonymous CDS candidate. N. benthamiana-only; rejected for other hosts. |
-| `gc_target` | Targets a configurable GC percentage, defaulting to the host-profile midpoint (60% for *N. benthamiana*). Pass an explicit target to drive GC higher or lower. |
+| `gc_target` | Targets a configurable GC percentage, defaulting to the active host GC-band midpoint (currently 60% for the legacy *N. benthamiana* production baseline). Pass an explicit target to drive GC higher or lower. |
 | `assembly_friendly` | Golden Gate / MoClo workflows — avoids BsaI/BpiI Type IIS restriction sites via synonymous substitution. Does not yet score local GC uniformity or repeat patterns. |
 
 ## Usage
