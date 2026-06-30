@@ -51,8 +51,7 @@ class TestCodonTableLoading:
 
         Stop family (*) is excluded — genome-derived tables built via
         scripts/build_codon_profile.py trim the terminal stop codon before
-        counting, so '*' legitimately has zero frequency mass (Job 168 /
-        v3.3.0, _analysis/025; terminal_stop_policy: excluded_from_frequency_model
+        counting, so '*' legitimately has zero frequency mass (v3.3.0 reference-policy update; terminal_stop_policy: excluded_from_frequency_model
         in the codon-table manifest). The stop codon is never reverse-translated
         as part of CDS body generation, so this has no functional effect.
         """
@@ -211,7 +210,7 @@ class TestGCTargetProfile:
         """Without explicit target_gc, gc_target defaults to the active host's
         composition midpoint (resolve_host_gc_mid(self.host)).
 
-        Job 168 / v3.3.0 (_analysis/025) corrected this midpoint for
+        v3.3.0 reference-policy update corrected this midpoint for
         nbenthamiana from a circularly-derived 60% (calibrated from the
         legacy engine's own GC-rich output, not from genome biology) to the
         native genome-composition anchor GC_OPT_MID=43.5%. This test now

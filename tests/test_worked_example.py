@@ -63,7 +63,7 @@ def test_sfgfp_sequence_no_x_residues():
 def test_run_example_deterministic():
     """run_example.py (no --freeze) must exit 0 when frozen outputs exist.
 
-    Job 168 / v3.3.0 (_analysis/025): this script is explicitly pinned to the
+    v3.3.0 reference-policy update: this script is explicitly pinned to the
     legacy v1 codon reference (GC 55-65%) regardless of the engine's current
     production default, so this reproducibility check stays valid forever.
     See run_example_v2_smoke.py / test_run_example_v2_smoke_succeeds for the
@@ -85,8 +85,7 @@ def test_run_example_v2_smoke_succeeds():
     """run_example_v2_smoke.py (tracks whatever the current production
     default actually is) must exit 0 and report a provenance ID that matches
     data/reference/active_codon_reference.json — not hardcoded to v2, since
-    the default was provisionally reverted to v1 on 2026-06-29 pending an MFE
-    re-sensitivity + 2x2 factorial recheck (Job 168 / v3.3.0, _analysis/025).
+    the example is aligned to the current v3.3.0 production-default reference policy.
 
     No frozen-output comparison — this only checks that the current-default
     path runs end-to-end and reports correct provenance.

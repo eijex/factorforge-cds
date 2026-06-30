@@ -34,7 +34,7 @@ GC_RANGES_BY_HOST: dict[str, tuple[float, float]] = {
 def resolve_host_gc_range(host: str | None) -> tuple[float, float]:
     """Resolve the (gc_min, gc_max) composition band for a host.
 
-    nbenthamiana uses the _analysis/025 native genome-composition anchor.
+    nbenthamiana uses the reference-policy audit native genome-composition anchor.
     Any other host (including unknown ones) keeps the pre-v3.3.0 global
     default band until it gets its own host-specific analysis.
     """
@@ -139,7 +139,7 @@ def _check_vienna_available() -> bool:
     return _vienna_available
 
 
-# 170-fix: ViennaRNA's RNA.fold() uses Zuker's MFE algorithm, O(n^3) time /
+# ViennaRNA's RNA.fold() uses Zuker's MFE algorithm, O(n^3) time /
 # O(n^2) memory — there was previously no length guard anywhere in the
 # calculate_mfe() call chain, so a single request at/under the existing
 # public API length limits (5000aa/15000bp) could pin a CPU core for minutes
@@ -172,7 +172,7 @@ def calculate_mfe(sequence: str) -> float | None:
             "Sequence length (%d nt) exceeds MFE_MAX_SEQUENCE_LENGTH (%d nt); "
             "skipping global MFE calculation to avoid an unbounded ViennaRNA "
             "RNA.fold() runtime (O(n^3)). MFE scoring falls back to a neutral, "
-            "zero-weighted contribution for this candidate (170-fix).",
+            "zero-weighted contribution for this candidate.",
             len(sequence), MFE_MAX_SEQUENCE_LENGTH,
         )
         return None
@@ -193,8 +193,7 @@ def normalize_mfe(mfe: float, seq_length: int) -> float:
     """
     Normalize MFE to 0-1 range where 1 = no structure (favorable).
 
-    Clamp range calibrated empirically in analysis 011
-    (eijex-workspace/_analysis/2026-06-26/011-mfe-clamp-calibration):
+    Clamp range calibrated empirically from internal computational audit data:
     measured MFE/nt across 135 FactorForge outputs (N. benthamiana +
     BY-2 hosts, 5 profiles) ranged -0.4064 to -0.1338 (combined 5th/95th
     percentile -0.3839/-0.1760). The range below widens that empirical
@@ -208,8 +207,7 @@ def normalize_mfe(mfe: float, seq_length: int) -> float:
     Returns:
         Normalized MFE score (0-1) under this computational normalization,
         where a higher value represents a less negative whole-CDS MFE/nt.
-        This is a Tier-0 computational heuristic only (see
-        eijex-validationHub/docs/CLAIM_EVIDENCE_BENCHMARK_MODEL.md §4) — no
+        This is a Tier-0 computational heuristic only — no
         biological interpretation (translation efficiency, mRNA stability,
         or expression outcome) is implied or validated.
     """
@@ -415,7 +413,7 @@ def compute_mfe_evidence(
     elif not _check_vienna_available():
         reason = "MFE was not computed because ViennaRNA is unavailable in this environment."
     elif len(sequence) > MFE_MAX_SEQUENCE_LENGTH:
-        # 170-fix: distinguish a deliberate length-based skip from an actual
+        # Distinguish a deliberate length-based skip from an actual
         # fold failure — the generic "computation failed" message below would
         # otherwise mislead a caller into thinking something is broken.
         reason = (

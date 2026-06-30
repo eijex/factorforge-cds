@@ -339,7 +339,7 @@ class TestMFEViennaBranches:
 
 
 class TestMFELengthGuard:
-    """170-fix: calculate_mfe() must not attempt RNA.fold() on sequences long
+    """calculate_mfe() must not attempt RNA.fold() on sequences long
     enough to make ViennaRNA's O(n^3) Zuker MFE algorithm a multi-second-to-
     multi-minute cost (confirmed via faulthandler + an isolated RNA.fold()
     timing curve: 1000nt~2.2s, 2000nt~9.8s, 3000nt~24.6s on the dev machine) —
@@ -382,7 +382,7 @@ class TestMFELengthGuard:
         )
 
     def test_compute_mfe_evidence_length_skip_is_not_mislabeled_as_failure(self, monkeypatch):
-        """170-fix follow-up (Opus review): a length-based skip must not be
+        """A length-based skip must not be
         reported via the generic 'MFE computation failed' message — that
         wording implies a fold error, which would misdirect a caller
         debugging why MFE is missing for a long sequence."""

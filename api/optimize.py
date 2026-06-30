@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.2.8
+Product Version: 3.3.0
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -200,13 +200,11 @@ def _reject_reference_override_fields(data: dict[str, Any]) -> dict[str, Any] | 
 
 
 def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[str, float]:
-    """Host-aware default gc_min/gc_max (Job 168 / v3.3.0, _analysis/025).
+    """Host-aware default gc_min/gc_max (v3.3.0 reference-policy update).
 
-    Resolves per-host via resolve_host_gc_range(). nbenthamiana's native
-    genome-composition band (40-47%) was provisionally reverted to the
-    legacy global default (55-65%) on 2026-06-29 pending an MFE
-    re-sensitivity + 2x2 factorial recheck — see scoring.py's GC_OPT_MIN/MAX
-    comment. All hosts currently resolve to the same band as a result.
+    Resolves per-host via resolve_host_gc_range(). nbenthamiana uses the
+    v3.3.0 NbeV1.1 high-confidence CDS-derived native-composition band
+    (40-47%); hosts without host-specific evidence keep the legacy fallback.
     """
     if FACTORFORGE_AVAILABLE:
         gc_min, gc_max = resolve_host_gc_range(internal_host)
@@ -214,9 +212,9 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
     return {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX}
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": "3.2.8",
-    "rule_engine": "3.2.8",
-    "dp_engine": "3.2.8",
+    "product": "3.3.0",
+    "rule_engine": "3.3.0",
+    "dp_engine": "3.3.0",
 }
 # Valid characters: ACGT (DNA) or standard 20 Amino Acids (Protein) + * (Stop)
 VALID_AA = "ACDEFGHIKLMNPQRSTVWY"
@@ -402,7 +400,7 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         """Handle GET requests (health check)"""
         # host_metadata is the single source of truth for web/js/app.js GC
-        # band labels/thresholds (Job 168 / v3.3.0) — the static UI must not
+        # band labels/thresholds (v3.3.0 reference-policy update) — the static UI must not
         # hardcode 55-65 or 40-47 anywhere, since each host's band can differ.
         host_metadata_with_gc = {
             public_host: {**meta, "gc_range": _default_gc_constraints(HOST_MAP[public_host])}
@@ -1055,6 +1053,22 @@ class handler(BaseHTTPRequestHandler):
         response["created_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         response["host_profile"] = host_profile
         response["profile"] = selected_profile
+        reference_policy = _public_reference_policy_metadata()
+        active_reference_id = reference_policy.get("active_default_reference_id")
+        gc_reference_band = f"{constraints['gc_min']:g}-{constraints['gc_max']:g}%"
+        response["product_version"] = ENGINE_VERSIONS["product"]
+        response["reference_policy"] = reference_policy
+        response["reference_policy_version"] = reference_policy.get("policy_version")
+        response["codon_reference_id"] = active_reference_id
+        response["gc_reference_band"] = gc_reference_band
+        response.setdefault("metadata", {}).update(
+            {
+                "product_version": ENGINE_VERSIONS["product"],
+                "reference_policy_version": reference_policy.get("policy_version"),
+                "codon_reference_id": active_reference_id,
+                "gc_reference_band": gc_reference_band,
+            }
+        )
         response["provenance"] = {
             "input_sequence_hash": self.sha256_prefix(input_sequence),
             "output_cds_hash": self.sha256_prefix(output_cds),
@@ -1077,6 +1091,9 @@ class handler(BaseHTTPRequestHandler):
             "host_profile": host_profile,
             "objective": objective or "legacy_profile",
             "profile": selected_profile,
+            "codon_reference_id": active_reference_id,
+            "gc_reference_band": gc_reference_band,
+            "reference_policy_version": reference_policy.get("policy_version"),
             "input_length_aa": self.input_length_aa(input_sequence),
             "output_length_nt": len(output_cds),
             "cai": float(cai),
@@ -1321,6 +1338,7 @@ class handler(BaseHTTPRequestHandler):
             "id": candidate_id,
             "label": label,
             "dna_sequence": dna_sequence,
+            "sequence_length": len(dna_sequence),
             "cai": round(profile_cai, 3) if profile_cai is not None else general_cai,
             "cai_reference": (
                 "profile_golden_set" if profile_cai is not None else "configured_codon_table"

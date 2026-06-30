@@ -89,7 +89,7 @@ PATTERNS = {
         re.IGNORECASE,
     ),
     "internal_reference": re.compile(
-        r"\bClaude\b|\bCodex\b|\bAnthropic\b|\bOpenAI\b|CLAUDE\.md|eijex-workspace|"
+        r"\bClaude\b|\bCodex\b|\bAnthropic\b|\bOpenAI\b|CLAUDE\.md|"
         r"C:\\Work|PlantFormOrg|PlantForm-AI|"
         r"eijex-web\.vercel\.app|"
         r"\bJob\s*\d+[A-Za-z-]*\b",

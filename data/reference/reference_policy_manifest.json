@@ -48,15 +48,15 @@
         "python_library": "historical comparator/replay path only, not the current default",
         "cli": "historical comparator metadata only unless an explicit replay/import path is enabled",
         "rest_api": "not accepted as an override through public optimize paths",
-        "web_ui": "collapsed historical comparator disclosure; not selectable",
+        "web_ui": "hidden from public product selection; not selectable",
         "mcp": "may be reported as current baseline metadata only if surfaced",
         "docs_examples": "may be described as historical comparator with claim boundary",
         "manuscript": "historical software baseline/comparator only; not a validated biological optimum"
       },
       "activation_evidence": {
-        "validation_dataset": "current v3.2.8 revert baseline; no new activation in Job 177",
+        "validation_dataset": "v3.2.8 rollback/stable legacy-reference baseline retained for historical replay",
         "analysis_plan": "not applicable to legacy baseline restoration",
-        "reviewer_signoff": "Job 172 revert and Job 176/177 policy gates"
+        "reviewer_signoff": "maintainer-reviewed reference-policy gate"
       },
       "notes": "Retained as historical comparator after NbeV1.1 HC activation."
     },
@@ -148,7 +148,7 @@
         "python_library": "research/internal path only",
         "cli": "not listed as public production option",
         "rest_api": "not accepted through public optimize paths",
-        "web_ui": "hidden or disabled research comparator only",
+        "web_ui": "hidden from public product selection; not selectable",
         "mcp": "not selectable as production reference",
         "docs_examples": "research comparator framework only",
         "manuscript": "comparator/sensitivity framework only"
@@ -197,7 +197,7 @@
         "python_library": "research/internal path only",
         "cli": "not listed as public production option",
         "rest_api": "not accepted through public optimize paths",
-        "web_ui": "hidden or disabled research comparator only",
+        "web_ui": "hidden from public product selection; not selectable",
         "mcp": "not selectable as production reference",
         "docs_examples": "research comparator framework only",
         "manuscript": "comparator/sensitivity framework only"

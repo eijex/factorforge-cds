@@ -22,14 +22,16 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 > intended to ship under a Minor bump rather than Major. This is a
 > deliberate, one-off exception for pre-1.0-maturity defaults recalibration,
 > not a change to the policy table above — future breaking API/engine
-> changes still require a Major bump. **Status as of v3.2.8 (2026-06-29):**
-> that change inadvertently shipped early, under v3.2.7's Patch bump (a
-> release-process gap, not an intentional exception), and was reverted in
-> v3.2.8 pending further validation — see both versions' entries below.
+> changes still require a Major bump. **Status as of v3.3.0 (2026-07-01):**
+> the NbeV1.1 high-confidence CDS-derived default is the active production
+> software reference for *N. benthamiana*. v3.2.8 remains the rollback/stable
+> legacy-reference state; see both versions' entries below.
 
 ---
 
 ## [Unreleased]
+
+## [3.3.0] — 2026-07-01
 
 ### Added
 
@@ -512,7 +514,8 @@ First official release of FactorForge.
 
 ---
 
-[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.2.8...HEAD
+[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.3.0...HEAD
+[3.3.0]: https://github.com/eijex/factorforge-cds/compare/v3.2.8...v3.3.0
 [3.2.8]: https://github.com/eijex/factorforge-cds/compare/v3.2.7...v3.2.8
 [3.2.7]: https://github.com/eijex/factorforge-cds/compare/v3.2.6...v3.2.7
 [3.2.6]: https://github.com/eijex/factorforge-cds/compare/v3.2.5...v3.2.6

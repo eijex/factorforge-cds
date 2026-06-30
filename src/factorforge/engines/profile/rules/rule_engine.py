@@ -358,11 +358,11 @@ class RuleEngine:
 
         This is a LOCAL synthesis/extreme-window guard (default 25-75% over a
         50 bp window), NOT the global GC target. Global GC is governed separately
-        by the scoring band (GC_OPT_MIN/MAX, currently 55-65% for nbenthamiana
-        — the native genome-composition anchor, ~40-47%, _analysis/025, was
-        provisionally reverted on 2026-06-29 pending an MFE re-sensitivity +
-        2x2 factorial recheck) and the API/DP gc_min/gc_max constraints. The
-        wide 25-75% local band is an independent synthesis/hairpin-risk guard
+        by the scoring band (GC_OPT_MIN/MAX; N. benthamiana currently uses
+        the NbeV1.1 high-confidence CDS-derived native-composition anchor,
+        40-47%, while other hosts retain their own configured defaults) and
+        the API/DP gc_min/gc_max constraints. The wide 25-75% local band is
+        an independent synthesis/hairpin-risk guard
         (registry `gc_extreme_local_window`), not derived from or coupled to
         the global GC target — narrowing it is a separate decision from the
         global band retarget and is out of scope here.

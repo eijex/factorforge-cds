@@ -127,7 +127,7 @@
     },
     "asset_type": {
       "type": "string",
-      "description": "Governance status of this codon-reference asset (added in Job 168 / v3.3.0 — _analysis/025).",
+      "description": "Governance status of this codon-reference asset (added in v3.3.0 reference-policy update — reference-policy audit).",
       "enum": [
         "legacy_packaged",
         "experimental_candidate",
@@ -140,7 +140,7 @@
     },
     "terminal_stop_policy": {
       "type": "string",
-      "description": "Whether stop-codon (*) frequencies are part of this table's frequency model (added in Job 168 / v3.3.0 — _analysis/025).",
+      "description": "Whether stop-codon (*) frequencies are part of this table's frequency model (added in v3.3.0 reference-policy update — reference-policy audit).",
       "enum": ["excluded_from_frequency_model", "included_in_frequency_model"]
     },
     "promotion_note": {

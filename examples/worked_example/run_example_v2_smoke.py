@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 """Current-default sfGFP smoke check for FactorForge.
 
-Job 168 / v3.3.0 (_analysis/025) introduced a new production-default codon
-reference (NbeV1.1 LAB-strain, GC 40-47%) for N. benthamiana, replacing the
-legacy reference that run_example.py is pinned to. That promotion was
-provisionally reverted on 2026-06-29 pending an MFE re-sensitivity + 2x2
-factorial recheck (see data/reference/active_codon_reference.json) — this
-script does not hardcode which one is active; it tracks whatever the engine
-currently resolves to.
+v3.3.0 activates the NbeV1.1 high-confidence CDS-derived codon reference
+(GC 40-47%) as the production default for N. benthamiana, replacing the
+legacy reference that run_example.py is pinned to for historical replay. This
+script does not hardcode which reference is active; it tracks whatever the
+engine currently resolves to.
 
 This script does NOT compare against a frozen artifact — it only verifies
 that the current production default runs successfully end-to-end and
