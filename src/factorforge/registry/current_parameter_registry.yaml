@@ -179,7 +179,7 @@ codon_reference:
     note: "Job 168 / v3.3.0 (_analysis/025) promoted nbenthamiana_nbev11_hc_v2 (see codon_reference.candidate below) to production default and released it as part of v3.2.7. Provisionally reverted to this asset (restored as production default) pending an MFE re-sensitivity + 2x2 factorial recheck of the v2 candidate. See data/reference/active_codon_reference.json and data/reference/codon_table_manifest.json."
   candidate:
     id: nbenthamiana_nbev11_hc_v2
-    asset_type: official_packaged
+    asset_type: experimental_candidate
     codon_reference_contract_version: v2
     species: Nicotiana benthamiana
     ncbi_taxid: 4100
@@ -190,4 +190,4 @@ codon_reference:
     isoform_policy: "longest_isoform_per_gene_locus (scripts/build_codon_profile.py)"
     sha256: "686f12f2881b00a45246670e6c73e10d2254854577c5323ceb19a9ee58ee87dd"
     claim_boundary: "Configured in-silico codon reference only; not wet-lab validation or yield prediction. Native AT-rich composition is not equivalent to expression-superior composition."
-    note: "Promoted to production default in Job 168 / v3.3.0 (_analysis/025) and shipped as part of v3.2.7 on 2026-06-29. Provisionally un-promoted (not deleted) pending an MFE re-sensitivity + 2x2 factorial recheck; see data/reference/codon_table_manifest_nbev11_hc_v2.json."
+    note: "Promoted to production default in Job 168 / v3.3.0 (_analysis/025) and shipped as part of v3.2.7 on 2026-06-29. Provisionally un-promoted (not deleted) to experimental_candidate / research-comparator status pending an MFE re-sensitivity + 2x2 factorial recheck; see data/reference/reference_policy_manifest.json and data/reference/codon_table_manifest_nbev11_hc_v2.json. Not a public selectable option."
