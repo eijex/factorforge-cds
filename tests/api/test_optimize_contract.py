@@ -212,6 +212,15 @@ def test_balanced_api_response_exposes_gc_target_observation() -> None:
     assert metrics["requested_gc_min_percent"] == 40.0
     assert metrics["requested_gc_max_percent"] == 47.0
     assert metrics["gc_target_reached"] == (40.0 <= metrics["gc_percent"] <= 47.0)
+    assert "mfe_status_reason" in metrics
+    assert metrics["mfe_status_reason"] in {
+        None,
+        "disabled_for_profile",
+        "no_input",
+        "missing_dependency",
+        "length_exceeded",
+        "computation_failed",
+    }
 
 
 def test_non_balanced_api_response_omits_gc_target_observation() -> None:

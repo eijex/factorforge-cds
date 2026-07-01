@@ -61,6 +61,7 @@ class PipelineResult:
                 else None
             ),
             "mfe_status": metrics.get("mfe_status", "not_computed"),
+            "mfe_status_reason": metrics.get("mfe_status_reason"),
             "mfe_used": metrics.get("mfe_used", False),
             "polya_signal_count": len(scan.get("polya", [])),
             "domestication_edits": len(dom.get("removed_sites", [])),

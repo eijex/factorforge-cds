@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +152,95 @@ def _check_vienna_available() -> bool:
 # while still covering most realistic single-protein CDS design requests.
 MFE_MAX_SEQUENCE_LENGTH = 1000
 
+MFEStatus = Literal["computed", "not_computed"]
+MFEReason = Literal[
+    "disabled_for_profile",
+    "no_input",
+    "missing_dependency",
+    "length_exceeded",
+    "computation_failed",
+]
+
+
+@dataclass(frozen=True)
+class MFEResolution:
+    """Resolved MFE value plus human and machine-readable provenance."""
+
+    value: float | None
+    status: MFEStatus
+    reason: MFEReason | None
+    warning: str | None
+
+
+def _fold_mfe(sequence: str) -> float | None:
+    """Run ViennaRNA folding after caller-side availability/length guards."""
+    try:
+        import RNA
+
+        # Convert DNA to RNA (T → U)
+        rna_seq = sequence.upper().replace("T", "U")
+        _, mfe = RNA.fold(rna_seq)
+        return float(mfe)
+    except Exception as exc:
+        logger.debug(f"MFE calculation failed: {exc}")
+        return None
+
+
+def _resolve_mfe_status(sequence: str | None, config: ScoringConfig) -> MFEResolution:
+    """Resolve MFE computation result without collapsing skip/failure reasons."""
+    if not config.use_mfe:
+        return MFEResolution(
+            value=None,
+            status="not_computed",
+            reason="disabled_for_profile",
+            warning="MFE scoring is disabled for this profile.",
+        )
+
+    if sequence is None:
+        return MFEResolution(
+            value=None,
+            status="not_computed",
+            reason="no_input",
+            warning="MFE was not computed because no sequence was provided.",
+        )
+
+    if not _check_vienna_available():
+        return MFEResolution(
+            value=None,
+            status="not_computed",
+            reason="missing_dependency",
+            warning="MFE was not computed because ViennaRNA is unavailable in this environment.",
+        )
+
+    if len(sequence) > MFE_MAX_SEQUENCE_LENGTH:
+        logger.warning(
+            "Sequence length (%d nt) exceeds MFE_MAX_SEQUENCE_LENGTH (%d nt); "
+            "skipping global MFE calculation to avoid an unbounded ViennaRNA "
+            "RNA.fold() runtime (O(n^3)). MFE scoring falls back to a neutral, "
+            "zero-weighted contribution for this candidate.",
+            len(sequence), MFE_MAX_SEQUENCE_LENGTH,
+        )
+        return MFEResolution(
+            value=None,
+            status="not_computed",
+            reason="length_exceeded",
+            warning=(
+                f"MFE was skipped because the sequence ({len(sequence)} nt) exceeds "
+                f"the {MFE_MAX_SEQUENCE_LENGTH} nt limit for global MFE folding."
+            ),
+        )
+
+    mfe_value = _fold_mfe(sequence)
+    if mfe_value is None:
+        return MFEResolution(
+            value=None,
+            status="not_computed",
+            reason="computation_failed",
+            warning="MFE computation failed for this sequence.",
+        )
+
+    return MFEResolution(value=mfe_value, status="computed", reason=None, warning=None)
+
 
 def calculate_mfe(sequence: str) -> float | None:
     """
@@ -164,29 +253,7 @@ def calculate_mfe(sequence: str) -> float | None:
         MFE in kcal/mol, or None if ViennaRNA is not available or the
         sequence exceeds MFE_MAX_SEQUENCE_LENGTH.
     """
-    if not _check_vienna_available():
-        return None
-
-    if len(sequence) > MFE_MAX_SEQUENCE_LENGTH:
-        logger.warning(
-            "Sequence length (%d nt) exceeds MFE_MAX_SEQUENCE_LENGTH (%d nt); "
-            "skipping global MFE calculation to avoid an unbounded ViennaRNA "
-            "RNA.fold() runtime (O(n^3)). MFE scoring falls back to a neutral, "
-            "zero-weighted contribution for this candidate.",
-            len(sequence), MFE_MAX_SEQUENCE_LENGTH,
-        )
-        return None
-
-    try:
-        import RNA
-
-        # Convert DNA to RNA (T → U)
-        rna_seq = sequence.upper().replace("T", "U")
-        _, mfe = RNA.fold(rna_seq)
-        return float(mfe)
-    except Exception as exc:
-        logger.debug(f"MFE calculation failed: {exc}")
-        return None
+    return _resolve_mfe_status(sequence, PROFILE_SCORING_CONFIGS["balanced"]).value
 
 
 def normalize_mfe(mfe: float, seq_length: int) -> float:
@@ -395,6 +462,7 @@ def compute_mfe_evidence(
     Returns a dict with:
         mfe_kcal_mol: float | None   (None when not computed)
         mfe_status:   "computed" | "not_computed"
+        mfe_status_reason: str | None (machine-readable reason when not computed)
         mfe_used:     bool           (whether MFE contributed to the score)
         mfe_warning:  str | None     (reason when not used)
         score_components: {cai_used, gc_used, mfe_used}
@@ -403,33 +471,13 @@ def compute_mfe_evidence(
         profile_name = (profile or "balanced").lower()
         config = PROFILE_SCORING_CONFIGS.get(profile_name) or PROFILE_SCORING_CONFIGS["balanced"]
 
-    mfe_value: float | None = None
-    reason: str | None = None
-
-    if not config.use_mfe:
-        reason = "MFE scoring is disabled for this profile."
-    elif sequence is None:
-        reason = "MFE was not computed because no sequence was provided."
-    elif not _check_vienna_available():
-        reason = "MFE was not computed because ViennaRNA is unavailable in this environment."
-    elif len(sequence) > MFE_MAX_SEQUENCE_LENGTH:
-        # Distinguish a deliberate length-based skip from an actual
-        # fold failure — the generic "computation failed" message below would
-        # otherwise mislead a caller into thinking something is broken.
-        reason = (
-            f"MFE was skipped because the sequence ({len(sequence)} nt) exceeds "
-            f"the {MFE_MAX_SEQUENCE_LENGTH} nt limit for global MFE folding."
-        )
-    else:
-        mfe_value = calculate_mfe(sequence)
-        if mfe_value is None:
-            reason = "MFE computation failed for this sequence."
-
-    mfe_used = mfe_value is not None
+    resolution = _resolve_mfe_status(sequence, config)
+    mfe_used = resolution.value is not None
     return {
-        "mfe_kcal_mol": round(mfe_value, 2) if mfe_used else None,
-        "mfe_status": "computed" if mfe_used else "not_computed",
+        "mfe_kcal_mol": round(resolution.value, 2) if mfe_used else None,
+        "mfe_status": resolution.status,
+        "mfe_status_reason": resolution.reason,
         "mfe_used": mfe_used,
-        "mfe_warning": None if mfe_used else reason,
+        "mfe_warning": resolution.warning,
         "score_components": {"cai_used": True, "gc_used": True, "mfe_used": mfe_used},
     }

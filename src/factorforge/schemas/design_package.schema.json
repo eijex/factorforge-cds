@@ -294,6 +294,17 @@
           "type": "string",
           "enum": ["computed", "not_computed", "unavailable", "failed"]
         },
+        "mfe_status_reason": {
+          "type": ["string", "null"],
+          "enum": [
+            null,
+            "disabled_for_profile",
+            "no_input",
+            "missing_dependency",
+            "length_exceeded",
+            "computation_failed"
+          ]
+        },
         "mfe_used": {
           "type": "boolean"
         }

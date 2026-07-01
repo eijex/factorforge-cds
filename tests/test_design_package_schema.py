@@ -22,6 +22,21 @@ def test_valid_design_package(design_package: dict) -> None:
     jsonschema.validate(design_package, SCHEMA)
 
 
+def test_mfe_status_reason_is_optional_and_enum_checked(design_package: dict) -> None:
+    without_reason = deepcopy(design_package)
+    without_reason["metrics"].pop("mfe_status_reason", None)
+    jsonschema.validate(without_reason, SCHEMA)
+
+    with_reason = deepcopy(design_package)
+    with_reason["metrics"]["mfe_status_reason"] = "missing_dependency"
+    jsonschema.validate(with_reason, SCHEMA)
+
+    invalid = deepcopy(design_package)
+    invalid["metrics"]["mfe_status_reason"] = "dependency_missing"
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(invalid, SCHEMA)
+
+
 @pytest.mark.parametrize(
     "field",
     [

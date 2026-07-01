@@ -33,6 +33,10 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Added
 
+- Added `mfe_status_reason` as a backward-compatible sub-reason for MFE
+  provenance output, while keeping the existing `mfe_status` values unchanged.
+  The new field distinguishes disabled profiles, missing input, missing
+  ViennaRNA dependency, length-guard skips, and fold failures.
 - Added a checksum-validated expert/research `--reference-id` CLI flag for
   selecting packaged codon-reference tables by manifest ID. Non-production
   tiers print their manifest claim-boundary warning and continue; REST API
