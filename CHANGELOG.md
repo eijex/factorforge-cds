@@ -31,6 +31,13 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
+### Added
+
+- Added a checksum-validated expert/research `--reference-id` CLI flag for
+  selecting packaged codon-reference tables by manifest ID. Non-production
+  tiers print their manifest claim-boundary warning and continue; REST API
+  reference overrides remain unsupported.
+
 ## [3.3.0] — 2026-07-01
 
 ### Added

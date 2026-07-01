@@ -1,0 +1,262 @@
+{
+  "schema_version": "1.0",
+  "policy_version": "2026-06-30-nbev11-default-activation",
+  "active_default_reference_id": "nbenthamiana_nbev11_hc_v2",
+  "activation_principles": [
+    "reference file presence != product activation",
+    "research comparator != public default",
+    "disabled UI != backend permission",
+    "manuscript framework != empirical validation claim"
+  ],
+  "references": [
+    {
+      "reference_id": "nbenthamiana_legacy_kazusa_sgn_v101",
+      "tier": "historical_reproduction",
+      "activation_status": "historical_only",
+      "codon_table_path": "src/factorforge/data/nbenthamiana_codons.json",
+      "checksum_sha256": "ddbd0a41da88109a709bca0304581e29bd0a756e4db1c51809d5002e9b2d5e8c",
+      "source_name": "Kazusa CodonUsage Database + SGN genome v1.0.1",
+      "source_url": "https://www.kazusa.or.jp/codon/",
+      "source_doi_or_accession": "legacy_metadata_only",
+      "source_version": "legacy_sgn_v101",
+      "date_accessed_or_built": "2026-06-29",
+      "organism": "Nicotiana benthamiana",
+      "ncbi_taxid": 4100,
+      "strain_or_cultivar": "legacy packaged reference; exact build path incomplete",
+      "tissue_or_sample_scope": "not specified in packaged legacy metadata",
+      "sequence_scope": "CDS",
+      "isoform_policy": "unknown legacy packaging policy",
+      "extraction_method": "legacy packaged codon table; authoritative build path incomplete",
+      "normalization_method": "legacy packaged frequency table",
+      "manual_curation": false,
+      "license_or_redistribution_status": "legacy metadata only; redistribution status not fully reconstructed",
+      "known_limitations": [
+        "Authoritative build script and exact source extraction command are incomplete.",
+        "Retained as a historical v3.2.x comparator after NbeV1.1 HC activation; this is not a biological inferiority or superiority claim."
+      ],
+      "intended_use": [
+        "Historical continuity comparator for v3.2.x result interpretation.",
+        "Sensitivity/reference-provenance analysis where legacy behavior must be reproduced."
+      ],
+      "not_for": [
+        "Current N. benthamiana production default after NbeV1.1 HC activation.",
+        "Experimental validation or performance evidence.",
+        "Claiming comparative biological performance relative to other reference tables."
+      ],
+      "claim_boundary": "Configured in-silico codon reference only; not experimental validation or biological-performance evidence.",
+      "public_exposure": {
+        "python_library": "historical comparator/replay path only, not the current default",
+        "cli": "historical comparator metadata only unless an explicit replay/import path is enabled",
+        "rest_api": "not accepted as an override through public optimize paths",
+        "web_ui": "hidden from public product selection; not selectable",
+        "mcp": "may be reported as current baseline metadata only if surfaced",
+        "docs_examples": "may be described as historical comparator with claim boundary",
+        "manuscript": "historical software baseline/comparator only; not a validated biological optimum"
+      },
+      "activation_evidence": {
+        "validation_dataset": "v3.2.8 rollback/stable legacy-reference baseline retained for historical replay",
+        "analysis_plan": "not applicable to legacy baseline restoration",
+        "reviewer_signoff": "maintainer-reviewed reference-policy gate"
+      },
+      "notes": "Retained as historical comparator after NbeV1.1 HC activation."
+    },
+    {
+      "reference_id": "nbenthamiana_nbev11_hc_v2",
+      "tier": "production_enabled",
+      "activation_status": "enabled",
+      "codon_table_path": "src/factorforge/data/profiles/nbev11_cds_hc_derived_codons.json",
+      "checksum_sha256": "686f12f2881b00a45246670e6c73e10d2254854577c5323ceb19a9ee58ee87dd",
+      "source_name": "NbeV1.1 LAB-strain genome high-confidence CDS subset",
+      "source_url": "https://nbenthamiana.jp/data/dl_data?data=transcripts_h",
+      "source_doi_or_accession": "Kurotani et al. 2023, Plant and Cell Physiology 64(2):248; PMC9977260",
+      "source_version": "Nbe_v1.1_cds_HC.fa.gz",
+      "date_accessed_or_built": "2026-06-16",
+      "organism": "Nicotiana benthamiana",
+      "ncbi_taxid": 4100,
+      "strain_or_cultivar": "NbeV1.1 laboratory-strain proxy; exact isolate identity not guaranteed",
+      "tissue_or_sample_scope": "high-confidence CDS gene models",
+      "sequence_scope": "CDS",
+      "isoform_policy": "longest_isoform_per_gene_locus via scripts/build_codon_profile.py",
+      "extraction_method": "strict_nuclear_cds_v1",
+      "normalization_method": "Laplace pseudocount codon profile build",
+      "manual_curation": false,
+      "license_or_redistribution_status": "public genome/CDS resource; redistribution status should be reviewed before product activation",
+      "known_limitations": [
+        "Native AT-rich composition is not equivalent to expression-superior composition.",
+        "Exact match to a specific wet-lab partner LAB isolate is not guaranteed.",
+        "Activated as the current N. benthamiana software default with explicit claim boundaries; activation is not wet-lab validation."
+      ],
+      "intended_use": [
+        "Current production-default codon reference for N. benthamiana profile-engine scoring and generation.",
+        "Provenance-tracked genome-derived baseline for public software outputs."
+      ],
+      "not_for": [
+        "Claims of experimental validation or comparative biological performance.",
+        "Assuming exact identity to any specific partner LAB isolate."
+      ],
+      "claim_boundary": "Genome-derived in-silico software default only; not experimental validation or comparative biological-performance evidence.",
+      "public_exposure": {
+        "python_library": "current default through N. benthamiana production paths",
+        "cli": "current default through N. benthamiana production paths",
+        "rest_api": "current default through public optimize paths; overrides remain unsupported",
+        "web_ui": "current default metadata; no reference selector introduced by this activation",
+        "mcp": "may be reported as current default metadata only if surfaced",
+        "docs_examples": "may be described as current configured genome-derived baseline with claim boundary",
+        "manuscript": "current software default only; not a validated biological optimum"
+      },
+      "activation_evidence": {
+        "validation_dataset": "NbeV1.1 high-confidence CDS-derived codon-profile build with checksum-pinned manifest",
+        "analysis_plan": "activation aligned across runtime default, GC band, API/UI metadata, tests, docs, and manuscript wording",
+        "reviewer_signoff": "user-approved B-path activation on 2026-06-30"
+      },
+      "notes": "Activated as current N. benthamiana production default; public overrides remain unsupported."
+    },
+    {
+      "reference_id": "nbenthamiana_nbev11_all_cds_v2",
+      "tier": "research_comparator",
+      "activation_status": "research_only",
+      "codon_table_path": "src/factorforge/data/profiles/nbev11_cds_all_derived_codons.json",
+      "checksum_sha256": "0f2e48983a07ed501a0ddfb4ebfbb4b862b49d917221721014fc2d90509d86b8",
+      "source_name": "NbeV1.1 LAB-strain genome all-CDS set",
+      "source_url": "https://solgenomics.net/ftp/genomes/Nicotiana_benthamiana_NbeV1.1/Nbe_v1.1_cds.fa.gz",
+      "source_doi_or_accession": "Kurotani et al. 2023 / Sol Genomics Network NbeV1.1 CDS",
+      "source_version": "Nbe_v1.1_cds.fa.gz",
+      "date_accessed_or_built": "2026-06-16",
+      "organism": "Nicotiana benthamiana",
+      "ncbi_taxid": 4100,
+      "strain_or_cultivar": "NbeV1.1 laboratory-strain proxy",
+      "tissue_or_sample_scope": "all CDS gene models",
+      "sequence_scope": "CDS",
+      "isoform_policy": "longest_isoform_per_gene_locus via scripts/build_codon_profile.py",
+      "extraction_method": "strict_nuclear_cds_v1",
+      "normalization_method": "Laplace pseudocount codon profile build",
+      "manual_curation": false,
+      "license_or_redistribution_status": "public genome/CDS resource; redistribution status should be reviewed before any public product activation",
+      "known_limitations": [
+        "All-CDS set includes lower-confidence annotations relative to the high-confidence subset.",
+        "Intended as sensitivity/comparator evidence, not a recommended default."
+      ],
+      "intended_use": [
+        "Research comparator for HC-vs-all sensitivity checks."
+      ],
+      "not_for": [
+        "Production default or public selector without separate activation gate.",
+        "Claims of biological superiority."
+      ],
+      "claim_boundary": "Research comparator only; not a validated or recommended production reference.",
+      "public_exposure": {
+        "python_library": "research/internal path only",
+        "cli": "not listed as public production option",
+        "rest_api": "not accepted through public optimize paths",
+        "web_ui": "hidden from public product selection; not selectable",
+        "mcp": "not selectable as production reference",
+        "docs_examples": "research comparator framework only",
+        "manuscript": "comparator/sensitivity framework only"
+      },
+      "activation_evidence": {
+        "validation_dataset": "not applicable until activation proposed",
+        "analysis_plan": "pending if activation proposed",
+        "reviewer_signoff": "not approved for production activation"
+      },
+      "notes": "Near-HC comparator for annotation-quality sensitivity, not a product option."
+    },
+    {
+      "reference_id": "nbenthamiana_qld183_v103",
+      "tier": "research_comparator",
+      "activation_status": "research_only",
+      "codon_table_path": "src/factorforge/data/profiles/qld183_v103_derived_codons.json",
+      "checksum_sha256": "191a90aa9efa8e3dc9d02c4f5c00c02c16388248aecd463888bcdb1f0562c7ed",
+      "source_name": "Nicotiana benthamiana QLD183 v103 CDS annotation",
+      "source_url": "https://solgenomics.net/ftp/genomes/Nicotiana_benthamiana/annotation/NbQld183.v103.gff3.CDS.fasta.gz",
+      "source_doi_or_accession": "Ranawaka et al. 2023, Nature Plants 9(9):1558-1571 / SGN QLD183 v103",
+      "source_version": "NbQld183.v103.gff3.CDS.fasta.gz",
+      "date_accessed_or_built": "2026-06-16",
+      "organism": "Nicotiana benthamiana",
+      "ncbi_taxid": 4100,
+      "strain_or_cultivar": "QLD183 wild accession",
+      "tissue_or_sample_scope": "CDS annotation",
+      "sequence_scope": "CDS",
+      "isoform_policy": "longest_isoform_per_gene_locus via scripts/build_codon_profile.py",
+      "extraction_method": "strict_nuclear_cds_v1",
+      "normalization_method": "Laplace pseudocount codon profile build",
+      "manual_curation": false,
+      "license_or_redistribution_status": "public genome/CDS resource; redistribution status should be reviewed before any public product activation",
+      "known_limitations": [
+        "Wild-accession QLD183 context does not match LAB-strain-oriented N. benthamiana design assumptions.",
+        "Useful as a comparator/sensitivity reference, not a default recommendation."
+      ],
+      "intended_use": [
+        "Research comparator for accession/source sensitivity analysis."
+      ],
+      "not_for": [
+        "LAB-strain production default without explicit activation evidence.",
+        "General N. benthamiana biological optimum claim."
+      ],
+      "claim_boundary": "Research comparator only; not a validated or recommended production reference for LAB-strain-oriented design.",
+      "public_exposure": {
+        "python_library": "research/internal path only",
+        "cli": "not listed as public production option",
+        "rest_api": "not accepted through public optimize paths",
+        "web_ui": "hidden from public product selection; not selectable",
+        "mcp": "not selectable as production reference",
+        "docs_examples": "research comparator framework only",
+        "manuscript": "comparator/sensitivity framework only"
+      },
+      "activation_evidence": {
+        "validation_dataset": "not applicable until activation proposed",
+        "analysis_plan": "pending if activation proposed",
+        "reviewer_signoff": "not approved for production activation"
+      },
+      "notes": "Comparator retained to prevent source/cultivar sensitivity from being hidden."
+    },
+    {
+      "reference_id": "ntabacum_by2_packaged",
+      "tier": "experimental_candidate",
+      "activation_status": "disabled",
+      "codon_table_path": "src/factorforge/data/ntabacum_codons.json",
+      "checksum_sha256": "45d300cfd394ce8387a4d2bc5b5b881219a2fabf6481c6b904c54a4a1ddf3d55",
+      "source_name": "Nicotiana tabacum packaged codon table for BY-2 experimental host context",
+      "source_url": "https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=4097",
+      "source_doi_or_accession": "NCBITaxon:4097; Nagata et al. 1992 BY-2 cell line context",
+      "source_version": "packaged_table",
+      "date_accessed_or_built": "2026-06-30",
+      "organism": "Nicotiana tabacum",
+      "ncbi_taxid": 4097,
+      "strain_or_cultivar": "BY-2 experimental host context",
+      "tissue_or_sample_scope": "cell-line context; exact codon source metadata incomplete",
+      "sequence_scope": "unknown",
+      "isoform_policy": "unknown packaged table policy",
+      "extraction_method": "packaged codon table; source build path not fully reconstructed",
+      "normalization_method": "packaged frequency table",
+      "manual_curation": false,
+      "license_or_redistribution_status": "metadata incomplete; review before broader product activation",
+      "known_limitations": [
+        "Registry labels BY-2 as experimental and not validated for production use.",
+        "Codon source/build provenance is less complete than derived NbeV1.1 profiles."
+      ],
+      "intended_use": [
+        "Experimental host-context support where explicitly enabled by existing FactorForge host logic."
+      ],
+      "not_for": [
+        "General N. benthamiana reference substitution.",
+        "Production/wet-lab validation claim."
+      ],
+      "claim_boundary": "Experimental host-associated packaged table only; not production validation or performance evidence.",
+      "public_exposure": {
+        "python_library": "experimental host path only where existing code permits it",
+        "cli": "must retain experimental/non-default framing",
+        "rest_api": "must retain experimental/non-default framing",
+        "web_ui": "experimental host label if visible",
+        "mcp": "not selectable as default production N. benthamiana reference",
+        "docs_examples": "experimental host caveat required",
+        "manuscript": "not part of N. benthamiana reference-default claim"
+      },
+      "activation_evidence": {
+        "validation_dataset": "not approved for production activation",
+        "analysis_plan": "pending if production activation proposed",
+        "reviewer_signoff": "registry marks BY-2 as experimental"
+      },
+      "notes": "Included so checksum/policy drift is visible for all packaged codon tables."
+    }
+  ]
+}
