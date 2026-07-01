@@ -26,7 +26,15 @@ from factorforge.engines.profile.pipeline import OptimizationPipeline
 
 ## 3. Branch & Commit Conventions
 
-Branch naming:
+Branch model:
+- `main` is **release-only**. Tags are cut from `main`; whatever is on `main` is what
+  ships in the next release. Do not push day-to-day work directly to `main`.
+- `develop` is the **work-accumulation branch**. Land completed work on `develop`.
+  CI (lint/test/audit) runs on both `main` and `develop`; publish/docker/release
+  workflows are tag/main-triggered, so nothing is published from `develop`.
+- At release time, `develop` is merged into `main` and the release is tagged on `main`.
+
+Branch naming (for topic branches off `develop`, optional):
 ```
 feat/short-description
 fix/short-description
