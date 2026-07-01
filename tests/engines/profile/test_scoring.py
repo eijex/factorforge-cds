@@ -299,6 +299,7 @@ class TestMFEViennaBranches:
         ev = compute_mfe_evidence(self.SEQ, profile="balanced")
         assert ev["mfe_kcal_mol"] is None
         assert ev["mfe_status"] == "not_computed"
+        assert ev["mfe_status_reason"] == "missing_dependency"
         assert ev["mfe_used"] is False
         assert ev["mfe_warning"] is not None
 
@@ -390,9 +391,25 @@ class TestMFELengthGuard:
         seq = "A" * (MFE_MAX_SEQUENCE_LENGTH + 1)
         ev = compute_mfe_evidence(seq, profile="balanced")
         assert ev["mfe_used"] is False
+        assert ev["mfe_status_reason"] == "length_exceeded"
         assert ev["mfe_warning"] is not None
         assert "failed" not in ev["mfe_warning"].lower()
         assert str(MFE_MAX_SEQUENCE_LENGTH) in ev["mfe_warning"]
+
+    def test_runtime_long_sequence_reports_active_first_blocker(self):
+        """Live environment evidence should expose whether dependency or length
+        is the first blocker without monkeypatching ViennaRNA availability."""
+        seq = "A" * (MFE_MAX_SEQUENCE_LENGTH + 1)
+        ev = compute_mfe_evidence(seq, profile="balanced")
+        print(f"observed live mfe_status_reason={ev['mfe_status_reason']}")
+
+        assert ev["mfe_kcal_mol"] is None
+        assert ev["mfe_status"] == "not_computed"
+        assert ev["mfe_used"] is False
+        if scoring._check_vienna_available():
+            assert ev["mfe_status_reason"] == "length_exceeded"
+        else:
+            assert ev["mfe_status_reason"] == "missing_dependency"
 
     def test_over_cutoff_drops_mfe_weight_like_vienna_unavailable(self):
         """Above the cutoff, calculate_composite_score must behave exactly

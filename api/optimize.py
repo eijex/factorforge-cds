@@ -819,6 +819,7 @@ class handler(BaseHTTPRequestHandler):
             # not_computed in production — never report it as a misleading 0.0.
             mfe_kcal_mol = result.metrics.get("mfe_kcal_mol")
             mfe_status = result.metrics.get("mfe_status", "not_computed")
+            mfe_status_reason = result.metrics.get("mfe_status_reason")
             mfe_used = bool(result.metrics.get("mfe_used", False))
             mfe_warning = result.metrics.get("mfe_warning")
 
@@ -854,6 +855,7 @@ class handler(BaseHTTPRequestHandler):
                         round(float(mfe_kcal_mol), 2) if mfe_kcal_mol is not None else None
                     ),
                     "mfe_status": mfe_status,
+                    "mfe_status_reason": mfe_status_reason,
                     "mfe_used": mfe_used,
                     "mfe_warning": mfe_warning,
                     **gc_target_observation,

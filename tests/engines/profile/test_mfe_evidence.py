@@ -23,6 +23,7 @@ def test_evidence_not_computed_when_vienna_unavailable(monkeypatch) -> None:
 
     assert ev["mfe_kcal_mol"] is None
     assert ev["mfe_status"] == "not_computed"
+    assert ev["mfe_status_reason"] == "missing_dependency"
     assert ev["mfe_used"] is False
     assert "ViennaRNA" in ev["mfe_warning"]
     assert ev["score_components"]["mfe_used"] is False
@@ -36,6 +37,7 @@ def test_evidence_disabled_profile(monkeypatch) -> None:
     ev = compute_mfe_evidence(SEQ, config=cfg)
 
     assert ev["mfe_status"] == "not_computed"
+    assert ev["mfe_status_reason"] == "disabled_for_profile"
     assert ev["mfe_used"] is False
     assert "disabled" in ev["mfe_warning"]
 
@@ -43,6 +45,7 @@ def test_evidence_disabled_profile(monkeypatch) -> None:
 def test_evidence_no_sequence() -> None:
     ev = compute_mfe_evidence(None, profile="balanced")
     assert ev["mfe_kcal_mol"] is None
+    assert ev["mfe_status_reason"] == "no_input"
     assert ev["mfe_used"] is False
 
 
@@ -67,6 +70,7 @@ def test_export_features_reports_null_not_zero_when_not_computed() -> None:
                 "gc": 60.0,
                 "mfe_kcal_mol": None,
                 "mfe_status": "not_computed",
+                "mfe_status_reason": "missing_dependency",
                 "mfe_used": False,
             },
         },
@@ -74,6 +78,7 @@ def test_export_features_reports_null_not_zero_when_not_computed() -> None:
     features = result.export_features()
     assert features["mfe_kcal_mol"] is None
     assert features["mfe_status"] == "not_computed"
+    assert features["mfe_status_reason"] == "missing_dependency"
     assert features["mfe_used"] is False
 
 
@@ -88,6 +93,7 @@ def test_export_features_reports_value_when_computed() -> None:
                 "gc": 60.0,
                 "mfe_kcal_mol": -12.345,
                 "mfe_status": "computed",
+                "mfe_status_reason": None,
                 "mfe_used": True,
             },
         },
@@ -95,4 +101,5 @@ def test_export_features_reports_value_when_computed() -> None:
     features = result.export_features()
     assert features["mfe_kcal_mol"] == -12.35
     assert features["mfe_status"] == "computed"
+    assert features["mfe_status_reason"] is None
     assert features["mfe_used"] is True
