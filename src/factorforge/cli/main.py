@@ -8,6 +8,8 @@ Usage:
 """
 
 from pathlib import Path
+import hashlib
+import json
 import sys
 
 import click
@@ -17,6 +19,105 @@ from factorforge.engines.registry import EngineRegistry
 from factorforge.engines.profile.utils import parse_fasta_records
 
 HOST_MAP = {"nbenthamiana": "nbenthamiana", "by2": "ntabacum"}
+HOST_TAXIDS = {"nbenthamiana": 4100, "ntabacum": 4097}
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+FACTORFORGE_REPO_ROOT = Path(__file__).resolve().parents[3]
+REFERENCE_POLICY_MANIFEST_PATH = (
+    FACTORFORGE_REPO_ROOT / "data" / "reference" / "reference_policy_manifest.json"
+)
+BUNDLED_REFERENCE_POLICY_MANIFEST_PATH = PACKAGE_ROOT / "data" / "reference" / "reference_policy_manifest.json"
+
+
+def _reference_policy_manifest_path() -> Path:
+    """Return the repo manifest during development, or the packaged manifest in wheels."""
+    if REFERENCE_POLICY_MANIFEST_PATH.exists():
+        return REFERENCE_POLICY_MANIFEST_PATH
+    return BUNDLED_REFERENCE_POLICY_MANIFEST_PATH
+
+
+def _resolve_packaged_or_repo_path(relative_path: str) -> Path:
+    """Resolve manifest paths in a source checkout or an installed wheel."""
+    repo_path = FACTORFORGE_REPO_ROOT / relative_path
+    if repo_path.exists():
+        return repo_path
+
+    package_prefix = "src/factorforge/"
+    if relative_path.startswith(package_prefix):
+        return PACKAGE_ROOT / relative_path.removeprefix(package_prefix)
+    return PACKAGE_ROOT / relative_path
+
+
+def _load_reference_policy_manifest() -> dict:
+    """Load the checksum/tier policy manifest for expert CLI reference selection."""
+    return json.loads(_reference_policy_manifest_path().read_text(encoding="utf-8"))
+
+
+def _reference_entries_by_id() -> dict[str, dict]:
+    manifest = _load_reference_policy_manifest()
+    return {entry["reference_id"]: entry for entry in manifest["references"]}
+
+
+def _reference_id_choices() -> tuple[str, ...]:
+    return tuple(_reference_entries_by_id())
+
+
+REFERENCE_ID_CHOICES = _reference_id_choices()
+
+
+def _reference_entry_by_id(reference_id: str) -> dict:
+    entries = _reference_entries_by_id()
+    try:
+        return entries[reference_id]
+    except KeyError as exc:
+        choices = ", ".join(sorted(entries))
+        raise click.UsageError(
+            f"Unknown reference_id {reference_id!r}. Supported values: {choices}"
+        ) from exc
+
+
+def _sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def resolve_reference_by_id(reference_id: str) -> Path:
+    """Resolve a manifest reference_id to a checksum-verified codon table path."""
+    entry = _reference_entry_by_id(reference_id)
+    codon_table_path = _resolve_packaged_or_repo_path(str(entry["codon_table_path"]))
+    expected = str(entry["checksum_sha256"])
+    if not codon_table_path.exists():
+        raise click.UsageError(
+            f"Codon table file for {reference_id} does not exist: {codon_table_path}"
+        )
+    actual = _sha256_file(codon_table_path)
+    if actual != expected:
+        raise click.UsageError(
+            "Checksum mismatch for "
+            f"{reference_id} at {codon_table_path}: expected {expected}, actual {actual}"
+        )
+
+    if entry["tier"] != "production_enabled":
+        limitations = "; ".join(entry.get("known_limitations", []))
+        warning = (
+            f"Warning: reference_id={reference_id} has tier={entry['tier']}; "
+            f"{entry['claim_boundary']}"
+        )
+        if limitations:
+            warning = f"{warning} Known limitations: {limitations}"
+        click.echo(warning, err=True)
+
+    return codon_table_path
+
+
+def _validate_reference_host(reference_id: str, internal_host: str) -> None:
+    entry = _reference_entry_by_id(reference_id)
+    expected_taxid = HOST_TAXIDS[internal_host]
+    actual_taxid = int(entry["ncbi_taxid"])
+    if actual_taxid != expected_taxid:
+        raise click.UsageError(
+            f"reference_id={reference_id} targets {entry['organism']} "
+            f"(NCBI taxid {actual_taxid}) and is incompatible with "
+            f"--host {internal_host} (expected NCBI taxid {expected_taxid})."
+        )
 
 
 def _configure_stdio() -> None:
@@ -43,7 +144,13 @@ def _wrap_sequence(sequence, width=80):
     return "\n".join(sequence[i : i + width] for i in range(0, len(sequence), width))
 
 
-def _build_dp_result(sequence: str, objective: str, gc_min: float, gc_max: float):
+def _build_dp_result(
+    sequence: str,
+    objective: str,
+    gc_min: float,
+    gc_max: float,
+    codon_table_path: Path | None = None,
+):
     """Run the constraint-based DP feasibility engine for a single protein sequence."""
     if objective != "feasibility_best":
         raise ValueError("DP engine currently supports --objective feasibility_best.")
@@ -53,7 +160,7 @@ def _build_dp_result(sequence: str, objective: str, gc_min: float, gc_max: float
     from factorforge.analysis.metrics import load_codon_usage_table
     from factorforge.analysis.feasibility import analyze_feasibility
 
-    table = load_codon_usage_table()
+    table = load_codon_usage_table(path=codon_table_path)
     result = analyze_feasibility(
         sequence,
         table.codon_weights,
@@ -170,6 +277,12 @@ def list_engines():
 @click.option("--output", "-o", help="Output file")
 @click.option("--format", "output_format", default="fasta", help="Output format (fasta, genbank)")
 @click.option(
+    "--reference-id",
+    type=click.Choice(REFERENCE_ID_CHOICES, case_sensitive=False),
+    default=None,
+    help="Expert/research codon-reference ID; checksum-validated.",
+)
+@click.option(
     "--compare-profiles",
     help=(
         "Comma-separated profiles to compare "
@@ -195,6 +308,7 @@ def optimize(
     construct_template,
     output,
     output_format,
+    reference_id,
     compare_profiles,
     scan_mode,
     scan_include,
@@ -206,6 +320,12 @@ def optimize(
     host_value = host.lower()
     internal_host = HOST_MAP[host_value]
     host_was_explicit = _option_was_explicitly_set("host")
+    reference_id = reference_id.lower() if reference_id else None
+    reference_table_path = None
+
+    if reference_id is not None:
+        _validate_reference_host(reference_id, internal_host)
+        reference_table_path = resolve_reference_by_id(reference_id)
 
     if host_was_explicit and engine == "dp" and _engine_option_was_explicitly_set():
         raise click.UsageError("--host is only supported with --engine profile")
@@ -223,6 +343,9 @@ def optimize(
         if engine == "dp" and _engine_option_was_explicitly_set():
             raise click.UsageError("--compare-profiles cannot be used with --engine dp.")
         engine = "profile"
+
+    if reference_table_path is not None and construct_template:
+        raise click.UsageError("--reference-id is not supported with --template mode.")
 
     try:
         # Read file
@@ -247,7 +370,12 @@ def optimize(
             if output_format.lower() != "fasta":
                 raise ValueError("Profile comparison only supports FASTA output.")
 
-            optimizer = EngineRegistry.get("profile")
+            if reference_table_path is not None:
+                from factorforge.engines.profile.optimizer import RuleBasedOptimizer
+
+                optimizer = RuleBasedOptimizer(codon_table_path=str(reference_table_path))
+            else:
+                optimizer = EngineRegistry.get("profile")
             profile_results = []
             for profile_name in compare_profile_list:
                 result = optimizer.optimize(
@@ -279,7 +407,12 @@ def optimize(
             if output_format.lower() != "fasta":
                 raise ValueError("Multi-FASTA input only supports FASTA output.")
 
-            optimizer = EngineRegistry.get(engine)
+            if reference_table_path is not None and engine == "profile":
+                from factorforge.engines.profile.optimizer import RuleBasedOptimizer
+
+                optimizer = RuleBasedOptimizer(codon_table_path=str(reference_table_path))
+            else:
+                optimizer = EngineRegistry.get(engine)
             payload = [{"id": seq_id, "sequence": seq} for seq_id, seq in fasta_records]
             if hasattr(optimizer, "optimize_batch"):
                 results = optimizer.optimize_batch(
@@ -336,6 +469,7 @@ def optimize(
                 objective=objective,
                 gc_min=gc_min,
                 gc_max=gc_max,
+                codon_table_path=reference_table_path,
             )
             dna_sequence = best["dna_sequence"]
             cai = float(best["cai"])
@@ -393,7 +527,12 @@ def optimize(
                 raise ValueError("Non-FASTA output requires --template with profile pipeline.")
 
             # Get engine
-            optimizer = EngineRegistry.get(engine)
+            if reference_table_path is not None and engine == "profile":
+                from factorforge.engines.profile.optimizer import RuleBasedOptimizer
+
+                optimizer = RuleBasedOptimizer(codon_table_path=str(reference_table_path))
+            else:
+                optimizer = EngineRegistry.get(engine)
 
             # Optimize
             click.echo(f"Optimizing with {optimizer.name} v{optimizer.version}...")

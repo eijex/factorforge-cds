@@ -53,7 +53,7 @@ factorforge-validate = "factorforge.validation.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-"factorforge" = ["data/*.json", "data/templates/*.json", "schemas/*.json"]
+"factorforge" = ["data/*.json", "data/templates/*.json", "data/profiles/*.json", "data/reference/*.json", "schemas/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
