@@ -7,7 +7,7 @@ import json
 
 import api.optimize as optimize_api
 import pytest
-from api.optimize import DEFAULT_GC_MAX, DEFAULT_GC_MIN, handler
+from api.optimize import DEFAULT_CAI_TARGET, DEFAULT_GC_MAX, DEFAULT_GC_MIN, handler
 
 
 def _handler() -> handler:
@@ -52,10 +52,7 @@ def test_public_api_rejects_codon_reference_override_fields() -> None:
     assert result["forbidden_fields"] == ["codon_reference"]
     assert result["reference_policy"]["override_supported"] is False
     assert result["reference_policy"]["selectable_reference_ids"] == []
-    assert (
-        result["reference_policy"]["active_default_reference_id"]
-        == "nbenthamiana_nbev11_hc_v2"
-    )
+    assert result["reference_policy"]["active_default_reference_id"] == "nbenthamiana_nbev11_hc_v2"
 
 
 def test_compare_and_batch_reject_reference_override_fields() -> None:
@@ -119,7 +116,10 @@ def test_parse_constraints_defaults() -> None:
     # NbeV1.1 native-composition anchor (v3.3.0 reference-policy update), not the
     # module-level DEFAULT_GC_MIN/MAX (which is now only the fallback for
     # hosts without their own analysis, e.g. by2/ntabacum).
-    assert h.parse_constraints({}) == optimize_api._default_gc_constraints("nbenthamiana")
+    assert h.parse_constraints({}) == {
+        **optimize_api._default_gc_constraints("nbenthamiana"),
+        "cai_target": DEFAULT_CAI_TARGET,
+    }
 
 
 def test_parse_constraints_defaults_for_non_nbenthamiana_host_unchanged() -> None:
@@ -130,6 +130,17 @@ def test_parse_constraints_defaults_for_non_nbenthamiana_host_unchanged() -> Non
     assert h.parse_constraints({}, host="ntabacum") == {
         "gc_min": DEFAULT_GC_MIN,
         "gc_max": DEFAULT_GC_MAX,
+        "cai_target": DEFAULT_CAI_TARGET,
+    }
+
+
+def test_parse_constraints_accepts_cai_target() -> None:
+    h = _handler()
+
+    assert h.parse_constraints({"gc_min": 40.0, "gc_max": 55.0, "cai_target": 0.91}) == {
+        "gc_min": 40.0,
+        "gc_max": 55.0,
+        "cai_target": 0.91,
     }
 
 
@@ -162,6 +173,80 @@ def test_feasibility_best_response_includes_candidate_contract() -> None:
     }
     assert result["engine_versions"]["product"] == "3.3.0"
     assert result["recommended_candidate"]["validator_status"] == "pass"
+    assert result["dp_target_observation"]["requested_cai_target"] == DEFAULT_CAI_TARGET
+
+
+def test_feasibility_best_default_cai_target_preserves_candidate_sequence() -> None:
+    h = _handler()
+
+    base = h.optimize_sequence(
+        "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+        "balanced",
+        False,
+        False,
+        False,
+        objective="feasibility_best",
+        host_profile="nbenthamiana",
+        return_candidates=True,
+        constraints={"gc_min": 40.0, "gc_max": 55.0},
+    )
+    explicit_default = h.optimize_sequence(
+        "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+        "balanced",
+        False,
+        False,
+        False,
+        objective="feasibility_best",
+        host_profile="nbenthamiana",
+        return_candidates=True,
+        constraints={
+            "gc_min": 40.0,
+            "gc_max": 55.0,
+            "cai_target": DEFAULT_CAI_TARGET,
+        },
+    )
+
+    assert (
+        base["recommended_candidate"]["dna_sequence"]
+        == explicit_default["recommended_candidate"]["dna_sequence"]
+    )
+    assert base["recommended_candidate"]["cai"] == explicit_default["recommended_candidate"]["cai"]
+    assert base["dp_target_observation"] == explicit_default["dp_target_observation"]
+
+
+def test_feasibility_best_non_default_cai_target_is_echoed_and_changes_feasibility() -> None:
+    h = _handler()
+
+    low_target = h.optimize_sequence(
+        "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+        "balanced",
+        False,
+        False,
+        False,
+        objective="feasibility_best",
+        host_profile="nbenthamiana",
+        return_candidates=True,
+        constraints={"gc_min": 40.0, "gc_max": 55.0, "cai_target": 0.1},
+    )
+    high_target = h.optimize_sequence(
+        "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+        "balanced",
+        False,
+        False,
+        False,
+        objective="feasibility_best",
+        host_profile="nbenthamiana",
+        return_candidates=True,
+        constraints={"gc_min": 40.0, "gc_max": 55.0, "cai_target": 1.0},
+    )
+
+    assert high_target["dp_target_observation"]["requested_cai_target"] == 1.0
+    assert low_target["dp_target_observation"]["target_cai_feasible"] is True
+    assert high_target["dp_target_observation"]["target_cai_feasible"] is False
+    assert (
+        low_target["recommended_candidate"]["dna_sequence"]
+        == high_target["recommended_candidate"]["dna_sequence"]
+    )
 
 
 def test_legacy_profile_response_keeps_old_fields_and_adds_candidates() -> None:
@@ -693,9 +778,7 @@ def test_appjs_offline_gc_fallback_matches_resolve_host_gc_range() -> None:
     app_js = (Path(__file__).resolve().parents[2] / "web" / "js" / "app.js").read_text(
         encoding="utf-8"
     )
-    match = re.search(
-        r"const OFFLINE_GC_RANGES = \{(.*?)\n\};", app_js, re.DOTALL
-    )
+    match = re.search(r"const OFFLINE_GC_RANGES = \{(.*?)\n\};", app_js, re.DOTALL)
     assert match is not None, "OFFLINE_GC_RANGES literal not found in web/js/app.js"
     block = match.group(1)
 

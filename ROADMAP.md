@@ -34,7 +34,12 @@ Public-claim alignment, wet-lab feedback intake, and stability. The core engine 
 
 ---
 
-## v3.3 — Algorithm Depth
+## Future — Algorithm Depth (version TBD)
+
+> Not part of the released v3.3.0. v3.3.0 shipped reference-policy guardrails,
+> production codon-reference activation (NbeV1.1), and related evidence-field
+> additions — see [Changelog](CHANGELOG.md). The items below remain planned
+> for a future release once scheduled.
 
 | Feature | Description |
 |---------|-------------|

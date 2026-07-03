@@ -41,6 +41,16 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   selecting packaged codon-reference tables by manifest ID. Non-production
   tiers print their manifest claim-boundary warning and continue; REST API
   reference overrides remain unsupported.
+- Added DP `feasibility_best` CAI-target exposure: CLI now accepts
+  `--cai-target`, and the REST API accepts `constraints.cai_target` with
+  default-preserving behavior plus explicit response echo for the requested
+  DP target.
+
+### Fixed
+
+- Fixed single-sequence profile-engine `--output` FASTA files so they include
+  the same parseable metadata header used by batch/profile-comparison outputs,
+  instead of writing only the raw CDS sequence.
 
 ## [3.3.0] — 2026-07-01
 

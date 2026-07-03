@@ -16,6 +16,9 @@ ROOT = Path(__file__).resolve().parents[2]
 VALIDATOR_PATH = ROOT / "scripts" / "validate_reference_manifests.py"
 POLICY_MANIFEST_PATH = ROOT / "data" / "reference" / "reference_policy_manifest.json"
 POLICY_SCHEMA_PATH = ROOT / "schemas" / "reference_policy_manifest.schema.json"
+BUNDLED_POLICY_MANIFEST_PATH = (
+    ROOT / "src" / "factorforge" / "data" / "reference" / "reference_policy_manifest.json"
+)
 
 spec = importlib.util.spec_from_file_location("validate_reference_manifests", VALIDATOR_PATH)
 validator = importlib.util.module_from_spec(spec)
@@ -118,3 +121,30 @@ def test_research_comparator_cannot_be_enabled(policy_manifest) -> None:
 
 def test_active_default_alignment_with_registry_and_active_reference(policy_manifest) -> None:
     validator.validate_active_default_alignment(policy_manifest)
+
+
+def test_bundled_manifest_copy_matches_repo_root_manifest() -> None:
+    """Guard against drift between the two git-tracked copies of this manifest.
+
+    `data/reference/reference_policy_manifest.json` is read directly from a
+    source checkout (e.g. by api/optimize.py); `src/factorforge/data/reference/
+    reference_policy_manifest.json` is the copy bundled into the installed
+    wheel (see cli/main.py's `_resolve_packaged_or_repo_path`, added in Job
+    131's wheel-packaging fix). Nothing keeps these two files in sync
+    automatically, so a manual edit to only one of them would silently make
+    the CLI (wheel path) and the REST API (repo-root path) disagree about
+    reference tiers/checksums. This repo has already hit the equivalent
+    drift pattern three times for MANIFEST.json (jobs 129/136/146).
+    """
+    assert BUNDLED_POLICY_MANIFEST_PATH.exists(), (
+        f"Bundled manifest copy is missing: {BUNDLED_POLICY_MANIFEST_PATH}"
+    )
+    repo_root_bytes = POLICY_MANIFEST_PATH.read_bytes()
+    bundled_bytes = BUNDLED_POLICY_MANIFEST_PATH.read_bytes()
+    assert repo_root_bytes == bundled_bytes, (
+        "data/reference/reference_policy_manifest.json and "
+        "src/factorforge/data/reference/reference_policy_manifest.json have "
+        "drifted apart. Copy the repo-root file over the bundled copy (or vice "
+        "versa, whichever is authoritative) so the CLI (wheel) and REST API "
+        "(source checkout) agree on reference-policy tiers/checksums."
+    )
