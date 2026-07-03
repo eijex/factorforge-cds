@@ -140,7 +140,7 @@ def test_cli_optimize_profile_engine(tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 0, result.output
-    assert "Optimizing with Profile-based v3.3.0" in result.output
+    assert "Optimizing with Profile-based v3.3.1" in result.output
     assert "Metrics:" in result.output
 
 
