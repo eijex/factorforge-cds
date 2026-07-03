@@ -6,6 +6,15 @@ FactorForge v3.0+ is the current public release line.
 
 ## Unreleased
 
+## v3.3.1 — 2026-07-03
+
+### Added
+- Exposed the DP `feasibility_best` engine's CAI target as a configurable CLI/API parameter (`--cai-target` / `constraints.cai_target`), alongside the existing GC-range controls.
+- Added `mfe_status_reason` and a checksum-validated `--reference-id` expert CLI flag.
+
+### Fixed
+- Fixed single-sequence profile-engine `--output` FASTA files to include the standard metadata header instead of writing only the raw sequence.
+
 ## v3.3.0 — 2026-07-01
 
 ### Changed
