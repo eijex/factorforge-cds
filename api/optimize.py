@@ -30,7 +30,7 @@ try:
     from factorforge.engines.profile.utils import get_data_path, load_codon_table
     from factorforge.engines.profile.scoring import resolve_host_gc_range
     from factorforge.analysis.metrics import load_codon_usage_table
-    from factorforge.analysis.feasibility import analyze_feasibility
+    from factorforge.analysis.feasibility import DEFAULT_CAI_TARGET, analyze_feasibility
     from factorforge.analysis.metrics import (
         calculate_cai,
         calculate_first_region_gc,
@@ -57,6 +57,7 @@ try:
     logger.info("FactorForge v3.x profile engine loaded successfully")
 except ImportError as e:
     FACTORFORGE_AVAILABLE = False
+    DEFAULT_CAI_TARGET = 0.82
     logger.warning(f"FactorForge not available: {e}")
 
 # Constants
@@ -210,6 +211,8 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
         gc_min, gc_max = resolve_host_gc_range(internal_host)
         return {"gc_min": gc_min, "gc_max": gc_max}
     return {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX}
+
+
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
     "product": "3.3.0",
@@ -452,9 +455,12 @@ class handler(BaseHTTPRequestHandler):
         try:
             gc_min = float(constraints.get("gc_min", default_gc["gc_min"]))
             gc_max = float(constraints.get("gc_max", default_gc["gc_max"]))
+            cai_target = float(constraints.get("cai_target", DEFAULT_CAI_TARGET))
         except (TypeError, ValueError):
-            raise ValueError("constraints.gc_min and constraints.gc_max must be numeric")
-        return {"gc_min": gc_min, "gc_max": gc_max}
+            raise ValueError(
+                "constraints.gc_min, constraints.gc_max, and constraints.cai_target must be numeric"
+            )
+        return {"gc_min": gc_min, "gc_max": gc_max, "cai_target": cai_target}
 
     def parse_custom_restriction_sites(self, custom_sites):
         """Parse and validate optional custom restriction-site definitions."""
@@ -522,7 +528,11 @@ class handler(BaseHTTPRequestHandler):
         if host_profile_value not in VALID_HOSTS and host_profile_value not in HOST_MAP.values():
             return f"Unsupported host_profile. Must be one of: {', '.join(VALID_HOSTS)}"
 
-        constraints = constraints or {"gc_min": DEFAULT_GC_MIN, "gc_max": DEFAULT_GC_MAX}
+        constraints = constraints or {
+            "gc_min": DEFAULT_GC_MIN,
+            "gc_max": DEFAULT_GC_MAX,
+            "cai_target": DEFAULT_CAI_TARGET,
+        }
         if constraints["gc_min"] > constraints["gc_max"]:
             return "constraints.gc_min must be <= constraints.gc_max"
 
@@ -634,7 +644,9 @@ class handler(BaseHTTPRequestHandler):
                     "profile": profile,
                     "cai": round(float(result.metrics.get("cai", 0.0)), 3),
                     "gc_percent": round(
-                        float(result.metrics.get("gc_percent", result.metrics.get("gc_content", 0.0))),
+                        float(
+                            result.metrics.get("gc_percent", result.metrics.get("gc_content", 0.0))
+                        ),
                         2,
                     ),
                     "score": round(float(result.metrics.get("score", 0.0)), 3),
@@ -714,7 +726,9 @@ class handler(BaseHTTPRequestHandler):
                     "sequence": result.sequence,
                     "cai": round(float(result.metrics.get("cai", 0.0)), 3),
                     "gc_percent": round(
-                        float(result.metrics.get("gc_percent", result.metrics.get("gc_content", 0.0))),
+                        float(
+                            result.metrics.get("gc_percent", result.metrics.get("gc_content", 0.0))
+                        ),
                         2,
                     ),
                     "score": round(float(result.metrics.get("score", 0.0)), 3),
@@ -753,7 +767,7 @@ class handler(BaseHTTPRequestHandler):
     ):
         """Run actual FactorForge v3.x profile optimization."""
         try:
-            constraints = constraints or _default_gc_constraints(host)
+            constraints = self.parse_constraints(constraints, host=host)
             if objective == DEFAULT_OBJECTIVE:
                 return self.optimize_feasibility_best(
                     sequence=sequence,
@@ -926,6 +940,7 @@ class handler(BaseHTTPRequestHandler):
         custom_restriction_sites=None,
     ):
         """Run feasibility_best contract and add profile comparison candidates."""
+        constraints = self.parse_constraints(constraints, host=host)
         table = load_codon_usage_table()
         aa_seq = self.clean_sequence(sequence).rstrip("*")
         optimizer = EngineRegistry.get("profile")
@@ -935,6 +950,7 @@ class handler(BaseHTTPRequestHandler):
             codon_weights=table.codon_weights,
             target_gc_low=constraints["gc_min"],
             target_gc_high=constraints["gc_max"],
+            target_cai=constraints["cai_target"],
         )
         best = feasibility["target"]["best_candidate"] or feasibility["best_candidate_without_gc"]
         if not best:
@@ -982,6 +998,11 @@ class handler(BaseHTTPRequestHandler):
             "success": True,
             "recommended_candidate": candidates[0],
             "candidates": candidates if return_candidates else [],
+            "dp_target_observation": {
+                "requested_cai_target": float(feasibility["target"]["cai"]),
+                "target_cai_feasible": bool(feasibility["target"]["feasible"]),
+                "max_cai_under_gc": feasibility["target"]["max_cai_under_gc"],
+            },
             "validation": {
                 "input_type": "protein",
                 "sequence_length": len(aa_seq),
@@ -1126,7 +1147,9 @@ class handler(BaseHTTPRequestHandler):
 
     def count_rare_codon_runs(self, output_cds, host_profile):
         """Count rare codon runs using the host-specific rule scanner."""
-        internal_host = HOST_MAP.get(str(host_profile or DEFAULT_HOST_PROFILE).lower(), host_profile)
+        internal_host = HOST_MAP.get(
+            str(host_profile or DEFAULT_HOST_PROFILE).lower(), host_profile
+        )
         return len(RuleEngine(host=internal_host).scan_rare_codon_runs(output_cds))
 
     def response_profile(self, response, profile, objective):
@@ -1163,7 +1186,9 @@ class handler(BaseHTTPRequestHandler):
         aa_identity_check = "pass" if aa_identity == 1.0 and not cds_errors else "fail"
         in_silico = (
             "pass"
-            if validator_status in (None, "pass") and gc != "warning" and aa_identity_check == "pass"
+            if validator_status in (None, "pass")
+            and gc != "warning"
+            and aa_identity_check == "pass"
             else "warning"
         )
         return {
