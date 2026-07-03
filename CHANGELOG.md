@@ -29,6 +29,14 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- Added benchmark runner `--out-dir` and `--force` controls with an overwrite
+  guard for existing result artifacts, plus a documented smoke/preflight/formal
+  evidence-registration workflow.
+
 ## [3.3.1] — 2026-07-03
 
 ### Added

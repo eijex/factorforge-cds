@@ -31,6 +31,24 @@ CLAIM = (
     "This benchmark evaluates in-silico CDS design quality only. "
     "It does not demonstrate improved protein expression, yield, folding, or wet-lab performance."
 )
+DEFAULT_RESULTS_DIR = ROOT / "benchmarks" / "results" / "v3.2.0"
+OUTPUT_GUARD_FILENAMES = ("benchmark_results.csv", "benchmark_summary.json")
+
+
+def _resolve_output_dir(out_dir: Path | None) -> Path:
+    return (out_dir or DEFAULT_RESULTS_DIR).resolve()
+
+
+def _guard_output_dir(out_dir: Path, force: bool) -> None:
+    existing = [out_dir / name for name in OUTPUT_GUARD_FILENAMES if (out_dir / name).exists()]
+    if not existing or force:
+        return
+    file_list = "\n  ".join(str(path) for path in existing)
+    raise SystemExit(
+        "ERROR: benchmark output directory already contains result artifact(s). "
+        "Pass --force to overwrite intentionally:\n"
+        f"  {file_list}"
+    )
 
 
 def _read_fasta(p: Path) -> dict[str, str]:
@@ -428,11 +446,19 @@ def main(default_mode: str = "formal") -> None:
                     help="Source profile identifier (required if --codon-table-path is provided).")
     ap.add_argument("--source-profile-manifest", default=None,
                     help="Path to source profile manifest JSON for hash verification.")
+    ap.add_argument("--out-dir", type=Path, default=None,
+                    help="Output directory for benchmark_results.csv, benchmark_summary.md, "
+                         "and benchmark_summary.json. Defaults to benchmarks/results/v3.2.0.")
+    ap.add_argument("--force", action="store_true",
+                    help="Allow overwriting benchmark_results.csv or benchmark_summary.json "
+                         "in the output directory.")
     args = ap.parse_args()
     if args.codon_table_path and not args.source_profile_id:
         raise SystemExit("ERROR: --source-profile-id is required when --codon-table-path is provided")
 
     root = Path(__file__).resolve().parents[1]
+    out_dir = _resolve_output_dir(args.out_dir)
+    _guard_output_dir(out_dir, args.force)
     codon_weights = None
     active_manifest_path: Path | None = None
 
@@ -486,8 +512,8 @@ def main(default_mode: str = "formal") -> None:
         proteins = root / "benchmarks" / "datasets" / "nbenthamiana_reference_proteins.fasta"
         native = root / "benchmarks" / "datasets" / "nbenthamiana_reference_cds.fasta"
     run(dataset=args.dataset, mode=args.mode,
-        out_csv=root / "benchmarks" / "results" / "v3.2.0" / "benchmark_results.csv",
-        out_md=root / "benchmarks" / "results" / "v3.2.0" / "benchmark_summary.md",
+        out_csv=out_dir / "benchmark_results.csv",
+        out_md=out_dir / "benchmark_summary.md",
         proteins_fasta=proteins, native_fasta=native,
         limit=args.limit, progress_every=args.progress_every, seed=args.seed,
         codon_weights=codon_weights,
