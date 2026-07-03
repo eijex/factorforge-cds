@@ -226,6 +226,12 @@ def _format_profile_fasta(sequence_id: str, profile: str, result) -> str:
     return f"{header}\n{_wrap_sequence(result.sequence)}\n"
 
 
+def _single_profile_sequence_id(input_file: str, fasta_records) -> str:
+    if fasta_records is not None and len(fasta_records) == 1:
+        return str(fasta_records[0][0])
+    return Path(input_file).stem or "factorforge_profile"
+
+
 def _format_profile_comparison_table(profile_results) -> str:
     """Format profile optimization metrics as a comparison table."""
     divider = "─" * 45
@@ -577,8 +583,10 @@ def optimize(
 
             # Output results
             if output:
+                sequence_id = _single_profile_sequence_id(input_file, fasta_records)
+                fasta = _format_profile_fasta(sequence_id, profile, result)
                 with open(output, "w", encoding="utf-8") as f:
-                    f.write(result.sequence)
+                    f.write(fasta)
                 click.echo(f"Saved to: {output}")
             else:
                 click.echo(f"\n{result.sequence}\n")
