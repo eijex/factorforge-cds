@@ -76,7 +76,31 @@ def test_cli_optimize_defaults_to_dp_engine(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     assert "Optimizing with DP feasibility engine" in result.output
     assert ">input|engine=dp|objective=feasibility_best|" in result.output
+    assert "target_cai=" not in result.output
+    assert "  - target_cai:" not in result.output
     assert "recommendation_reason" in result.output
+
+
+def test_cli_dp_explicit_cai_target_is_echoed(tmp_path: Path) -> None:
+    runner = CliRunner()
+    input_file = tmp_path / "input.fasta"
+    input_file.write_text(">test\nMSKGEELFTGVVPILVELD\n", encoding="utf-8")
+
+    result = runner.invoke(
+        cli,
+        [
+            "optimize",
+            str(input_file),
+            "--engine",
+            "dp",
+            "--cai-target",
+            "0.99",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "target_cai=0.990" in result.output
+    assert "  - target_cai: 0.990" in result.output
 
 
 def test_cli_optimize_profile_engine(tmp_path: Path) -> None:

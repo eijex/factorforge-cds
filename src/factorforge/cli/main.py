@@ -15,6 +15,7 @@ import sys
 import click
 
 from factorforge import __version__
+from factorforge.analysis.feasibility import DEFAULT_CAI_TARGET
 from factorforge.engines.registry import EngineRegistry
 from factorforge.engines.profile.utils import parse_fasta_records
 
@@ -25,7 +26,9 @@ FACTORFORGE_REPO_ROOT = Path(__file__).resolve().parents[3]
 REFERENCE_POLICY_MANIFEST_PATH = (
     FACTORFORGE_REPO_ROOT / "data" / "reference" / "reference_policy_manifest.json"
 )
-BUNDLED_REFERENCE_POLICY_MANIFEST_PATH = PACKAGE_ROOT / "data" / "reference" / "reference_policy_manifest.json"
+BUNDLED_REFERENCE_POLICY_MANIFEST_PATH = (
+    PACKAGE_ROOT / "data" / "reference" / "reference_policy_manifest.json"
+)
 
 
 def _reference_policy_manifest_path() -> Path:
@@ -149,6 +152,7 @@ def _build_dp_result(
     objective: str,
     gc_min: float,
     gc_max: float,
+    cai_target: float = DEFAULT_CAI_TARGET,
     codon_table_path: Path | None = None,
 ):
     """Run the constraint-based DP feasibility engine for a single protein sequence."""
@@ -164,6 +168,7 @@ def _build_dp_result(
     result = analyze_feasibility(
         sequence,
         table.codon_weights,
+        target_cai=cai_target,
         target_gc_low=gc_min,
         target_gc_high=gc_max,
     )
@@ -182,9 +187,17 @@ def _build_dp_result(
     return best, result, reason
 
 
-def _format_dp_fasta(sequence_id: str, dna_sequence: str, cai: float, gc: float) -> str:
+def _format_dp_fasta(
+    sequence_id: str,
+    dna_sequence: str,
+    cai: float,
+    gc: float,
+    requested_cai_target: float | None = None,
+) -> str:
     """Format a DP result as FASTA."""
     header = f">{sequence_id}|engine=dp|objective=feasibility_best|cai={cai:.3f}|gc={gc:.2f}"
+    if requested_cai_target is not None:
+        header = f"{header}|target_cai={requested_cai_target:.3f}"
     return f"{header}\n{_wrap_sequence(dna_sequence)}\n"
 
 
@@ -273,6 +286,12 @@ def list_engines():
 )
 @click.option("--gc-min", type=float, default=40.0, help="Minimum target GC percentage")
 @click.option("--gc-max", type=float, default=47.0, help="Maximum target GC percentage")
+@click.option(
+    "--cai-target",
+    type=float,
+    default=DEFAULT_CAI_TARGET,
+    help="Requested DP target CAI threshold",
+)
 @click.option("--template", "construct_template", help="Construct template name")
 @click.option("--output", "-o", help="Output file")
 @click.option("--format", "output_format", default="fasta", help="Output format (fasta, genbank)")
@@ -305,6 +324,7 @@ def optimize(
     objective,
     gc_min,
     gc_max,
+    cai_target,
     construct_template,
     output,
     output_format,
@@ -469,13 +489,21 @@ def optimize(
                 objective=objective,
                 gc_min=gc_min,
                 gc_max=gc_max,
+                cai_target=cai_target,
                 codon_table_path=reference_table_path,
             )
             dna_sequence = best["dna_sequence"]
             cai = float(best["cai"])
             gc = float(best["gc"])
             sequence_id = Path(input_file).stem or "factorforge_dp"
-            fasta = _format_dp_fasta(sequence_id, dna_sequence, cai, gc)
+            requested_cai_target = cai_target if _option_was_explicitly_set("cai_target") else None
+            fasta = _format_dp_fasta(
+                sequence_id,
+                dna_sequence,
+                cai,
+                gc,
+                requested_cai_target=requested_cai_target,
+            )
 
             click.echo("Optimizing with DP feasibility engine...")
             if output:
@@ -490,6 +518,8 @@ def optimize(
             click.echo(f"  - gc_percent: {gc:.2f}")
             click.echo(f"  - target_gc_min: {float(feasibility['target']['gc_low']):.2f}")
             click.echo(f"  - target_gc_max: {float(feasibility['target']['gc_high']):.2f}")
+            if requested_cai_target is not None:
+                click.echo(f"  - target_cai: {float(feasibility['target']['cai']):.3f}")
             click.echo(f"  - target_feasible: {bool(feasibility['target']['best_candidate'])}")
             click.echo(f"  - recommendation_reason: {recommendation_reason}")
             return
