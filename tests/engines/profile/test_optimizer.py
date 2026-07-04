@@ -10,6 +10,7 @@ import pytest
 # Add project src to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src"))
 
+from factorforge.cli.main import resolve_reference_by_id
 from factorforge.engines.profile.optimizer import RuleBasedOptimizer
 
 
@@ -36,6 +37,12 @@ def test_optimize_profiles(optimizer, sample_protein, profile):
     assert result.sequence
     assert len(result.sequence) == len(sample_protein) * 3
     assert "cai" in result.metrics
+    assert isinstance(result.metrics["cai"], float)
+    assert result.metrics["cai_authority"]["reference_role"] == "cai_evaluation"
+    assert (
+        result.metrics["cai_authority"]["reference_relationship"]
+        == "distinct_from_generation_reference"
+    )
     assert "gc_content" in result.metrics
     assert "score" in result.metrics
 
@@ -120,11 +127,56 @@ def test_optimize_batch(optimizer, sample_protein):
     assert len(results[0].sequence) == len(sample_protein) * 3
 
 
-@pytest.mark.parametrize("seq,expected_len", [
-    ("MSCSNYRRC", 27),   # 9 AA — chars overlap with IUPAC ambiguous DNA
-    ("MMCWCKMMMS", 30),  # 10 AA
-    ("MDSARNNKD", 27),   # 9 AA
-])
+def test_cai_authority_metric_is_defensive_copy(optimizer, sample_protein):
+    """Mutating one emitted authority dict must not affect future results."""
+    first = optimizer.optimize(sample_protein, profile="balanced", seed=1, scan_mode="fast")
+    first.metrics["cai_authority"]["reference_id"] = "mutated"
+
+    second = optimizer.optimize(sample_protein, profile="balanced", seed=1, scan_mode="fast")
+
+    assert second.metrics["cai_authority"]["reference_id"] == "nbenthamiana_golden_set_v1"
+
+
+def test_explicit_reference_authority_is_same_as_generation_reference(sample_protein):
+    reference_id = "nbenthamiana_nbev11_hc_v2"
+    codon_table_path = resolve_reference_by_id(reference_id)
+    legacy_label_optimizer = RuleBasedOptimizer(codon_table_path=str(codon_table_path))
+    explicit_reference_optimizer = RuleBasedOptimizer(
+        codon_table_path=str(codon_table_path),
+        generation_reference_id=reference_id,
+    )
+
+    legacy_result = legacy_label_optimizer.optimize(
+        sample_protein,
+        profile="balanced",
+        seed=199,
+        scan_mode="fast",
+    )
+    explicit_result = explicit_reference_optimizer.optimize(
+        sample_protein,
+        profile="balanced",
+        seed=199,
+        scan_mode="fast",
+    )
+
+    assert explicit_result.metrics["cai_authority"] == {
+        "reference_id": reference_id,
+        "reference_role": "cai_evaluation",
+        "reference_relationship": "same_as_generation_reference",
+        "fallback_used": False,
+    }
+    assert legacy_result.sequence == explicit_result.sequence
+    assert legacy_result.metrics["cai"] == explicit_result.metrics["cai"]
+
+
+@pytest.mark.parametrize(
+    "seq,expected_len",
+    [
+        ("MSCSNYRRC", 27),  # 9 AA — chars overlap with IUPAC ambiguous DNA
+        ("MMCWCKMMMS", 30),  # 10 AA
+        ("MDSARNNKD", 27),  # 9 AA
+    ],
+)
 def test_optimize_short_iupac_overlap_proteins(optimizer, seq, expected_len):
     """Proteins whose AA codes overlap with IUPAC ambiguous DNA must produce a valid CDS.
 

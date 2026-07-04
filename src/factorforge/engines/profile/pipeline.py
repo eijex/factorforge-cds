@@ -187,16 +187,25 @@ class OptimizationPipeline:
                 f"Unknown profile: {effective_profile}. Supported profiles: {supported}"
             ) from exc
 
+        candidate_metrics: dict[str, Any]
         if seq_type == "dna":
             optimized_dna = processed
             expected_protein = translate_dna(processed).rstrip("*")
             cai = translator.calculate_cai(optimized_dna)
             gc = translator.calculate_gc_content(optimized_dna)
             score = calculate_composite_score(
-                cai=cai, gc=gc, sequence=optimized_dna, profile=effective_profile,
+                cai=cai,
+                gc=gc,
+                sequence=optimized_dna,
+                profile=effective_profile,
                 host=effective_host,
             )
-            candidate_metrics = {"cai": cai, "gc": gc, "score": score}
+            candidate_metrics = {
+                "cai": cai,
+                "cai_authority": dict(translator.cai_authority),
+                "gc": gc,
+                "score": score,
+            }
         else:
             expected_protein = processed.rstrip("*")
             logger.debug(f"Generating candidates with profile: {opt_profile.value}")
@@ -207,6 +216,7 @@ class OptimizationPipeline:
             optimized_dna = candidates[0]["sequence"]
             candidate_metrics = {
                 "cai": candidates[0]["cai"],
+                "cai_authority": dict(translator.cai_authority),
                 "gc": candidates[0]["gc"],
                 "score": candidates[0]["score"],
             }
@@ -216,9 +226,7 @@ class OptimizationPipeline:
             )
 
         # Fast pre-check avoids an expensive full rule scan before PolyA fixing.
-        has_polya_signal = any(
-            pattern in optimized_dna for pattern in rule_engine.POLYA_PATTERNS
-        )
+        has_polya_signal = any(pattern in optimized_dna for pattern in rule_engine.POLYA_PATTERNS)
         if has_polya_signal:
             logger.debug("Potential PolyA signal detected; attempting iterative fix")
             polya_fix = rule_engine.fix_polya_iterative(optimized_dna)
@@ -239,15 +247,19 @@ class OptimizationPipeline:
             dinu_fix = rule_engine.fix_dinucleotides(optimized_dna, mode="balanced")
             if dinu_fix["success"]:
                 optimized_dna = dinu_fix["modified_seq"]
-                candidate_metrics["cai"] = round(translator.calculate_cai(optimized_dna), 4)
-                candidate_metrics["gc"] = translator.calculate_gc_content(optimized_dna)
-                candidate_metrics["score"] = calculate_composite_score(
-                    cai=candidate_metrics["cai"],
-                    gc=candidate_metrics["gc"],
+                cai_after_dinucleotide_fix = round(translator.calculate_cai(optimized_dna), 4)
+                gc_after_dinucleotide_fix = translator.calculate_gc_content(optimized_dna)
+                score_after_dinucleotide_fix = calculate_composite_score(
+                    cai=cai_after_dinucleotide_fix,
+                    gc=gc_after_dinucleotide_fix,
                     sequence=optimized_dna,
                     profile=effective_profile,
                     host=effective_host,
                 )
+                candidate_metrics["cai"] = cai_after_dinucleotide_fix
+                candidate_metrics["cai_authority"] = dict(translator.cai_authority)
+                candidate_metrics["gc"] = gc_after_dinucleotide_fix
+                candidate_metrics["score"] = score_after_dinucleotide_fix
                 logger.info(
                     f"Dinucleotide reduction [{dinu_fix['mode']}]: "
                     f"{dinu_fix['initial_count']} -> "
@@ -287,9 +299,7 @@ class OptimizationPipeline:
         template_name = construct_template or self.construct_template
         if template_name:
             if self.construct_builder is None:
-                template_dir = (
-                    self.template_dir or get_data_path() / "templates"
-                )
+                template_dir = self.template_dir or get_data_path() / "templates"
                 self.construct_builder = ConstructBuilder(template_dir)
             construct_record = self.construct_builder.generate_construct(
                 gene_sequence=domesticated_sequence,

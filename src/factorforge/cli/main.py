@@ -154,6 +154,7 @@ def _build_dp_result(
     gc_max: float,
     cai_target: float = DEFAULT_CAI_TARGET,
     codon_table_path: Path | None = None,
+    codon_reference_id: str | None = None,
 ):
     """Run the constraint-based DP feasibility engine for a single protein sequence."""
     if objective != "feasibility_best":
@@ -171,6 +172,7 @@ def _build_dp_result(
         target_cai=cai_target,
         target_gc_low=gc_min,
         target_gc_high=gc_max,
+        codon_reference_id=codon_reference_id,
     )
     best = result["target"]["best_candidate"]
     feasible = best is not None
@@ -399,7 +401,10 @@ def optimize(
             if reference_table_path is not None:
                 from factorforge.engines.profile.optimizer import RuleBasedOptimizer
 
-                optimizer = RuleBasedOptimizer(codon_table_path=str(reference_table_path))
+                optimizer = RuleBasedOptimizer(
+                    codon_table_path=str(reference_table_path),
+                    generation_reference_id=reference_id,
+                )
             else:
                 optimizer = EngineRegistry.get("profile")
             profile_results = []
@@ -436,7 +441,10 @@ def optimize(
             if reference_table_path is not None and engine == "profile":
                 from factorforge.engines.profile.optimizer import RuleBasedOptimizer
 
-                optimizer = RuleBasedOptimizer(codon_table_path=str(reference_table_path))
+                optimizer = RuleBasedOptimizer(
+                    codon_table_path=str(reference_table_path),
+                    generation_reference_id=reference_id,
+                )
             else:
                 optimizer = EngineRegistry.get(engine)
             payload = [{"id": seq_id, "sequence": seq} for seq_id, seq in fasta_records]
@@ -497,6 +505,7 @@ def optimize(
                 gc_max=gc_max,
                 cai_target=cai_target,
                 codon_table_path=reference_table_path,
+                codon_reference_id=reference_id,
             )
             dna_sequence = best["dna_sequence"]
             cai = float(best["cai"])
@@ -566,7 +575,10 @@ def optimize(
             if reference_table_path is not None and engine == "profile":
                 from factorforge.engines.profile.optimizer import RuleBasedOptimizer
 
-                optimizer = RuleBasedOptimizer(codon_table_path=str(reference_table_path))
+                optimizer = RuleBasedOptimizer(
+                    codon_table_path=str(reference_table_path),
+                    generation_reference_id=reference_id,
+                )
             else:
                 optimizer = EngineRegistry.get(engine)
 
