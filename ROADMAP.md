@@ -56,7 +56,7 @@ Public-claim alignment, wet-lab feedback intake, and stability. The core engine 
 | Feature | Description |
 |---------|-------------|
 | **Membrane protein profile** | TMD detection; local codon-usage review around transmembrane domains |
-| **Secreted protein profile** | Signal peptide recognition; separate optimization of SP region |
+| **Secreted protein profile** | Signal peptide recognition; separate optimization of SP region; detection of tandem/duplicated signal peptides |
 | **Chloroplast-targeted profile** | Transit peptide-aware optimization |
 | **PTGS silencing risk** | Flag sequences with similarity to plant endogenous genes |
 
