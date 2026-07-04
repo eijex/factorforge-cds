@@ -83,6 +83,11 @@ FactorForge is an **in-silico CDS design assistant**. Public claims must stay li
 deterministic CDS design, sequence metrics, validation checks, and reproducible output
 paths unless wet-lab evidence is explicitly documented.
 
+**LLM Claim Boundary Protocol**:
+When providing analysis or troubleshooting, strictly distinguish your (LLM) advisory hypotheses from the deterministic outputs of the FactorForge engine.
+- **LLM hypotheses** (e.g., structural biological inferences like overlapping SPs or 4-TM limits) must be explicitly flagged as "advisory, non-authoritative interpretation".
+- **Deterministic outputs** (e.g., CAI, GC% from FactorForge) must be treated as the source of truth for the tool's behavior. Do not conflate the LLM's biological reasoning with the tool's deterministic claims.
+
 ## 7. Code Style & Testing
 
 Before submitting a PR:
