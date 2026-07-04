@@ -1,6 +1,10 @@
 {
     "organism": "Nicotiana benthamiana",
+    "reference_id": "nbenthamiana_golden_set_v1",
+    "reference_role": "cai_evaluation",
+    "reference_version": "1",
     "source": "N. benthamiana high-expression CDS frequencies (70%, Kazusa CodonUsage DB / NCBI) blended with RNA-seq expression-weighted codon frequencies (30%, Grosse-Holz et al. 2018 Plant Biotechnology Journal; Prudhomme et al. 2024 Plant Biotechnology Journal / PRIDE PXD042916)",
+    "source_basis": "N. benthamiana high-expression CDS frequencies (70%, Kazusa CodonUsage DB / NCBI) blended with RNA-seq expression-weighted codon frequencies (30%, Grosse-Holz et al. 2018 Plant Biotechnology Journal; Prudhomme et al. 2024 Plant Biotechnology Journal / PRIDE PXD042916)",
     "description": "Codon usage frequencies weighted toward highly expressed N. benthamiana genes (RuBisCO, ribosomal proteins, histones). Used as CAI reference weights per Sharp & Li (1987). All source data is publicly available.",
     "blend_ratio": 0.7,
     "optimal_gc_content": 42.5,

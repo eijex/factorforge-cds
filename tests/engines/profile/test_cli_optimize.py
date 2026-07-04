@@ -144,6 +144,61 @@ def test_cli_optimize_profile_engine(tmp_path: Path) -> None:
     assert "Metrics:" in result.output
 
 
+def test_profile_cli_explicit_reference_reports_same_reference_not_fallback(
+    tmp_path: Path,
+) -> None:
+    runner = CliRunner()
+    input_file = tmp_path / "input.fasta"
+    input_file.write_text(">test\nMSKGEELF\n", encoding="utf-8")
+
+    result = runner.invoke(
+        cli,
+        [
+            "optimize",
+            str(input_file),
+            "--engine",
+            "profile",
+            "--reference-id",
+            "nbenthamiana_nbev11_hc_v2",
+            "--scan-mode",
+            "fast",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "'reference_id': 'nbenthamiana_nbev11_hc_v2'" in result.output
+    assert "'reference_relationship': 'same_as_generation_reference'" in result.output
+    assert "'fallback_used': False" in result.output
+    assert "fallback_to_generation_reference" not in result.output
+
+
+def test_cli_template_profile_metrics_include_cai_authority(tmp_path: Path) -> None:
+    runner = CliRunner()
+    input_file = tmp_path / "input.fasta"
+    input_file.write_text(">test\nMSKGEELFTGVVPILVELD\n", encoding="utf-8")
+
+    result = runner.invoke(
+        cli,
+        [
+            "optimize",
+            str(input_file),
+            "--engine",
+            "profile",
+            "--profile",
+            "balanced",
+            "--template",
+            "standard_expression",
+            "--scan-mode",
+            "fast",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "Metrics:" in result.output
+    assert "  - cai_authority:" in result.output
+    assert "distinct_from_generation_reference" in result.output
+
+
 def test_cli_profile_single_output_writes_parseable_fasta_with_input_id(
     monkeypatch,
     tmp_path: Path,

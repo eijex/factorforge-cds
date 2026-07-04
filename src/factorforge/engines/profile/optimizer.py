@@ -22,7 +22,11 @@ class RuleBasedOptimizer(OptimizerEngine):
     name = "Profile-based"
     version = "3.3.1"
 
-    def __init__(self, codon_table_path: str | None = None) -> None:
+    def __init__(
+        self,
+        codon_table_path: str | None = None,
+        generation_reference_id: str | None = None,
+    ) -> None:
         """
         Args:
             codon_table_path: Optional path to a codon usage table JSON used for
@@ -31,6 +35,8 @@ class RuleBasedOptimizer(OptimizerEngine):
                 product `optimize` CLI and the registered engine ever take, so
                 their behavior is unchanged. Injection is used by the benchmark
                 harness to drive design with alternative source-profile tables.
+            generation_reference_id: Explicit manifest reference id when the
+                injected design table is also the CAI evaluation reference.
         """
         self.validator = InputValidator()
         self._codon_table_path = codon_table_path
@@ -43,6 +49,8 @@ class RuleBasedOptimizer(OptimizerEngine):
         self.translator = ReverseTranslator(
             codon_table_path=codon_table_path,
             golden_set_path=codon_table_path,
+            generation_reference_id=generation_reference_id,
+            _allow_golden_set_metadata_fallback=codon_table_path is not None,
         )
         self.rule_engine = RuleEngine()
         self.exporter = SequenceExporter()
@@ -127,7 +135,8 @@ class RuleBasedOptimizer(OptimizerEngine):
             candidates = [{"sequence": optimized_dna, "cai": cai, "gc": gc, "score": score}]
         else:
             translate_kwargs = {
-                k: v for k, v in kwargs.items()
+                k: v
+                for k, v in kwargs.items()
                 if k not in ("scan_mode", "scan_include", "scan_exclude")
             }
             candidates = translator.generate_candidates(
@@ -151,6 +160,7 @@ class RuleBasedOptimizer(OptimizerEngine):
         # 5. Build result
         metrics = {
             "cai": candidates[0]["cai"],
+            "cai_authority": dict(translator.cai_authority),
             # Keep both names for compatibility across existing tests/callers.
             "gc_content": candidates[0]["gc"],
             "gc_percent": candidates[0]["gc"],
@@ -165,9 +175,7 @@ class RuleBasedOptimizer(OptimizerEngine):
             metrics.update(
                 {
                     "gc_target_reached": (
-                        requested_gc_min_percent
-                        <= achieved_gc_percent
-                        <= requested_gc_max_percent
+                        requested_gc_min_percent <= achieved_gc_percent <= requested_gc_max_percent
                     ),
                     "requested_gc_min_percent": requested_gc_min_percent,
                     "requested_gc_max_percent": requested_gc_max_percent,
