@@ -104,4 +104,6 @@ def test_cli_compare_profiles_writes_first_profile_fasta(tmp_path: Path) -> None
     assert result.exit_code == 0, result.output
     assert "Profile comparison results:" in result.output
     assert output_file.exists()
-    assert output_file.read_text(encoding="utf-8").startswith(">input|profile=balanced|")
+    assert output_file.read_text(encoding="utf-8").startswith(
+        ">input|engine=profile|profile=balanced|"
+    )
