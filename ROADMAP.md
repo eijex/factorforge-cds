@@ -47,7 +47,10 @@ Public-claim alignment, wet-lab feedback intake, and stability. The core engine 
 | **5' UTR mRNA folding** | Optional MFE-aware review around the start codon when dependencies are available |
 | **Codon pair bias** | Detection and adjustment of unfavorable adjacent codon pairs |
 | **Kozak context** | Optimization of nucleotides flanking the ATG (-3, +4 positions) |
-| **Extended DP engine** | Expose DP feasibility parameters via CLI and API |
+
+> **Extended DP engine** (DP feasibility parameters exposed via CLI and
+> API) shipped — see [Changelog](CHANGELOG.md). Removed from the table
+> above; it is no longer a planned item.
 
 ---
 
@@ -56,7 +59,7 @@ Public-claim alignment, wet-lab feedback intake, and stability. The core engine 
 | Feature | Description |
 |---------|-------------|
 | **Membrane protein profile** | TMD detection; local codon-usage review around transmembrane domains |
-| **Secreted protein profile** | Signal peptide recognition; separate optimization of SP region |
+| **Secreted protein profile** | Signal peptide recognition; separate optimization of SP region; detection of tandem/duplicated signal peptides |
 | **Chloroplast-targeted profile** | Transit peptide-aware optimization |
 | **PTGS silencing risk** | Flag sequences with similarity to plant endogenous genes |
 

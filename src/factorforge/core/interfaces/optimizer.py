@@ -16,7 +16,7 @@ class OptimizationResult:
     def __init__(
         self,
         sequence: str,
-        metrics: dict[str, float],
+        metrics: dict[str, Any],
         metadata: dict[str, Any] | None = None,
     ) -> None:
         self.sequence = sequence

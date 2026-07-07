@@ -154,6 +154,7 @@ def _build_dp_result(
     gc_max: float,
     cai_target: float = DEFAULT_CAI_TARGET,
     codon_table_path: Path | None = None,
+    codon_reference_id: str | None = None,
 ):
     """Run the constraint-based DP feasibility engine for a single protein sequence."""
     if objective != "feasibility_best":
@@ -171,6 +172,7 @@ def _build_dp_result(
         target_cai=cai_target,
         target_gc_low=gc_min,
         target_gc_high=gc_max,
+        codon_reference_id=codon_reference_id,
     )
     best = result["target"]["best_candidate"]
     feasible = best is not None
@@ -222,7 +224,10 @@ def _format_profile_fasta(sequence_id: str, profile: str, result) -> str:
     cai = float(result.metrics.get("cai", 0.0))
     gc = float(result.metrics.get("gc_percent", result.metrics.get("gc_content", 0.0)))
     score = float(result.metrics.get("score", 0.0))
-    header = f">{sequence_id}|profile={profile}|cai={cai:.3f}|gc={gc:.2f}|score={score:.3f}"
+    header = (
+        f">{sequence_id}|engine=profile|profile={profile}|"
+        f"cai={cai:.3f}|gc={gc:.2f}|score={score:.3f}"
+    )
     return f"{header}\n{_wrap_sequence(result.sequence)}\n"
 
 
@@ -399,7 +404,10 @@ def optimize(
             if reference_table_path is not None:
                 from factorforge.engines.profile.optimizer import RuleBasedOptimizer
 
-                optimizer = RuleBasedOptimizer(codon_table_path=str(reference_table_path))
+                optimizer = RuleBasedOptimizer(
+                    codon_table_path=str(reference_table_path),
+                    generation_reference_id=reference_id,
+                )
             else:
                 optimizer = EngineRegistry.get("profile")
             profile_results = []
@@ -436,7 +444,10 @@ def optimize(
             if reference_table_path is not None and engine == "profile":
                 from factorforge.engines.profile.optimizer import RuleBasedOptimizer
 
-                optimizer = RuleBasedOptimizer(codon_table_path=str(reference_table_path))
+                optimizer = RuleBasedOptimizer(
+                    codon_table_path=str(reference_table_path),
+                    generation_reference_id=reference_id,
+                )
             else:
                 optimizer = EngineRegistry.get(engine)
             payload = [{"id": seq_id, "sequence": seq} for seq_id, seq in fasta_records]
@@ -465,14 +476,9 @@ def optimize(
             combined_fasta = []
             for idx, result in enumerate(results):
                 seq_id = payload[idx]["id"]
-                cai = result.metrics.get("cai", 0.0)
-                gc = result.metrics.get("gc_percent", result.metrics.get("gc_content", 0.0))
-                score = result.metrics.get("score", 0.0)
-                header = (
-                    f">{seq_id}|profile={profile}|cai={float(cai):.3f}|"
-                    f"gc={float(gc):.2f}|score={float(score):.3f}"
+                combined_fasta.append(
+                    _format_profile_fasta(seq_id, profile, result).rstrip()
                 )
-                combined_fasta.append(f"{header}\n{_wrap_sequence(result.sequence)}")
             out_content = "\n".join(combined_fasta) + "\n"
 
             if output:
@@ -497,6 +503,7 @@ def optimize(
                 gc_max=gc_max,
                 cai_target=cai_target,
                 codon_table_path=reference_table_path,
+                codon_reference_id=reference_id,
             )
             dna_sequence = best["dna_sequence"]
             cai = float(best["cai"])
@@ -566,7 +573,10 @@ def optimize(
             if reference_table_path is not None and engine == "profile":
                 from factorforge.engines.profile.optimizer import RuleBasedOptimizer
 
-                optimizer = RuleBasedOptimizer(codon_table_path=str(reference_table_path))
+                optimizer = RuleBasedOptimizer(
+                    codon_table_path=str(reference_table_path),
+                    generation_reference_id=reference_id,
+                )
             else:
                 optimizer = EngineRegistry.get(engine)
 

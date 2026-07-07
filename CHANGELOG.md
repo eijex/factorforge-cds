@@ -29,6 +29,27 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- Added structured `cai_authority` metadata to CAI-bearing profile-engine and
+  DP feasibility outputs, labeling whether CAI was evaluated against the
+  golden-set reference, the generation reference, a fallback reference, or an
+  unresolved reference id. CAI values and formulas are unchanged.
+- Added benchmark runner `--out-dir` and `--force` controls with an overwrite
+  guard for existing result artifacts, plus a documented smoke/preflight/formal
+  evidence-registration workflow.
+
+### Fixed
+
+- Fixed profile-engine `--reference-id` CAI authority labeling so an explicit
+  checksum-verified generation reference reports `same_as_generation_reference`
+  instead of a fallback.
+- Fixed profile-engine `--output` FASTA headers to include `engine=profile`
+  alongside `profile`, `cai`, `gc`, and `score`; profile FASTA headers
+  intentionally omit DP-only `objective` metadata.
+
 ## [3.3.1] — 2026-07-03
 
 ### Added

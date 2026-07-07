@@ -51,6 +51,7 @@ def _cai_from_log(log_sum: float, codon_count: int) -> float:
 def _candidate_summary(
     dna_sequence: str | None,
     codon_weights: dict[str, float],
+    cai_authority: dict[str, Any],
 ) -> dict[str, Any] | None:
     if dna_sequence is None:
         return None
@@ -59,10 +60,25 @@ def _candidate_summary(
     return {
         "dna_sequence": dna_sequence,
         "cai": calculate_cai(dna_sequence, codon_weights),
+        "cai_authority": dict(cai_authority),
         "gc": calculate_gc(dna_sequence),
         "first_region_gc": calculate_first_region_gc(dna_sequence),
         "gc_window_min": min(window_values) if window_values else 0.0,
         "gc_window_max": max(window_values) if window_values else 0.0,
+    }
+
+
+def _build_cai_authority(codon_reference_id: str | None) -> dict[str, Any]:
+    if codon_reference_id is None:
+        return {
+            "reference_id": None,
+            "reference_role": "cai_evaluation",
+            "reference_relationship": "unresolved",
+        }
+    return {
+        "reference_id": codon_reference_id,
+        "reference_role": "cai_evaluation",
+        "reference_relationship": "same_as_generation_reference",
     }
 
 
@@ -104,6 +120,7 @@ def analyze_feasibility(
     target_gc_low: float = DEFAULT_GC_LOW,
     target_gc_high: float = DEFAULT_GC_HIGH,
     gc_ranges: list[tuple[float, float]] | None = None,
+    codon_reference_id: str | None = None,
 ) -> dict[str, Any]:
     """Compute exact CAI/GC feasibility over synonymous codon choices.
 
@@ -160,6 +177,7 @@ def analyze_feasibility(
 
     protein_length = len(protein)
     total_bases = protein_length * 3
+    cai_authority = _build_cai_authority(codon_reference_id)
     best_any_gc = max(states, key=lambda gc_count: states[gc_count])
     best_any_log_sum = states[best_any_gc]
     best_any_sequence = _reconstruct_sequence(backrefs, best_any_gc)
@@ -180,7 +198,7 @@ def analyze_feasibility(
             range_results[key] = {
                 "feasible": True,
                 "max_cai": _cai_from_log(states[gc_count], protein_length),
-                "best_candidate": _candidate_summary(sequence, codon_weights),
+                "best_candidate": _candidate_summary(sequence, codon_weights, cai_authority),
             }
 
     target_cai_possible = (
@@ -192,8 +210,13 @@ def analyze_feasibility(
         "protein_length": protein_length,
         "minimum_possible_gc": (min_gc_count / total_bases) * 100.0,
         "maximum_possible_gc": (max_gc_count / total_bases) * 100.0,
+        "cai_authority": dict(cai_authority),
         "maximum_achievable_cai_without_gc": _cai_from_log(best_any_log_sum, protein_length),
-        "best_candidate_without_gc": _candidate_summary(best_any_sequence, codon_weights),
+        "best_candidate_without_gc": _candidate_summary(
+            best_any_sequence,
+            codon_weights,
+            cai_authority,
+        ),
         "ranges": range_results,
         "target": {
             "cai": target_cai,
@@ -206,7 +229,11 @@ def analyze_feasibility(
                 else None
             ),
             "best_candidate": (
-                _candidate_summary(_reconstruct_sequence(backrefs, target_gc_count), codon_weights)
+                _candidate_summary(
+                    _reconstruct_sequence(backrefs, target_gc_count),
+                    codon_weights,
+                    cai_authority,
+                )
                 if target_gc_count is not None
                 else None
             ),
