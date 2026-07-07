@@ -906,7 +906,7 @@ def main() -> None:
             sys.exit(1)
         old = m.group(1)
 
-    if old == new:
+    if old == new and not args.zenodo_doi:
         print(f"Nothing to do — already at {new}")
         sys.exit(0)
 

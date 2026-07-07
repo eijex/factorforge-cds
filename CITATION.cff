@@ -4,7 +4,7 @@ title: "FactorForge: constraint-aware CDS design and pre-synthesis sequence revi
 version: 3.3.2
 date-released: "2026-07-07"
 license: AGPL-3.0
-doi: "10.5281/zenodo.20949241"
+doi: "10.5281/zenodo.21238811"
 repository-code: "https://github.com/eijex/factorforge-cds"
 url: "https://factorforge.eijex.com"
 authors:
