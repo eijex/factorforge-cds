@@ -33,6 +33,17 @@ continue after printing a warning that quotes the manifest claim boundary; they
 are not production recommendations. Public REST API reference overrides remain
 unsupported.
 
+Profile-engine FASTA files written with `--output` start with a self-describing
+metadata header:
+
+```text
+>id|engine=profile|profile=<profile>|cai=<value>|gc=<value>|score=<value>
+```
+
+Profile FASTA headers intentionally omit `objective`; `objective` is a DP
+engine field, while profile output is identified by `engine=profile` and
+`profile=<profile>`.
+
 ## API Endpoints
 
 The web API (`https://factorforge.eijex.com`) exposes the following endpoints:

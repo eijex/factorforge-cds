@@ -46,6 +46,9 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 - Fixed profile-engine `--reference-id` CAI authority labeling so an explicit
   checksum-verified generation reference reports `same_as_generation_reference`
   instead of a fallback.
+- Fixed profile-engine `--output` FASTA headers to include `engine=profile`
+  alongside `profile`, `cai`, `gc`, and `score`; profile FASTA headers
+  intentionally omit DP-only `objective` metadata.
 
 ## [3.3.1] — 2026-07-03
 

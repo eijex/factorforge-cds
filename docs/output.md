@@ -13,10 +13,17 @@ Each optimized sequence includes:
 
 ## FASTA Output
 
+Profile-engine CLI `--output` FASTA uses self-describing metadata headers:
+
 ```
->target_optimized | CAI=0.81 | GC=52.4% | construct_id=a3f7b2
+>target_optimized|engine=profile|profile=balanced|cai=0.810|gc=52.40|score=0.730
 ATGAAACAGTTGGTCCTGGGG...
 ```
+
+Profile output does not emit an `objective` field. `objective` is reserved for
+the DP feasibility engine, where `objective=feasibility_best` identifies the
+DP objective; profile-engine output is identified by `engine=profile` and
+`profile=<profile>`.
 
 ## GenBank Output
 

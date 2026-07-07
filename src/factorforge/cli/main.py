@@ -224,7 +224,10 @@ def _format_profile_fasta(sequence_id: str, profile: str, result) -> str:
     cai = float(result.metrics.get("cai", 0.0))
     gc = float(result.metrics.get("gc_percent", result.metrics.get("gc_content", 0.0)))
     score = float(result.metrics.get("score", 0.0))
-    header = f">{sequence_id}|profile={profile}|cai={cai:.3f}|gc={gc:.2f}|score={score:.3f}"
+    header = (
+        f">{sequence_id}|engine=profile|profile={profile}|"
+        f"cai={cai:.3f}|gc={gc:.2f}|score={score:.3f}"
+    )
     return f"{header}\n{_wrap_sequence(result.sequence)}\n"
 
 
@@ -473,14 +476,9 @@ def optimize(
             combined_fasta = []
             for idx, result in enumerate(results):
                 seq_id = payload[idx]["id"]
-                cai = result.metrics.get("cai", 0.0)
-                gc = result.metrics.get("gc_percent", result.metrics.get("gc_content", 0.0))
-                score = result.metrics.get("score", 0.0)
-                header = (
-                    f">{seq_id}|profile={profile}|cai={float(cai):.3f}|"
-                    f"gc={float(gc):.2f}|score={float(score):.3f}"
+                combined_fasta.append(
+                    _format_profile_fasta(seq_id, profile, result).rstrip()
                 )
-                combined_fasta.append(f"{header}\n{_wrap_sequence(result.sequence)}")
             out_content = "\n".join(combined_fasta) + "\n"
 
             if output:
