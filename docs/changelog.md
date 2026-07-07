@@ -6,6 +6,13 @@ FactorForge v3.0+ is the current public release line.
 
 ## Unreleased
 
+### Added
+- Added structured `cai_authority` metadata to CAI-bearing profile-engine and DP feasibility outputs. This labels the CAI reference relationship without changing CAI values or formulas.
+
+### Fixed
+- Fixed profile-engine `--reference-id` CAI authority labeling so explicit checksum-verified reference selections report `same_as_generation_reference` instead of fallback.
+- Fixed profile-engine `--output` FASTA headers to include `engine=profile` alongside `profile`, `cai`, `gc`, and `score`; profile FASTA headers intentionally omit DP-only `objective` metadata.
+
 ## v3.3.1 — 2026-07-03
 
 ### Added

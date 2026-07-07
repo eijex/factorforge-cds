@@ -84,6 +84,61 @@ def test_pipeline_fast_scan_mode(short_protein: str) -> None:
     assert "dinucleotides" not in result.metadata["scan_results"]
 
 
+def test_pipeline_protein_branch_includes_cai_authority(short_protein: str) -> None:
+    pipeline = OptimizationPipeline(profile="balanced")
+    result = pipeline.run(short_protein, scan_mode="fast")
+    authority = result.metadata["metrics"]["cai_authority"]
+
+    assert authority["reference_id"] == "nbenthamiana_golden_set_v1"
+    assert authority["reference_role"] == "cai_evaluation"
+    assert authority["reference_relationship"] == "distinct_from_generation_reference"
+    assert authority["fallback_used"] is False
+
+
+def test_pipeline_dna_branch_includes_cai_authority() -> None:
+    pipeline = OptimizationPipeline(profile="balanced")
+    result = pipeline.run("ATGGCC", scan_mode="fast")
+    authority = result.metadata["metrics"]["cai_authority"]
+
+    assert isinstance(result.metadata["metrics"]["cai"], float)
+    assert authority["reference_role"] == "cai_evaluation"
+    assert authority["reference_relationship"] == "distinct_from_generation_reference"
+
+
+def test_pipeline_post_dinucleotide_update_preserves_cai_authority(
+    short_protein: str,
+    monkeypatch,
+) -> None:
+    pipeline = OptimizationPipeline(profile="balanced")
+
+    monkeypatch.setattr(
+        pipeline.rule_engine,
+        "scan_dinucleotides",
+        lambda _sequence: [{"type": "CpG"}],
+    )
+    monkeypatch.setattr(
+        pipeline.rule_engine,
+        "fix_dinucleotides",
+        lambda sequence, mode="balanced": {
+            "success": True,
+            "modified_seq": sequence,
+            "mode": mode,
+            "initial_count": 1,
+            "final_count": 1,
+            "reduction_pct": 0.0,
+            "cai_before": 0.8,
+            "cai_after": 0.8,
+            "rounds": 1,
+        },
+    )
+
+    result = pipeline.run(short_protein, scan_mode="fast")
+    authority = result.metadata["metrics"]["cai_authority"]
+
+    assert authority["reference_role"] == "cai_evaluation"
+    assert authority["reference_relationship"] == "distinct_from_generation_reference"
+
+
 def test_pipeline_run_batch(short_protein: str) -> None:
     """Batch pipeline execution should return ordered results with ids."""
     pipeline = OptimizationPipeline(profile="balanced")
@@ -207,9 +262,14 @@ class TestConstructIdAndExportFeatures:
         features = result.export_features()
 
         required = {
-            "construct_id", "protein_name", "optimization_profile",
-            "cai_score", "gc_content_pct", "mfe_kcal_mol",
-            "polya_signal_count", "domestication_edits",
+            "construct_id",
+            "protein_name",
+            "optimization_profile",
+            "cai_score",
+            "gc_content_pct",
+            "mfe_kcal_mol",
+            "polya_signal_count",
+            "domestication_edits",
         }
         assert required.issubset(features.keys())
 

@@ -13,7 +13,7 @@ import random
 import secrets
 from enum import Enum
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, TypedDict, cast
 
 from factorforge.engines.profile.scoring import (
     calculate_composite_score,
@@ -23,12 +23,21 @@ from factorforge.engines.profile.utils import (
     build_aa_to_codons_map,
     calculate_gc,
     get_data_path,
-    load_golden_set,
     resolve_host_codon_table_path,
 )
 from factorforge.utils.exceptions import EmptyCandidateError
 
 logger = logging.getLogger(__name__)
+
+
+class CaiAuthority(TypedDict, total=False):
+    """JSON-serializable CAI reference authority metadata."""
+
+    reference_id: str | None
+    reference_role: str
+    reference_version: str | None
+    reference_relationship: str
+    fallback_used: bool
 
 
 class OptimizationProfile(Enum):
@@ -58,6 +67,8 @@ class ReverseTranslator:
         codon_table_path: str | Path | None = None,
         golden_set_path: str | Path | None = None,
         host: str = "nbenthamiana",
+        generation_reference_id: str | None = None,
+        _allow_golden_set_metadata_fallback: bool = False,
     ) -> None:
         """
         Args:
@@ -65,6 +76,8 @@ class ReverseTranslator:
             golden_set_path: Path to golden set JSON for CAI reference weights.
                              If None, attempts to load default golden set.
             host: Host codon table name used when codon_table_path is not provided.
+            generation_reference_id: Explicit manifest reference id when the CAI
+                reference is intentionally the same table used for generation.
         """
         self.host = host
         if codon_table_path is None:
@@ -76,13 +89,38 @@ class ReverseTranslator:
         self.aa_to_codons: dict[str, list[tuple[str, float]]] = self._build_aa_to_codons_map()
 
         # Load golden set for CAI reference weights
-        if golden_set_path is not None:
-            self.golden_set_table: dict[str, Any] = self._load_codon_table(golden_set_path)
-        else:
-            try:
-                self.golden_set_table = load_golden_set()
-            except (FileNotFoundError, json.JSONDecodeError):
-                self.golden_set_table = self.codon_table
+        try:
+            if golden_set_path is not None:
+                self.golden_set_table = self._load_codon_table(golden_set_path)
+            else:
+                self.golden_set_table = self._load_codon_table(
+                    get_data_path() / "nbenthamiana_golden_set.json"
+                )
+            if generation_reference_id is not None:
+                self.cai_authority = self._build_generation_reference_cai_authority(
+                    generation_reference_id
+                )
+            else:
+                try:
+                    self.cai_authority = self._build_cai_authority(self.golden_set_table)
+                except ValueError:
+                    if not _allow_golden_set_metadata_fallback:
+                        raise
+                    self.golden_set_table = self.codon_table
+                    self.cai_authority = {
+                        "reference_id": self.codon_table.get("reference_id"),
+                        "reference_role": "cai_evaluation",
+                        "reference_relationship": "fallback_to_generation_reference",
+                        "fallback_used": True,
+                    }
+        except (FileNotFoundError, json.JSONDecodeError):
+            self.golden_set_table = self.codon_table
+            self.cai_authority = {
+                "reference_id": self.codon_table.get("reference_id"),
+                "reference_role": "cai_evaluation",
+                "reference_relationship": "fallback_to_generation_reference",
+                "fallback_used": True,
+            }
 
         # Pre-compute relative adaptiveness weights from golden set (Sharp & Li 1987)
         self.golden_ref_weights: dict[str, float] = self._build_ref_weights(self.golden_set_table)
@@ -131,6 +169,37 @@ class ReverseTranslator:
         """Load codon table"""
         with open(path, "r", encoding="utf-8") as f:
             return cast(dict[str, Any], json.load(f))
+
+    @staticmethod
+    def _build_cai_authority(golden_set_table: dict[str, Any]) -> CaiAuthority:
+        """Validate and expose golden-set CAI authority metadata."""
+        required_fields = ("reference_id", "reference_role", "reference_version")
+        missing = [field for field in required_fields if not golden_set_table.get(field)]
+        if missing:
+            raise ValueError(
+                "Golden-set CAI authority metadata is missing required field(s): "
+                + ", ".join(missing)
+            )
+        if golden_set_table["reference_role"] != "cai_evaluation":
+            raise ValueError("Golden-set CAI authority reference_role must be 'cai_evaluation'.")
+
+        return {
+            "reference_id": str(golden_set_table["reference_id"]),
+            "reference_role": "cai_evaluation",
+            "reference_version": str(golden_set_table["reference_version"]),
+            "reference_relationship": "distinct_from_generation_reference",
+            "fallback_used": False,
+        }
+
+    @staticmethod
+    def _build_generation_reference_cai_authority(reference_id: str) -> CaiAuthority:
+        """Expose explicit generation-reference reuse as intentional, not fallback."""
+        return {
+            "reference_id": reference_id,
+            "reference_role": "cai_evaluation",
+            "reference_relationship": "same_as_generation_reference",
+            "fallback_used": False,
+        }
 
     def _build_aa_to_codons_map(self) -> dict[str, list[tuple[str, float]]]:
         """
@@ -520,7 +589,9 @@ class ReverseTranslator:
         last_seq = ""
 
         balanced_kwargs = {
-            k: v for k, v in kwargs.items() if k in ("target_gc_min", "target_gc_max", "max_gc_attempts")
+            k: v
+            for k, v in kwargs.items()
+            if k in ("target_gc_min", "target_gc_max", "max_gc_attempts")
         }
         balanced_kwargs["preferred_ratio"] = 0.6
 

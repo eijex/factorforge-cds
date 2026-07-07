@@ -2,6 +2,8 @@
 Unit tests for ReverseTranslator
 """
 
+import copy
+import json
 import sys
 from pathlib import Path
 
@@ -10,7 +12,10 @@ import pytest
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "src"))
 
-from factorforge.engines.profile.rules.reverse_translator import OptimizationProfile, ReverseTranslator
+from factorforge.engines.profile.rules.reverse_translator import (
+    OptimizationProfile,
+    ReverseTranslator,
+)
 
 
 @pytest.fixture
@@ -76,6 +81,49 @@ class TestCodonTableLoading:
         stop_codons = v2_translator.aa_to_codons.get("*", [])
         assert stop_codons, "stop codon entry must still be present in aa_to_codons"
         assert all(freq == 0.0 for _, freq in stop_codons)
+
+    def test_golden_set_authority_metadata_loaded(self, translator):
+        """Golden-set CAI authority metadata is validated and exposed."""
+        assert translator.cai_authority == {
+            "reference_id": "nbenthamiana_golden_set_v1",
+            "reference_role": "cai_evaluation",
+            "reference_version": "1",
+            "reference_relationship": "distinct_from_generation_reference",
+            "fallback_used": False,
+        }
+
+    def test_missing_golden_set_authority_field_raises(self, translator, tmp_path: Path):
+        """Golden-set authority metadata must fail closed when required fields are absent."""
+        golden_set = copy.deepcopy(translator.golden_set_table)
+        golden_set.pop("reference_id")
+        golden_set_path = tmp_path / "golden_missing_reference_id.json"
+        golden_set_path.write_text(json.dumps(golden_set), encoding="utf-8")
+
+        with pytest.raises(ValueError, match="reference_id"):
+            ReverseTranslator(golden_set_path=golden_set_path)
+
+    def test_missing_golden_set_file_uses_generation_reference_fallback(
+        self,
+        translator,
+        tmp_path: Path,
+    ):
+        """A missing golden-set file is labeled as fallback to the generation table."""
+        codon_table = copy.deepcopy(translator.codon_table)
+        codon_table["reference_id"] = "working_generation_ref_v1"
+        codon_table_path = tmp_path / "working_table.json"
+        codon_table_path.write_text(json.dumps(codon_table), encoding="utf-8")
+
+        fallback_translator = ReverseTranslator(
+            codon_table_path=codon_table_path,
+            golden_set_path=tmp_path / "missing_golden_set.json",
+        )
+
+        assert fallback_translator.cai_authority == {
+            "reference_id": "working_generation_ref_v1",
+            "reference_role": "cai_evaluation",
+            "reference_relationship": "fallback_to_generation_reference",
+            "fallback_used": True,
+        }
 
 
 class TestCAICalculation:
@@ -220,9 +268,7 @@ class TestGCTargetProfile:
         """
         from factorforge.engines.profile.scoring import resolve_host_gc_mid
 
-        dna = translator.reverse_translate(
-            sample_protein, profile=OptimizationProfile.GC_TARGET
-        )
+        dna = translator.reverse_translate(sample_protein, profile=OptimizationProfile.GC_TARGET)
         gc = translator.calculate_gc_content(dna)
         expected_mid = resolve_host_gc_mid(translator.host)
         assert abs(gc - expected_mid) <= 10.0
@@ -292,7 +338,9 @@ class TestAssemblyFriendlyProfile:
         )
 
         # Check that warning was logged (changed from print to logger.warning)
-        assert any("Could not remove all restriction sites" in record.message for record in caplog.records)
+        assert any(
+            "Could not remove all restriction sites" in record.message for record in caplog.records
+        )
         assert "GGTCTC" in dna
 
 
@@ -393,16 +441,12 @@ class TestViralDeliveryProfile:
 
         # 아미노산 서열 보존 확인: 코돈 테이블로 역번역 결과를 직접 번역
         codons_section = translator.codon_table["codons"]
-        translated = "".join(
-            codons_section[dna[i : i + 3]]["aa"] for i in range(0, len(dna), 3)
-        )
+        translated = "".join(codons_section[dna[i : i + 3]]["aa"] for i in range(0, len(dna), 3))
         assert translated == "MAST"
 
     def test_viral_delivery_via_generate_candidates(self, translator):
         """generate_candidates로 viral_delivery 프로필 호출 검증"""
-        candidates = translator.generate_candidates(
-            "MAST", OptimizationProfile.VIRAL_DELIVERY, n=2
-        )
+        candidates = translator.generate_candidates("MAST", OptimizationProfile.VIRAL_DELIVERY, n=2)
         assert len(candidates) == 2
         for cand in candidates:
             assert 0.0 <= cand["score"] <= 1.0
