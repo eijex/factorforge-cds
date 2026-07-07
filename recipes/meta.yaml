@@ -1,5 +1,5 @@
 {% set name = "factorforge-cds" %}
-{% set version = "3.3.1" %}
+{% set version = "3.3.2" %}
 
 package:
   name: {{ name|lower }}
