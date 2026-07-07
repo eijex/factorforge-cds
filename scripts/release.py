@@ -67,7 +67,7 @@ def build_workspace_targets(old: str, new: str, workspace: Path) -> list[tuple[P
 def build_web_targets(old: str, new: str, web: Path) -> list[tuple[Path, list[tuple[str, str]], bool]]:
     """Optional cross-repo targets in the eijex-web repo."""
     return [
-        (web / "src/app/components/StatsBar.tsx", [
+        (web / "src/app/lib/site-stats.ts", [
             (f'"v{old}"', f'"v{new}"'),
         ], False),
     ]
