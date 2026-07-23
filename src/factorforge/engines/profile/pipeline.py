@@ -189,8 +189,21 @@ class OptimizationPipeline:
 
         candidate_metrics: dict[str, Any]
         if seq_type == "dna":
-            optimized_dna = processed
-            expected_protein = translate_dna(processed).rstrip("*")
+            if len(processed) % 3:
+                raise ValueError("DNA/CDS input length must be divisible by 3.")
+            translated = translate_dna(processed)
+            if "*" in translated[:-1]:
+                raise ValueError("DNA/CDS input contains an internal stop codon.")
+            expected_protein = translated.rstrip("*")
+            terminal_stop = processed[-3:] if translated.endswith("*") else ""
+            generated = translator.generate_candidates(expected_protein, profile=opt_profile, n=1)
+            if not generated:
+                raise ValueError("No candidates generated for DNA/CDS input.")
+            optimized_dna = generated[0]["sequence"] + terminal_stop
+            if len(optimized_dna) != len(processed):
+                raise ValueError("CDS invariant failed: optimized nucleotide length differs.")
+            if translate_dna(optimized_dna).rstrip("*") != expected_protein:
+                raise ValueError("CDS invariant failed: translated protein was not preserved.")
             cai = translator.calculate_cai(optimized_dna)
             gc = translator.calculate_gc_content(optimized_dna)
             score = calculate_composite_score(
