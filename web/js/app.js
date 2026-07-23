@@ -32,6 +32,18 @@ function getGcRange(hostId) {
 }
 
 let validationRegistry = [];
+const HISTORY_SCHEMA_VERSION = 2;
+
+function loadVersionedHistory() {
+    try {
+        const raw = JSON.parse(localStorage.getItem('factorforge_history') || '[]');
+        if (Array.isArray(raw)) return raw.map(item => ({ ...item, schemaVersion: HISTORY_SCHEMA_VERSION }));
+        if (raw && Array.isArray(raw.items)) return raw.items;
+    } catch (_) {
+        localStorage.removeItem('factorforge_history');
+    }
+    return [];
+}
 
 // State Management
 const state = {
@@ -42,9 +54,10 @@ const state = {
     kozak: false,
     dinuc: false,
     customRestrictionSites: [],
+    reviewerDisposition: null,
     results: null,
     isOptimizing: false,
-    history: JSON.parse(localStorage.getItem('factorforge_history') || '[]')
+    history: loadVersionedHistory()
 };
 
 // DOM Elements
@@ -130,7 +143,22 @@ const elements = {
     inputTypeBadge: document.getElementById('inputTypeBadge'),
     toastContainer: document.getElementById('toastContainer'),
     logoIcon: document.getElementById('logoIcon'),
-    logoTitle: document.getElementById('logoTitle')
+    logoTitle: document.getElementById('logoTitle'),
+    criterionCaiMode: document.getElementById('criterionCaiMode'),
+    criterionGcMode: document.getElementById('criterionGcMode'),
+    criterionLocalGcMode: document.getElementById('criterionLocalGcMode'),
+    criterionTypeIisMode: document.getElementById('criterionTypeIisMode'),
+    criterionRepeatsMode: document.getElementById('criterionRepeatsMode'),
+    criterionHomopolymerMode: document.getElementById('criterionHomopolymerMode'),
+    criterionMotifsMode: document.getElementById('criterionMotifsMode'),
+    automatedDecisionValue: document.getElementById('automatedDecisionValue'),
+    automatedDecisionSummary: document.getElementById('automatedDecisionSummary'),
+    qcDecisionMatrix: document.getElementById('qcDecisionMatrix'),
+    qcDecisionMatrixBody: document.getElementById('qcDecisionMatrixBody'),
+    reviewerDisposition: document.getElementById('reviewerDisposition'),
+    reviewerReason: document.getElementById('reviewerReason'),
+    saveReviewerDisposition: document.getElementById('saveReviewerDisposition'),
+    reviewerDispositionStatus: document.getElementById('reviewerDispositionStatus')
 };
 
 let chartInstance = null;
@@ -169,7 +197,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initEventListeners();
     updateHostUI();
     renderHistory();
-    console.log('FactorForge v3.3.2 Engaged');
+    console.log('FactorForge v3.4.0 Engaged');
 });
 
 // Fetches supported_hosts/host_metadata from GET /api/optimize and renders the
@@ -263,6 +291,7 @@ function initEventListeners() {
     elements.customRestrictionSites.addEventListener('input', () => {
         state.customRestrictionSites = [];
     });
+    elements.saveReviewerDisposition.addEventListener('click', saveReviewerDisposition);
     elements.clearHistory.addEventListener('click', clearHistory);
 
     // Action
@@ -432,10 +461,20 @@ function handleFileUpload(e) {
 function handleSequenceChange(e) {
     let rawValue = e.target.value;
 
-    // Clean sequence (remove FASTA headers, whitespace)
-    const lines = rawValue.split('\n');
-    let sequenceOnly = lines[0].startsWith('>') ? lines.slice(1).join('') : rawValue;
-    sequenceOnly = sequenceOnly.replace(/[^A-Za-z*]/g, ''); // Include * for stop codons
+    // Normalize exactly one FASTA record and preserve invalid characters so
+    // they can be reported instead of silently deleted.
+    const lines = rawValue.replace(/\r/g, '').split('\n').map(line => line.trim()).filter(Boolean);
+    const headerIndexes = lines.map((line, index) => line.startsWith('>') ? index : -1).filter(index => index >= 0);
+    let sequenceOnly = '';
+    let parseError = '';
+    if (headerIndexes.length > 1) {
+        parseError = 'Multiple FASTA records detected. Upload one sequence at a time.';
+    } else if (headerIndexes.length === 1 && headerIndexes[0] !== 0) {
+        parseError = 'FASTA header must be the first non-empty line.';
+    } else {
+        sequenceOnly = (headerIndexes.length === 1 ? lines.slice(1) : lines).join('');
+        sequenceOnly = sequenceOnly.replace(/\s/g, '').toUpperCase();
+    }
 
     // Detection Regex
     const dnaRegex = /^[ACGTacgt]+$/;
@@ -446,9 +485,15 @@ function handleSequenceChange(e) {
 
     // Update Badge & Warning
     const dnaInputWarning = document.getElementById('dnaInputWarning');
-    if (sequenceOnly.length > 0) {
+    if (sequenceOnly.length > 0 || parseError) {
         elements.inputTypeBadge.classList.remove('hidden');
-        if (isDNA) {
+        if (parseError) {
+            elements.inputTypeBadge.textContent = 'Invalid FASTA';
+            elements.inputTypeBadge.className = 'ml-2 px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 font-bold text-[9px] uppercase';
+            elements.validationWarning.classList.remove('hidden');
+            elements.validationWarning.innerHTML = `<span class="mr-2">⚠️</span> ${parseError}`;
+            if (dnaInputWarning) dnaInputWarning.classList.add('hidden');
+        } else if (isDNA) {
             elements.inputTypeBadge.textContent = 'DNA';
             elements.inputTypeBadge.className = 'ml-2 px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold text-[9px] uppercase';
             elements.validationWarning.classList.add('hidden');
@@ -462,7 +507,8 @@ function handleSequenceChange(e) {
             elements.inputTypeBadge.textContent = 'Mixed/Invalid';
             elements.inputTypeBadge.className = 'ml-2 px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 font-bold text-[9px] uppercase';
             elements.validationWarning.classList.remove('hidden');
-            elements.validationWarning.innerHTML = '<span class="mr-2">⚠️</span> Contains characters not valid for DNA or Protein.';
+            const invalid = [...new Set(sequenceOnly.split('').filter(char => !/[ACGTNacgtn*ACDEFGHIKLMNPQRSTVWY]/.test(char)))].join(', ');
+            elements.validationWarning.innerHTML = `<span class="mr-2">⚠️</span> Invalid characters: ${escapeHtml(invalid || 'input')}`;
             if (dnaInputWarning) dnaInputWarning.classList.add('hidden');
         }
     } else {
@@ -471,7 +517,9 @@ function handleSequenceChange(e) {
         if (dnaInputWarning) dnaInputWarning.classList.add('hidden');
     }
 
-    state.sequence = sequenceOnly.toUpperCase();
+    state.sequence = parseError ? '' : sequenceOnly;
+    const validInput = !parseError && sequenceOnly.length >= 3 && (isDNA || (isProtein && !isDNA));
+    elements.optimizeBtn.disabled = !validInput || state.isOptimizing;
 
     // Update Stats (only treat as protein if it's NOT also valid DNA)
     updateInputStats(state.sequence, isProtein && !isDNA);
@@ -553,6 +601,7 @@ async function runOptimization() {
             payload.custom_restriction_sites = customRestrictionSites;
             state.customRestrictionSites = customRestrictionSites;
         }
+        payload.acceptance_criteria = getAcceptanceCriteriaPayload();
 
         let response;
         try {
@@ -717,7 +766,9 @@ function renderResults() {
     elements.origGC.textContent = isProteinInput ? 'N/A' : `${oGC}%`;
     elements.optGCComp.textContent = `${calculatedGC.toFixed(1)}%`;
     elements.gcValue.textContent = `${calculatedGC.toFixed(1)}%`;
-    elements.origCAI.textContent = 'N/A';
+    const originalEvaluation = res.acceptance_evaluation?.original;
+    const originalCai = originalEvaluation?.criteria?.find(row => row.criterion === 'cai')?.observed;
+    elements.origCAI.textContent = originalCai == null ? 'Unavailable' : Number(originalCai).toFixed(3);
     elements.optCAIComp.textContent = primary.metrics.cai.toFixed(3);
 
     const mutationRow = elements.mutationRate?.closest('tr, .metric-row');
@@ -737,6 +788,7 @@ function renderResults() {
         elements.mutationRate.textContent = `${mRate}% (${diffCount} bp)`;
     }
     if (elements.aaIdentity) elements.aaIdentity.textContent = primary.aaPreserved;
+    renderDesignReview(res);
 
     // Sequence
     elements.optimizedSequence.textContent = formatSequence(primary.optimized_sequence);
@@ -765,6 +817,60 @@ function renderResults() {
 
     // JSON Details
     elements.jsonDetails.textContent = JSON.stringify(res, null, 2);
+}
+
+function getAcceptanceCriteriaPayload() {
+    return {
+        cai: { mode: elements.criterionCaiMode.value, minimum: 0.8 },
+        overall_gc: { mode: elements.criterionGcMode.value },
+        local_gc: { mode: elements.criterionLocalGcMode.value, minimum: 30, maximum: 70, window_size: 60 },
+        type_iis: { mode: elements.criterionTypeIisMode.value, enzymes: ['BsaI', 'BsmBI/Esp3I', 'SapI'], custom_sites: state.customRestrictionSites },
+        repeats: { mode: elements.criterionRepeatsMode.value, minimum_length: 18, maximum_count: 0 },
+        homopolymers: { mode: elements.criterionHomopolymerMode.value, maximum_length: 8 },
+        forbidden_motifs: { mode: elements.criterionMotifsMode.value, motifs: ['AATAAA', 'GTAAGT', 'ATTTA'] }
+    };
+}
+
+function renderDesignReview(res) {
+    const decision = res.automated_decision || 'Unavailable';
+    const summary = res.decision_summary || {};
+    elements.automatedDecisionValue.textContent = decision.replace('_', ' ');
+    elements.automatedDecisionValue.setAttribute('aria-label', `Automated decision: ${decision}`);
+    elements.automatedDecisionSummary.textContent = res.decision_summary
+        ? `${summary.required_failure_count || 0} required failures · ${summary.preferred_warning_count || 0} preferred warnings. ${summary.explanation || ''}`
+        : 'Acceptance criteria were not returned by the API.';
+    const rows = res.qc_decision_matrix || [];
+    if (!rows.length) {
+        elements.qcDecisionMatrix.classList.add('hidden');
+    } else {
+        elements.qcDecisionMatrix.classList.remove('hidden');
+        elements.qcDecisionMatrixBody.innerHTML = `<table class="w-full text-xs"><thead class="bg-slate-50"><tr><th class="px-3 py-2 text-left">Criterion</th><th class="px-3 py-2 text-left">Mode</th><th class="px-3 py-2 text-left">Observed</th><th class="px-3 py-2 text-left">Result</th></tr></thead><tbody class="divide-y divide-slate-100">${rows.map(row => `<tr><td class="px-3 py-2">${escapeHtml(row.criterion)}</td><td class="px-3 py-2">${escapeHtml(row.mode)}</td><td class="px-3 py-2">${escapeHtml(String(row.observed))}</td><td class="px-3 py-2 font-bold">${row.result === 'PASS' ? '✓ PASS' : row.result === 'FAIL' ? '✕ FAIL' : row.result === 'WARN' ? '⚠ WARN' : '— IGNORED'}</td></tr>`).join('')}</tbody></table>`;
+    }
+    const disposition = res.reviewer_disposition;
+    elements.reviewerDispositionStatus.textContent = disposition
+        ? `${disposition.final_state}: ${disposition.reason || 'No written reason'}`
+        : '';
+}
+
+function saveReviewerDisposition() {
+    if (!state.results) return;
+    const disposition = elements.reviewerDisposition.value;
+    if (!disposition) {
+        showToast('Choose a reviewer disposition first', 'error');
+        return;
+    }
+    const reason = elements.reviewerReason.value.trim();
+    if (state.results.automated_decision === 'FAIL' && (disposition === 'accept' || disposition === 'accept_with_exception') && !reason) {
+        showToast('A reason is required to accept an automated FAIL', 'error');
+        return;
+    }
+    const finalState = disposition === 'accept' || disposition === 'accept_with_exception'
+        ? (state.results.automated_decision === 'FAIL' ? 'MANUALLY_ACCEPTED' : 'ACCEPTED')
+        : disposition === 'return_for_redesign' ? 'RETURNED_FOR_REDESIGN' : 'REJECTED';
+    state.results.reviewer_disposition = { disposition, reason: reason || null, final_state: finalState, automated_decision: state.results.automated_decision, timestamp: new Date().toISOString() };
+    renderDesignReview(state.results);
+    addToHistory(state.sequence, state.results);
+    showToast('Reviewer disposition saved locally', 'success');
 }
 
 function parseCustomRestrictionSites(rawValue) {
@@ -847,7 +953,7 @@ function renderCandidateComparison(res) {
     const recommendedId = res.recommended_candidate ? res.recommended_candidate.id : res.candidates[0].id;
     elements.candidateComparisonBody.innerHTML = res.candidates.map(candidate => {
         const isRecommended = candidate.id === recommendedId;
-        const status = candidate.validator_status === 'pass' ? 'Pass' : 'Review';
+        const status = candidate.automated_decision || (candidate.validator_status === 'pass' ? 'PASS' : 'REVIEW');
         const aaStatus = candidate.validator_status === 'pass' ? '100%' : 'Review';
         return `
             <tr class="${isRecommended ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-white dark:bg-slate-900'}">
@@ -858,7 +964,7 @@ function renderCandidateComparison(res) {
                 <td class="px-3 py-2">${aaStatus}</td>
                 <td class="px-3 py-2">${candidate.internal_stop_count || 0}</td>
                 <td class="px-3 py-2">${candidate.repeat_count || 0}</td>
-                <td class="px-3 py-2 font-bold ${candidate.validator_status === 'pass' ? 'text-emerald-600' : 'text-amber-600'}">${status}</td>
+                <td class="px-3 py-2 font-bold">${status}</td>
             </tr>
         `;
     }).join('');
@@ -1114,11 +1220,14 @@ function addToHistory(input, result) {
         gc: calculateGC(primary.optimized_sequence),
         sequence: primary.optimized_sequence,
         inputSequence: input
+        ,acceptanceCriteria: result.acceptance_criteria_snapshot || null
+        ,automatedDecision: result.automated_decision || null
+        ,reviewerDisposition: result.reviewer_disposition || null
     };
 
     state.history.unshift(item);
     if (state.history.length > 10) state.history.pop();
-    localStorage.setItem('factorforge_history', JSON.stringify(state.history));
+    localStorage.setItem('factorforge_history', JSON.stringify({ schemaVersion: HISTORY_SCHEMA_VERSION, items: state.history }));
     renderHistory();
 }
 
@@ -1323,7 +1432,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.3.2';
+        const version = state.results.engine_versions?.product || '3.4.0';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }

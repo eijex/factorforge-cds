@@ -90,6 +90,30 @@ class WetLabFeedback(BaseModel):
     submissions: list[Any] = Field(default_factory=list)
 
 
+class ReviewerDisposition(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    disposition: Literal[
+        "accept", "accept_with_exception", "return_for_redesign", "reject"
+    ]
+    reason: Optional[str] = None
+    timestamp: str
+    final_state: str
+    automated_decision: Literal["PASS", "CONDITIONAL_PASS", "FAIL"]
+
+
+class AcceptanceCriteriaSnapshot(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    cai: dict[str, Any]
+    overall_gc: dict[str, Any]
+    local_gc: dict[str, Any]
+    type_iis: dict[str, Any]
+    repeats: dict[str, Any]
+    homopolymers: dict[str, Any]
+    forbidden_motifs: dict[str, Any]
+
+
 class ProteinRisk(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -114,3 +138,9 @@ class DesignPackage(BaseModel):
     provenance: Provenance
     wet_lab_feedback: WetLabFeedback = Field(default_factory=WetLabFeedback)
     protein_risk: Optional[ProteinRisk] = None
+    result_identifier: Optional[str] = None
+    input_type: Optional[Literal["cds", "protein"]] = None
+    input_summary: Optional[dict[str, Any]] = None
+    acceptance_criteria_snapshot: Optional[AcceptanceCriteriaSnapshot] = None
+    automated_decision: Optional[Literal["PASS", "CONDITIONAL_PASS", "FAIL"]] = None
+    reviewer_disposition: Optional[ReviewerDisposition] = None
