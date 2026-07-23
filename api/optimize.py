@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.3.2
+Product Version: 3.4.0
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -51,6 +51,13 @@ try:
     from factorforge.validation_report import (
         VALIDATION_REPORT_SCHEMA_VERSION,
         build_validation_report,
+    )
+    from factorforge.design_review import (
+        apply_reviewer_disposition,
+        evaluate_candidate,
+        normalize_acceptance_criteria,
+        original_cai,
+        parse_sequence_input,
     )
 
     FACTORFORGE_AVAILABLE = True
@@ -215,9 +222,9 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": "3.3.2",
-    "rule_engine": "3.3.2",
-    "dp_engine": "3.3.2",
+    "product": "3.4.0",
+    "rule_engine": "3.4.0",
+    "dp_engine": "3.4.0",
 }
 # Valid characters: ACGT (DNA) or standard 20 Amino Acids (Protein) + * (Stop)
 VALID_AA = "ACDEFGHIKLMNPQRSTVWY"
@@ -332,6 +339,14 @@ class handler(BaseHTTPRequestHandler):
 
             return_candidates = bool(data.get("return_candidates", True))
             constraints = self.parse_constraints(data.get("constraints", {}), host=internal_host)
+            input_context = parse_sequence_input(sequence)
+            if not input_context["generation_allowed"]:
+                raise ValueError("; ".join(input_context["errors"]))
+            acceptance_criteria = normalize_acceptance_criteria(
+                data.get("acceptance_criteria"),
+                gc_min=float(constraints["gc_min"]),
+                gc_max=float(constraints["gc_max"]),
+            )
             use_template = data.get("use_template", False)
             kozak = data.get("kozak", False)
             dinuc = data.get("dinuc", False)
@@ -382,6 +397,12 @@ class handler(BaseHTTPRequestHandler):
                     return_candidates=return_candidates,
                     constraints=constraints,
                     custom_restriction_sites=custom_restriction_sites,
+                )
+                result = self.attach_design_review(
+                    result,
+                    input_sequence=sequence,
+                    acceptance_criteria=acceptance_criteria,
+                    reviewer_disposition=data.get("reviewer_disposition"),
                 )
 
             if implicit_strategy_disclosure and isinstance(result, dict):
@@ -738,6 +759,72 @@ class handler(BaseHTTPRequestHandler):
 
         return {"results": results, "count": len(results), "profile": profile}
 
+    def attach_design_review(
+        self,
+        response,
+        *,
+        input_sequence,
+        acceptance_criteria,
+        reviewer_disposition=None,
+    ):
+        """Attach deterministic acceptance and reviewer state to a result."""
+        from factorforge.design_review import build_result_identifier
+
+        context = parse_sequence_input(input_sequence)
+        criteria = normalize_acceptance_criteria(
+            acceptance_criteria,
+            gc_min=float(acceptance_criteria.get("overall_gc", {}).get("minimum", 40.0)),
+            gc_max=float(acceptance_criteria.get("overall_gc", {}).get("maximum", 55.0)),
+        )
+        output_cds = self.primary_dna_sequence(response)
+        table = load_codon_usage_table()
+        optimized_cai = float(
+            response.get("metrics", {}).get(
+                "cai", (response.get("recommended_candidate") or {}).get("cai", 0.0)
+            )
+        )
+        optimized = evaluate_candidate(output_cds, cai=optimized_cai, criteria=criteria)
+        for candidate in response.get("candidates", []):
+            candidate_eval = evaluate_candidate(
+                candidate.get("dna_sequence", ""),
+                cai=float(candidate.get("cai", 0.0)),
+                criteria=criteria,
+            )
+            candidate["automated_decision"] = candidate_eval["automated_decision"]
+            candidate["required_failure_count"] = candidate_eval["required_failure_count"]
+            candidate["preferred_warning_count"] = candidate_eval["preferred_warning_count"]
+            candidate["acceptance_criteria"] = candidate_eval["criteria"]
+        original = None
+        if context["input_type"] == "cds":
+            original = evaluate_candidate(
+                context["normalized_sequence"],
+                cai=float(original_cai(context["normalized_sequence"], table.codon_weights) or 0.0),
+                criteria=criteria,
+            )
+
+        automated_decision = optimized["automated_decision"]
+        response["input_type"] = context["input_type"]
+        response["input_summary"] = context["summary"]
+        response["acceptance_criteria"] = criteria
+        response["acceptance_criteria_snapshot"] = criteria
+        response["automated_decision"] = automated_decision
+        response["decision_summary"] = {
+            "required_failure_count": optimized["required_failure_count"],
+            "preferred_warning_count": optimized["preferred_warning_count"],
+            "explanation": optimized["explanation"],
+        }
+        response["qc_decision_matrix"] = optimized["criteria"]
+        response["acceptance_evaluation"] = {"original": original, "optimized": optimized}
+        response["reviewer_disposition"] = apply_reviewer_disposition(
+            automated_decision, reviewer_disposition
+        )
+        response["result_identifier"] = build_result_identifier(
+            context["normalized_sequence"], criteria
+        )
+        response.setdefault("provenance", {})["normalized_input_type"] = context["input_type"]
+        response["provenance"]["acceptance_criteria_snapshot"] = criteria
+        return response
+
     def clean_sequence(self, sequence):
         """Clean sequence: remove whitespace, FASTA headers, convert to uppercase"""
         # Remove FASTA headers (lines starting with >)
@@ -942,7 +1029,13 @@ class handler(BaseHTTPRequestHandler):
         """Run feasibility_best contract and add profile comparison candidates."""
         constraints = self.parse_constraints(constraints, host=host)
         table = load_codon_usage_table()
-        aa_seq = self.clean_sequence(sequence).rstrip("*")
+        from factorforge.design_review import assert_pathway_invariants, restore_cds_stop_policy
+
+        input_context = parse_sequence_input(sequence)
+        if not input_context["generation_allowed"]:
+            raise ValueError("; ".join(input_context["errors"]))
+        is_cds = input_context["input_type"] == "cds"
+        aa_seq = input_context["optimization_sequence"]
         optimizer = EngineRegistry.get("profile")
 
         feasibility = analyze_feasibility(
@@ -960,7 +1053,10 @@ class handler(BaseHTTPRequestHandler):
             self.build_candidate(
                 candidate_id="feasibility_best",
                 label="Feasibility Best",
-                dna_sequence=best["dna_sequence"],
+                dna_sequence=(
+                    restore_cds_stop_policy(best["dna_sequence"], input_context)
+                    if is_cds else best["dna_sequence"]
+                ),
                 codon_weights=table.codon_weights,
                 profile_cai=float(best["cai"]),
                 recommendation_reason=(
@@ -985,7 +1081,10 @@ class handler(BaseHTTPRequestHandler):
                 self.build_candidate(
                     candidate_id=candidate_profile,
                     label=self.candidate_label(candidate_profile),
-                    dna_sequence=result.sequence,
+                    dna_sequence=(
+                        restore_cds_stop_policy(result.sequence, input_context)
+                        if is_cds else result.sequence
+                    ),
                     codon_weights=table.codon_weights,
                     profile_cai=float(result.metrics.get("cai", 0.0)),
                     recommendation_reason=f"Profile engine {candidate_profile} comparison candidate",
@@ -996,6 +1095,9 @@ class handler(BaseHTTPRequestHandler):
 
         response = {
             "success": True,
+            "optimized_sequence": candidates[0]["dna_sequence"],
+            "original_length": len(sequence),
+            "optimized_length": len(candidates[0]["dna_sequence"]),
             "recommended_candidate": candidates[0],
             "candidates": candidates if return_candidates else [],
             "dp_target_observation": {
@@ -1004,14 +1106,16 @@ class handler(BaseHTTPRequestHandler):
                 "max_cai_under_gc": feasibility["target"]["max_cai_under_gc"],
             },
             "validation": {
-                "input_type": "protein",
-                "sequence_length": len(aa_seq),
+                "input_type": "cds" if is_cds else "protein",
+                "sequence_length": len(sequence) if is_cds else len(aa_seq),
                 "host_profile": host_profile,
             },
             "engine_versions": ENGINE_VERSIONS,
         }
 
         primary_dna = candidates[0]["dna_sequence"]
+        if is_cds:
+            assert_pathway_invariants(sequence, primary_dna, input_context)
         validation_report = build_validation_report(
             primary_dna,
             gc_percent=float(candidates[0]["gc_percent"]),
