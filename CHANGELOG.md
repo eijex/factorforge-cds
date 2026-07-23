@@ -29,6 +29,34 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
+## [3.4.0] — 2026-07-23
+
+### Added
+
+- Added explicit DNA/CDS parsing and protein workflows. Single-record FASTA is
+  normalized, multi-FASTA is rejected, and invalid CDS frame/internal-stop input
+  cannot generate candidates.
+- Added synonymous DNA/CDS redesign invariants: translated protein identity and
+  nucleotide length are preserved under the active terminal-stop policy.
+- Added configurable Required / Preferred / Ignored acceptance criteria for CAI,
+  global/local GC, Type IIS sites, repeats, homopolymers, and forbidden motifs.
+- Added deterministic candidate-level PASS / CONDITIONAL PASS / FAIL decisions,
+  QC decision matrix output, versioned local history snapshots, and separate
+  reviewer dispositions with reason-required acceptance of automated FAIL.
+
+### Fixed
+
+- Fixed the default feasibility path treating nucleotide length as amino-acid
+  length and expanding a 300 bp DNA input into an approximately 900 bp output.
+
+### Notes
+
+- Results remain computational CDS-design and pre-synthesis review artifacts;
+  CAI and QC decisions do not demonstrate expression, yield, synthesis acceptance,
+  or experimental validation.
+
+---
+
 ## [3.3.2] — 2026-07-07
 
 ### Added
@@ -556,7 +584,7 @@ First official release of FactorForge.
 
 ---
 
-[Unreleased]: https://github.com/eijex/factorforge-cds/compare/v3.3.2...HEAD
+[3.4.0]: https://github.com/eijex/factorforge-cds/compare/v3.3.2...v3.4.0
 [3.3.2]: https://github.com/eijex/factorforge-cds/compare/v3.3.1...v3.3.2
 [3.3.1]: https://github.com/eijex/factorforge-cds/compare/v3.3.0...v3.3.1
 [3.3.0]: https://github.com/eijex/factorforge-cds/compare/v3.2.8...v3.3.0

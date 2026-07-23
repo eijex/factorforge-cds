@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from factorforge.core.interfaces import OptimizationResult, OptimizerEngine
+from factorforge.analysis.metrics import translate_dna
 
 from .exporter import SequenceExporter
 from .rules.reverse_translator import OptimizationProfile, ReverseTranslator
@@ -20,7 +21,7 @@ class RuleBasedOptimizer(OptimizerEngine):
     """Profile-based rule optimization engine."""
 
     name = "Profile-based"
-    version = "3.3.2"
+    version = "3.4.0"
 
     def __init__(
         self,
@@ -124,9 +125,30 @@ class RuleBasedOptimizer(OptimizerEngine):
             translator = ReverseTranslator(host=host)
             rule_engine = RuleEngine(host=host)
 
-        # 3. Reverse-translate (pick the best candidate)
+        # 3. Optimize DNA/CDS through the translated protein, then restore the
+        # original terminal-stop policy.  DNA must never be treated as a
+        # protein string (300 bp must not become 300 aa / 900 bp).
         if seq_type == "dna":
-            optimized_dna = processed_seq
+            if len(processed_seq) % 3:
+                raise ValueError("DNA/CDS input length must be divisible by 3.")
+            translated = translate_dna(processed_seq)
+            if "*" in translated[:-1]:
+                raise ValueError("DNA/CDS input contains an internal stop codon.")
+            terminal_stop = processed_seq[-3:] if translated.endswith("*") else ""
+            protein = translated.rstrip("*")
+            generated = translator.generate_candidates(
+                protein, profile=opt_profile, n=1, seed=seed, **{
+                    k: v for k, v in kwargs.items()
+                    if k not in ("scan_mode", "scan_include", "scan_exclude")
+                }
+            )
+            if not generated:
+                raise ValueError("No candidates generated for DNA/CDS input.")
+            optimized_dna = generated[0]["sequence"] + terminal_stop
+            if len(optimized_dna) != len(processed_seq):
+                raise ValueError("CDS invariant failed: optimized nucleotide length differs.")
+            if translate_dna(optimized_dna).rstrip("*") != protein:
+                raise ValueError("CDS invariant failed: translated protein was not preserved.")
             cai = translator.calculate_cai(optimized_dna)
             gc = translator.calculate_gc_content(optimized_dna)
             score = calculate_composite_score(
