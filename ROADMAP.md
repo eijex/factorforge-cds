@@ -2,7 +2,7 @@
 
 FactorForge development direction and planned work.
 
-> Current release: **v3.3.2** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current release: **v3.4.0** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
@@ -54,7 +54,19 @@ Public-claim alignment, wet-lab feedback intake, and stability. The core engine 
 
 ---
 
-## v3.4 — Protein Type Expansion
+## v3.4 — CDS Design Review
+
+| Feature | Description |
+|---------|-------------|
+| **DNA/CDS semantic workflow** | Classify DNA/CDS separately from protein input; preserve translated protein and nucleotide length during synonymous redesign |
+| **Acceptance criteria** | Required / Preferred / Ignored controls for CAI, global/local GC, Type IIS, repeats, homopolymers, and forbidden motifs |
+| **Automated decision** | Deterministic PASS / CONDITIONAL PASS / FAIL with candidate-level QC matrix |
+| **Reviewer disposition** | Record human accept, exception, redesign, or reject decisions without overwriting automated results |
+| **Review provenance** | Versioned criteria snapshots, result identifiers, decision history, and reproducible design metadata |
+
+> This release remains an in-silico CDS design and pre-synthesis review workflow. It does not claim expression, yield, synthesis acceptance, or experimental validation.
+
+## Future — Protein Type Expansion (version TBD)
 
 | Feature | Description |
 |---------|-------------|

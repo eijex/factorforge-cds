@@ -1,4 +1,4 @@
-# FactorForge v3.3.2 Release Gate
+# FactorForge v3.4.0 Release Gate
 
 This gate covers the public Open Bio output and I/O contracts. FactorForge remains
 an in-silico CDS design assistant; this gate does not establish wet-lab, yield, or

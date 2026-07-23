@@ -68,7 +68,7 @@ def design_package() -> dict:
         },
         "evidence": {
             "sequence_hash": f"sha256:{'a' * 64}",
-            "registry_version": "3.3.2",
+            "registry_version": "3.4.0",
             "registry_hash": f"sha256:{'b' * 64}",
         },
         "claim_boundary": {

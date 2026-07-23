@@ -76,6 +76,16 @@ test('updates sequence metadata for protein input', async ({ page }) => {
   await expect(page.locator('#sequencePreview')).toContainText(SAMPLE_PROTEIN);
 });
 
+test('shows CDS design review controls and rejects multi-FASTA input', async ({ page }) => {
+  await openApp(page);
+
+  await expect(page.locator('details').filter({ hasText: 'Acceptance Criteria' })).toBeVisible();
+  await page.locator('#sequenceInput').fill('>one\nATGTCCAAG\n>two\nATGTCCAAG');
+
+  await expect(page.locator('#validationWarning')).toContainText('Multiple FASTA records detected');
+  await expect(page.locator('#optimizeBtn')).toBeDisabled();
+});
+
 test('BY-2 host disables feasibility_best and selects a profile fallback', async ({ page }) => {
   await openApp(page);
 
@@ -125,7 +135,10 @@ test('optimization payload includes host and renders host_profile', async ({ pag
   await expect.poll(() => requestBody).toMatchObject({
     sequence: SAMPLE_PROTEIN,
     host: 'by2',
-    profile: 'gc_target'
+    profile: 'gc_target',
+    acceptance_criteria: expect.objectContaining({
+      cai: expect.objectContaining({ mode: 'preferred' })
+    })
   });
   await expect(page.locator('#hostProfileValue')).toContainText('by2');
   await expect(page.locator('#optimizedSequence')).toContainText(MOCK_DNA.slice(0, 20));

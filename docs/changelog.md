@@ -4,6 +4,16 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.4.0 — 2026-07-23
+
+- Corrected DNA/CDS semantics so synonymous redesign preserves translated protein
+  identity and nucleotide length, including the 300 bp regression fixture.
+- Added explicit single-record FASTA parsing, CDS validation, configurable
+  Required / Preferred / Ignored acceptance criteria, deterministic automated
+  decisions, QC matrix output, reviewer disposition, and versioned provenance.
+- This remains an in-silico pre-synthesis review workflow and does not claim
+  expression, yield, synthesis acceptance, or experimental validation.
+
 ## v3.3.2 — 2026-07-07
 
 Adds structured `cai_authority` metadata to CAI-bearing outputs (labels the CAI reference
