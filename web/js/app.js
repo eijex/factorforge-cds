@@ -942,6 +942,15 @@ function getPrimaryResult(res) {
     };
 }
 
+// Same wording as the profile-selection cards above (Optimization Settings),
+// reused here so the comparison table explains each candidate strategy
+// instead of showing a bare name.
+const CANDIDATE_DESCRIPTIONS = {
+    feasibility_best: 'Dynamic-programming candidate with maximum CAI inside the requested GC range when feasible.',
+    gc_target: 'Profile-engine comparison that prioritizes proximity to the active host GC band.',
+    high_cai: 'Profile-engine comparison that favors high codon adaptation index.'
+};
+
 function renderCandidateComparison(res) {
     if (!elements.candidateComparisonContainer || !elements.candidateComparisonBody) return;
     if (!Array.isArray(res.candidates) || res.candidates.length === 0) {
@@ -955,9 +964,13 @@ function renderCandidateComparison(res) {
         const isRecommended = candidate.id === recommendedId;
         const status = candidate.automated_decision || (candidate.validator_status === 'pass' ? 'PASS' : 'REVIEW');
         const aaStatus = candidate.validator_status === 'pass' ? '100%' : 'Review';
+        const description = CANDIDATE_DESCRIPTIONS[candidate.id];
+        const nameCell = description
+            ? `${escapeHtml(candidate.label || candidate.id)}<span class="tooltip-container"><span class="info-icon">i</span><span class="tooltip-text">${escapeHtml(description)}</span></span>`
+            : escapeHtml(candidate.label || candidate.id);
         return `
             <tr class="${isRecommended ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-white dark:bg-slate-900'}">
-                <td class="px-3 py-2 font-bold text-slate-800 dark:text-slate-100">${candidate.label || candidate.id}${isRecommended ? ' ★' : ''}</td>
+                <td class="px-3 py-2 font-bold text-slate-800 dark:text-slate-100">${nameCell}${isRecommended ? ' ★' : ''}</td>
                 <td class="px-3 py-2">${Number(candidate.cai || 0).toFixed(3)}</td>
                 <td class="px-3 py-2">${Number(candidate.gc_percent || 0).toFixed(1)}</td>
                 <td class="px-3 py-2">${Number(candidate.gc_window_min || 0).toFixed(1)}-${Number(candidate.gc_window_max || 0).toFixed(1)}</td>
