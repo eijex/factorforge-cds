@@ -102,7 +102,7 @@
                     <div class="relative group">
                         <input type="file" id="fileUpload" accept=".fasta,.fa,.txt" class="hidden">
                         <label for="fileUpload"
-                            class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 hover:bg-emerald-50 hover:border-emerald-400 transition-all group">
+                            class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer bg-slate-50 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-400 transition-all group">
                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
                                 <span class="text-3xl mb-2 group-hover:scale-110 transition-transform">📄</span>
                                 <p class="text-sm text-slate-600 font-medium">Click to upload FASTA</p>
@@ -125,7 +125,7 @@
                                 class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest flex items-center">
                                 Sequence Input Area
                                 <span id="inputTypeBadge"
-                                    class="ml-2 px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 hidden text-[9px]">DNA</span>
+                                    class="ml-2 px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 hidden text-[9px]">DNA</span>
                             </p>
                             <div class="flex space-x-2">
                                 <span id="inputLenBadge"
@@ -167,7 +167,7 @@
                         </div>
 
                         <button id="clearBtn"
-                            class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-all flex items-center justify-center space-x-2">
+                            class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-xl transition-all flex items-center justify-center space-x-2">
                             <span>🗑️</span>
                             <span>Clear Input</span>
                         </button>
@@ -466,7 +466,7 @@
                         <label
                             class="flex items-center space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors">
                             <input type="checkbox" id="useTemplate"
-                                class="w-5 h-5 text-emerald-600 rounded-md border-slate-300 focus:ring-emerald-500 transition-all">
+                                class="w-5 h-5 text-emerald-600 rounded-md border-slate-300 dark:border-slate-600 focus:ring-emerald-500 transition-all">
                             <div>
                                 <span class="flex items-center text-sm font-bold text-slate-800">
                                     Standard Expression
@@ -747,7 +747,7 @@
                                 <span>Download GenBank</span>
                             </button>
                             <button id="copyBtn"
-                                class="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl flex items-center justify-center space-x-2 transition-all active:scale-95">
+                                class="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl flex items-center justify-center space-x-2 transition-all active:scale-95">
                                 <span>📋</span>
                                 <span>Copy to Clipboard</span>
                             </button>
@@ -1490,7 +1490,7 @@
             <div
                 class="flex items-center justify-center space-x-4 mb-4 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all">
                 <span class="text-xs font-bold text-slate-400">FactorForge — Open Source</span>
-                <span class="w-1.5 h-1.5 bg-slate-300 rounded-full"></span>
+                <span class="w-1.5 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full"></span>
                 <span class="text-xs font-bold text-slate-400">AGPL-3.0 License</span>
             </div>
             <p class="text-xs text-slate-400 font-medium">© 2026 Eijex. Licensed under the GNU AGPL v3.0.</p>
