@@ -1276,7 +1276,10 @@ window.loadHistoryItem = (id) => {
         optimized_sequence: item.sequence,
         metrics: { cai: item.cai, gc_percent: item.gc, polya_signals: 0, length: item.sequence.length },
         profile: item.profile,
-        host_profile: item.host || 'nbenthamiana'
+        host_profile: item.host || 'nbenthamiana',
+        acceptance_criteria_snapshot: item.acceptanceCriteria || null,
+        automated_decision: item.automatedDecision || null,
+        reviewer_disposition: item.reviewerDisposition || null
     };
     renderResults();
     showToast('History item loaded', 'success');

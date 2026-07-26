@@ -29,6 +29,15 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- Web UI: reloading a result from "Recent Designs" no longer shows
+  "Automated Decision: Unavailable" — `loadHistoryItem()` now restores the
+  `automated_decision`/`acceptance_criteria_snapshot`/`reviewer_disposition`
+  fields that `addToHistory()` already saves, instead of dropping them on
+  reload.
+
 ## [3.4.0] — 2026-07-23
 
 ### Added
