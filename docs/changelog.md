@@ -4,6 +4,13 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.4.3 — 2026-07-26
+
+- Fixed the web app's "Recent Designs" history reload dropping the automated
+  decision, acceptance-criteria snapshot, and reviewer disposition, which made
+  reloaded results show "Automated Decision: Unavailable" instead of the
+  original PASS/FAIL.
+
 ## v3.4.0 — 2026-07-23
 
 - Corrected DNA/CDS semantics so synonymous redesign preserves translated protein

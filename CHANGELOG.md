@@ -29,7 +29,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
-## [Unreleased]
+## [3.4.3] — 2026-07-26
 
 ### Fixed
 - Web UI: reloading a result from "Recent Designs" no longer shows
@@ -593,6 +593,7 @@ First official release of FactorForge.
 
 ---
 
+[3.4.3]: https://github.com/eijex/factorforge-cds/compare/v3.4.2...v3.4.3
 [3.4.0]: https://github.com/eijex/factorforge-cds/compare/v3.3.2...v3.4.0
 [3.3.2]: https://github.com/eijex/factorforge-cds/compare/v3.3.1...v3.3.2
 [3.3.1]: https://github.com/eijex/factorforge-cds/compare/v3.3.0...v3.3.1
