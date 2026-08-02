@@ -52,6 +52,10 @@ class CdsDesign(BaseModel):
     output_length_nt: Optional[int] = None
     cai: float
     gc_percent: float
+    requested_seed: Optional[int] = None
+    effective_seed: Optional[int] = None
+    seed_applicable: bool = False
+    deterministic_method: Optional[str] = None
 
 
 class ConstraintReport(BaseModel):
@@ -83,6 +87,15 @@ class Provenance(BaseModel):
     parameter_hash: str
 
 
+class Reproducibility(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    requested_seed: Optional[int] = None
+    effective_seed: Optional[int] = None
+    seed_applicable: bool
+    deterministic_method: Optional[str] = None
+
+
 class WetLabFeedback(BaseModel):
     model_config = ConfigDict(extra="allow")
 
@@ -112,5 +125,6 @@ class DesignPackage(BaseModel):
     constraint_report: Optional[ConstraintReport] = None
     validation_status: Optional[ValidationStatus] = None
     provenance: Provenance
+    reproducibility: Optional[Reproducibility] = None
     wet_lab_feedback: WetLabFeedback = Field(default_factory=WetLabFeedback)
     protein_risk: Optional[ProteinRisk] = None

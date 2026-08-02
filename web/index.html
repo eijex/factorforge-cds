@@ -85,7 +85,34 @@
 
     <!-- Main Dashboard -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="mb-8 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+            role="tablist" aria-label="FactorForge execution lane">
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <button id="productionLaneTab" type="button" role="tab" aria-selected="true"
+                    aria-controls="productionLanePanel"
+                    class="rounded-xl border border-emerald-500 bg-emerald-600 px-5 py-4 text-left text-white shadow-sm transition-all">
+                    <span class="block text-sm font-extrabold">Production (Deterministic)</span>
+                    <span class="mt-1 block text-[11px] font-medium text-emerald-50">CPU-first deterministic DP generation and validation</span>
+                </button>
+                <button id="labLaneTab" type="button" role="tab" aria-selected="false"
+                    aria-controls="labLanePanel"
+                    class="rounded-xl border border-transparent bg-slate-50 px-5 py-4 text-left text-slate-700 transition-all hover:border-purple-300 hover:bg-purple-50 dark:bg-slate-800 dark:text-slate-200">
+                    <span class="block text-sm font-extrabold">Exploratory Lab (ML/AI)</span>
+                    <span class="mt-1 block text-[11px] font-medium text-slate-500 dark:text-slate-400">Non-deterministic comparison tools and gated placeholders</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="productionLanePanel" role="tabpanel" aria-labelledby="productionLaneTab">
+            <div class="mb-6 flex flex-col gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/80 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-emerald-800/60 dark:bg-emerald-900/20">
+                <div>
+                    <p class="text-xs font-extrabold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">Production lane</p>
+                    <p class="mt-1 text-sm font-semibold text-slate-800 dark:text-slate-100">Deterministic CPU generation with Production validation.</p>
+                </div>
+                <code class="rounded-lg border border-emerald-200 bg-white px-3 py-2 text-[11px] font-bold text-emerald-800 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-300">generator: "cpu_deterministic_dp"</code>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
             <!-- Panel 1: Input -->
             <section class="flex flex-col space-y-6">
@@ -304,48 +331,6 @@
                             </div>
                         </details>
 
-                        <details id="experimentalObjectives" class="disclosure-card rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900 dark:border-slate-800">
-                            <summary class="cursor-pointer select-none px-4 py-3 text-xs font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
-                                Show experimental objectives not enabled
-                            </summary>
-                            <div class="px-3 pb-3 space-y-3" aria-label="Experimental objectives not enabled">
-                                <label class="block relative group cursor-not-allowed">
-                                    <input type="radio" name="objective" value="ramp" class="peer sr-only" disabled>
-                                    <div
-                                        class="p-4 profile-card rounded-xl cursor-not-allowed opacity-60 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-                                        <span class="flex items-center text-sm font-bold text-slate-800">
-                                            5' Ramp
-                                            <span
-                                                class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">Experimental</span>
-                                            <span class="tooltip-container">
-                                                <span class="info-icon">i</span>
-                                                <span class="tooltip-text">Experimental N-terminal codon-ramp heuristic for design review. Disabled until reviewed evidence supports public use.</span>
-                                            </span>
-                                        </span>
-                                        <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">Experimental N-terminal ramp heuristic.</span>
-                                        <span class="block text-[10px] text-amber-600 dark:text-amber-400 mt-1">Pending activation gate before enabling.</span>
-                                    </div>
-                                </label>
-
-                                <label class="block relative group cursor-not-allowed">
-                                    <input type="radio" name="objective" value="viral_delivery" class="peer sr-only" disabled>
-                                    <div
-                                        class="p-4 profile-card rounded-xl cursor-not-allowed opacity-60 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-                                        <span class="flex items-center text-sm font-bold text-slate-800">
-                                            Viral Delivery
-                                            <span
-                                                class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">Experimental</span>
-                                            <span class="tooltip-container">
-                                                <span class="info-icon">i</span>
-                                                <span class="tooltip-text">Experimental TRV-oriented sequence-context profile. Disabled until reviewed evidence supports public use.</span>
-                                            </span>
-                                        </span>
-                                        <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">TRV-oriented sequence-context review.</span>
-                                        <span class="block text-[10px] text-amber-600 dark:text-amber-400 mt-1">Pending activation gate before enabling.</span>
-                                    </div>
-                                </label>
-                            </div>
-                        </details>
                     </div>
 
                     <!-- Host Selector -->
@@ -691,6 +676,15 @@
                                     class="text-sm font-black text-slate-900 dark:text-slate-100 leading-none">-
                                 </p>
                             </div>
+                            <div
+                                class="col-span-2 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-2xl shadow-sm">
+                                <p
+                                    class="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-300 uppercase tracking-widest mb-1">
+                                    Generator Provenance</p>
+                                <p id="generatorValue"
+                                    class="text-sm font-black font-mono text-emerald-900 dark:text-emerald-100 leading-none">cpu_deterministic_dp
+                                </p>
+                            </div>
                         </div>
 
                         <!-- Optimized Sequence -->
@@ -739,24 +733,6 @@
                             </button>
                         </div>
 
-                        <!-- Structure Prediction Links -->
-                        <div class="mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                            <p class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">View Predicted Structure</p>
-                            <div class="flex gap-2">
-                                <a id="alphafoldLink" href="#" target="_blank" rel="noopener noreferrer"
-                                    class="flex-1 py-2 px-3 bg-white dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-xl flex items-center justify-center gap-2 transition-all text-xs">
-                                    <span>🔵</span>
-                                    <span>AlphaFold DB</span>
-                                </a>
-                                <a id="esmatlasFoldLink" href="#" target="_blank" rel="noopener noreferrer"
-                                    class="flex-1 py-2 px-3 bg-white dark:bg-slate-700 hover:bg-purple-50 dark:hover:bg-purple-900/30 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-xl flex items-center justify-center gap-2 transition-all text-xs">
-                                    <span>🟣</span>
-                                    <span>ESM Atlas</span>
-                                </a>
-                            </div>
-                            <p class="text-[9px] text-slate-400 mt-2">Opens external structure prediction services. Your sequence will be passed to the external service via URL.</p>
-                        </div>
-
                         <!-- Details Section -->
                         <div class="mt-8 border-t border-slate-100 pt-6">
                             <button id="toggleDetails"
@@ -787,7 +763,80 @@
                     </div>
                 </div>
             </section>
+            </div>
         </div>
+
+        <section id="labLanePanel" role="tabpanel" aria-labelledby="labLaneTab"
+            class="hidden rounded-3xl border border-purple-300 bg-gradient-to-br from-purple-50 via-fuchsia-50 to-indigo-50 p-6 shadow-lg dark:border-purple-800 dark:from-purple-950/40 dark:via-fuchsia-950/30 dark:to-indigo-950/40 sm:p-8">
+            <div class="mb-8 rounded-2xl border-2 border-amber-400 bg-amber-50 p-5 text-amber-950 shadow-sm dark:border-amber-500 dark:bg-amber-950/40 dark:text-amber-100"
+                role="alert">
+                <p class="text-xs font-black uppercase tracking-widest">⚠ Exploratory output boundary</p>
+                <p class="mt-2 text-sm font-bold leading-relaxed">Sequences generated in this lane use non-deterministic ML models. They are for exploratory purposes and MUST pass through the Production validation engine before wet-lab synthesis.</p>
+            </div>
+
+            <div class="mb-8 flex flex-col gap-3 rounded-2xl border border-purple-200 bg-white/80 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-purple-800 dark:bg-slate-900/80">
+                <div>
+                    <p class="text-xs font-extrabold uppercase tracking-widest text-purple-700 dark:text-purple-300">Exploratory lane</p>
+                    <p class="mt-1 text-sm text-slate-700 dark:text-slate-300">ML generation is not enabled in this release. Placeholders and external comparison tools are isolated here.</p>
+                </div>
+                <code class="rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-[11px] font-bold text-purple-800 dark:border-purple-800 dark:bg-purple-950/40 dark:text-purple-200">generator: "gpu_ml_exploratory"</code>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div class="rounded-2xl border border-purple-200 bg-white p-6 shadow-sm dark:border-purple-800 dark:bg-slate-900">
+                    <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">ML/AI Generators</h2>
+                    <p class="mt-2 text-xs text-slate-600 dark:text-slate-400">Non-deterministic model execution remains disabled until a separate implementation and validation gate is completed.</p>
+                    <div class="mt-5 space-y-3">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 opacity-70 dark:border-slate-700 dark:bg-slate-800">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-sm font-bold text-slate-800 dark:text-slate-100">BART sequence generator</span>
+                                <span class="rounded bg-purple-100 px-2 py-1 text-[9px] font-black uppercase text-purple-700 dark:bg-purple-900/40 dark:text-purple-200">Not enabled</span>
+                            </div>
+                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Exploratory comparison placeholder; no model is invoked.</p>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 opacity-70 dark:border-slate-700 dark:bg-slate-800">
+                            <div class="flex items-center justify-between gap-3">
+                                <span class="text-sm font-bold text-slate-800 dark:text-slate-100">HalluCodon generator</span>
+                                <span class="rounded bg-purple-100 px-2 py-1 text-[9px] font-black uppercase text-purple-700 dark:bg-purple-900/40 dark:text-purple-200">Not enabled</span>
+                            </div>
+                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Exploratory comparison placeholder; no model is invoked.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="experimentalObjectives"
+                    class="rounded-2xl border border-purple-200 bg-white p-6 shadow-sm dark:border-purple-800 dark:bg-slate-900">
+                    <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">Experimental Objectives</h2>
+                    <p class="mt-2 text-xs text-slate-600 dark:text-slate-400">These review concepts remain disabled and are not part of the Production execution path.</p>
+                    <div class="mt-5 space-y-3">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 opacity-70 dark:border-slate-700 dark:bg-slate-800">
+                            <span class="text-sm font-bold text-slate-800 dark:text-slate-100">5' Ramp</span>
+                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">Experimental N-terminal codon-ramp heuristic. Pending activation gate.</p>
+                        </div>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 opacity-70 dark:border-slate-700 dark:bg-slate-800">
+                            <span class="text-sm font-bold text-slate-800 dark:text-slate-100">Viral Delivery</span>
+                            <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">TRV-oriented sequence-context review. Pending activation gate.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-2xl border border-purple-200 bg-white p-6 shadow-sm dark:border-purple-800 dark:bg-slate-900 lg:col-span-2">
+                    <h2 class="text-lg font-extrabold text-slate-900 dark:text-white">External ML Structure Comparisons</h2>
+                    <p class="mt-2 text-xs text-slate-600 dark:text-slate-400">Run and validate a design in Production first. These links are optional external comparisons and are not FactorForge validation.</p>
+                    <div class="mt-5 flex flex-col gap-3 sm:flex-row">
+                        <a id="alphafoldLink" href="#" target="_blank" rel="noopener noreferrer"
+                            class="flex-1 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-center text-sm font-bold text-blue-800 transition-all hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+                            🔵 AlphaFold DB
+                        </a>
+                        <a id="esmatlasFoldLink" href="#" target="_blank" rel="noopener noreferrer"
+                            class="flex-1 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-center text-sm font-bold text-purple-800 transition-all hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-900/20 dark:text-purple-200">
+                            🟣 ESM Atlas
+                        </a>
+                    </div>
+                    <p class="mt-3 text-[10px] text-slate-500 dark:text-slate-400">Opening a link passes your sequence to the named external service via URL after an explicit consent step.</p>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Global Toasts -->

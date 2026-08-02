@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import secrets
 from typing import Any
 
 from factorforge.core.interfaces import OptimizationResult, OptimizerEngine
@@ -14,6 +15,8 @@ from .scoring import calculate_composite_score, compute_mfe_evidence, resolve_ho
 from .validator import InputValidator
 
 logger = logging.getLogger(__name__)
+
+STOCHASTIC_PROFILES = frozenset({"balanced", "assembly_friendly", "ramp", "viral_delivery"})
 
 
 class RuleBasedOptimizer(OptimizerEngine):
@@ -104,6 +107,17 @@ class RuleBasedOptimizer(OptimizerEngine):
                 f"Unknown profile: {profile_value}. Supported profiles: {supported}"
             ) from exc
 
+        seed_applicable = seq_type != "dna" and profile_value in STOCHASTIC_PROFILES
+        effective_seed = (
+            seed if seed is not None else secrets.randbits(32)
+        ) if seed_applicable else None
+        if seq_type == "dna":
+            deterministic_method = "dna_passthrough"
+        elif not seed_applicable:
+            deterministic_method = f"profile_{profile_value}"
+        else:
+            deterministic_method = None
+
         if (
             self._codon_table_path is None
             and host != "nbenthamiana"
@@ -140,7 +154,7 @@ class RuleBasedOptimizer(OptimizerEngine):
                 if k not in ("scan_mode", "scan_include", "scan_exclude")
             }
             candidates = translator.generate_candidates(
-                processed_seq, profile=opt_profile, n=1, seed=seed, **translate_kwargs
+                processed_seq, profile=opt_profile, n=1, seed=effective_seed, **translate_kwargs
             )
             if not candidates:
                 raise ValueError("No candidates generated for input sequence.")
@@ -166,6 +180,10 @@ class RuleBasedOptimizer(OptimizerEngine):
             "gc_percent": candidates[0]["gc"],
             "score": candidates[0]["score"],
             "violations": sum(len(v) for v in scan_results.values()),
+            "requested_seed": seed,
+            "effective_seed": effective_seed,
+            "seed_applicable": seed_applicable,
+            "deterministic_method": deterministic_method,
         }
         if profile_value == "balanced":
             host_gc_min, host_gc_max = resolve_host_gc_range(host)

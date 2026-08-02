@@ -15,9 +15,28 @@ async function openApp(page) {
 test('loads the main web UI', async ({ page }) => {
   await openApp(page);
 
+  await expect(page.locator('#productionLaneTab')).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#productionLanePanel')).toBeVisible();
+  await expect(page.locator('#labLanePanel')).toBeHidden();
   await expect(page.locator('#sequenceInput')).toBeVisible();
   await expect(page.getByRole('heading', { name: '⚙️ Optimization Settings' })).toBeVisible();
   await expect(page.locator('#optimizeBtn')).toBeVisible();
+});
+
+test('separates exploratory ML tools behind a warning boundary', async ({ page }) => {
+  await openApp(page);
+
+  await page.locator('#labLaneTab').click();
+
+  await expect(page.locator('#labLaneTab')).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#productionLanePanel')).toBeHidden();
+  await expect(page.locator('#labLanePanel')).toBeVisible();
+  await expect(page.locator('#labLanePanel')).toContainText(
+    'Sequences generated in this lane use non-deterministic ML models. They are for exploratory purposes and MUST pass through the Production validation engine before wet-lab synthesis.'
+  );
+  await expect(page.locator('#labLanePanel')).toContainText('generator: "gpu_ml_exploratory"');
+  await expect(page.locator('#labLanePanel')).toContainText('BART sequence generator');
+  await expect(page.locator('#labLanePanel')).toContainText('HalluCodon generator');
 });
 
 test('discloses codon reference policy as current default plus non-selector note', async ({ page }) => {
@@ -38,7 +57,7 @@ test('discloses codon reference policy as current default plus non-selector note
   await expect(policy.locator('input, select, button')).toHaveCount(0);
 });
 
-test('keeps non-default design objectives collapsed until requested', async ({ page }) => {
+test('keeps deterministic alternatives in Production and experimental objectives in Lab', async ({ page }) => {
   await openApp(page);
 
   const objectives = page.locator('#designObjectivePolicy');
@@ -48,9 +67,8 @@ test('keeps non-default design objectives collapsed until requested', async ({ p
   const implemented = page.locator('#implementedObjectives');
   const experimental = page.locator('#experimentalObjectives');
   await expect(implemented).not.toHaveAttribute('open', '');
-  await expect(experimental).not.toHaveAttribute('open', '');
   await expect(implemented.getByText('High CAI')).toBeHidden();
-  await expect(experimental.getByText("5' Ramp")).toBeHidden();
+  await expect(experimental).toBeHidden();
 
   await implemented.locator('summary').click();
   await expect(implemented).toHaveAttribute('open', '');
@@ -58,12 +76,11 @@ test('keeps non-default design objectives collapsed until requested', async ({ p
   await expect(implemented).toContainText('GC Target');
   await expect(implemented).toContainText('Assembly Friendly');
 
-  await experimental.locator('summary').click();
-  await expect(experimental).toHaveAttribute('open', '');
+  await page.locator('#labLaneTab').click();
+  await expect(experimental).toBeVisible();
   await expect(experimental).toContainText("5' Ramp");
   await expect(experimental).toContainText('Viral Delivery');
-  await expect(page.locator('input[name="objective"][value="ramp"]')).toBeDisabled();
-  await expect(page.locator('input[name="objective"][value="viral_delivery"]')).toBeDisabled();
+  await expect(experimental.locator('input')).toHaveCount(0);
 });
 
 test('updates sequence metadata for protein input', async ({ page }) => {
@@ -123,11 +140,14 @@ test('optimization payload includes host and renders host_profile', async ({ pag
   await page.locator('#optimizeBtn').click();
 
   await expect.poll(() => requestBody).toMatchObject({
+    generator: 'cpu_deterministic_dp',
     sequence: SAMPLE_PROTEIN,
     host: 'by2',
     profile: 'gc_target'
   });
   await expect(page.locator('#hostProfileValue')).toContainText('by2');
+  await expect(page.locator('#generatorValue')).toHaveText('cpu_deterministic_dp');
+  await expect(page.locator('#jsonDetails')).toContainText('"generator": "cpu_deterministic_dp"');
   await expect(page.locator('#optimizedSequence')).toContainText(MOCK_DNA.slice(0, 20));
 });
 
@@ -169,6 +189,7 @@ async function fillAndOptimize(page) {
 
 test('third-party structure linkout is gated behind a consent modal (Cancel)', async ({ page }) => {
   await fillAndOptimize(page);
+  await page.locator('#labLaneTab').click();
 
   await expect(page.locator('#linkoutConsentModal')).toHaveClass(/hidden/);
 
@@ -183,6 +204,7 @@ test('third-party structure linkout is gated behind a consent modal (Cancel)', a
 
 test('third-party structure linkout consent (Continue) keeps the original AlphaFold DB URL', async ({ page }) => {
   await fillAndOptimize(page);
+  await page.locator('#labLaneTab').click();
 
   const expectedHref = await page.locator('#alphafoldLink').getAttribute('href');
   await page.locator('#alphafoldLink').click();

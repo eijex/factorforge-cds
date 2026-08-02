@@ -24,6 +24,7 @@ factorforge optimize input.fasta -o output.fasta
 | `--reference-id` | — | Expert/research codon-reference ID; checksum-validated and not recommended for production defaults |
 | `--compare-profiles` | — | Comma-separated profiles to compare (e.g. `balanced,high_cai,gc_target`) |
 | `--scan-mode` | `full` | Rule scan: `full` or `fast` |
+| `--seed` | generated when applicable | Replay seed (0 to 2^32-1) for stochastic profile generation; not applicable to DP, deterministic profiles, or DNA pass-through |
 | `--template` | — | MoClo construct template |
 
 `--reference-id` is an expert/research path for replaying or comparing packaged
@@ -54,6 +55,14 @@ The web API (`https://factorforge.eijex.com`) exposes the following endpoints:
 | `POST /api/optimize/compare` | Compare multiple profiles side-by-side |
 | `POST /api/optimize/batch` | Optimize up to 20 sequences in one request |
 
+All three POST endpoints accept an optional JSON integer `seed` from 0 through
+4,294,967,295. For stochastic protein-profile paths (`balanced` and
+`assembly_friendly`), an omitted seed is generated once at the request boundary.
+Responses expose `requested_seed`, `effective_seed`, `seed_applicable`, and
+`deterministic_method` under `reproducibility`; replay with the returned
+`effective_seed`. DP `feasibility_best`, `high_cai`, `gc_target`, and DNA
+pass-through paths report seed as not applicable.
+
 For AI agent access, use [Eijex MCP](https://mcp.eijex.com) which wraps these endpoints as MCP tools.
 
 ### `factorforge list-engines`
@@ -82,6 +91,9 @@ factorforge optimize input.fasta --gc-min 45 --gc-max 60 -o output.fasta
 
 # Fast scan (skip rare codon run detection)
 factorforge optimize input.fasta --scan-mode fast -o output.fasta
+
+# Replay stochastic profile generation
+factorforge optimize input.fasta --engine profile --profile balanced --seed 320 -o output.fasta
 
 # Expert/research reference replay or comparison
 factorforge optimize input.fasta --reference-id nbenthamiana_qld183_v103

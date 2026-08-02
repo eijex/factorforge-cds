@@ -5,6 +5,10 @@
 
 const API_ENDPOINT = '/api/optimize';
 const ENABLE_MOCK = window.FACTORFORGE_ENABLE_MOCK === true;
+const LANE_GENERATORS = Object.freeze({
+    production: 'cpu_deterministic_dp',
+    lab: 'gpu_ml_exploratory'
+});
 // Maps internal engine table names (incl. HOST_MAP aliases like 'ntabacum')
 // back to a human label for results display, and serves as the offline/dev
 // fallback for the Host System cards (rendered dynamically — see
@@ -35,6 +39,7 @@ let validationRegistry = [];
 
 // State Management
 const state = {
+    lane: 'production',
     sequence: '',
     objective: 'feasibility_best',
     host: 'nbenthamiana',
@@ -49,6 +54,10 @@ const state = {
 
 // DOM Elements
 const elements = {
+    productionLaneTab: document.getElementById('productionLaneTab'),
+    labLaneTab: document.getElementById('labLaneTab'),
+    productionLanePanel: document.getElementById('productionLanePanel'),
+    labLanePanel: document.getElementById('labLanePanel'),
     fileUpload: document.getElementById('fileUpload'),
     sequenceInput: document.getElementById('sequenceInput'),
     sequencePreview: document.getElementById('sequencePreview'),
@@ -65,6 +74,7 @@ const elements = {
     gcValue: document.getElementById('gcValue'),
     polyaValue: document.getElementById('polyaValue'),
     hostProfileValue: document.getElementById('hostProfileValue'),
+    generatorValue: document.getElementById('generatorValue'),
     optimizedSequence: document.getElementById('optimizedSequence'),
     jsonDetails: document.getElementById('jsonDetails'),
     downloadFasta: document.getElementById('downloadFasta'),
@@ -165,6 +175,7 @@ function trackEvent(name, data) {
 document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     applyStaticLabelPatches();
+    switchLane('production');
     await loadHostOptions();
     initEventListeners();
     updateHostUI();
@@ -234,6 +245,9 @@ function renderHostCards(hosts, metadata) {
 }
 
 function initEventListeners() {
+    elements.productionLaneTab.addEventListener('click', () => switchLane('production'));
+    elements.labLaneTab.addEventListener('click', () => switchLane('lab'));
+
     // Input Handling
     elements.fileUpload.addEventListener('change', handleFileUpload);
     elements.sequenceInput.addEventListener('input', debounce(handleSequenceChange, 300));
@@ -299,6 +313,24 @@ function initEventListeners() {
     elements.linkoutConsentClose.addEventListener('click', closeLinkoutConsent);
     elements.linkoutConsentOverlay.addEventListener('click', closeLinkoutConsent);
     elements.linkoutConsentContinue.addEventListener('click', closeLinkoutConsent);
+}
+
+function switchLane(lane) {
+    if (!Object.hasOwn(LANE_GENERATORS, lane)) return;
+    state.lane = lane;
+    const isProduction = lane === 'production';
+
+    elements.productionLanePanel.classList.toggle('hidden', !isProduction);
+    elements.labLanePanel.classList.toggle('hidden', isProduction);
+    elements.productionLaneTab.setAttribute('aria-selected', String(isProduction));
+    elements.labLaneTab.setAttribute('aria-selected', String(!isProduction));
+
+    elements.productionLaneTab.className = isProduction
+        ? 'rounded-xl border border-emerald-500 bg-emerald-600 px-5 py-4 text-left text-white shadow-sm transition-all'
+        : 'rounded-xl border border-transparent bg-slate-50 px-5 py-4 text-left text-slate-700 transition-all hover:border-emerald-300 hover:bg-emerald-50 dark:bg-slate-800 dark:text-slate-200';
+    elements.labLaneTab.className = isProduction
+        ? 'rounded-xl border border-transparent bg-slate-50 px-5 py-4 text-left text-slate-700 transition-all hover:border-purple-300 hover:bg-purple-50 dark:bg-slate-800 dark:text-slate-200'
+        : 'rounded-xl border border-purple-500 bg-purple-600 px-5 py-4 text-left text-white shadow-sm transition-all';
 }
 
 function reloadPage() {
@@ -510,6 +542,11 @@ function updateInputStats(seq, isProtein = false) {
 }
 
 async function runOptimization() {
+    if (state.lane !== 'production') {
+        showToast('ML/AI generation is not enabled. Use Production for validated deterministic execution.', 'error');
+        return;
+    }
+
     // Flush the debounced input handler so an immediate click after paste/type
     // optimizes the current textarea value instead of stale state.
     handleSequenceChange({ target: elements.sequenceInput });
@@ -521,6 +558,8 @@ async function runOptimization() {
 
     setLoading(true);
     trackEvent('optimization_run', {
+        lane: state.lane,
+        generator: LANE_GENERATORS[state.lane],
         objective: state.objective,
         host: state.host,
         kozak: state.kozak,
@@ -531,6 +570,7 @@ async function runOptimization() {
     try {
         // Prepare Request
         const payload = {
+            generator: LANE_GENERATORS[state.lane],
             sequence: state.sequence,
             host: state.host,
             use_template: state.useTemplate,
@@ -580,6 +620,7 @@ async function runOptimization() {
             throw new Error(message);
         }
 
+        data = attachGeneratorProvenance(data, payload.generator);
         state.results = data;
         addToHistory(state.sequence, data);
         renderResults();
@@ -587,6 +628,7 @@ async function runOptimization() {
         const primary = getPrimaryResult(data);
         if (primary?.metrics) {
             trackEvent('optimization_result', {
+                generator: data.generator,
                 objective: state.objective,
                 host: getResultHostProfile(data),
                 cai_bucket: caiBucket(primary.metrics.cai ?? 0),
@@ -610,6 +652,16 @@ async function runOptimization() {
     } finally {
         setLoading(false);
     }
+}
+
+function attachGeneratorProvenance(result, expectedGenerator) {
+    if (!result || typeof result !== 'object' || Array.isArray(result)) {
+        throw new Error('Optimization response is not a valid result object');
+    }
+    if (result.generator && result.generator !== expectedGenerator) {
+        throw new Error(`Generator provenance mismatch: expected ${expectedGenerator}, received ${result.generator}`);
+    }
+    return { ...result, generator: expectedGenerator };
 }
 
 // UI Updating Functions
@@ -701,6 +753,9 @@ function renderResults() {
     elements.polyaValue.textContent = primary.metrics.polya_signals === 0 ? '0 (Clean)' : primary.metrics.polya_signals;
     if (elements.hostProfileValue) {
         elements.hostProfileValue.textContent = formatHostProfile(getResultHostProfile(res));
+    }
+    if (elements.generatorValue) {
+        elements.generatorValue.textContent = res.generator || LANE_GENERATORS.production;
     }
 
     // Metrics Comparison Table
@@ -1345,6 +1400,9 @@ async function copyJson() {
 function getMockResult() {
     const mockSeq = "ATGGTGAGCAAGGGCGAGGAGCTGTTCACCGGGGTGGTGCCCATCCTGGTCGAGCTGGACGGCGACGTAAACGGCCACAAGTTCAGCGTGTCCGGCGAGGGCGAGGGCGATGCCACCTACGGCAAGCTGACCCTGAAGTTCATCTGCACCACCGGCAAGCTGCCCGTGCCCTGGCCCACCCTCGTGACCACCTTCAGCTACGGCGTGCAGTGCTTCAGCCGCTACCCCGACCACATGAAGCAGCACGACTTCTTCAAGTCCGCCATGCCCGAAGGCTACGTCCAGGAGCGCACCATCTTCTTCAAGGACGACGGCAACTACAAGACCCGCGCCGAGGTGAAGTTCGAGGGCGACACCCTGGTGAACCGCATCGAGCTGAAGGGCATCGACTTCAAGGAGGACGGCAACATCCTGGGGCACAAGCTGGAGTACAACTACAACAGCCACAACGTCTATATCATGGCCGACAAGCAGAAGAACGGCATCAAGGTGAACTTCAAGATCCGCCACAACATCGAGGACGGCAGCGTGCAGCTCGCCGACCACTACCAGCAGAACACCCCCATCGGCGACGGCCCCGTGCTGCTGCCCGACAACCACTACCTGAGCACCCAGTCCGCCCTGAGCAAAGACCCCAACGAGAAGCGCGATCACATGGTCCTGCTGGAGTTCGTGACCGCCGCCGGGATCACTCACGGCATGGACGAGCTGTACAAG";
     return {
+        // Keep the demonstration response aligned with the active execution
+        // lane so the rendered JSON never loses its provenance flag.
+        generator: LANE_GENERATORS[state.lane],
         optimized_sequence: mockSeq,
         original_length: state.sequence.length,
         optimized_length: mockSeq.length,

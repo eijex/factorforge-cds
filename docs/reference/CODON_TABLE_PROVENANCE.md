@@ -54,12 +54,16 @@ It was developed as part of the v3 ML prototype and requires expression-level in
 
 ## Benchmark Relationship
 
-The v3.2.0 formal benchmark uses:
+The frozen v3.2.0 formal historical benchmark uses:
 
 - **Benchmark dataset**: SGN QLD183 v103 CDS records (N=49,257)
-- **Codon table**: `nbenthamiana_nbev11_hc_v2` (NbeV1.1 high-confidence CDS-derived current software default); legacy `nbenthamiana_legacy_kazusa_sgn_v101` retained as historical comparator
+- **Codon table**: `nbenthamiana_legacy_kazusa_sgn_v101` (historical packaged legacy codon reference)
+- **Scoring contract**: `v1.1`
+- **Historical GC scoring window**: 55-65%
 
-Using a codon table derived from one genome version while benchmarking on another is standard practice in codon optimization. The codon table is the *scoring reference*, not the benchmark dataset itself. CAI values reflect how well each sequence matches the configured FactorForge reference.
+The benchmark corpus and codon reference are separate axes: QLD183 is the frozen input corpus, while `nbenthamiana_legacy_kazusa_sgn_v101` is the generation/scoring reference preserved in the archived artifact layer. The NbeV1.1 HC reference was evaluated later as a controlled sensitivity/current-reference condition; it did not generate the frozen v3.2.0 formal benchmark and must not be substituted into its provenance.
+
+Current v3.3.x production operation instead uses `nbenthamiana_nbev11_hc_v2` with the 40-47% default GC policy. This operational standard is versioned separately and is not a universal biological optimum.
 
 ---
 

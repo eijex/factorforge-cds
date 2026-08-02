@@ -11,6 +11,7 @@ import json
 import sys
 import os
 import re
+import secrets
 import logging
 from datetime import datetime, timezone
 from typing import Any
@@ -72,6 +73,8 @@ VALID_PROFILES = [
     "gc_target",
     "assembly_friendly",
 ]
+STOCHASTIC_PROFILES = frozenset({"balanced", "assembly_friendly"})
+MAX_SEED = (2**32) - 1
 DEFAULT_COMPARE_PROFILES = [
     "balanced",
     "high_cai",
@@ -338,6 +341,7 @@ class handler(BaseHTTPRequestHandler):
             custom_restriction_sites = self.parse_custom_restriction_sites(
                 data.get("custom_restriction_sites")
             )
+            requested_seed = self.parse_seed(data)
 
             # Validate input
             validation_error = self.validate_input(
@@ -350,6 +354,12 @@ class handler(BaseHTTPRequestHandler):
 
             # Clean sequence
             sequence = self.clean_sequence(sequence)
+            seed_context = self.resolve_seed_context(
+                sequence=sequence,
+                profile=profile,
+                objective=objective,
+                requested_seed=requested_seed,
+            )
 
             # Check if FactorForge is available
             if not FACTORFORGE_AVAILABLE:
@@ -382,6 +392,7 @@ class handler(BaseHTTPRequestHandler):
                     return_candidates=return_candidates,
                     constraints=constraints,
                     custom_restriction_sites=custom_restriction_sites,
+                    seed_context=seed_context,
                 )
 
             if implicit_strategy_disclosure and isinstance(result, dict):
@@ -621,23 +632,43 @@ class handler(BaseHTTPRequestHandler):
                 logger.error("FactorForge engine unavailable for profile comparison")
                 return 503, {"success": False, "error": "Engine unavailable. Contact support."}
 
-            result = self.optimize_profile_comparison(sequence, profiles, scan_mode)
+            requested_seed = self.parse_seed(data)
+            comparison_seed = self.resolve_seed_context(
+                sequence,
+                "balanced" if any(p in STOCHASTIC_PROFILES for p in profiles) else profiles[0],
+                None,
+                requested_seed,
+            )
+            result = self.optimize_profile_comparison(
+                sequence, profiles, scan_mode, seed_context=comparison_seed
+            )
             return 200, result
 
         except ValueError as e:
             logger.warning(f"Compare validation error: {e}")
             return 400, {"success": False, "error": str(e)}
 
-    def optimize_profile_comparison(self, sequence, profiles, scan_mode="fast"):
+    def optimize_profile_comparison(
+        self, sequence, profiles, scan_mode="fast", seed_context=None
+    ):
         """Run profile optimization sequentially and return compact comparison rows."""
         optimizer = EngineRegistry.get("profile")
         results = []
 
         for profile in profiles:
+            row_seed_context = self.resolve_seed_context(
+                sequence,
+                profile,
+                None,
+                (seed_context or {}).get("requested_seed"),
+            )
+            if row_seed_context["seed_applicable"] and seed_context:
+                row_seed_context["effective_seed"] = seed_context["effective_seed"]
             result = optimizer.optimize(
                 sequence=sequence,
                 profile=profile,
                 scan_mode=scan_mode,
+                seed=row_seed_context["effective_seed"],
             )
             results.append(
                 {
@@ -651,10 +682,11 @@ class handler(BaseHTTPRequestHandler):
                     ),
                     "score": round(float(result.metrics.get("score", 0.0)), 3),
                     "sequence": result.sequence,
+                    "reproducibility": row_seed_context,
                 }
             )
 
-        return {"results": results}
+        return {"results": results, "reproducibility": seed_context}
 
     def validate_batch_sequences(self, sequences):
         """Validate and normalize batch optimization sequence entries."""
@@ -702,14 +734,30 @@ class handler(BaseHTTPRequestHandler):
                 logger.error("FactorForge engine unavailable for batch optimization")
                 return 503, {"success": False, "error": "Engine unavailable. Contact support."}
 
-            result = self.optimize_batch_sequences(sequences, profile, scan_mode)
+            requested_seed = self.parse_seed(data)
+            seed_probe_sequence = next(
+                (
+                    entry["sequence"]
+                    for entry in sequences
+                    if not re.fullmatch(r"[ACGT]+", entry["sequence"])
+                ),
+                sequences[0]["sequence"],
+            )
+            seed_context = self.resolve_seed_context(
+                seed_probe_sequence, profile, None, requested_seed
+            )
+            result = self.optimize_batch_sequences(
+                sequences, profile, scan_mode, seed_context=seed_context
+            )
             return 200, result
 
         except ValueError as e:
             logger.warning(f"Batch validation error: {e}")
             return 400, {"success": False, "error": str(e)}
 
-    def optimize_batch_sequences(self, sequences, profile, scan_mode="fast"):
+    def optimize_batch_sequences(
+        self, sequences, profile, scan_mode="fast", seed_context=None
+    ):
         """Run profile optimization sequentially for a batch of input sequences."""
         optimizer = EngineRegistry.get("profile")
         results = []
@@ -719,6 +767,7 @@ class handler(BaseHTTPRequestHandler):
                 sequence=entry["sequence"],
                 profile=profile,
                 scan_mode=scan_mode,
+                seed=(seed_context or {}).get("effective_seed"),
             )
             results.append(
                 {
@@ -736,7 +785,12 @@ class handler(BaseHTTPRequestHandler):
                 }
             )
 
-        return {"results": results, "count": len(results), "profile": profile}
+        return {
+            "results": results,
+            "count": len(results),
+            "profile": profile,
+            "reproducibility": seed_context,
+        }
 
     def clean_sequence(self, sequence):
         """Clean sequence: remove whitespace, FASTA headers, convert to uppercase"""
@@ -751,6 +805,43 @@ class handler(BaseHTTPRequestHandler):
         # Convert to uppercase
         return cleaned.upper()
 
+    def parse_seed(self, data):
+        """Validate an optional JSON integer seed without accepting booleans."""
+        if "seed" not in data or data["seed"] is None:
+            return None
+        seed = data["seed"]
+        if isinstance(seed, bool) or not isinstance(seed, int):
+            raise ValueError("seed must be an integer or null")
+        if not 0 <= seed <= MAX_SEED:
+            raise ValueError(f"seed must be between 0 and {MAX_SEED}")
+        return seed
+
+    def resolve_seed_context(self, sequence, profile, objective, requested_seed):
+        """Resolve replay metadata and generate an applicable seed exactly once."""
+        is_dna = bool(re.fullmatch(r"[ACGT]+", sequence))
+        if objective == DEFAULT_OBJECTIVE:
+            return {
+                "requested_seed": requested_seed,
+                "effective_seed": None,
+                "seed_applicable": False,
+                "deterministic_method": "dp_feasibility_best",
+            }
+        if is_dna:
+            deterministic_method = "dna_passthrough"
+        elif profile not in STOCHASTIC_PROFILES:
+            deterministic_method = f"profile_{profile}"
+        else:
+            deterministic_method = None
+        seed_applicable = deterministic_method is None
+        return {
+            "requested_seed": requested_seed,
+            "effective_seed": (
+                requested_seed if requested_seed is not None else secrets.randbits(32)
+            ) if seed_applicable else None,
+            "seed_applicable": seed_applicable,
+            "deterministic_method": deterministic_method,
+        }
+
     def optimize_sequence(
         self,
         sequence,
@@ -764,6 +855,7 @@ class handler(BaseHTTPRequestHandler):
         return_candidates=False,
         constraints=None,
         custom_restriction_sites=None,
+        seed_context=None,
     ):
         """Run actual FactorForge v3.x profile optimization."""
         try:
@@ -779,6 +871,7 @@ class handler(BaseHTTPRequestHandler):
                     dinuc=dinuc,
                     return_candidates=return_candidates,
                     custom_restriction_sites=custom_restriction_sites,
+                    seed_context=seed_context,
                 )
 
             # Get profile-based optimizer
@@ -794,6 +887,7 @@ class handler(BaseHTTPRequestHandler):
                 host=host,
                 kozak=kozak,
                 dinuc=dinuc,
+                seed=(seed_context or {}).get("effective_seed"),
             )
 
             # Build construct if requested
@@ -920,6 +1014,7 @@ class handler(BaseHTTPRequestHandler):
                 kozak=kozak,
                 dinuc=dinuc,
                 constraints=constraints,
+                seed_context=seed_context,
             )
             return response
 
@@ -938,6 +1033,7 @@ class handler(BaseHTTPRequestHandler):
         host=DEFAULT_HOST_PROFILE,
         return_candidates=True,
         custom_restriction_sites=None,
+        seed_context=None,
     ):
         """Run feasibility_best contract and add profile comparison candidates."""
         constraints = self.parse_constraints(constraints, host=host)
@@ -1035,6 +1131,7 @@ class handler(BaseHTTPRequestHandler):
             kozak=kozak,
             dinuc=dinuc,
             constraints=constraints,
+            seed_context=seed_context,
         )
 
     def add_design_package_fields(
@@ -1047,6 +1144,7 @@ class handler(BaseHTTPRequestHandler):
         kozak,
         dinuc,
         constraints,
+        seed_context=None,
     ):
         """Add DesignPackage-compatible metadata while preserving existing response keys."""
         output_cds = self.primary_dna_sequence(response)
@@ -1069,6 +1167,16 @@ class handler(BaseHTTPRequestHandler):
             "dinuc": dinuc,
             "constraints": constraints,
         }
+        seed_context = seed_context or {
+            "requested_seed": None,
+            "effective_seed": None,
+            "seed_applicable": False,
+            "deterministic_method": (
+                "dp_feasibility_best" if objective == DEFAULT_OBJECTIVE else "unspecified"
+            ),
+        }
+        if seed_context["seed_applicable"]:
+            param_payload["effective_seed"] = seed_context["effective_seed"]
         param_str = json.dumps(param_payload, sort_keys=True, separators=(",", ":"))
 
         response["construct_id"] = _generate_construct_id()
@@ -1090,8 +1198,10 @@ class handler(BaseHTTPRequestHandler):
                 "reference_policy_version": reference_policy.get("policy_version"),
                 "codon_reference_id": active_reference_id,
                 "gc_reference_band": gc_reference_band,
+                **seed_context,
             }
         )
+        response["reproducibility"] = dict(seed_context)
         response["provenance"] = {
             "input_sequence_hash": self.sha256_prefix(input_sequence),
             "output_cds_hash": self.sha256_prefix(output_cds),
@@ -1121,6 +1231,7 @@ class handler(BaseHTTPRequestHandler):
             "output_length_nt": len(output_cds),
             "cai": float(cai),
             "gc_percent": float(gc_percent),
+            **seed_context,
         }
         response["constraint_report"] = {
             "restriction_sites_removed": response.get("custom_restriction_sites", {}).get(

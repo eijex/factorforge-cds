@@ -1,5 +1,5 @@
 site_name: FactorForge
-site_description: Open-source CDS design and pre-synthesis sequence review for plant CDS workflows (N. benthamiana, Tobacco BY-2 experimental)
+site_description: Open-source constraint-based plant CDS design engine and Design layer anchor for Eijex DBTL platform workflows (N. benthamiana, Tobacco BY-2 experimental)
 site_url: https://eijex.github.io/factorforge-cds/
 repo_url: https://github.com/eijex/factorforge-cds
 repo_name: eijex/factorforge-cds

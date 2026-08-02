@@ -19,6 +19,7 @@ ABLATION_SPEC = ROOT / "benchmarks" / "ablation" / "ablation_spec.yaml"
 BENCHMARK_README = BENCH_DIR / "README.md"
 MANIFEST_PATH = BENCH_DIR / "MANIFEST.json"
 FROZEN_SUMMARY = BENCH_DIR / "data" / "benchmark_summary.frozen.json"
+CODON_PROVENANCE = ROOT / "docs" / "reference" / "CODON_TABLE_PROVENANCE.md"
 
 
 # ---------------------------------------------------------------------------
@@ -83,6 +84,18 @@ def test_manifest_separates_software_and_benchmark_dois():
     data = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
     assert data["archives"]["software_release"]["doi"] == "10.5281/zenodo.20640931"
     assert data["archives"]["corrected_benchmark_dataset"]["doi"] == "10.5281/zenodo.20676276"
+
+
+def test_codon_provenance_separates_historical_and_production_references():
+    text = CODON_PROVENANCE.read_text(encoding="utf-8")
+    historical = text.split("## Benchmark Relationship", 1)[1].split("## Claim Boundary", 1)[0]
+    assert "`nbenthamiana_legacy_kazusa_sgn_v101`" in historical
+    assert "`scoring_contract v1.1`" not in historical  # canonical spelling is split below
+    assert "`v1.1`" in historical
+    assert "55-65%" in historical
+    assert "Current v3.3.x production operation" in historical
+    assert "`nbenthamiana_nbev11_hc_v2`" in historical
+    assert "did not generate the frozen v3.2.0 formal benchmark" in historical
 
 
 # ---------------------------------------------------------------------------

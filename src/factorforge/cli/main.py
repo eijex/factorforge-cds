@@ -224,9 +224,12 @@ def _format_profile_fasta(sequence_id: str, profile: str, result) -> str:
     cai = float(result.metrics.get("cai", 0.0))
     gc = float(result.metrics.get("gc_percent", result.metrics.get("gc_content", 0.0)))
     score = float(result.metrics.get("score", 0.0))
+    seed_applicable = bool(result.metrics.get("seed_applicable", False))
+    effective_seed = result.metrics.get("effective_seed")
+    seed_field = f"|seed={effective_seed}" if seed_applicable else "|seed=not_applicable"
     header = (
         f">{sequence_id}|engine=profile|profile={profile}|"
-        f"cai={cai:.3f}|gc={gc:.2f}|score={score:.3f}"
+        f"cai={cai:.3f}|gc={gc:.2f}|score={score:.3f}{seed_field}"
     )
     return f"{header}\n{_wrap_sequence(result.sequence)}\n"
 
@@ -327,6 +330,12 @@ def list_engines():
 )
 @click.option("--scan-include", help="Comma-separated scanner names to include")
 @click.option("--scan-exclude", help="Comma-separated scanner names to exclude")
+@click.option(
+    "--seed",
+    type=click.IntRange(min=0, max=(2**32) - 1),
+    default=None,
+    help="Replay seed for stochastic profile generation; not applicable to the DP engine.",
+)
 def optimize(
     input_file,
     engine,
@@ -344,6 +353,7 @@ def optimize(
     scan_mode,
     scan_include,
     scan_exclude,
+    seed,
 ):
     """Optimize protein sequence"""
     compare_profile_list = _parse_csv_option(compare_profiles)
@@ -419,6 +429,7 @@ def optimize(
                     scan_mode=scan_mode,
                     scan_include=scan_include_list,
                     scan_exclude=scan_exclude_list,
+                    seed=seed,
                 )
                 profile_results.append((profile_name, result))
 
@@ -459,6 +470,7 @@ def optimize(
                     scan_mode=scan_mode,
                     scan_include=scan_include_list,
                     scan_exclude=scan_exclude_list,
+                    seed=seed,
                 )
             else:
                 results = [
@@ -469,6 +481,7 @@ def optimize(
                         scan_mode=scan_mode,
                         scan_include=scan_include_list,
                         scan_exclude=scan_exclude_list,
+                        seed=seed,
                     )
                     for _id, seq in fasta_records
                 ]
@@ -535,6 +548,8 @@ def optimize(
                 click.echo(f"  - target_cai: {float(feasibility['target']['cai']):.3f}")
             click.echo(f"  - target_feasible: {bool(feasibility['target']['best_candidate'])}")
             click.echo(f"  - recommendation_reason: {recommendation_reason}")
+            click.echo("  - seed_applicable: False")
+            click.echo("  - deterministic_method: dp_feasibility_best")
             return
 
         if engine == "profile" and construct_template:
@@ -551,6 +566,7 @@ def optimize(
                 scan_mode=scan_mode,
                 scan_include=scan_include_list,
                 scan_exclude=scan_exclude_list,
+                seed=seed,
             )
 
             if output_format.lower() == "genbank" and not output:
@@ -589,6 +605,7 @@ def optimize(
                 scan_mode=scan_mode,
                 scan_include=scan_include_list,
                 scan_exclude=scan_exclude_list,
+                seed=seed,
             )
 
             # Output results

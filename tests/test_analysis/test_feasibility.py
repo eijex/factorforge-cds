@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import itertools
+import math
+
 from factorforge.analysis.feasibility import analyze_feasibility
-from factorforge.analysis.metrics import calculate_gc
+from factorforge.analysis.feasibility import AA_TO_CODONS
+from factorforge.analysis.metrics import calculate_cai, calculate_gc
 
 
 WEIGHTS = {
@@ -109,3 +113,65 @@ def test_dp_cai_authority_candidate_dicts_are_defensive_copies() -> None:
         result["best_candidate_without_gc"]["cai_authority"]["reference_id"]
         == "test_generation_ref_v1"
     )
+
+
+def _exhaustive_best_candidate(
+    protein: str,
+    weights: dict[str, float],
+    gc_low: float,
+    gc_high: float,
+) -> tuple[str, float, float] | None:
+    """Independent complete enumeration with the documented first-encounter tie rule."""
+    best: tuple[str, float, float] | None = None
+    best_log_sum = float("-inf")
+    for codons in itertools.product(*(AA_TO_CODONS[aa] for aa in protein)):
+        if any(weights.get(codon, 0.0) <= 0.0 for codon in codons):
+            continue
+        dna = "".join(codons)
+        gc = calculate_gc(dna)
+        if not gc_low <= gc <= gc_high:
+            continue
+        log_sum = sum(math.log(weights[codon]) for codon in codons)
+        if log_sum > best_log_sum:
+            best_log_sum = log_sum
+            best = (dna, calculate_cai(dna, weights), gc)
+    return best
+
+
+def test_dp_matches_complete_synonymous_enumeration() -> None:
+    """The GC-count DP must match exhaustive search on tractable synthetic fixtures."""
+    fixtures = [
+        ("MAK", 40.0, 50.0),
+        ("AAK", 55.0, 65.0),
+        ("AKA", 60.0, 70.0),
+    ]
+    for protein, gc_low, gc_high in fixtures:
+        expected = _exhaustive_best_candidate(protein, WEIGHTS, gc_low, gc_high)
+        result = analyze_feasibility(
+            protein,
+            WEIGHTS,
+            target_cai=0.0,
+            target_gc_low=gc_low,
+            target_gc_high=gc_high,
+        )
+        observed = result["target"]["best_candidate"]
+
+        assert expected is not None
+        assert observed is not None
+        expected_dna, expected_cai, expected_gc = expected
+        assert observed["dna_sequence"] == expected_dna
+        assert observed["cai"] == expected_cai
+        assert observed["gc"] == expected_gc
+
+
+def test_dp_tie_breaking_matches_standard_genetic_code_codon_order() -> None:
+    """Equal-scoring same-GC Ala codons retain the first AA_TO_CODONS transition."""
+    tie_weights = {codon: 1.0 for codon in AA_TO_CODONS["A"]}
+    expected = _exhaustive_best_candidate("A", tie_weights, 60.0, 70.0)
+    result = analyze_feasibility(
+        "A", tie_weights, target_cai=0.0, target_gc_low=60.0, target_gc_high=70.0
+    )
+
+    assert expected is not None
+    assert expected[0] == "GCT"
+    assert result["target"]["best_candidate"]["dna_sequence"] == expected[0]

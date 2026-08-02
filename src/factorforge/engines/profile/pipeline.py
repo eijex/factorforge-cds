@@ -6,6 +6,7 @@ Integrates validation, translation, rule scanning, domestication, and construct 
 from __future__ import annotations
 
 import logging
+import secrets
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -28,6 +29,7 @@ from factorforge.utils.construct_id import generate_construct_id
 from factorforge.utils.sequence_validator import validate_cds_output
 
 logger = logging.getLogger(__name__)
+STOCHASTIC_PROFILES = frozenset({"balanced", "assembly_friendly", "ramp", "viral_delivery"})
 
 if TYPE_CHECKING:
     from Bio.SeqRecord import SeqRecord
@@ -187,6 +189,18 @@ class OptimizationPipeline:
                 f"Unknown profile: {effective_profile}. Supported profiles: {supported}"
             ) from exc
 
+        requested_seed = kwargs.get("seed")
+        seed_applicable = seq_type != "dna" and effective_profile in STOCHASTIC_PROFILES
+        effective_seed = (
+            requested_seed if requested_seed is not None else secrets.randbits(32)
+        ) if seed_applicable else None
+        if seq_type == "dna":
+            deterministic_method = "dna_passthrough"
+        elif not seed_applicable:
+            deterministic_method = f"profile_{effective_profile}"
+        else:
+            deterministic_method = None
+
         candidate_metrics: dict[str, Any]
         if seq_type == "dna":
             optimized_dna = processed
@@ -209,7 +223,12 @@ class OptimizationPipeline:
         else:
             expected_protein = processed.rstrip("*")
             logger.debug(f"Generating candidates with profile: {opt_profile.value}")
-            candidates = translator.generate_candidates(processed, profile=opt_profile, n=1)
+            candidates = translator.generate_candidates(
+                processed,
+                profile=opt_profile,
+                n=1,
+                seed=effective_seed,
+            )
             if not candidates:
                 logger.error("No candidates generated for input sequence")
                 raise ValueError("No candidates generated for input sequence.")
@@ -329,6 +348,10 @@ class OptimizationPipeline:
             "final_validation": final_validation,
             "metrics": candidate_metrics,
             "scan_mode": scan_mode,
+            "requested_seed": requested_seed,
+            "effective_seed": effective_seed,
+            "seed_applicable": seed_applicable,
+            "deterministic_method": deterministic_method,
         }
 
         return PipelineResult(

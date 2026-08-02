@@ -290,20 +290,27 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   for non-default hosts (`--compare-profiles` included), matching the
   existing `feasibility_best` guard; the web UI's auto-selected fallback
   for BY-2 changes from `high_cai` to `gc_target`.
-- Release provenance hashing now computed from the committed git blob (`git show HEAD:<path>`) instead of local working-tree bytes, fixing CRLF/LF drift on Windows that could silently produce incorrect SHA-256 values in `reproducibility/benchmark_v0.5.1/MANIFEST.json` and `tests/test_docs_consistency.py`.
-- Public-surface DOI references (`README.md`, `docs/index.md`, `AGENTS.md`) switched from version-pinned Zenodo DOIs to the concept DOI, which always resolves to the latest release, so future releases no longer require manually updating these files.
-- `AGENTS.md` no longer states a hardcoded "16 version-bearing files" count, which had gone stale; points at `scripts/release.py`'s `build_targets()` as the source of truth instead.
 - `docs/rule-engine-roadmap.md`, `docs/validation.md`, `docs/how-it-works.md`, and `docs/factorforge-architecture.md` enumerated only 5-8 of the 9 default advisory RuleEngine scanners and omitted the MoClo overhang assembly-review check; all four now list the complete set. `rule-engine-roadmap.md` additionally mis-stated "Repeat patterns" as "Planned / Not yet implemented" (it is implemented and runs by default) and described an unused legacy GC-window calculation instead of the active `scan_gc_extremes` thresholds; both corrected. No runtime code changed.
 - Web app "Sequence Checks" badge labeled "MoClo Overhang Check" actually reported a Type IIS restriction-site scan result, not MoClo overhang validity (the real MoClo overhang check lives in the opt-in construct-builder path and was never called here); label and changelog text corrected to "Restriction Site Check (Type IIS)". `validation.moclo` JSON field name kept unchanged for frontend compatibility.
+
+### Changed
+
+- Repositioned FactorForge as a claim-bounded pre-synthesis review harness across `README.md`, `ROADMAP.md`, `docs/index.md`, the new `docs/roadmap.md`, and `web/index.html`, separating the research-software journey from product roadmap themes without adding any new guarantees (expression, glycosylation, folding, yield, synthesis acceptance, regulatory approval).
+
+---
+
+## [3.2.3] — 2026-06-19
 
 ### Added
 
 - `scripts/audit_public_surface.py` and a CHANGELOG duplicate-`[Unreleased]`-header check now run on every push/PR in CI, instead of only when `release.py --auto --audit-script` is remembered.
 - `scripts/regen_manifest.py` regenerates `reproducibility/benchmark_v0.5.1/MANIFEST.json` input hashes from committed git-blob content on demand.
 
-### Changed
+### Fixed
 
-- Repositioned FactorForge as a claim-bounded pre-synthesis review harness across `README.md`, `ROADMAP.md`, `docs/index.md`, the new `docs/roadmap.md`, and `web/index.html`, separating the research-software journey from product roadmap themes without adding any new guarantees (expression, glycosylation, folding, yield, synthesis acceptance, regulatory approval).
+- Release provenance hashing now computed from the committed git blob (`git show HEAD:<path>`) instead of local working-tree bytes, fixing CRLF/LF drift on Windows that could silently produce incorrect SHA-256 values in `reproducibility/benchmark_v0.5.1/MANIFEST.json` and `tests/test_docs_consistency.py`.
+- Public-surface DOI references (`README.md`, `docs/index.md`, `AGENTS.md`) switched from version-pinned Zenodo DOIs to the concept DOI, which always resolves to the latest release, so future releases no longer require manually updating these files.
+- `AGENTS.md` no longer states a hardcoded "16 version-bearing files" count, which had gone stale; points at `scripts/release.py`'s `build_targets()` as the source of truth instead.
 
 ---
 
