@@ -1065,16 +1065,15 @@ function reportStatCard({ label, value, sub, tone = 'neutral' }) {
     }[tone] || 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200';
 
     return `
-        <div class="rounded-xl p-3 ${toneClasses}">
-            <p class="text-[10px] font-extrabold uppercase tracking-widest opacity-70">${escapeHtml(label)}</p>
-            <p class="mt-1 text-sm font-black leading-tight">${escapeHtml(value)}</p>
-            ${sub ? `<p class="mt-0.5 text-[11px] font-medium opacity-80">${escapeHtml(sub)}</p>` : ''}
+        <div class="min-w-0 rounded-xl p-2.5 ${toneClasses}">
+            <p class="text-[9px] font-extrabold uppercase tracking-widest opacity-70 truncate">${escapeHtml(label)}</p>
+            <p class="mt-1 text-xs font-black leading-tight break-words">${escapeHtml(value)}</p>
+            ${sub ? `<p class="mt-0.5 text-[10px] font-medium opacity-80 break-words">${escapeHtml(sub)}</p>` : ''}
         </div>
     `;
 }
 
-function renderResultsReport(res, primary, gcTarget) {
-    if (!elements.resultsReport || !elements.resultsReportBody) return;
+function computeResultsReportData(res, primary, gcTarget) {
     const host = getResultHostProfile(res);
     const profile = res.profile || state.objective;
     const seedText = res.seed == null ? 'seed not specified' : `seed=${res.seed}`;
@@ -1096,41 +1095,61 @@ function renderResultsReport(res, primary, gcTarget) {
     const mfe = getMfeStatus(res);
     const mfeComputed = mfe.status === 'computed';
 
-    const cards = [
-        reportStatCard({ label: 'Host / Profile', value: `${host} · ${profile}`, sub: seedText, tone: 'neutral' }),
+    return {
+        generatedAt: new Date().toISOString(),
+        host, profile, seedText, seed: res.seed ?? null,
+        cai, gc, gcTarget, gcInRange,
+        typeIis: { selected, fail: typeIisFail, checked: selected.length > 0 },
+        domestication: { attempted, removed, unresolved },
+        mfe: { computed: mfeComputed, reason: mfe.reason },
+        candidates: Array.isArray(res.candidates) ? res.candidates : [],
+    };
+}
+
+function reportCardsFromData(data) {
+    return [
+        reportStatCard({ label: 'Host / Profile', value: `${data.host} · ${data.profile}`, sub: data.seedText, tone: 'neutral' }),
         reportStatCard({
             label: 'CAI',
-            value: cai.toFixed(3),
-            sub: cai >= 0.8 ? 'meets 0.800 minimum' : 'below 0.800 minimum',
-            tone: cai >= 0.8 ? 'good' : 'warn',
+            value: data.cai.toFixed(3),
+            sub: data.cai >= 0.8 ? 'meets 0.800 minimum' : 'below 0.800 minimum',
+            tone: data.cai >= 0.8 ? 'good' : 'warn',
         }),
         reportStatCard({
             label: 'GC content',
-            value: `${gc.toFixed(1)}%`,
-            sub: `target ${gcTarget.min.toFixed(1)}–${gcTarget.max.toFixed(1)}%`,
-            tone: gcInRange ? 'good' : 'warn',
+            value: `${data.gc.toFixed(1)}%`,
+            sub: `target ${data.gcTarget.min.toFixed(1)}–${data.gcTarget.max.toFixed(1)}%`,
+            tone: data.gcInRange ? 'good' : 'warn',
         }),
         reportStatCard({
             label: 'Type IIS',
-            value: selected.length > 0 ? (typeIisFail ? 'FAIL' : 'PASS') : 'Not checked',
-            sub: selected.length > 0 ? selected.join(', ') : 'no preset enzymes selected',
-            tone: selected.length === 0 ? 'neutral' : (typeIisFail ? 'bad' : 'good'),
+            value: data.typeIis.checked ? (data.typeIis.fail ? 'FAIL' : 'PASS') : 'Not checked',
+            sub: data.typeIis.checked ? data.typeIis.selected.join(', ') : 'no preset enzymes selected',
+            tone: !data.typeIis.checked ? 'neutral' : (data.typeIis.fail ? 'bad' : 'good'),
         }),
         reportStatCard({
             label: 'Domestication',
-            value: attempted ? 'Attempted' : 'Not attempted',
-            sub: attempted ? `${removed.length} removed · ${unresolved.length} unresolved` : 'no enzymes selected to fix',
-            tone: !attempted ? 'neutral' : (unresolved.length > 0 ? 'warn' : 'good'),
+            value: data.domestication.attempted ? 'Attempted' : 'Not attempted',
+            sub: data.domestication.attempted
+                ? `${data.domestication.removed.length} removed · ${data.domestication.unresolved.length} unresolved`
+                : 'no enzymes selected to fix',
+            tone: !data.domestication.attempted ? 'neutral' : (data.domestication.unresolved.length > 0 ? 'warn' : 'good'),
         }),
         reportStatCard({
             label: 'MFE',
-            value: mfeComputed ? 'Computed' : 'Not computed',
-            sub: mfeComputed ? '' : mfe.reason,
-            tone: mfeComputed ? 'good' : 'warn',
+            value: data.mfe.computed ? 'Computed' : 'Not computed',
+            sub: data.mfe.computed ? '' : data.mfe.reason,
+            tone: data.mfe.computed ? 'good' : 'warn',
         }),
     ];
+}
 
-    const comparisonRows = Array.isArray(res.candidates) && res.candidates.length > 1
+function renderResultsReport(res, primary, gcTarget) {
+    if (!elements.resultsReport || !elements.resultsReportBody) return;
+    const data = computeResultsReportData(res, primary, gcTarget);
+    const cards = reportCardsFromData(data);
+
+    const comparisonRows = data.candidates.length > 1
         ? `
             <div class="overflow-x-auto pt-1">
                 <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Candidate comparison</p>
@@ -1143,7 +1162,7 @@ function renderResultsReport(res, primary, gcTarget) {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        ${res.candidates.map(candidate => `
+                        ${data.candidates.map(candidate => `
                             <tr>
                                 <td class="py-1.5 pr-3 font-semibold text-slate-700 dark:text-slate-200">${escapeHtml(candidate.label || candidate.id)}</td>
                                 <td class="py-1.5 pr-3 font-mono">${Number(candidate.cai || 0).toFixed(3)}</td>
@@ -1157,10 +1176,102 @@ function renderResultsReport(res, primary, gcTarget) {
         : '';
 
     elements.resultsReportBody.innerHTML = `
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">${cards.join('')}</div>
+        <div class="grid grid-cols-2 gap-2">${cards.join('')}</div>
         ${comparisonRows}
+        <button type="button" id="downloadResultsReportBtn" class="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-xs font-bold py-2.5 transition-colors">
+            <span>📄</span> Download Report (HTML)
+        </button>
     `;
     elements.resultsReport.classList.remove('hidden');
+
+    const downloadBtn = document.getElementById('downloadResultsReportBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => downloadResultsReportHtml(res, primary, gcTarget));
+    }
+}
+
+function downloadResultsReportHtml(res, primary, gcTarget) {
+    trackEvent('report_download', { format: 'html' });
+    const data = computeResultsReportData(res, primary, gcTarget);
+    const toneHex = { good: '#059669', warn: '#d97706', bad: '#e11d48', neutral: '#475569' };
+    const cardTone = (t) => toneHex[t] || toneHex.neutral;
+
+    const cardDefs = [
+        { label: 'Host / Profile', value: `${data.host} · ${data.profile}`, sub: data.seedText, tone: 'neutral' },
+        { label: 'CAI', value: data.cai.toFixed(3), sub: data.cai >= 0.8 ? 'meets 0.800 minimum' : 'below 0.800 minimum', tone: data.cai >= 0.8 ? 'good' : 'warn' },
+        { label: 'GC content', value: `${data.gc.toFixed(1)}%`, sub: `target ${data.gcTarget.min.toFixed(1)}–${data.gcTarget.max.toFixed(1)}%`, tone: data.gcInRange ? 'good' : 'warn' },
+        { label: 'Type IIS', value: data.typeIis.checked ? (data.typeIis.fail ? 'FAIL' : 'PASS') : 'Not checked', sub: data.typeIis.checked ? data.typeIis.selected.join(', ') : 'no preset enzymes selected', tone: !data.typeIis.checked ? 'neutral' : (data.typeIis.fail ? 'bad' : 'good') },
+        { label: 'Domestication', value: data.domestication.attempted ? 'Attempted' : 'Not attempted', sub: data.domestication.attempted ? `${data.domestication.removed.length} removed · ${data.domestication.unresolved.length} unresolved` : 'no enzymes selected to fix', tone: !data.domestication.attempted ? 'neutral' : (data.domestication.unresolved.length > 0 ? 'warn' : 'good') },
+        { label: 'MFE', value: data.mfe.computed ? 'Computed' : 'Not computed', sub: data.mfe.computed ? '' : data.mfe.reason, tone: data.mfe.computed ? 'good' : 'warn' },
+    ];
+
+    const cardsHtml = cardDefs.map(c => `
+        <div style="border-radius:14px;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid ${cardTone(c.tone)};">
+            <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#64748b;">${escapeHtml(c.label)}</p>
+            <p style="margin:6px 0 0;font-size:20px;font-weight:800;color:${cardTone(c.tone)};">${escapeHtml(c.value)}</p>
+            ${c.sub ? `<p style="margin:4px 0 0;font-size:12px;color:#475569;">${escapeHtml(c.sub)}</p>` : ''}
+        </div>
+    `).join('');
+
+    const comparisonHtml = data.candidates.length > 1 ? `
+        <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin:32px 0 12px;">Candidate comparison</h2>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead><tr style="text-align:left;color:#64748b;">
+                <th style="padding:6px 12px 6px 0;border-bottom:1px solid #e2e8f0;">Profile</th>
+                <th style="padding:6px 12px 6px 0;border-bottom:1px solid #e2e8f0;">CAI</th>
+                <th style="padding:6px 0;border-bottom:1px solid #e2e8f0;">GC%</th>
+            </tr></thead>
+            <tbody>
+                ${data.candidates.map(c => `
+                    <tr>
+                        <td style="padding:8px 12px 8px 0;border-bottom:1px solid #f1f5f9;font-weight:600;">${escapeHtml(c.label || c.id)}</td>
+                        <td style="padding:8px 12px 8px 0;border-bottom:1px solid #f1f5f9;font-family:monospace;">${Number(c.cai || 0).toFixed(3)}</td>
+                        <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-family:monospace;">${Number(c.gc_percent || 0).toFixed(1)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    ` : '';
+
+    const seq = primary.optimized_sequence || '';
+    const seqWrapped = seq.match(/.{1,60}/g)?.join('\n') || seq;
+
+    const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FactorForge Results Report — ${escapeHtml(data.host)} / ${escapeHtml(data.profile)}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { margin:0; background:#f1f5f9; color:#0f172a; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  .page { max-width:820px; margin:0 auto; padding:48px 24px 80px; }
+  .grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
+  @media (max-width:640px) { .grid { grid-template-columns:repeat(2, 1fr); } }
+  pre { background:#0f172a; color:#a7f3d0; padding:16px; border-radius:12px; overflow-x:auto; font-size:12px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="page">
+  <p style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#059669;margin:0;">FactorForge CDS Design Review</p>
+  <h1 style="font-size:26px;margin:6px 0 4px;">Results Report</h1>
+  <p style="color:#64748b;font-size:13px;margin:0 0 28px;">Generated ${escapeHtml(new Date(data.generatedAt).toLocaleString())}</p>
+  <div class="grid">${cardsHtml}</div>
+  ${comparisonHtml}
+  <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin:32px 0 12px;">Optimized sequence (DNA)</h2>
+  <pre>${escapeHtml(seqWrapped)}</pre>
+  <p style="margin-top:32px;font-size:11px;color:#94a3b8;">This is an in-silico CDS design candidate and pre-synthesis review artifact. Review and wet-lab testing are required before relying on any design in experiments.</p>
+</div>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `factorforge_results_report_${Date.now()}.html`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    showToast('Report downloaded', 'success');
 }
 
 function renderCustomRestrictionResults(res) {

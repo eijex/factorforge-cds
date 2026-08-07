@@ -191,6 +191,19 @@ test('optional seed and Type IIS presets are merged into the optimization payloa
   await expect(page.locator('#resultsReportBody')).toContainText('Type IIS');
   await expect(page.locator('#resultsReportBody')).toContainText('PASS');
   await expect(page.locator('#resultsReportBody')).toContainText('SapI');
+
+  await page.locator('#resultsReport summary').click();
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#downloadResultsReportBtn').click(),
+  ]);
+  expect(download.suggestedFilename()).toMatch(/^factorforge_results_report_\d+\.html$/);
+  const downloadStream = await download.createReadStream();
+  const chunks = [];
+  for await (const chunk of downloadStream) chunks.push(chunk);
+  const downloadedHtml = Buffer.concat(chunks).toString('utf-8');
+  expect(downloadedHtml).toContain('seed=42');
+  expect(downloadedHtml).toContain('Results Report');
 });
 
 test('results distinguish no domestication and hide the MFE warning when computed', async ({ page }) => {
