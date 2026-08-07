@@ -25,6 +25,14 @@ const OFFLINE_GC_RANGES = {
     by2: { gc_min: 55.0, gc_max: 65.0 },
     ntabacum: { gc_min: 55.0, gc_max: 65.0 }
 };
+// Recognition sequences mirror Domesticator.ASSEMBLY_STANDARDS["golden_gate"]
+// and design_review.TYPE_IIS_SITES["SapI"]. scan_rc lets the API check both strands.
+const TYPE_IIS_PRESETS = Object.freeze({
+    BsaI: 'GGTCTC',
+    BpiI: 'GAAGAC',
+    BsmBI: 'CGTCTC',
+    SapI: 'GAAGAGC'
+});
 let hostGcRanges = {};
 
 function getGcRange(hostId) {
@@ -54,6 +62,7 @@ const state = {
     kozak: false,
     dinuc: false,
     customRestrictionSites: [],
+    selectedTypeIisEnzymes: [],
     reviewerDisposition: null,
     results: null,
     isOptimizing: false,
@@ -111,6 +120,8 @@ const elements = {
     kozakToggle: document.getElementById('toggleKozak'),
     dinucToggle: document.getElementById('toggleDinuc'),
     customRestrictionSites: document.getElementById('customRestrictionSites'),
+    optimizationSeed: document.getElementById('optimizationSeed'),
+    typeIisEnzymes: document.getElementsByName('typeIisEnzyme'),
     inputLenBadge: document.getElementById('inputLenBadge'),
     inputGCBadge: document.getElementById('inputGCBadge'),
     origLen: document.getElementById('origLen'),
@@ -125,6 +136,10 @@ const elements = {
     candidateComparisonBody: document.getElementById('candidateComparisonBody'),
     customRestrictionResults: document.getElementById('customRestrictionResults'),
     customRestrictionResultsBody: document.getElementById('customRestrictionResultsBody'),
+    mfeWarningBanner: document.getElementById('mfeWarningBanner'),
+    gcTargetRange: document.getElementById('gcTargetRange'),
+    resultsReport: document.getElementById('resultsReport'),
+    resultsReportBody: document.getElementById('resultsReportBody'),
     gcChart: document.getElementById('gcChart'),
     gcZoneLabel: document.getElementById('gcZoneLabel'),
     historyList: document.getElementById('historyList'),
@@ -197,7 +212,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initEventListeners();
     updateHostUI();
     renderHistory();
-    console.log('FactorForge v3.4.3 Engaged');
+    console.log('FactorForge v3.4.4 Engaged');
 });
 
 // Fetches supported_hosts/host_metadata from GET /api/optimize and renders the
@@ -596,10 +611,23 @@ async function runOptimization() {
         } else {
             payload.profile = state.objective;
         }
-        const customRestrictionSites = parseCustomRestrictionSites(elements.customRestrictionSites.value);
+        const seedValue = elements.optimizationSeed.value.trim();
+        if (seedValue !== '') {
+            const seed = Number(seedValue);
+            if (!Number.isInteger(seed)) throw new Error('Seed must be an integer');
+            payload.seed = seed;
+        }
+        const selectedTypeIisEnzymes = Array.from(elements.typeIisEnzymes)
+            .filter(input => input.checked)
+            .map(input => input.value);
+        const customRestrictionSites = mergeRestrictionSitePresets(
+            parseCustomRestrictionSites(elements.customRestrictionSites.value),
+            selectedTypeIisEnzymes
+        );
+        state.customRestrictionSites = customRestrictionSites;
+        state.selectedTypeIisEnzymes = selectedTypeIisEnzymes;
         if (customRestrictionSites.length > 0) {
             payload.custom_restriction_sites = customRestrictionSites;
-            state.customRestrictionSites = customRestrictionSites;
         }
         payload.acceptance_criteria = getAcceptanceCriteriaPayload();
 
@@ -766,6 +794,8 @@ function renderResults() {
     elements.origGC.textContent = isProteinInput ? 'N/A' : `${oGC}%`;
     elements.optGCComp.textContent = `${calculatedGC.toFixed(1)}%`;
     elements.gcValue.textContent = `${calculatedGC.toFixed(1)}%`;
+    const gcTarget = getResultGcTarget(res, primary);
+    elements.gcTargetRange.textContent = `Target: ${gcTarget.min.toFixed(1)}–${gcTarget.max.toFixed(1)}%`;
     const originalEvaluation = res.acceptance_evaluation?.original;
     const originalCai = originalEvaluation?.criteria?.find(row => row.criterion === 'cai')?.observed;
     elements.origCAI.textContent = originalCai == null ? 'Unavailable' : Number(originalCai).toFixed(3);
@@ -797,6 +827,8 @@ function renderResults() {
     renderGCGraph(primary.optimized_sequence, getResultHostProfile(res));
     renderCandidateComparison(res);
     renderCustomRestrictionResults(res);
+    renderMfeWarning(res);
+    renderResultsReport(res, primary, gcTarget);
 
     // PolyA color coding
     const polyaCount = primary.metrics.polya_signals;
@@ -909,6 +941,17 @@ function parseCustomRestrictionSites(rawValue) {
     });
 }
 
+function mergeRestrictionSitePresets(customSites, selectedEnzymes) {
+    const merged = [...customSites];
+    const names = new Set(customSites.map(site => site.name.toLowerCase()));
+    selectedEnzymes.forEach(name => {
+        if (!Object.hasOwn(TYPE_IIS_PRESETS, name) || names.has(name.toLowerCase())) return;
+        merged.push({ name, sequence: TYPE_IIS_PRESETS[name], scan_rc: true });
+        names.add(name.toLowerCase());
+    });
+    return merged;
+}
+
 function getPrimaryResult(res) {
     const candidate = res.recommended_candidate || (Array.isArray(res.candidates) ? res.candidates[0] : null);
     if (!candidate) {
@@ -984,15 +1027,84 @@ function renderCandidateComparison(res) {
     elements.candidateComparisonContainer.classList.remove('hidden');
 }
 
+function getResultGcTarget(res, primary) {
+    const metrics = res.metrics || {};
+    const fallback = getGcRange(getResultHostProfile(res));
+    return {
+        min: Number(metrics.requested_gc_min_percent ?? primary.gc_window_min ?? fallback.gc_min),
+        max: Number(metrics.requested_gc_max_percent ?? primary.gc_window_max ?? fallback.gc_max)
+    };
+}
+
+function getMfeStatus(res) {
+    const metrics = res.metrics || {};
+    return {
+        status: metrics.mfe_status || 'not_computed',
+        reason: metrics.mfe_status_reason || 'status unavailable'
+    };
+}
+
+function renderMfeWarning(res) {
+    if (!elements.mfeWarningBanner) return;
+    const mfe = getMfeStatus(res);
+    if (mfe.status === 'computed') {
+        elements.mfeWarningBanner.textContent = '';
+        elements.mfeWarningBanner.classList.add('hidden');
+        return;
+    }
+    elements.mfeWarningBanner.textContent = `RNA secondary-structure/MFE analysis was not performed (${mfe.reason}).`;
+    elements.mfeWarningBanner.classList.remove('hidden');
+}
+
+function renderResultsReport(res, primary, gcTarget) {
+    if (!elements.resultsReport || !elements.resultsReportBody) return;
+    const host = getResultHostProfile(res);
+    const profile = res.profile || state.objective;
+    const seedText = res.seed == null ? ', seed not specified' : `, seed=${res.seed}`;
+    const custom = res.custom_restriction_sites;
+    const removed = Array.isArray(custom?.removed) ? custom.removed : [];
+    const unresolved = Array.isArray(custom?.unresolved) ? custom.unresolved : [];
+    const attempted = Boolean(custom);
+    const requestedNames = Array.isArray(custom?.requested)
+        ? custom.requested.map(site => site.name).filter(name => Object.hasOwn(TYPE_IIS_PRESETS, name))
+        : [];
+    const selected = requestedNames.length > 0 ? requestedNames : state.selectedTypeIisEnzymes;
+    const typeIisStatus = unresolved.length > 0 ? 'FAIL' : 'PASS';
+    const typeIisText = selected.length > 0
+        ? `${selected.join(', ')} — ${typeIisStatus}`
+        : 'no preset enzymes selected';
+    const mfe = getMfeStatus(res);
+    const mfeText = mfe.status === 'computed' ? 'computed' : `not computed — ${mfe.reason}`;
+
+    const paragraphs = [
+        `Optimized with ${host} / ${profile} profile${seedText}.`,
+        `CAI ${Number(primary.metrics.cai || 0).toFixed(3)}, GC ${Number(primary.metrics.gc_percent || 0).toFixed(1)}% (target ${gcTarget.min.toFixed(1)}–${gcTarget.max.toFixed(1)}%).`,
+        `Type IIS: ${typeIisText}.`,
+        attempted
+            ? `Domestication: attempted — ${removed.length} sites removed, ${unresolved.length} unresolved.`
+            : 'Domestication: not attempted.',
+        `MFE: ${mfeText}.`
+    ];
+    const comparisonRows = Array.isArray(res.candidates) && res.candidates.length > 1
+        ? `<div class="overflow-x-auto pt-2"><table class="w-full text-left"><thead><tr><th class="py-1 pr-3">Profile</th><th class="py-1 pr-3">CAI</th><th class="py-1">GC%</th></tr></thead><tbody>${res.candidates.map(candidate => `<tr><td class="py-1 pr-3">${escapeHtml(candidate.label || candidate.id)}</td><td class="py-1 pr-3">${Number(candidate.cai || 0).toFixed(3)}</td><td class="py-1">${Number(candidate.gc_percent || 0).toFixed(1)}</td></tr>`).join('')}</tbody></table></div>`
+        : '';
+    elements.resultsReportBody.innerHTML = paragraphs.map(line => `<p>${escapeHtml(line)}</p>`).join('') + comparisonRows;
+    elements.resultsReport.classList.remove('hidden');
+}
+
 function renderCustomRestrictionResults(res) {
     if (!elements.customRestrictionResults || !elements.customRestrictionResultsBody) return;
 
     const custom = res.custom_restriction_sites;
     if (!custom) {
-        elements.customRestrictionResults.classList.add('hidden');
-        elements.customRestrictionResultsBody.innerHTML = '';
+        elements.customRestrictionResults.classList.remove('hidden', 'domestication-attempted');
+        elements.customRestrictionResults.classList.add('domestication-not-attempted');
+        elements.customRestrictionResultsBody.innerHTML = '<p class="font-bold text-slate-600 dark:text-slate-300">Domestication not attempted</p>';
         return;
     }
+
+    elements.customRestrictionResults.classList.remove('domestication-not-attempted');
+    elements.customRestrictionResults.classList.add('domestication-attempted');
 
     const removed = Array.isArray(custom.removed) ? custom.removed : [];
     const unresolved = Array.isArray(custom.unresolved) ? custom.unresolved : [];
@@ -1032,6 +1144,7 @@ function renderCustomRestrictionResults(res) {
 
     elements.customRestrictionResultsBody.innerHTML = `
         <div class="grid grid-cols-1 gap-4 text-xs">
+            <p class="font-bold text-emerald-700 dark:text-emerald-300">Domestication attempted</p>
             <div>
                 <p class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-600 mb-2">Removed sites</p>
                 <ul class="divide-y divide-slate-100 dark:divide-slate-800">${removedHtml}</ul>
@@ -1296,8 +1409,11 @@ function clearAll() {
     elements.sequenceInput.value = '';
     elements.fileUpload.value = '';
     elements.customRestrictionSites.value = '';
+    elements.optimizationSeed.value = '';
+    Array.from(elements.typeIisEnzymes).forEach(input => { input.checked = false; });
     state.sequence = '';
     state.customRestrictionSites = [];
+    state.selectedTypeIisEnzymes = [];
     state.results = null;
     elements.previewContainer.classList.add('hidden');
     elements.inputTypeBadge.classList.add('hidden');
@@ -1307,6 +1423,7 @@ function clearAll() {
     elements.constructIdRow.classList.add('hidden');
     if (elements.candidateComparisonContainer) elements.candidateComparisonContainer.classList.add('hidden');
     if (elements.customRestrictionResults) elements.customRestrictionResults.classList.add('hidden');
+    if (elements.mfeWarningBanner) elements.mfeWarningBanner.classList.add('hidden');
     elements.emptyState.classList.remove('hidden');
     elements.validationStatus.classList.add('hidden');
     showToast('Input cleared', 'info');
@@ -1448,7 +1565,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.4.3';
+        const version = state.results.engine_versions?.product || '3.4.4';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }

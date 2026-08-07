@@ -63,6 +63,9 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 - ✅ 4 public CDS design profiles
 - ✅ Real-time results
 - ✅ Custom restriction site input and removal report
+- ✅ Optional reproducibility seed and Type IIS enzyme presets
+- ✅ Domestication, MFE availability, and GC target transparency
+- ✅ Narrative Results Report with candidate comparison
 - ✅ Download (FASTA, GenBank)
 - ✅ Responsive design
 - ✅ No login required

@@ -29,6 +29,28 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
+## [3.4.4] — 2026-08-07
+
+### Added
+
+- Added an optional, backward-compatible `seed` web API parameter and UI input;
+  seeded profile optimization echoes the requested seed for reproducibility.
+- Added BsaI, BpiI, BsmBI, and SapI Type IIS presets that merge without name
+  duplication into the existing `custom_restriction_sites` mechanism.
+- Added an explicit domestication status panel that distinguishes not attempted
+  from attempted runs and lists removed and unresolved sites.
+- Added MFE availability warnings whenever RNA secondary-structure analysis was
+  not computed, using the existing status and reason fields.
+- Added GC target-band display for all four public optimization objectives.
+- Added a collapsible Results Report summarizing host/profile/seed, CAI and GC,
+  Type IIS and domestication outcomes, MFE availability, and candidate comparison.
+
+### Notes
+
+- This release is labeled as a Patch by explicit project decision because it is
+  primarily UI exposure work; the optional `seed` parameter is the sole additive
+  API contract extension and existing clients remain compatible.
+
 ## [3.4.3] — 2026-07-26
 
 ### Fixed
@@ -593,6 +615,7 @@ First official release of FactorForge.
 
 ---
 
+[3.4.4]: https://github.com/eijex/factorforge-cds/compare/v3.4.3...v3.4.4
 [3.4.3]: https://github.com/eijex/factorforge-cds/compare/v3.4.2...v3.4.3
 [3.4.0]: https://github.com/eijex/factorforge-cds/compare/v3.3.2...v3.4.0
 [3.3.2]: https://github.com/eijex/factorforge-cds/compare/v3.3.1...v3.3.2

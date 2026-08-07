@@ -4,6 +4,14 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.4.4 — 2026-08-07
+
+- Added an optional reproducibility seed to the web API and UI, Type IIS enzyme
+  presets, explicit domestication and MFE status, host-aware GC target display,
+  and a narrative Results Report with candidate comparison.
+- Existing requests without `seed` remain compatible, and restriction-site
+  removal continues to use the existing custom-site domestication mechanism.
+
 ## v3.4.3 — 2026-07-26
 
 - Fixed the web app's "Recent Designs" history reload dropping the automated

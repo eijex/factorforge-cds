@@ -70,7 +70,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.4.3 Release Notes
+                            v3.4.4 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -392,6 +392,15 @@
                             Settings
                         </p>
                         <div class="space-y-4">
+                            <div>
+                                <label for="optimizationSeed"
+                                    class="block text-[13px] font-bold text-slate-900 dark:text-slate-100 mb-2">
+                                    Reproducibility Seed <span class="text-slate-400 font-medium">(optional)</span>
+                                </label>
+                                <input id="optimizationSeed" type="number" step="1" placeholder="e.g. 42"
+                                    class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all font-mono text-xs placeholder:text-slate-400">
+                                <p class="mt-2 text-[11px] text-slate-600 dark:text-slate-400">Use the same integer to reproduce optimizer candidate selection.</p>
+                            </div>
                             <label class="flex items-center justify-between group cursor-pointer py-1">
                                 <span class="text-[13px] font-bold text-slate-900 dark:text-slate-100">
                                     Kozak Optimization
@@ -425,6 +434,16 @@
                                     </div>
                                 </div>
                             </label>
+                            <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                <p class="text-[13px] font-bold text-slate-900 dark:text-slate-100 mb-2">Type IIS Enzymes to Avoid</p>
+                                <div id="typeIisPresets" class="grid grid-cols-2 gap-2" aria-label="Type IIS Enzymes to Avoid">
+                                    <label class="flex items-center gap-2 text-xs"><input type="checkbox" name="typeIisEnzyme" value="BsaI" class="rounded border-slate-300 text-emerald-600"> BsaI</label>
+                                    <label class="flex items-center gap-2 text-xs"><input type="checkbox" name="typeIisEnzyme" value="BpiI" class="rounded border-slate-300 text-emerald-600"> BpiI</label>
+                                    <label class="flex items-center gap-2 text-xs"><input type="checkbox" name="typeIisEnzyme" value="BsmBI" class="rounded border-slate-300 text-emerald-600"> BsmBI</label>
+                                    <label class="flex items-center gap-2 text-xs"><input type="checkbox" name="typeIisEnzyme" value="SapI" class="rounded border-slate-300 text-emerald-600"> SapI</label>
+                                </div>
+                                <p class="mt-2 text-[11px] text-slate-600 dark:text-slate-400">Selected presets are merged with custom sites and removed by synonymous substitution where possible.</p>
+                            </div>
                             <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
                                 <div class="flex items-center justify-between mb-2">
                                     <label for="customRestrictionSites"
@@ -534,6 +553,7 @@
                             <p class="text-slate-900 font-extrabold text-lg">Ready to design.</p>
                             <p class="text-slate-500 text-sm mt-2">Optimization will unlock:</p>
                         </div>
+
                         <div class="grid grid-cols-2 gap-3 w-full max-w-sm">
                             <div class="p-3 bg-white border border-slate-100 rounded-xl shadow-sm text-left">
                                 <p class="text-[10px] font-bold text-emerald-500 uppercase">📊 Visualization</p>
@@ -567,6 +587,10 @@
                                 <p class="text-emerald-700 dark:text-emerald-400 text-xs mt-0.5 font-medium">N.
                                     benthamiana specific logic applied.</p>
                             </div>
+                        </div>
+
+                        <div id="mfeWarningBanner" role="alert"
+                            class="hidden mb-6 p-4 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200 text-xs font-semibold">
                         </div>
 
                         <div id="automatedDecisionCard" class="mb-6 p-4 rounded-2xl border border-slate-200 bg-slate-50 dark:bg-slate-900 dark:border-slate-800" aria-live="polite">
@@ -658,8 +682,8 @@
                             </div>
                         </div>
 
-                        <div id="customRestrictionResults" class="mb-8 hidden">
-                            <h3 class="text-lg font-semibold mb-3">Custom Restriction Sites</h3>
+                        <div id="customRestrictionResults" class="mb-8 hidden" aria-live="polite">
+                            <h3 class="text-lg font-semibold mb-3">Domestication Status</h3>
                             <div id="customRestrictionResultsBody"
                                 class="space-y-3 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
                             </div>
@@ -685,6 +709,7 @@
                                 <p id="gcValue"
                                     class="text-2xl font-black text-emerald-900 dark:text-emerald-400 leading-none">-
                                 </p>
+                                <p id="gcTargetRange" class="mt-2 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">Target: —</p>
                             </div>
                             <div id="constructIdRow"
                                 class="hidden col-span-2 mt-2 flex items-center justify-between gap-3 text-xs text-slate-400 dark:text-slate-500">
@@ -716,6 +741,11 @@
                                 </p>
                             </div>
                         </div>
+
+                        <details id="resultsReport" class="mb-8 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                            <summary class="cursor-pointer px-4 py-3 text-sm font-extrabold text-slate-800 dark:text-slate-100">Results Report</summary>
+                            <div id="resultsReportBody" class="px-4 pb-4 space-y-2 text-xs text-slate-700 dark:text-slate-300"></div>
+                        </details>
 
                         <!-- Optimized Sequence -->
                         <div class="mb-8 flex-grow">
@@ -862,7 +892,7 @@
                     class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
             </div>
             <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
-                <!-- Version 3.4.3 -->
+                <!-- Version 3.4.4 -->
                 <div class="relative pl-8 border-l-2 border-emerald-500">
                     <div
                         class="absolute -left-[9px] top-0 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
@@ -870,6 +900,22 @@
                     <div class="flex items-center space-x-2 mb-2">
                         <span
                             class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.4.4</h3>
+                        <span class="text-slate-400 text-[10px]">2026-08-07</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Added:</b> Optional reproducibility seed in the web API and Advanced Settings.</li>
+                        <li><b>Added:</b> BsaI, BpiI, BsmBI, and SapI presets using the existing custom-site domestication path.</li>
+                        <li><b>Added:</b> Explicit domestication, MFE availability, and GC target-band status in results.</li>
+                        <li><b>Added:</b> A narrative Results Report with candidate comparison.</li>
+                    </ul>
+                </div>
+                <!-- Version 3.4.3 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-300 dark:bg-slate-600 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
                         <h3 class="font-bold text-slate-800 dark:text-white">v3.4.3</h3>
                         <span class="text-slate-400 text-[10px]">2026-07-26</span>
                     </div>

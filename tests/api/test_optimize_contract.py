@@ -144,6 +144,64 @@ def test_parse_constraints_accepts_cai_target() -> None:
     }
 
 
+def test_parse_seed_is_optional_and_integer_only() -> None:
+    h = _handler()
+
+    assert h.parse_seed(None) is None
+    assert h.parse_seed(42) == 42
+    assert h.parse_seed("42") == 42
+    with pytest.raises(ValueError, match="seed must be an integer"):
+        h.parse_seed(4.2)
+    with pytest.raises(ValueError, match="seed must be an integer"):
+        h.parse_seed(True)
+
+
+def test_seeded_requests_are_reproducible_and_echo_seed() -> None:
+    payload = {
+        "sequence": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+        "profile": "gc_target",
+        "seed": 42,
+    }
+
+    first_status, first = _post_optimize(payload)
+    second_status, second = _post_optimize(payload)
+
+    assert first_status == second_status == 200
+    assert first["optimized_sequence"].encode() == second["optimized_sequence"].encode()
+    assert first["seed"] == second["seed"] == 42
+
+
+def test_request_without_seed_remains_valid() -> None:
+    status_code, result = _post_optimize(
+        {"sequence": "MSKGEELFTGVVPILVELD", "profile": "gc_target"}
+    )
+
+    assert status_code == 200
+    assert result["success"] is True
+    assert result["seed"] is None
+
+
+def test_sapi_preset_contract_reports_domestication_outcome() -> None:
+    status_code, result = _post_optimize(
+        {
+            "sequence": "EEL",
+            "profile": "balanced",
+            "seed": 1,
+            "custom_restriction_sites": [{"name": "SapI", "sequence": "GAAGAGC", "scan_rc": True}],
+        }
+    )
+
+    assert status_code == 200
+    assert result["custom_restriction_sites"]["requested"] == [
+        {"name": "SapI", "sequence": "GAAGAGC", "scan_rc": True}
+    ]
+    outcomes = (
+        result["constraint_report"]["restriction_sites_removed"]
+        + result["constraint_report"]["restriction_sites_unresolved"]
+    )
+    assert any(site["name"] == "SapI" for site in outcomes)
+
+
 def test_feasibility_best_response_includes_candidate_contract() -> None:
     h = _handler()
 
@@ -171,7 +229,7 @@ def test_feasibility_best_response_includes_candidate_contract() -> None:
         "sequence_length": 35,
         "host_profile": "nbenthamiana",
     }
-    assert result["engine_versions"]["product"] == "3.4.3"
+    assert result["engine_versions"]["product"] == "3.4.4"
     assert result["recommended_candidate"]["validator_status"] == "pass"
     assert result["dp_target_observation"]["requested_cai_target"] == DEFAULT_CAI_TARGET
 
@@ -308,12 +366,13 @@ def test_balanced_api_response_exposes_gc_target_observation() -> None:
     }
 
 
-def test_non_balanced_api_response_omits_gc_target_observation() -> None:
+@pytest.mark.parametrize("profile", ["high_cai", "gc_target", "assembly_friendly"])
+def test_all_profile_api_responses_expose_gc_target_observation(profile: str) -> None:
     h = _handler()
 
     result = h.optimize_sequence(
         "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
-        "gc_target",
+        profile,
         False,
         False,
         False,
@@ -323,9 +382,29 @@ def test_non_balanced_api_response_omits_gc_target_observation() -> None:
     )
 
     metrics = result["metrics"]
-    assert "gc_target_reached" not in metrics
-    assert "requested_gc_min_percent" not in metrics
-    assert "requested_gc_max_percent" not in metrics
+    assert metrics["requested_gc_min_percent"] == 40.0
+    assert metrics["requested_gc_max_percent"] == 47.0
+    assert metrics["gc_target_reached"] == (40.0 <= metrics["gc_percent"] <= 47.0)
+
+
+def test_feasibility_best_response_exposes_gc_target_observation() -> None:
+    h = _handler()
+
+    result = h.optimize_sequence(
+        "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+        "balanced",
+        False,
+        False,
+        False,
+        objective="feasibility_best",
+        return_candidates=True,
+        constraints={"gc_min": 40.0, "gc_max": 47.0},
+    )
+
+    metrics = result["metrics"]
+    assert metrics["requested_gc_min_percent"] == 40.0
+    assert metrics["requested_gc_max_percent"] == 47.0
+    assert metrics["gc_target_reached"] == (40.0 <= metrics["gc_percent"] <= 47.0)
 
 
 def test_candidate_with_type_iis_conflict_is_not_reported_as_pass() -> None:

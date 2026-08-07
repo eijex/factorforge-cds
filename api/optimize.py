@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.4.3
+Product Version: 3.4.4
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -222,9 +222,9 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": "3.4.3",
-    "rule_engine": "3.4.3",
-    "dp_engine": "3.4.3",
+    "product": "3.4.4",
+    "rule_engine": "3.4.4",
+    "dp_engine": "3.4.4",
 }
 # Valid characters: ACGT (DNA) or standard 20 Amino Acids (Protein) + * (Stop)
 VALID_AA = "ACDEFGHIKLMNPQRSTVWY"
@@ -339,6 +339,7 @@ class handler(BaseHTTPRequestHandler):
 
             return_candidates = bool(data.get("return_candidates", True))
             constraints = self.parse_constraints(data.get("constraints", {}), host=internal_host)
+            seed = self.parse_seed(data.get("seed"))
             input_context = parse_sequence_input(sequence)
             if not input_context["generation_allowed"]:
                 raise ValueError("; ".join(input_context["errors"]))
@@ -397,6 +398,7 @@ class handler(BaseHTTPRequestHandler):
                     return_candidates=return_candidates,
                     constraints=constraints,
                     custom_restriction_sites=custom_restriction_sites,
+                    seed=seed,
                 )
                 result = self.attach_design_review(
                     result,
@@ -482,6 +484,22 @@ class handler(BaseHTTPRequestHandler):
                 "constraints.gc_min, constraints.gc_max, and constraints.cai_target must be numeric"
             )
         return {"gc_min": gc_min, "gc_max": gc_max, "cai_target": cai_target}
+
+    def parse_seed(self, seed):
+        """Parse an optional deterministic optimizer seed."""
+        if seed is None:
+            return None
+        if isinstance(seed, bool):
+            raise ValueError("seed must be an integer")
+        try:
+            parsed = int(seed)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("seed must be an integer") from exc
+        if isinstance(seed, float) and not seed.is_integer():
+            raise ValueError("seed must be an integer")
+        if isinstance(seed, str) and str(parsed) != seed.strip():
+            raise ValueError("seed must be an integer")
+        return parsed
 
     def parse_custom_restriction_sites(self, custom_sites):
         """Parse and validate optional custom restriction-site definitions."""
@@ -851,6 +869,7 @@ class handler(BaseHTTPRequestHandler):
         return_candidates=False,
         constraints=None,
         custom_restriction_sites=None,
+        seed=None,
     ):
         """Run actual FactorForge v3.x profile optimization."""
         try:
@@ -866,6 +885,7 @@ class handler(BaseHTTPRequestHandler):
                     dinuc=dinuc,
                     return_candidates=return_candidates,
                     custom_restriction_sites=custom_restriction_sites,
+                    seed=seed,
                 )
 
             # Get profile-based optimizer
@@ -881,6 +901,7 @@ class handler(BaseHTTPRequestHandler):
                 host=host,
                 kozak=kozak,
                 dinuc=dinuc,
+                seed=seed,
             )
 
             # Build construct if requested
@@ -901,17 +922,15 @@ class handler(BaseHTTPRequestHandler):
             # Extract metrics safely
             cai = float(result.metrics.get("cai", 0.0))
             gc_percent = float(result.metrics.get("gc_percent", 0.0))
-            gc_target_observation = {}
-            if profile == "balanced":
-                requested_gc_min_percent = float(constraints["gc_min"])
-                requested_gc_max_percent = float(constraints["gc_max"])
-                gc_target_observation = {
-                    "gc_target_reached": (
-                        requested_gc_min_percent <= gc_percent <= requested_gc_max_percent
-                    ),
-                    "requested_gc_min_percent": requested_gc_min_percent,
-                    "requested_gc_max_percent": requested_gc_max_percent,
-                }
+            requested_gc_min_percent = float(constraints["gc_min"])
+            requested_gc_max_percent = float(constraints["gc_max"])
+            gc_target_observation = {
+                "gc_target_reached": (
+                    requested_gc_min_percent <= gc_percent <= requested_gc_max_percent
+                ),
+                "requested_gc_min_percent": requested_gc_min_percent,
+                "requested_gc_max_percent": requested_gc_max_percent,
+            }
             polya_warnings = int(result.metrics.get("polya_warnings", 0))
             table = load_codon_usage_table()
             general_cai = calculate_cai(result.sequence, table.codon_weights)
@@ -962,6 +981,7 @@ class handler(BaseHTTPRequestHandler):
                     **gc_target_observation,
                 },
                 "profile": profile,
+                "seed": seed,
                 "use_template": use_template,
                 "validation": {"polya": polya_check, "moclo": moclo_check, "gc": gc_check},
                 "engine": {"name": optimizer.name, "version": optimizer.version},
@@ -1007,6 +1027,7 @@ class handler(BaseHTTPRequestHandler):
                 kozak=kozak,
                 dinuc=dinuc,
                 constraints=constraints,
+                seed=seed,
             )
             return response
 
@@ -1025,6 +1046,7 @@ class handler(BaseHTTPRequestHandler):
         host=DEFAULT_HOST_PROFILE,
         return_candidates=True,
         custom_restriction_sites=None,
+        seed=None,
     ):
         """Run feasibility_best contract and add profile comparison candidates."""
         constraints = self.parse_constraints(constraints, host=host)
@@ -1055,7 +1077,8 @@ class handler(BaseHTTPRequestHandler):
                 label="Feasibility Best",
                 dna_sequence=(
                     restore_cds_stop_policy(best["dna_sequence"], input_context)
-                    if is_cds else best["dna_sequence"]
+                    if is_cds
+                    else best["dna_sequence"]
                 ),
                 codon_weights=table.codon_weights,
                 profile_cai=float(best["cai"]),
@@ -1076,6 +1099,7 @@ class handler(BaseHTTPRequestHandler):
                 host=host,
                 kozak=kozak,
                 dinuc=dinuc,
+                seed=seed,
             )
             candidates.append(
                 self.build_candidate(
@@ -1083,7 +1107,8 @@ class handler(BaseHTTPRequestHandler):
                     label=self.candidate_label(candidate_profile),
                     dna_sequence=(
                         restore_cds_stop_policy(result.sequence, input_context)
-                        if is_cds else result.sequence
+                        if is_cds
+                        else result.sequence
                     ),
                     codon_weights=table.codon_weights,
                     profile_cai=float(result.metrics.get("cai", 0.0)),
@@ -1111,6 +1136,24 @@ class handler(BaseHTTPRequestHandler):
                 "host_profile": host_profile,
             },
             "engine_versions": ENGINE_VERSIONS,
+            "seed": seed,
+            "metrics": {
+                "cai": float(candidates[0]["cai"]),
+                "gc_percent": float(candidates[0]["gc_percent"]),
+                "polya_signals": int(candidates[0].get("polya_signals", 0)),
+                "length": len(candidates[0]["dna_sequence"]),
+                "mfe_kcal_mol": None,
+                "mfe_status": "not_computed",
+                "mfe_status_reason": "disabled_for_profile",
+                "mfe_used": False,
+                "requested_gc_min_percent": float(constraints["gc_min"]),
+                "requested_gc_max_percent": float(constraints["gc_max"]),
+                "gc_target_reached": (
+                    float(constraints["gc_min"])
+                    <= float(candidates[0]["gc_percent"])
+                    <= float(constraints["gc_max"])
+                ),
+            },
         }
 
         primary_dna = candidates[0]["dna_sequence"]
@@ -1139,6 +1182,7 @@ class handler(BaseHTTPRequestHandler):
             kozak=kozak,
             dinuc=dinuc,
             constraints=constraints,
+            seed=seed,
         )
 
     def add_design_package_fields(
@@ -1151,6 +1195,7 @@ class handler(BaseHTTPRequestHandler):
         kozak,
         dinuc,
         constraints,
+        seed=None,
     ):
         """Add DesignPackage-compatible metadata while preserving existing response keys."""
         output_cds = self.primary_dna_sequence(response)
@@ -1173,6 +1218,8 @@ class handler(BaseHTTPRequestHandler):
             "dinuc": dinuc,
             "constraints": constraints,
         }
+        if seed is not None:
+            param_payload["seed"] = seed
         param_str = json.dumps(param_payload, sort_keys=True, separators=(",", ":"))
 
         response["construct_id"] = _generate_construct_id()
@@ -1347,6 +1394,7 @@ class handler(BaseHTTPRequestHandler):
             metrics["length"] = len(after_sequence)
 
         response["custom_restriction_sites"] = {
+            "requested": custom_restriction_sites,
             "detected": domestication["detected"],
             "removed": domestication["removed"],
             "unresolved": domestication["unresolved"],

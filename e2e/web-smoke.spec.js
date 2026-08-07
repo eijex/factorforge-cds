@@ -144,6 +144,95 @@ test('optimization payload includes host and renders host_profile', async ({ pag
   await expect(page.locator('#optimizedSequence')).toContainText(MOCK_DNA.slice(0, 20));
 });
 
+test('optional seed and Type IIS presets are merged into the optimization payload', async ({ page }) => {
+  let requestBody;
+  await page.route('**/api/optimize', async route => {
+    requestBody = route.request().postDataJSON();
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        optimized_sequence: MOCK_DNA,
+        original_length: SAMPLE_PROTEIN.length,
+        optimized_length: MOCK_DNA.length,
+        seed: 42,
+        metrics: {
+          cai: 0.91,
+          gc_percent: 45.0,
+          polya_signals: 0,
+          length: MOCK_DNA.length,
+          mfe_status: 'not_computed',
+          mfe_status_reason: 'missing_dependency',
+          requested_gc_min_percent: 40,
+          requested_gc_max_percent: 47
+        },
+        profile: 'feasibility_best',
+        host_profile: 'nbenthamiana',
+        custom_restriction_sites: { detected: [], removed: [], unresolved: [] },
+        validation: { input_type: 'protein', polya: 'PASS', moclo: 'PASS', gc: 'PASS' }
+      })
+    });
+  });
+  await openApp(page);
+
+  await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  await page.locator('#optimizationSeed').fill('42');
+  await page.locator('#customRestrictionSites').fill('SapI:GAAGAGC');
+  await page.locator('input[name="typeIisEnzyme"][value="SapI"]').check();
+  await page.locator('#optimizeBtn').click();
+
+  await expect.poll(() => requestBody).toMatchObject({ seed: 42 });
+  expect(requestBody.custom_restriction_sites.filter(site => site.name === 'SapI')).toHaveLength(1);
+  await expect(page.locator('#customRestrictionResults')).toHaveClass(/domestication-attempted/);
+  await expect(page.locator('#mfeWarningBanner')).toContainText('missing_dependency');
+  await expect(page.locator('#gcTargetRange')).toHaveText('Target: 40.0–47.0%');
+  await expect(page.locator('#resultsReportBody')).toContainText('seed=42');
+  await expect(page.locator('#resultsReportBody')).toContainText('Type IIS: SapI — PASS');
+});
+
+test('results distinguish no domestication and hide the MFE warning when computed', async ({ page }) => {
+  let requestBody;
+  await page.route('**/api/optimize', async route => {
+    requestBody = route.request().postDataJSON();
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        optimized_sequence: MOCK_DNA,
+        original_length: SAMPLE_PROTEIN.length,
+        optimized_length: MOCK_DNA.length,
+        seed: null,
+        metrics: {
+          cai: 0.91,
+          gc_percent: 45.0,
+          polya_signals: 0,
+          length: MOCK_DNA.length,
+          mfe_status: 'computed',
+          mfe_status_reason: null,
+          requested_gc_min_percent: 40,
+          requested_gc_max_percent: 47
+        },
+        profile: 'feasibility_best',
+        host_profile: 'nbenthamiana',
+        validation: { input_type: 'protein', polya: 'PASS', moclo: 'PASS', gc: 'PASS' }
+      })
+    });
+  });
+  await openApp(page);
+
+  await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  await page.locator('#optimizeBtn').click();
+
+  await expect.poll(() => requestBody && Object.hasOwn(requestBody, 'seed')).toBe(false);
+  await expect(page.locator('#customRestrictionResults')).toHaveClass(/domestication-not-attempted/);
+  await expect(page.locator('#customRestrictionResults')).toContainText('Domestication not attempted');
+  await expect(page.locator('#mfeWarningBanner')).toBeHidden();
+  await expect(page.locator('#resultsReportBody')).toContainText('seed not specified');
+  await expect(page.locator('#resultsReportBody')).toContainText('MFE: computed');
+});
+
 test('clear input resets preview and sequence badges', async ({ page }) => {
   await openApp(page);
 
