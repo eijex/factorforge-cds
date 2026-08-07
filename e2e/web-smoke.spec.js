@@ -188,7 +188,9 @@ test('optional seed and Type IIS presets are merged into the optimization payloa
   await expect(page.locator('#mfeWarningBanner')).toContainText('missing_dependency');
   await expect(page.locator('#gcTargetRange')).toHaveText('Target: 40.0–47.0%');
   await expect(page.locator('#resultsReportBody')).toContainText('seed=42');
-  await expect(page.locator('#resultsReportBody')).toContainText('Type IIS: SapI — PASS');
+  await expect(page.locator('#resultsReportBody')).toContainText('Type IIS');
+  await expect(page.locator('#resultsReportBody')).toContainText('PASS');
+  await expect(page.locator('#resultsReportBody')).toContainText('SapI');
 });
 
 test('results distinguish no domestication and hide the MFE warning when computed', async ({ page }) => {
@@ -230,7 +232,8 @@ test('results distinguish no domestication and hide the MFE warning when compute
   await expect(page.locator('#customRestrictionResults')).toContainText('Domestication not attempted');
   await expect(page.locator('#mfeWarningBanner')).toBeHidden();
   await expect(page.locator('#resultsReportBody')).toContainText('seed not specified');
-  await expect(page.locator('#resultsReportBody')).toContainText('MFE: computed');
+  await expect(page.locator('#resultsReportBody')).toContainText('MFE');
+  await expect(page.locator('#resultsReportBody')).toContainText('Computed');
 });
 
 test('clear input resets preview and sequence badges', async ({ page }) => {

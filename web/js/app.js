@@ -1056,11 +1056,33 @@ function renderMfeWarning(res) {
     elements.mfeWarningBanner.classList.remove('hidden');
 }
 
+function reportStatCard({ label, value, sub, tone = 'neutral' }) {
+    const toneClasses = {
+        good: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
+        warn: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300',
+        bad: 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300',
+        neutral: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200',
+    }[tone] || 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200';
+
+    return `
+        <div class="rounded-xl p-3 ${toneClasses}">
+            <p class="text-[10px] font-extrabold uppercase tracking-widest opacity-70">${escapeHtml(label)}</p>
+            <p class="mt-1 text-sm font-black leading-tight">${escapeHtml(value)}</p>
+            ${sub ? `<p class="mt-0.5 text-[11px] font-medium opacity-80">${escapeHtml(sub)}</p>` : ''}
+        </div>
+    `;
+}
+
 function renderResultsReport(res, primary, gcTarget) {
     if (!elements.resultsReport || !elements.resultsReportBody) return;
     const host = getResultHostProfile(res);
     const profile = res.profile || state.objective;
-    const seedText = res.seed == null ? ', seed not specified' : `, seed=${res.seed}`;
+    const seedText = res.seed == null ? 'seed not specified' : `seed=${res.seed}`;
+
+    const cai = Number(primary.metrics.cai || 0);
+    const gc = Number(primary.metrics.gc_percent || 0);
+    const gcInRange = gc >= gcTarget.min && gc <= gcTarget.max;
+
     const custom = res.custom_restriction_sites;
     const removed = Array.isArray(custom?.removed) ? custom.removed : [];
     const unresolved = Array.isArray(custom?.unresolved) ? custom.unresolved : [];
@@ -1069,26 +1091,75 @@ function renderResultsReport(res, primary, gcTarget) {
         ? custom.requested.map(site => site.name).filter(name => Object.hasOwn(TYPE_IIS_PRESETS, name))
         : [];
     const selected = requestedNames.length > 0 ? requestedNames : state.selectedTypeIisEnzymes;
-    const typeIisStatus = unresolved.length > 0 ? 'FAIL' : 'PASS';
-    const typeIisText = selected.length > 0
-        ? `${selected.join(', ')} — ${typeIisStatus}`
-        : 'no preset enzymes selected';
-    const mfe = getMfeStatus(res);
-    const mfeText = mfe.status === 'computed' ? 'computed' : `not computed — ${mfe.reason}`;
+    const typeIisFail = unresolved.length > 0;
 
-    const paragraphs = [
-        `Optimized with ${host} / ${profile} profile${seedText}.`,
-        `CAI ${Number(primary.metrics.cai || 0).toFixed(3)}, GC ${Number(primary.metrics.gc_percent || 0).toFixed(1)}% (target ${gcTarget.min.toFixed(1)}–${gcTarget.max.toFixed(1)}%).`,
-        `Type IIS: ${typeIisText}.`,
-        attempted
-            ? `Domestication: attempted — ${removed.length} sites removed, ${unresolved.length} unresolved.`
-            : 'Domestication: not attempted.',
-        `MFE: ${mfeText}.`
+    const mfe = getMfeStatus(res);
+    const mfeComputed = mfe.status === 'computed';
+
+    const cards = [
+        reportStatCard({ label: 'Host / Profile', value: `${host} · ${profile}`, sub: seedText, tone: 'neutral' }),
+        reportStatCard({
+            label: 'CAI',
+            value: cai.toFixed(3),
+            sub: cai >= 0.8 ? 'meets 0.800 minimum' : 'below 0.800 minimum',
+            tone: cai >= 0.8 ? 'good' : 'warn',
+        }),
+        reportStatCard({
+            label: 'GC content',
+            value: `${gc.toFixed(1)}%`,
+            sub: `target ${gcTarget.min.toFixed(1)}–${gcTarget.max.toFixed(1)}%`,
+            tone: gcInRange ? 'good' : 'warn',
+        }),
+        reportStatCard({
+            label: 'Type IIS',
+            value: selected.length > 0 ? (typeIisFail ? 'FAIL' : 'PASS') : 'Not checked',
+            sub: selected.length > 0 ? selected.join(', ') : 'no preset enzymes selected',
+            tone: selected.length === 0 ? 'neutral' : (typeIisFail ? 'bad' : 'good'),
+        }),
+        reportStatCard({
+            label: 'Domestication',
+            value: attempted ? 'Attempted' : 'Not attempted',
+            sub: attempted ? `${removed.length} removed · ${unresolved.length} unresolved` : 'no enzymes selected to fix',
+            tone: !attempted ? 'neutral' : (unresolved.length > 0 ? 'warn' : 'good'),
+        }),
+        reportStatCard({
+            label: 'MFE',
+            value: mfeComputed ? 'Computed' : 'Not computed',
+            sub: mfeComputed ? '' : mfe.reason,
+            tone: mfeComputed ? 'good' : 'warn',
+        }),
     ];
+
     const comparisonRows = Array.isArray(res.candidates) && res.candidates.length > 1
-        ? `<div class="overflow-x-auto pt-2"><table class="w-full text-left"><thead><tr><th class="py-1 pr-3">Profile</th><th class="py-1 pr-3">CAI</th><th class="py-1">GC%</th></tr></thead><tbody>${res.candidates.map(candidate => `<tr><td class="py-1 pr-3">${escapeHtml(candidate.label || candidate.id)}</td><td class="py-1 pr-3">${Number(candidate.cai || 0).toFixed(3)}</td><td class="py-1">${Number(candidate.gc_percent || 0).toFixed(1)}</td></tr>`).join('')}</tbody></table></div>`
+        ? `
+            <div class="overflow-x-auto pt-1">
+                <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Candidate comparison</p>
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="text-slate-500 dark:text-slate-400">
+                            <th class="py-1 pr-3 font-bold">Profile</th>
+                            <th class="py-1 pr-3 font-bold">CAI</th>
+                            <th class="py-1 font-bold">GC%</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        ${res.candidates.map(candidate => `
+                            <tr>
+                                <td class="py-1.5 pr-3 font-semibold text-slate-700 dark:text-slate-200">${escapeHtml(candidate.label || candidate.id)}</td>
+                                <td class="py-1.5 pr-3 font-mono">${Number(candidate.cai || 0).toFixed(3)}</td>
+                                <td class="py-1.5 font-mono">${Number(candidate.gc_percent || 0).toFixed(1)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `
         : '';
-    elements.resultsReportBody.innerHTML = paragraphs.map(line => `<p>${escapeHtml(line)}</p>`).join('') + comparisonRows;
+
+    elements.resultsReportBody.innerHTML = `
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">${cards.join('')}</div>
+        ${comparisonRows}
+    `;
     elements.resultsReport.classList.remove('hidden');
 }
 
