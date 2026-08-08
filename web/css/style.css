@@ -290,14 +290,30 @@ input[name="host"]:checked+div div:last-child {
    visually competing with the current production path. */
 .disclosure-card summary {
     list-style-position: outside;
+    border-radius: 0.75rem;
+    transition: background-color 150ms ease, color 150ms ease;
 }
 
 .disclosure-card summary::marker {
     color: #059669;
 }
 
+.disclosure-card summary:hover {
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+.dark .disclosure-card summary:hover {
+    background-color: rgba(30, 41, 59, 0.6);
+}
+
+.disclosure-card summary:focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+}
+
 .disclosure-card[open] summary {
     border-bottom: 1px solid #e2e8f0;
+    border-radius: 0.75rem 0.75rem 0 0;
     margin-bottom: 0.75rem;
 }
 

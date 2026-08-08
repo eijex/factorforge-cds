@@ -1,6 +1,6 @@
 # FactorForge Web Interface
 
-Plant CDS Design — N. benthamiana & Tobacco BY-2 experimental
+Focused CDS design and pre-synthesis review for N. benthamiana workflows.
 
 ## 🌐 Live Demo
 
@@ -59,11 +59,12 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 
 - ✅ File upload (FASTA)
 - ✅ Text input (paste sequence)
-- ✅ Host selector (N. benthamiana / Tobacco BY-2)
+- ✅ Focused N. benthamiana web workflow
 - ✅ 4 public CDS design profiles
 - ✅ Real-time results
 - ✅ Custom restriction site input and removal report
 - ✅ Optional reproducibility seed and Type IIS enzyme presets
+- ✅ Progressive disclosure for alternative objectives and expert settings
 - ✅ Domestication, MFE availability, and GC target transparency
 - ✅ Narrative Results Report with candidate comparison
 - ✅ Download (FASTA, GenBank)

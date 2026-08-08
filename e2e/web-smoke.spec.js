@@ -25,8 +25,11 @@ test('discloses codon reference policy as current default plus non-selector note
 
   const policy = page.locator('#codonReferencePolicy');
   await expect(policy).toBeVisible();
+  await expect(policy).not.toHaveAttribute('open', '');
+  await expect(policy.getByText('Current default: NbeV1.1 HC CDS-derived')).toBeHidden();
+  await policy.locator('summary').click();
   await expect(policy).toContainText('Current default: NbeV1.1 HC CDS-derived');
-  await expect(policy).toContainText('Selected');
+  await expect(policy.getByText('Selected', { exact: true })).toBeVisible();
 
   const packagedAssets = page.locator('#packagedReferenceAssets');
   await expect(packagedAssets).toContainText('not shown as public product choices');
@@ -79,22 +82,25 @@ test('updates sequence metadata for protein input', async ({ page }) => {
 test('shows CDS design review controls and rejects multi-FASTA input', async ({ page }) => {
   await openApp(page);
 
-  await expect(page.locator('details').filter({ hasText: 'Acceptance Criteria' })).toBeVisible();
+  const acceptanceCriteria = page.locator('#acceptanceCriteria');
+  await expect(acceptanceCriteria).toBeVisible();
+  await expect(acceptanceCriteria).not.toHaveAttribute('open', '');
+  await expect(page.locator('#criterionCaiMode')).toBeHidden();
+  await acceptanceCriteria.locator('summary').click();
+  await expect(page.locator('#criterionCaiMode')).toBeVisible();
   await page.locator('#sequenceInput').fill('>one\nATGTCCAAG\n>two\nATGTCCAAG');
 
   await expect(page.locator('#validationWarning')).toContainText('Multiple FASTA records detected');
   await expect(page.locator('#optimizeBtn')).toBeDisabled();
 });
 
-test('BY-2 host disables feasibility_best and selects a profile fallback', async ({ page }) => {
+test('keeps the public web workflow focused on N. benthamiana', async ({ page }) => {
   await openApp(page);
 
-  await page.getByText('Tobacco BY-2', { exact: true }).click();
-
-  await expect(page.locator('input[name="host"][value="by2"]')).toBeChecked();
-  await expect(page.locator('input[name="objective"][value="feasibility_best"]')).toBeDisabled();
-  await expect(page.locator('input[name="objective"][value="high_cai"]')).toBeDisabled();
-  await expect(page.locator('input[name="objective"][value="gc_target"]')).toBeChecked();
+  await expect(page.getByText('Host System', { exact: true })).toHaveCount(0);
+  await expect(page.locator('input[name="host"]')).toHaveCount(0);
+  await expect(page).toHaveTitle('FactorForge | N. benthamiana CDS Design');
+  await expect(page.locator('input[name="objective"][value="feasibility_best"]')).toBeEnabled();
 });
 
 test('optimization payload includes host and renders host_profile', async ({ page }) => {
@@ -115,8 +121,8 @@ test('optimization payload includes host and renders host_profile', async ({ pag
           polya_signals: 0,
           length: MOCK_DNA.length
         },
-        profile: 'gc_target',
-        host_profile: 'by2',
+        profile: 'feasibility_best',
+        host_profile: 'nbenthamiana',
         validation: {
           input_type: 'protein',
           polya: 'PASS',
@@ -129,18 +135,18 @@ test('optimization payload includes host and renders host_profile', async ({ pag
   await openApp(page);
 
   await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
-  await page.getByText('Tobacco BY-2', { exact: true }).click();
   await page.locator('#optimizeBtn').click();
 
   await expect.poll(() => requestBody).toMatchObject({
     sequence: SAMPLE_PROTEIN,
-    host: 'by2',
-    profile: 'gc_target',
+    host: 'nbenthamiana',
+    host_profile: 'nbenthamiana',
+    objective: 'feasibility_best',
     acceptance_criteria: expect.objectContaining({
       cai: expect.objectContaining({ mode: 'preferred' })
     })
   });
-  await expect(page.locator('#hostProfileValue')).toContainText('by2');
+  await expect(page.locator('#hostProfileValue')).toContainText('nbenthamiana');
   await expect(page.locator('#optimizedSequence')).toContainText(MOCK_DNA.slice(0, 20));
 });
 
@@ -177,6 +183,9 @@ test('optional seed and Type IIS presets are merged into the optimization payloa
   await openApp(page);
 
   await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  const advancedSettings = page.locator('#advancedSettings');
+  await expect(advancedSettings).not.toHaveAttribute('open', '');
+  await advancedSettings.locator('summary').click();
   await page.locator('#optimizationSeed').fill('42');
   await page.locator('#customRestrictionSites').fill('SapI:GAAGAGC');
   await page.locator('input[name="typeIisEnzyme"][value="SapI"]').check();

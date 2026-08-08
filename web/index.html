@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FactorForge | Plant CDS Design — N. benthamiana & Tobacco BY-2</title>
+    <title>FactorForge | N. benthamiana CDS Design</title>
     <meta name="description"
-        content="Open-source CDS design and pre-synthesis sequence review for plant CDS workflows. Primary support: N. benthamiana (Tobacco BY-2: experimental).">
+        content="Open-source CDS design and pre-synthesis sequence review for N. benthamiana workflows.">
     <!-- Vercel Web Analytics -->
     <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
     <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
@@ -125,14 +125,14 @@
                                 class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest flex items-center">
                                 Sequence Input Area
                                 <span id="inputTypeBadge"
-                                    class="ml-2 px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 hidden text-[9px]">DNA</span>
+                                    class="ml-2 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hidden text-[9px] font-semibold">DNA</span>
                             </p>
                             <div class="flex space-x-2">
                                 <span id="inputLenBadge"
-                                    class="px-2 py-0.5 bg-slate-800 text-[10px] text-white rounded-md font-bold transition-all border border-slate-700 shadow-sm opacity-30">0
+                                    class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-[9px] text-slate-500 dark:text-slate-400 rounded border border-slate-200 dark:border-slate-700 font-semibold transition-all opacity-40">0
                                     bp</span>
                                 <span id="inputGCBadge"
-                                    class="px-2 py-0.5 bg-emerald-600 text-[10px] text-white rounded-md font-bold transition-all border border-emerald-500 shadow-sm opacity-30">GC:
+                                    class="px-1.5 py-0.5 bg-emerald-50 dark:bg-emerald-900/20 text-[9px] text-emerald-700 dark:text-emerald-400 rounded border border-emerald-100 dark:border-emerald-800/50 font-semibold transition-all opacity-40">GC:
                                     0%</span>
                             </div>
                         </div>
@@ -224,8 +224,6 @@
                                 <span class="flex items-center text-sm font-bold text-slate-800">
                                     Feasibility Best
                                     <span class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800/50">Recommended</span>
-                                    <span id="feasibilityBestHostBadge"
-                                        class="hidden ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">N. benthamiana only</span>
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
                                         <span class="tooltip-text">Dynamic-programming candidate with maximum CAI inside the requested GC range when feasible.</span>
@@ -250,8 +248,6 @@
                                         class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
                                         <span class="flex items-center text-sm font-bold text-slate-800">
                                             High CAI
-                                            <span id="highCaiHostBadge"
-                                                class="hidden ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">N. benthamiana only</span>
                                             <span class="tooltip-container">
                                                 <span class="info-icon">i</span>
                                                 <span class="tooltip-text">Profile-engine comparison that favors high codon adaptation index.</span>
@@ -346,52 +342,46 @@
                         </details>
                     </div>
 
-                    <!-- Host Selector -->
-                    <div class="mb-8 border-t border-slate-100 pt-6">
-                        <p class="text-[10px] font-extrabold text-slate-600 uppercase tracking-widest mb-4">Host
-                            System
-                        </p>
-                        <div id="hostCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <!-- Rendered dynamically by js/app.js from GET /api/optimize (supported_hosts + host_metadata). -->
-                        </div>
-                    </div>
-
                     <!-- Codon Reference Policy -->
-                    <div id="codonReferencePolicy" class="mb-8 border-t border-slate-100 pt-6">
-                        <div class="flex items-start justify-between gap-3 mb-4">
-                            <div>
-                                <p class="text-[10px] font-extrabold text-slate-600 uppercase tracking-widest">Codon Reference</p>
-                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Current production default only; comparator assets are retained for provenance and controlled analysis, not public selection.</p>
+                    <details id="codonReferencePolicy" class="disclosure-card mb-8 rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900 dark:border-slate-800">
+                        <summary class="cursor-pointer select-none px-4 py-3 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-widest">
+                            Codon Reference
+                        </summary>
+                        <div class="px-4 pb-4">
+                            <div class="flex items-start justify-between gap-3 mb-4">
+                                <div>
+                                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Current production default only; comparator assets are retained for provenance and controlled analysis, not public selection.</p>
+                                </div>
+                                <span class="shrink-0 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 text-[9px] font-extrabold uppercase tracking-wider dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/50">current default</span>
                             </div>
-                            <span class="shrink-0 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 text-[9px] font-extrabold uppercase tracking-wider dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/50">current default</span>
-                        </div>
-                        <div class="space-y-3">
-                            <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/80 dark:bg-emerald-900/20 dark:border-emerald-800/50">
-                                <div class="flex items-center justify-between gap-3">
-                                    <div>
-                                        <p class="text-sm font-black text-slate-900 dark:text-slate-100">
-                                            Current default: NbeV1.1 HC CDS-derived
-                                            <span class="tooltip info-dot ml-1" tabindex="0" aria-label="Codon reference explanation">i
-                                                <span class="tooltip-text">NbeV1.1 high-confidence CDS-derived codon usage is the configured in-silico software default for <i>N. benthamiana</i>. It is not experimental validation or comparative biological-performance evidence.</span>
-                                            </span>
-                                        </p>
-                                        <p class="text-xs text-slate-700 dark:text-slate-400 mt-1">Production software baseline for <i>N. benthamiana</i>; public reference overrides remain disabled.</p>
+                            <div class="space-y-3">
+                                <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/80 dark:bg-emerald-900/20 dark:border-emerald-800/50">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div>
+                                            <p class="text-sm font-black text-slate-900 dark:text-slate-100">
+                                                Current default: NbeV1.1 HC CDS-derived
+                                                <span class="tooltip info-dot ml-1" tabindex="0" aria-label="Codon reference explanation">i
+                                                    <span class="tooltip-text">NbeV1.1 high-confidence CDS-derived codon usage is the configured in-silico software default for <i>N. benthamiana</i>. It is not experimental validation or comparative biological-performance evidence.</span>
+                                                </span>
+                                            </p>
+                                            <p class="text-xs text-slate-700 dark:text-slate-400 mt-1">Production software baseline for <i>N. benthamiana</i>; public reference overrides remain disabled.</p>
+                                        </div>
+                                        <span class="shrink-0 px-2 py-1 rounded-md bg-emerald-600 text-white text-[9px] font-extrabold uppercase tracking-wider">Selected</span>
                                     </div>
-                                    <span class="shrink-0 px-2 py-1 rounded-md bg-emerald-600 text-white text-[9px] font-extrabold uppercase tracking-wider">Selected</span>
+                                </div>
+                                <div id="packagedReferenceAssets" class="rounded-xl border border-slate-200 bg-white/70 p-3 dark:bg-slate-950/40 dark:border-slate-800">
+                                    <p class="text-[11px] text-slate-600 dark:text-slate-400">Other packaged codon-reference assets are retained for provenance, reproducibility, and controlled internal sensitivity analysis only. They are not shown as public product choices, and public API/UI reference overrides remain unsupported.</p>
                                 </div>
                             </div>
-                            <div id="packagedReferenceAssets" class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:bg-slate-900 dark:border-slate-800">
-                                <p class="text-[11px] text-slate-600 dark:text-slate-400">Other packaged codon-reference assets are retained for provenance, reproducibility, and controlled internal sensitivity analysis only. They are not shown as public product choices, and public API/UI reference overrides remain unsupported.</p>
-                            </div>
                         </div>
-                    </div>
+                    </details>
 
                     <!-- Advanced Settings -->
-                    <div class="mb-8 border-t border-slate-100 pt-6">
-                        <p class="text-[10px] font-extrabold text-slate-600 uppercase tracking-widest mb-4">Advanced
-                            Settings
-                        </p>
-                        <div class="space-y-4">
+                    <details id="advancedSettings" class="disclosure-card mb-8 rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900 dark:border-slate-800">
+                        <summary class="cursor-pointer select-none px-4 py-3 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-widest">
+                            Advanced Settings
+                        </summary>
+                        <div class="px-4 pb-4 space-y-4">
                             <div>
                                 <label for="optimizationSeed"
                                     class="block text-[13px] font-bold text-slate-900 dark:text-slate-100 mb-2">
@@ -463,20 +453,22 @@
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </details>
 
                     <!-- Acceptance Criteria -->
-                    <details class="mb-8 border-t border-slate-100 dark:border-slate-800 pt-6" open>
-                        <summary class="cursor-pointer text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-widest">Acceptance Criteria</summary>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-2 mb-3">Required failures produce FAIL; preferred warnings produce CONDITIONAL PASS.</p>
-                        <div class="space-y-2 text-xs">
-                            <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionCaiMode" class="text-slate-700 dark:text-slate-300">CAI minimum 0.800</label><select id="criterionCaiMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
-                            <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionGcMode" class="text-slate-700 dark:text-slate-300">Overall GC host range</label><select id="criterionGcMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
-                            <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionLocalGcMode" class="text-slate-700 dark:text-slate-300">Local GC 30–70% / 60 bp</label><select id="criterionLocalGcMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
-                            <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionTypeIisMode" class="text-slate-700 dark:text-slate-300">Type IIS (BsaI/BsmBI/SapI)</label><select id="criterionTypeIisMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="required">Required</option><option value="preferred">Preferred</option><option value="ignored">Ignored</option></select></div>
-                            <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionRepeatsMode" class="text-slate-700 dark:text-slate-300">Direct repeats</label><select id="criterionRepeatsMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
-                            <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionHomopolymerMode" class="text-slate-700 dark:text-slate-300">Homopolymers ≤8 bp</label><select id="criterionHomopolymerMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
-                            <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionMotifsMode" class="text-slate-700 dark:text-slate-300">Forbidden motifs</label><select id="criterionMotifsMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
+                    <details id="acceptanceCriteria" class="disclosure-card mb-8 rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900 dark:border-slate-800">
+                        <summary class="cursor-pointer select-none px-4 py-3 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-widest">Acceptance Criteria</summary>
+                        <div class="px-4 pb-4">
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Required failures produce FAIL; preferred warnings produce CONDITIONAL PASS.</p>
+                            <div class="space-y-2 text-xs">
+                                <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionCaiMode" class="text-slate-700 dark:text-slate-300">CAI minimum 0.800</label><select id="criterionCaiMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
+                                <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionGcMode" class="text-slate-700 dark:text-slate-300">Overall GC host range</label><select id="criterionGcMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
+                                <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionLocalGcMode" class="text-slate-700 dark:text-slate-300">Local GC 30–70% / 60 bp</label><select id="criterionLocalGcMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
+                                <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionTypeIisMode" class="text-slate-700 dark:text-slate-300">Type IIS (BsaI/BsmBI/SapI)</label><select id="criterionTypeIisMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="required">Required</option><option value="preferred">Preferred</option><option value="ignored">Ignored</option></select></div>
+                                <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionRepeatsMode" class="text-slate-700 dark:text-slate-300">Direct repeats</label><select id="criterionRepeatsMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
+                                <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionHomopolymerMode" class="text-slate-700 dark:text-slate-300">Homopolymers ≤8 bp</label><select id="criterionHomopolymerMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
+                                <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionMotifsMode" class="text-slate-700 dark:text-slate-300">Forbidden motifs</label><select id="criterionMotifsMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
+                            </div>
                         </div>
                     </details>
 

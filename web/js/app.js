@@ -6,9 +6,8 @@
 const API_ENDPOINT = '/api/optimize';
 const ENABLE_MOCK = window.FACTORFORGE_ENABLE_MOCK === true;
 // Maps internal engine table names (incl. HOST_MAP aliases like 'ntabacum')
-// back to a human label for results display, and serves as the offline/dev
-// fallback for the Host System cards (rendered dynamically — see
-// loadHostOptions/renderHostCards).
+// back to a human label for results and legacy local-history display. The web
+// design workflow itself is intentionally fixed to N. benthamiana.
 const HOST_LABELS = {
     nbenthamiana: 'N. benthamiana',
     by2: 'Tobacco BY-2',
@@ -105,14 +104,6 @@ const elements = {
     themeToggle: document.getElementById('themeToggle'),
     themeIcon: document.getElementById('themeIcon'),
     objectiveRadios: document.getElementsByName('objective'),
-    hostRadios: document.getElementsByName('host'),
-    hostCardsContainer: document.getElementById('hostCardsContainer'),
-    feasibilityBestOption: document.getElementById('feasibilityBestOption'),
-    feasibilityBestCard: document.getElementById('feasibilityBestCard'),
-    feasibilityBestHostBadge: document.getElementById('feasibilityBestHostBadge'),
-    highCaiOption: document.getElementById('highCaiOption'),
-    highCaiCard: document.getElementById('highCaiCard'),
-    highCaiHostBadge: document.getElementById('highCaiHostBadge'),
     implementedObjectives: document.getElementById('implementedObjectives'),
     experimentalObjectives: document.getElementById('experimentalObjectives'),
     packagedReferenceAssets: document.getElementById('packagedReferenceAssets'),
@@ -208,33 +199,22 @@ function trackEvent(name, data) {
 document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     applyStaticLabelPatches();
-    await loadHostOptions();
+    await loadApiMetadata();
     initEventListeners();
-    updateHostUI();
     renderHistory();
     console.log('FactorForge v3.4.4 Engaged');
 });
 
-// Fetches supported_hosts/host_metadata from GET /api/optimize and renders the
-// Host System cards. Falls back to the static HOST_LABELS defaults if the API
-// is unreachable, so the page still functions offline/in dev.
-// (Replaces the previously hardcoded host cards in web/index.html.)
-async function loadHostOptions() {
-    let hosts = Object.keys(HOST_LABELS).filter((id) => id !== 'ntabacum');
-    let metadata = Object.fromEntries(
-        hosts.map((id) => [id, { display_name: HOST_LABELS[id], description: '' }])
-    );
-
+// Loads server-owned GC ranges and validation labels. Supported hosts remain
+// available to API/CLI clients, while the public web workflow stays focused on
+// the production N. benthamiana path.
+async function loadApiMetadata() {
     try {
         const response = await fetch(API_ENDPOINT, { method: 'GET' });
         if (response.ok) {
             const data = await response.json();
-            if (Array.isArray(data.supported_hosts) && data.supported_hosts.length) {
-                hosts = data.supported_hosts;
-            }
             if (data.host_metadata && typeof data.host_metadata === 'object') {
-                metadata = data.host_metadata;
-                Object.entries(metadata).forEach(([id, meta]) => {
+                Object.entries(data.host_metadata).forEach(([id, meta]) => {
                     if (meta && meta.gc_range) {
                         hostGcRanges[id] = meta.gc_range;
                     }
@@ -245,35 +225,9 @@ async function loadHostOptions() {
             }
         }
     } catch (_) {
-        // Offline/dev fallback — keep static defaults above; validationRegistry
-        // stays [] and renderValidationChecks() degrades to "no rows" rather
-        // than guessing labels.
+        // Offline/dev fallback — getGcRange() uses OFFLINE_GC_RANGES;
+        // validationRegistry stays [] instead of guessing server labels.
     }
-
-    renderHostCards(hosts, metadata);
-}
-
-function renderHostCards(hosts, metadata) {
-    if (!elements.hostCardsContainer) return;
-
-    elements.hostCardsContainer.innerHTML = hosts.map((hostId, index) => {
-        const meta = metadata[hostId] || { display_name: hostId, description: '' };
-        const checkedAttr = index === 0 ? 'checked' : '';
-        const caveatHtml = meta.caveat ? `
-                    <span class="tooltip-container">
-                        <span class="info-icon">i</span>
-                        <span class="tooltip-text">${escapeHtml(meta.caveat)}</span>
-                    </span>` : '';
-        return `
-            <label class="block relative group">
-                <input type="radio" name="host" value="${escapeHtml(hostId)}" ${checkedAttr} class="peer sr-only">
-                <div class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all hover:border-emerald-400 hover:shadow-md">
-                    <span class="flex items-center text-sm font-bold text-slate-800">${escapeHtml(meta.display_name)}${caveatHtml}</span>
-                    <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">${escapeHtml(meta.description || '')}</span>
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-emerald-500 text-xl">✓</div>
-                </div>
-            </label>`;
-    }).join('');
 }
 
 function initEventListeners() {
@@ -286,14 +240,6 @@ function initEventListeners() {
     elements.objectiveRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             state.objective = e.target.value;
-            updateHostUI();
-        });
-    });
-
-    elements.hostRadios.forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            state.host = e.target.value;
-            updateHostUI();
         });
     });
 
@@ -353,71 +299,6 @@ function applyStaticLabelPatches() {
     if (!elements.submitValidationBtn) return;
     const label = elements.submitValidationBtn.children[1];
     if (label) label.textContent = 'Share Wet-lab Results (GitHub)';
-}
-
-function updateHostUI() {
-    const selectedHost = Array.from(elements.hostRadios).find(radio => radio.checked);
-    state.host = selectedHost?.value || state.host || 'nbenthamiana';
-
-    const isBy2 = state.host === 'by2';
-    const objectiveRadios = Array.from(elements.objectiveRadios);
-    const feasibilityRadio = objectiveRadios.find(radio => radio.value === 'feasibility_best');
-    const highCaiRadio = objectiveRadios.find(radio => radio.value === 'high_cai');
-
-    // high_cai is anchored to the nbenthamiana-only golden-set reference
-    // and has no BY-2 equivalent, so it is disabled for BY-2 the
-    // same way feasibility_best is. Note: 'balanced' is not a selectable
-    // objective radio in this UI (only feasibility_best/ramp/high_cai/
-    // gc_target/assembly_friendly/viral_delivery exist) — the fallback
-    // below resolves to 'gc_target', the first remaining enabled radio.
-    if (feasibilityRadio) {
-        feasibilityRadio.disabled = isBy2;
-    }
-    if (highCaiRadio) {
-        highCaiRadio.disabled = isBy2;
-    }
-    if (isBy2 && ((feasibilityRadio && feasibilityRadio.checked) || (highCaiRadio && highCaiRadio.checked))) {
-        const fallback = objectiveRadios.find(radio => !radio.disabled);
-        if (fallback) {
-            fallback.checked = true;
-            state.objective = fallback.value;
-            // The compact UX keeps alternative objectives collapsed by default.
-            // If host switching selects a hidden fallback, open that disclosure so
-            // the visible UI still shows the active objective rather than a
-            // disabled default card only.
-            if (elements.implementedObjectives && fallback.closest('#implementedObjectives')) {
-                elements.implementedObjectives.open = true;
-            }
-        }
-    }
-
-    if (elements.feasibilityBestOption) {
-        elements.feasibilityBestOption.classList.toggle('cursor-not-allowed', isBy2);
-    }
-    if (elements.feasibilityBestCard) {
-        elements.feasibilityBestCard.classList.toggle('opacity-60', isBy2);
-        elements.feasibilityBestCard.classList.toggle('cursor-not-allowed', isBy2);
-        elements.feasibilityBestCard.classList.toggle('cursor-pointer', !isBy2);
-        elements.feasibilityBestCard.classList.toggle('hover:border-emerald-400', !isBy2);
-        elements.feasibilityBestCard.classList.toggle('hover:shadow-md', !isBy2);
-    }
-    if (elements.feasibilityBestHostBadge) {
-        elements.feasibilityBestHostBadge.classList.toggle('hidden', !isBy2);
-    }
-
-    if (elements.highCaiOption) {
-        elements.highCaiOption.classList.toggle('cursor-not-allowed', isBy2);
-    }
-    if (elements.highCaiCard) {
-        elements.highCaiCard.classList.toggle('opacity-60', isBy2);
-        elements.highCaiCard.classList.toggle('cursor-not-allowed', isBy2);
-        elements.highCaiCard.classList.toggle('cursor-pointer', !isBy2);
-        elements.highCaiCard.classList.toggle('hover:border-emerald-400', !isBy2);
-        elements.highCaiCard.classList.toggle('hover:shadow-md', !isBy2);
-    }
-    if (elements.highCaiHostBadge) {
-        elements.highCaiHostBadge.classList.toggle('hidden', !isBy2);
-    }
 }
 
 function isProteinInputResult(res) {
@@ -510,12 +391,12 @@ function handleSequenceChange(e) {
             if (dnaInputWarning) dnaInputWarning.classList.add('hidden');
         } else if (isDNA) {
             elements.inputTypeBadge.textContent = 'DNA';
-            elements.inputTypeBadge.className = 'ml-2 px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold text-[9px] uppercase';
+            elements.inputTypeBadge.className = 'ml-2 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-semibold text-[9px] uppercase';
             elements.validationWarning.classList.add('hidden');
             if (dnaInputWarning) dnaInputWarning.classList.remove('hidden');
         } else if (isProtein) {
             elements.inputTypeBadge.textContent = 'Protein';
-            elements.inputTypeBadge.className = 'ml-2 px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold text-[9px] uppercase';
+            elements.inputTypeBadge.className = 'ml-2 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-semibold text-[9px] uppercase';
             elements.validationWarning.classList.add('hidden');
             if (dnaInputWarning) dnaInputWarning.classList.add('hidden');
         } else {
@@ -566,9 +447,9 @@ function updateInputStats(seq, isProtein = false) {
         }
     } else {
         elements.inputLenBadge.textContent = "0 bp";
-        elements.inputLenBadge.style.opacity = "0.3";
+        elements.inputLenBadge.style.opacity = "0.4";
         elements.inputGCBadge.textContent = "GC: 0%";
-        elements.inputGCBadge.style.opacity = "0.3";
+        elements.inputGCBadge.style.opacity = "0.4";
     }
 }
 
