@@ -9,6 +9,8 @@
 [![codecov](https://codecov.io/gh/eijex/factorforge-cds/branch/main/graph/badge.svg)](https://codecov.io/gh/eijex/factorforge-cds)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20407330.svg)](https://doi.org/10.5281/zenodo.20407330)
 [![Web App](https://img.shields.io/badge/web-factorforge.eijex.com-brightgreen.svg)](https://factorforge.eijex.com)
+[![Sponsor](https://img.shields.io/badge/Sponsor-EA4AAA?style=flat&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/eijex)
+
 
 FactorForge performs profile-guided CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. It is positioned as a pre-synthesis review harness: it helps teams generate reproducible CDS candidates, inspect assembly-relevant sequence constraints, and package design metadata before downstream synthesis, cloning, or experimental review. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
 
@@ -80,6 +82,7 @@ GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).
 
 ## Get in Touch
 
+- **Sponsor** — Support our research via [GitHub Sponsors](https://github.com/sponsors/eijex) or [PayPal](https://paypal.me/munkyukim)
 - **Docs** — [eijex.github.io/factorforge-cds](https://eijex.github.io/factorforge-cds/)
 - **Wet-lab Feedback** — Public-safe feedback summaries are welcome via [Share Wet-lab Feedback (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml). Do not submit raw sequences, confidential construct details, internal batch IDs, patient data, private contact information, exact process parameters, or confidential partner/customer data. Email `eijex.lab@gmail.com` for private or sensitive summaries. See [VALIDATION.md](VALIDATION.md) before submitting.
 - **GitHub Issues** — bugs, features: [github.com/eijex/factorforge-cds/issues](https://github.com/eijex/factorforge-cds/issues)
@@ -87,3 +90,4 @@ GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).
 - **FactorForge** — [factorforge.eijex.com](https://factorforge.eijex.com)
 - **Eijex MCP** — [mcp.eijex.com](https://mcp.eijex.com)
 - **Lab** — [www.eijex.com](https://www.eijex.com)
+
