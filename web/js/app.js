@@ -197,98 +197,6 @@ function trackEvent(name, data) {
 
 // Initialization
 document.addEventListener('DOMContentLoaded', async () => {
-    experimentalObjectives: document.getElementById('experimentalObjectives'),
-    packagedReferenceAssets: document.getElementById('packagedReferenceAssets'),
-    useTemplateCheck: document.getElementById('useTemplate'),
-    kozakToggle: document.getElementById('toggleKozak'),
-    dinucToggle: document.getElementById('toggleDinuc'),
-    customRestrictionSites: document.getElementById('customRestrictionSites'),
-    optimizationSeed: document.getElementById('optimizationSeed'),
-    typeIisEnzymes: document.getElementsByName('typeIisEnzyme'),
-    inputLenBadge: document.getElementById('inputLenBadge'),
-    inputGCBadge: document.getElementById('inputGCBadge'),
-    origLen: document.getElementById('origLen'),
-    optLen: document.getElementById('optLen'),
-    origGC: document.getElementById('origGC'),
-    optGCComp: document.getElementById('optGCComp'),
-    origCAI: document.getElementById('origCAI'),
-    optCAIComp: document.getElementById('optCAIComp'),
-    mutationRate: document.getElementById('mutationRate'),
-    aaIdentity: document.getElementById('aaIdentity'),
-    candidateComparisonContainer: document.getElementById('candidateComparisonContainer'),
-    candidateComparisonBody: document.getElementById('candidateComparisonBody'),
-    customRestrictionResults: document.getElementById('customRestrictionResults'),
-    customRestrictionResultsBody: document.getElementById('customRestrictionResultsBody'),
-    mfeWarningBanner: document.getElementById('mfeWarningBanner'),
-    gcTargetRange: document.getElementById('gcTargetRange'),
-    resultsReport: document.getElementById('resultsReport'),
-    resultsReportBody: document.getElementById('resultsReportBody'),
-    gcChart: document.getElementById('gcChart'),
-    gcZoneLabel: document.getElementById('gcZoneLabel'),
-    historyList: document.getElementById('historyList'),
-    clearHistory: document.getElementById('clearHistory'),
-    changelogBtn: document.getElementById('changelogBtn'),
-    changelogModal: document.getElementById('changelogModal'),
-    closeModal: document.getElementById('closeModal'),
-    modalOverlay: document.getElementById('modalOverlay'),
-    linkoutConsentModal: document.getElementById('linkoutConsentModal'),
-    linkoutConsentOverlay: document.getElementById('linkoutConsentOverlay'),
-    linkoutConsentTitle: document.getElementById('linkoutConsentTitle'),
-    linkoutConsentBody: document.getElementById('linkoutConsentBody'),
-    linkoutConsentClose: document.getElementById('linkoutConsentClose'),
-    linkoutConsentCancel: document.getElementById('linkoutConsentCancel'),
-    linkoutConsentContinue: document.getElementById('linkoutConsentContinue'),
-    inputTypeBadge: document.getElementById('inputTypeBadge'),
-    toastContainer: document.getElementById('toastContainer'),
-    logoIcon: document.getElementById('logoIcon'),
-    logoTitle: document.getElementById('logoTitle'),
-    criterionCaiMode: document.getElementById('criterionCaiMode'),
-    criterionGcMode: document.getElementById('criterionGcMode'),
-    criterionLocalGcMode: document.getElementById('criterionLocalGcMode'),
-    criterionTypeIisMode: document.getElementById('criterionTypeIisMode'),
-    criterionRepeatsMode: document.getElementById('criterionRepeatsMode'),
-    criterionHomopolymerMode: document.getElementById('criterionHomopolymerMode'),
-    criterionMotifsMode: document.getElementById('criterionMotifsMode'),
-    automatedDecisionValue: document.getElementById('automatedDecisionValue'),
-    automatedDecisionSummary: document.getElementById('automatedDecisionSummary'),
-    qcDecisionMatrix: document.getElementById('qcDecisionMatrix'),
-    qcDecisionMatrixBody: document.getElementById('qcDecisionMatrixBody'),
-    reviewerDisposition: document.getElementById('reviewerDisposition'),
-    reviewerReason: document.getElementById('reviewerReason'),
-    saveReviewerDisposition: document.getElementById('saveReviewerDisposition'),
-    reviewerDispositionStatus: document.getElementById('reviewerDispositionStatus')
-};
-
-let chartInstance = null;
-
-// Analytics helpers
-function seqLenBucket(len) {
-    if (len < 100) return '<100';
-    if (len < 300) return '100-300';
-    if (len < 1000) return '300-1000';
-    return '>1000';
-}
-function caiBucket(cai) {
-    if (cai < 0.7) return '<0.7';
-    if (cai < 0.8) return '0.7-0.8';
-    if (cai < 0.9) return '0.8-0.9';
-    return '>0.9';
-}
-function gcBucket(gc, hostId = state.host) {
-    // Host-aware telemetry bucketing (v3.3.0) — boundaries follow
-    // the resolved reference band for the host instead of a fixed 55-65
-    // assumption, so BY-2 and N. benthamiana don't get mislabeled buckets.
-    const { gc_min, gc_max } = getGcRange(hostId);
-    if (gc < gc_min) return `<${gc_min}`;
-    if (gc <= gc_max) return `${gc_min}-${gc_max}`;
-    return `>${gc_max}`;
-}
-function trackEvent(name, data) {
-    try { window.va?.('event', { name, data }); } catch (_) {}
-}
-
-// Initialization
-document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     applyStaticLabelPatches();
     await loadApiMetadata();
@@ -1720,7 +1628,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.4.4';
+        const version = state.results.engine_versions?.product || '3.4.5';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }

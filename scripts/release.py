@@ -15,7 +15,7 @@ Usage:
     [1] Version bump — all version-bearing files
     [2] Freeze      — examples/worked_example/run_example.py --freeze
     [3] Audit       — scripts/audit_public_surface.py --live (if --audit-script given)
-    [4] Tests       — pytest tests/ -q
+    [4] Tests       — pytest, JavaScript syntax, and Playwright
     [5] CHANGELOG   — [Unreleased] → [X.Y.Z] — date + comparison links
     [6] What's New  — auto-fill web/index.html bullets from CHANGELOG entries
     [7] Commit      — git add -A && git commit
@@ -82,6 +82,11 @@ def _update_changelog_current(root: Path, old: str, new: str, dry_run: bool) -> 
     content = path.read_text(encoding="utf-8")
     original = content
     changes = []
+
+    # A partial release may already have inserted the new block. Treat that as
+    # recovery state instead of demoting it and inserting a duplicate block.
+    if f"<!-- Version {new} -->" in content:
+        return []
 
     # 1. Navbar button
     if f"v{old} Release Notes" in content:
@@ -764,6 +769,12 @@ def auto_release(
             print("\n[4] Test suite")
             if not dry_run:
                 _run_step("pytest", ["python", "-m", "pytest", "tests/", "-q", "--tb=short"])
+                node = "node.exe" if sys.platform.startswith("win") else "node"
+                npm = "npm.cmd" if sys.platform.startswith("win") else "npm"
+                npx = "npx.cmd" if sys.platform.startswith("win") else "npx"
+                _run_step("web JavaScript syntax", [node, "--check", "web/js/app.js"])
+                _run_step("npm dependencies", [npm, "ci"])
+                _run_step("Playwright", [npx, "playwright", "test"])
             else:
                 print("  (skipped — dry run)")
         else:

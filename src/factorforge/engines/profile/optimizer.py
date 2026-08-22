@@ -21,7 +21,7 @@ class RuleBasedOptimizer(OptimizerEngine):
     """Profile-based rule optimization engine."""
 
     name = "Profile-based"
-    version = "3.4.4"
+    version = "3.4.5"
 
     def __init__(
         self,
