@@ -4,12 +4,16 @@ const SAMPLE_PROTEIN = 'MSKGEELFTGVVPILVELD';
 const MOCK_DNA = 'ATGTCCAAGGGCGAGGAGCTGTTCACCGGCGTGGTGCCCATCCTGGTGGAGCTGGAC';
 
 async function openApp(page) {
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
   await page.addInitScript(() => {
     window.Chart = class {
       destroy() {}
     };
   });
   await page.goto('/');
+  await page.waitForLoadState('networkidle');
+  expect(pageErrors).toEqual([]);
 }
 
 test('loads the main web UI', async ({ page }) => {
@@ -18,6 +22,19 @@ test('loads the main web UI', async ({ page }) => {
   await expect(page.locator('#sequenceInput')).toBeVisible();
   await expect(page.getByRole('heading', { name: '⚙️ Optimization Settings' })).toBeVisible();
   await expect(page.locator('#optimizeBtn')).toBeVisible();
+});
+
+test('opens release notes and toggles dark mode', async ({ page }) => {
+  await openApp(page);
+
+  await page.locator('#themeToggle').click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+
+  await page.locator('#changelogBtn').click();
+  await expect(page.locator('#changelogModal')).toBeVisible();
+  await expect(page.locator('#changelogModal')).toContainText('v3.4.5');
+  await page.locator('#closeModal').click();
+  await expect(page.locator('#changelogModal')).toBeHidden();
 });
 
 test('discloses codon reference policy as current default plus non-selector note', async ({ page }) => {
