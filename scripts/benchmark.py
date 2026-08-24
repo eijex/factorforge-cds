@@ -63,9 +63,9 @@ def build_panel(size: int, length: int = DEFAULT_SEQUENCE_LENGTH) -> list[tuple[
 
 def run_profile(profile: str, panel: list[tuple[str, str]]) -> list[BenchmarkRow]:
     random.seed(OPTIMIZER_SEED)
-    optimizer = RuleBasedOptimizer()
     rows: list[BenchmarkRow] = []
 
+    optimizer = RuleBasedOptimizer()
     for sequence_id, protein in panel:
         result = optimizer.optimize(protein, profile=profile, scan_mode="fast")
         validation = validate_cds_output(protein, result.sequence)
@@ -93,8 +93,7 @@ def summarize(rows: list[BenchmarkRow]) -> dict[str, float]:
         "cai_mean": mean(row.cai for row in rows),
         "gc_mean": mean(row.gc_percent for row in rows),
         "aa_identity": mean(row.aa_identity for row in rows) * 100.0,
-        "validator_pass_rate": mean(1.0 if row.validator_passed else 0.0 for row in rows)
-        * 100.0,
+        "validator_pass_rate": mean(1.0 if row.validator_passed else 0.0 for row in rows) * 100.0,
     }
 
 
@@ -138,7 +137,7 @@ def write_csv(path: Path, rows: list[BenchmarkRow]) -> None:
             )
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the FactorForge reproducible benchmark.")
     parser.add_argument("--n", type=int, default=DEFAULT_BENCHMARK_SIZE, help="Number of sequences")
     parser.add_argument("--profile", choices=VALID_PROFILES, default="balanced")
@@ -147,7 +146,7 @@ def parse_args() -> argparse.Namespace:
         "--compare-profiles",
         help="Comma-separated profiles to benchmark, e.g. balanced,high_cai,gc_target",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def main() -> int:
@@ -157,7 +156,9 @@ def main() -> int:
 
     profiles = [args.profile]
     if args.compare_profiles:
-        profiles = [profile.strip() for profile in args.compare_profiles.split(",") if profile.strip()]
+        profiles = [
+            profile.strip() for profile in args.compare_profiles.split(",") if profile.strip()
+        ]
         invalid = sorted(set(profiles) - set(VALID_PROFILES))
         if invalid:
             raise ValueError(f"Unsupported profiles: {', '.join(invalid)}")

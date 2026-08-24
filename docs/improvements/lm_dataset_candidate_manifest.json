@@ -1,0 +1,23 @@
+{
+  "manifest_version": "lm-candidate-assets-v0",
+  "status": "candidate-assets-only-no-training-split",
+  "claim_boundary": "This manifest does not establish a training corpus, CD-HIT split, model benchmark, or biological-performance claim.",
+  "candidate_public_reference_assets": [
+    "nbenthamiana_codons.json",
+    "nbenthamiana_golden_set.json",
+    "ntabacum_codons.json",
+    "profiles/nbev11_cds_all_derived_codons.json",
+    "profiles/nbev11_cds_all_derived_filtered_stats.json",
+    "profiles/nbev11_cds_all_derived_manifest.json",
+    "profiles/nbev11_cds_hc_derived_codons.json",
+    "profiles/nbev11_cds_hc_derived_filtered_stats.json",
+    "profiles/nbev11_cds_hc_derived_manifest.json",
+    "profiles/qld183_v103_derived_codons.json",
+    "profiles/qld183_v103_derived_manifest.json",
+    "profiles/qld183_v103_filtered_stats.json",
+    "reference/reference_policy_manifest.json",
+    "templates/high_expression.json",
+    "templates/standard_expression.json",
+    "wolffia_globosa_codons.json"
+  ]
+}
