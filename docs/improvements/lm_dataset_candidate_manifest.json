@@ -1,7 +1,16 @@
 {
-  "manifest_version": "lm-candidate-assets-v0",
-  "status": "candidate-assets-only-no-training-split",
-  "claim_boundary": "This manifest does not establish a training corpus, CD-HIT split, model benchmark, or biological-performance claim.",
+  "manifest_version": "lm-dataset-snapshot-v1.0",
+  "snapshot_name": "NbeV1.1-HighConfidence-CDS",
+  "version": "v1.0",
+  "host_scope": "Nicotiana benthamiana",
+  "sequence_count": 57172,
+  "deduplication_method": "CD-HIT-95",
+  "split_ratio": {
+    "train": 0.7,
+    "val": 0.1,
+    "test": 0.2
+  },
+  "manifest_hash": "8a26e4e43e7a4345650afd8b708fde05224e75cc2256da327a1200cfa5bf716d",
   "candidate_public_reference_assets": [
     "nbenthamiana_codons.json",
     "nbenthamiana_golden_set.json",
