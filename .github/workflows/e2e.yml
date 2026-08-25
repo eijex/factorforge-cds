@@ -9,7 +9,6 @@ on:
 jobs:
   playwright:
     runs-on: ubuntu-latest
-    continue-on-error: true  # non-blocking until stable
 
     steps:
       - name: Checkout
@@ -28,6 +27,9 @@ jobs:
 
       - name: Install Node dependencies
         run: npm ci
+
+      - name: Validate web JavaScript syntax
+        run: node --check web/js/app.js
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium

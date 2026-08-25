@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": null,
+  "buildCommand": "node --check web/js/app.js",
   "outputDirectory": "web",
   "env": {
     "PYTHONPATH": "src",

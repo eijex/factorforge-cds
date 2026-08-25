@@ -66,7 +66,7 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 - ✅ Optional reproducibility seed and Type IIS enzyme presets
 - ✅ Progressive disclosure for alternative objectives and expert settings
 - ✅ Domestication, MFE availability, and GC target transparency
-- ✅ Narrative Results Report with candidate comparison
+- ✅ Structured Results Report with candidate comparison and HTML download
 - ✅ Download (FASTA, GenBank)
 - ✅ Responsive design
 - ✅ No login required

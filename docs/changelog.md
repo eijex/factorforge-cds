@@ -4,6 +4,16 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.4.5 — 2026-08-22
+
+- Focused Optimization Settings on the current default, refined the structured
+  Results Report, and added HTML report download.
+- Restored theme switching, release notes, sequence input, and optimization
+  interactions after a JavaScript initialization regression.
+- Made browser failures blocking and added JavaScript syntax checks to local and
+  deployment release gates.
+- This release makes no new empirical or wet-lab performance claim.
+
 ## v3.4.4 — 2026-08-07
 
 - Added an optional reproducibility seed to the web API and UI, Type IIS enzyme

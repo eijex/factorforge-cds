@@ -29,6 +29,32 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
+## [3.4.5] — 2026-08-22
+
+### Changed
+
+- Focused Optimization Settings on the current default while keeping alternative
+  implemented objectives and disabled experimental objectives clearly separated.
+- Refined the structured Results Report stat-card layout and added HTML report
+  download.
+
+### Fixed
+
+- Removed a malformed duplicate initialization block that stopped all browser
+  JavaScript, restoring theme switching, release notes, sequence input, and
+  optimization interactions.
+- Synchronized product, API, engine, registry, documentation, and fixture version
+  surfaces to v3.4.5.
+- Made Playwright failures blocking and added JavaScript syntax checks to the
+  release script, Vercel build, E2E workflow, and container publication workflow.
+- Replaced release-note statements that were not traceable to shipped changes
+  with bounded descriptions of the interface and release-gate work.
+
+### Notes
+
+- This remains an in-silico CDS design and pre-synthesis review release; it does
+  not add wet-lab validation or empirical performance claims.
+
 ## [3.4.4] — 2026-08-07
 
 ### Added
@@ -615,6 +641,7 @@ First official release of FactorForge.
 
 ---
 
+[3.4.5]: https://github.com/eijex/factorforge-cds/compare/v3.4.4...v3.4.5
 [3.4.4]: https://github.com/eijex/factorforge-cds/compare/v3.4.3...v3.4.4
 [3.4.3]: https://github.com/eijex/factorforge-cds/compare/v3.4.2...v3.4.3
 [3.4.0]: https://github.com/eijex/factorforge-cds/compare/v3.3.2...v3.4.0
