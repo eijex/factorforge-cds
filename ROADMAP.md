@@ -7,9 +7,16 @@ FactorForge development direction and planned work.
 
 ---
 
-## Current Focus (v3.3.x)
+## Current Release Status (v3.4.5)
 
-Public-claim alignment, wet-lab feedback intake, and stability. The core engine is feature-complete for the current public scope; this track keeps public documentation, package metadata, web UI, Docker/GHCR references, and citation archives aligned with the same in-silico CDS design boundary.
+FactorForge v3.4.5 was released on 2026-08-22. It is the current public
+release and completes the interface-reliability patch line: browser
+interactions were restored, release checks were strengthened, and product,
+API, engine, registry, documentation, and fixture version surfaces were
+synchronized. The supported public boundary remains deterministic in-silico
+CDS design and pre-synthesis sequence review.
+
+Current maintenance and evidence priorities are:
 
 - Public surface wording audit across README, docs, web UI, package metadata, Docker/GHCR references, and citation archives
 - Wet-lab feedback review and public-safe validation summaries
