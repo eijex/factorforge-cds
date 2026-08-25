@@ -233,3 +233,57 @@ class FactorForgeDBConnector:
             conn.commit()
 
         return run_id
+
+    def save_ml_evaluation_provenance(
+        self,
+        evaluation_run_data: Dict[str, Any],
+        evaluation_checks: List[Dict[str, Any]],
+    ) -> str:
+        """
+        Atomically saves the ML Evaluation Integrity provenance:
+        1. evaluation_runs
+        2. evaluation_checks
+        """
+        run_id = str(uuid.uuid4())
+        
+        with self.get_connection() as conn:
+            with conn.cursor() as cursor:
+                # 1. Insert Evaluation Run
+                cursor.execute(
+                    """
+                    INSERT INTO ml.evaluation_runs
+                    (evaluation_run_id, model_id, evaluation_snapshot_id, engine_name, evaluation_protocol, status)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        run_id,
+                        evaluation_run_data.get("model_id"),
+                        evaluation_run_data.get("evaluation_snapshot_id"),
+                        evaluation_run_data.get("engine_name", "UNKNOWN"),
+                        evaluation_run_data.get("evaluation_protocol", "standard_benchmark"),
+                        evaluation_run_data.get("status", "completed"),
+                    )
+                )
+
+                # 2. Insert Evaluation Checks
+                for chk in evaluation_checks:
+                    check_id = str(uuid.uuid4())
+                    cursor.execute(
+                        """
+                        INSERT INTO ml.evaluation_checks
+                        (check_id, evaluation_run_id, check_type, result, threshold, match_count, details_json)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        """,
+                        (
+                            check_id,
+                            run_id,
+                            chk["check_type"],
+                            chk["result"],
+                            chk.get("threshold"),
+                            chk.get("match_count"),
+                            json.dumps(chk.get("details_json", {})),
+                        )
+                    )
+            conn.commit()
+            
+        return run_id

@@ -683,6 +683,55 @@ def optimize(
         click.echo(f"Error: {e}", err=True)
         raise click.Abort()
 
+@cli.command()
+@click.option("--model-id", required=True, help="UUID of the model version in ml.model_registry")
+@click.option("--train-snapshot", required=True, help="UUID of the training dataset snapshot")
+@click.option("--eval-snapshot", required=True, help="UUID of the evaluation dataset snapshot")
+@click.option("--input-sequence", required=True, help="Generated sequence to audit")
+def evaluate_model(model_id, train_snapshot, eval_snapshot, input_sequence):
+    """
+    Evaluates ML evaluation integrity (Dataset Leakage and Generation Memorization).
+    """
+    click.echo(f"Evaluating Model Integrity for {model_id}...")
+    
+    # 1. We would resolve snapshots from DB here. Mocking for MVP:
+    click.echo(f"Resolving snapshots: Train={train_snapshot}, Eval={eval_snapshot}")
+    mock_train_seqs = ["ATGGCTAAATGGTAA", "ATGCGTACGTGCTAG"]
+    mock_eval_seqs = ["ATGCCCGGGAAATTT"]
+    
+    from factorforge.review.evaluation_integrity import DatasetLeakageAuditor, GenerationMemorizationAuditor
+    
+    # 2. Dataset Leakage Audit
+    ds_auditor = DatasetLeakageAuditor(mock_train_seqs, mock_eval_seqs)
+    ds_check_exact = ds_auditor.audit_exact_overlap()
+    ds_check_homology = ds_auditor.audit_homology_overlap()
+    
+    # 3. Generation Memorization Audit
+    mem_auditor = GenerationMemorizationAuditor(mock_train_seqs)
+    mem_check_exact = mem_auditor.audit_exact_match(input_sequence)
+    mem_check_homology = mem_auditor.audit_high_similarity(input_sequence)
+    
+    all_checks = [ds_check_exact, ds_check_homology, mem_check_exact, mem_check_homology]
+    
+    for chk in all_checks:
+        click.echo(f"[{chk['result']}] {chk['check_type']}: {chk['details_json']['message']}")
+        
+    try:
+        from factorforge.db.connector import FactorForgeDBConnector
+        connector = FactorForgeDBConnector()
+        run_data = {
+            "model_id": model_id,
+            "evaluation_snapshot_id": eval_snapshot,
+            "engine_name": "FactorForgeLM",
+            "evaluation_protocol": "benchmark_leakage_audit",
+            "status": "completed"
+        }
+        run_id = connector.save_ml_evaluation_provenance(run_data, all_checks)
+        click.echo(f"\nSuccessfully recorded ML Evaluation Provenance (Run ID: {run_id})")
+    except Exception as db_e:
+        click.echo("Evaluation completed, but DB persistence failed.", err=True)
+        click.echo(f"DB Error Details: {db_e}", err=True)
+        raise click.Abort()
 
 if __name__ == "__main__":
     cli()

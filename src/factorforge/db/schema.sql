@@ -399,12 +399,52 @@ CREATE TABLE IF NOT EXISTS ml.dataset_snapshots (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS ml.dataset_snapshot_items (
+    item_id UUID PRIMARY KEY,
+    snapshot_id UUID REFERENCES ml.dataset_snapshots(snapshot_id),
+    sequence_id UUID REFERENCES common.sequences(sequence_id),
+    split_role VARCHAR(32) NOT NULL, -- e.g., 'train', 'validation', 'test', 'reference'
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (snapshot_id, sequence_id)
+);
+
+CREATE TABLE IF NOT EXISTS ml.training_runs (
+    training_run_id UUID PRIMARY KEY,
+    dataset_snapshot_id UUID REFERENCES ml.dataset_snapshots(snapshot_id),
+    training_config JSONB,
+    status VARCHAR(32) NOT NULL,
+    started_at TIMESTAMPTZ,
+    completed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS ml.model_registry (
     model_id UUID PRIMARY KEY,
     model_name VARCHAR(128) NOT NULL,
     model_version VARCHAR(64) NOT NULL,
-    dataset_snapshot_id UUID REFERENCES ml.dataset_snapshots(snapshot_id),
+    training_run_id UUID REFERENCES ml.training_runs(training_run_id),
     status VARCHAR(32) NOT NULL DEFAULT 'research_scaffold',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ml.evaluation_runs (
+    evaluation_run_id UUID PRIMARY KEY,
+    model_id UUID REFERENCES ml.model_registry(model_id),
+    evaluation_snapshot_id UUID REFERENCES ml.dataset_snapshots(snapshot_id),
+    engine_name VARCHAR(64) NOT NULL,
+    evaluation_protocol VARCHAR(128) NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ml.evaluation_checks (
+    check_id UUID PRIMARY KEY,
+    evaluation_run_id UUID REFERENCES ml.evaluation_runs(evaluation_run_id),
+    check_type VARCHAR(64) NOT NULL, -- e.g., train_test_exact_overlap, generated_output_homology
+    result VARCHAR(32) NOT NULL,     -- PASS, FAIL, WARNING, INDETERMINATE, NOT_APPLICABLE
+    threshold FLOAT,
+    match_count INT,
+    details_json JSONB,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
