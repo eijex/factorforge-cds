@@ -20,6 +20,7 @@ data/embeddings/
 data/training/
 data/models/
 data/checkpoints/
+data/db/
 models/
 
 # Test cache

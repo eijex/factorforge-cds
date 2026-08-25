@@ -1,9 +1,9 @@
-"""Prepare a public-safe manifest for the experimental FactorForge-LM track.
+"""Prepare a public-safe candidate-asset manifest for FactorForge-LM research.
 
 This script intentionally does not create a train/validation/test corpus. It only
-summarizes candidate public reference assets so a later release gate can decide
-whether a real training-data pipeline is permitted and how split/provenance hashes
-should be recorded.
+fingerprints packaged public reference assets so a later release gate can decide
+whether a real training-data pipeline is permitted. A local SQLite registration
+records this metadata checkpoint; it is not a PostgreSQL or training claim.
 """
 
 from __future__ import annotations
@@ -37,29 +37,83 @@ def collect_candidate_assets(data_dir: Path = DATA_DIR) -> list[str]:
     )
 
 
-def build_manifest(candidate_assets: list[str]) -> dict[str, object]:
-    """Build a versioned dataset snapshot manifest with 70:10:20 split and SHA-256 content hashing."""
-    payload = json.dumps(candidate_assets, sort_keys=True)
-    manifest_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
-    
-    return {
-        "manifest_version": "lm-dataset-snapshot-v1.0",
-        "snapshot_name": "NbeV1.1-HighConfidence-CDS",
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _canonical_manifest_hash(manifest: dict[str, object]) -> str:
+    payload = dict(manifest)
+    payload.pop("manifest_hash", None)
+    canonical = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def build_manifest(
+    candidate_assets: list[str], data_dir: Path = DATA_DIR
+) -> dict[str, object]:
+    """Build a byte-pinned manifest without asserting an unperformed split."""
+    root = data_dir.resolve()
+    fingerprints: list[dict[str, object]] = []
+    for relative_path in candidate_assets:
+        asset = (root / relative_path).resolve()
+        if not asset.is_relative_to(root):
+            raise ValueError(f"Candidate asset escapes data directory: {relative_path}")
+        if not asset.is_file():
+            raise FileNotFoundError(f"Candidate asset does not exist: {asset}")
+        fingerprints.append(
+            {
+                "path": relative_path,
+                "size_bytes": asset.stat().st_size,
+                "sha256": _sha256_file(asset),
+            }
+        )
+
+    manifest: dict[str, object] = {
+        "manifest_version": "lm-candidate-assets-v1",
+        "snapshot_name": "FactorForge-Packaged-Public-Reference-Assets",
         "version": "v1.0",
-        "host_scope": "Nicotiana benthamiana",
-        "sequence_count": 57172,
-        "deduplication_method": "CD-HIT-95",
-        "split_ratio": {"train": 0.70, "val": 0.10, "test": 0.20},
-        "manifest_hash": manifest_hash,
+        "status": "candidate-assets-only-no-training-split",
+        "host_scope": "mixed-packaged-reference-assets",
+        "sequence_count": None,
+        "deduplication_method": None,
+        "split_ratio": None,
+        "claim_boundary": (
+            "This manifest fingerprints packaged candidate assets only. It does not "
+            "establish a training corpus, CD-HIT result, train/validation/test split, "
+            "held-out benchmark, trained model, or biological-performance claim."
+        ),
         "candidate_public_reference_assets": candidate_assets,
+        "asset_fingerprints": fingerprints,
     }
+    manifest["manifest_hash"] = _canonical_manifest_hash(manifest)
+    return manifest
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Write a dataset-snapshot manifest for the experimental LM track."
+        description="Write a byte-pinned candidate-asset manifest for the LM research track."
     )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUTPUT, help="Output JSON path")
+    parser.add_argument(
+        "--db-path",
+        type=Path,
+        default=None,
+        help="Local SQLite checkpoint path (default: data/db/factorforge_relational.db)",
+    )
+    parser.add_argument(
+        "--skip-db-registration",
+        action="store_true",
+        help="Write the manifest without registering it in local SQLite",
+    )
     return parser.parse_args(argv)
 
 
@@ -68,16 +122,17 @@ def main(argv: list[str] | None = None) -> int:
     manifest = build_manifest(collect_candidate_assets())
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-    
-    # Register Dataset Snapshot via DB Connector
-    try:
-        from factorforge.db.connector import FactorForgeDBConnector
-        db = FactorForgeDBConnector()
-        print(f"Dataset Snapshot '{manifest['snapshot_name']}' registered in DB!")
-    except Exception as err:
-        print(f"DB connector registration notice: {err}")
 
-    print(f"Dataset snapshot manifest written: {args.out}")
+    if not args.skip_db_registration:
+        from factorforge.db.connector import FactorForgeDBConnector
+        db = FactorForgeDBConnector(db_path=str(args.db_path) if args.db_path else None)
+        snapshot_id = db.register_dataset_snapshot(manifest)
+        print(
+            "Candidate-asset manifest registered in local SQLite "
+            f"(snapshot_id={snapshot_id})"
+        )
+
+    print(f"Candidate-asset manifest written: {args.out}")
     print(f"Manifest Hash: {manifest['manifest_hash']}")
     return 0
 

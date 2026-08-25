@@ -1,16 +1,13 @@
 {
-  "manifest_version": "lm-dataset-snapshot-v1.0",
-  "snapshot_name": "NbeV1.1-HighConfidence-CDS",
+  "manifest_version": "lm-candidate-assets-v1",
+  "snapshot_name": "FactorForge-Packaged-Public-Reference-Assets",
   "version": "v1.0",
-  "host_scope": "Nicotiana benthamiana",
-  "sequence_count": 57172,
-  "deduplication_method": "CD-HIT-95",
-  "split_ratio": {
-    "train": 0.7,
-    "val": 0.1,
-    "test": 0.2
-  },
-  "manifest_hash": "8a26e4e43e7a4345650afd8b708fde05224e75cc2256da327a1200cfa5bf716d",
+  "status": "candidate-assets-only-no-training-split",
+  "host_scope": "mixed-packaged-reference-assets",
+  "sequence_count": null,
+  "deduplication_method": null,
+  "split_ratio": null,
+  "claim_boundary": "This manifest fingerprints packaged candidate assets only. It does not establish a training corpus, CD-HIT result, train/validation/test split, held-out benchmark, trained model, or biological-performance claim.",
   "candidate_public_reference_assets": [
     "nbenthamiana_codons.json",
     "nbenthamiana_golden_set.json",
@@ -28,5 +25,88 @@
     "templates/high_expression.json",
     "templates/standard_expression.json",
     "wolffia_globosa_codons.json"
-  ]
+  ],
+  "asset_fingerprints": [
+    {
+      "path": "nbenthamiana_codons.json",
+      "size_bytes": 12175,
+      "sha256": "ddbd0a41da88109a709bca0304581e29bd0a756e4db1c51809d5002e9b2d5e8c"
+    },
+    {
+      "path": "nbenthamiana_golden_set.json",
+      "size_bytes": 7025,
+      "sha256": "1168242551290b2cf2d2c33fefc9abd8cff46c5d63e7ac4f94e1b860bbac900f"
+    },
+    {
+      "path": "ntabacum_codons.json",
+      "size_bytes": 12503,
+      "sha256": "45d300cfd394ce8387a4d2bc5b5b881219a2fabf6481c6b904c54a4a1ddf3d55"
+    },
+    {
+      "path": "profiles/nbev11_cds_all_derived_codons.json",
+      "size_bytes": 12503,
+      "sha256": "0f2e48983a07ed501a0ddfb4ebfbb4b862b49d917221721014fc2d90509d86b8"
+    },
+    {
+      "path": "profiles/nbev11_cds_all_derived_filtered_stats.json",
+      "size_bytes": 1605,
+      "sha256": "9f389dc857775fd95ba7d3286dccb3dfeb37a934a412ab1fdb1d70c4aaceaf5c"
+    },
+    {
+      "path": "profiles/nbev11_cds_all_derived_manifest.json",
+      "size_bytes": 887,
+      "sha256": "1584db4a4bad1b9e220773345f10a764f6b5cac4f9a3bf2f0b9db1f2356f552c"
+    },
+    {
+      "path": "profiles/nbev11_cds_hc_derived_codons.json",
+      "size_bytes": 12481,
+      "sha256": "686f12f2881b00a45246670e6c73e10d2254854577c5323ceb19a9ee58ee87dd"
+    },
+    {
+      "path": "profiles/nbev11_cds_hc_derived_filtered_stats.json",
+      "size_bytes": 1602,
+      "sha256": "9ba8ff4369533a922022235bb0c79a156276393aa63a2f59f89522ccfddbf3d6"
+    },
+    {
+      "path": "profiles/nbev11_cds_hc_derived_manifest.json",
+      "size_bytes": 860,
+      "sha256": "36c87e547f5e5065b7f934d759d557b19787e860c50b45e4ace8e7c123e746a3"
+    },
+    {
+      "path": "profiles/qld183_v103_derived_codons.json",
+      "size_bytes": 12519,
+      "sha256": "191a90aa9efa8e3dc9d02c4f5c00c02c16388248aecd463888bcdb1f0562c7ed"
+    },
+    {
+      "path": "profiles/qld183_v103_derived_manifest.json",
+      "size_bytes": 918,
+      "sha256": "8381a8a690b377d24e6cd46a6848a9d6ec5bced272c4f052dbf8c6b891bbacbc"
+    },
+    {
+      "path": "profiles/qld183_v103_filtered_stats.json",
+      "size_bytes": 1596,
+      "sha256": "6ac457cd84b1c2297087794d137dc111bbedc0b1c5a3b53bf452921bc0683920"
+    },
+    {
+      "path": "reference/reference_policy_manifest.json",
+      "size_bytes": 15187,
+      "sha256": "10ed5f908206dca8a371bce25b35ed44cf62f11279877e06caee21afb53a6609"
+    },
+    {
+      "path": "templates/high_expression.json",
+      "size_bytes": 770,
+      "sha256": "41ac5e1961c1addc10660893b6f442783fa835a3452b0e544de58f8f138043f5"
+    },
+    {
+      "path": "templates/standard_expression.json",
+      "size_bytes": 736,
+      "sha256": "c15af881727f0cb06ce71204d635ce4f31ca68d0d7ae7a9f4aea690f248d2bba"
+    },
+    {
+      "path": "wolffia_globosa_codons.json",
+      "size_bytes": 12366,
+      "sha256": "39b0ae457df49f89bef1567304ad41c52ae361cdc3a9ba153cc48dcb6376afaf"
+    }
+  ],
+  "manifest_hash": "6feee961a92fb0679725d6a7c0b1da71dbfc2d9399d61d69dc072a483c616597"
 }

@@ -1,5 +1,9 @@
--- FactorForge / ValidationHub / AgentOS Tri-Tier Database Schema DDL (v3.5.0 Upgraded Architecture)
--- Context-Aware, Versioned & Policy-Driven Constraint Engine Schema
+-- FactorForge / ValidationHub / AgentOS Tri-Tier Database Schema DDL
+-- Research implementation checkpoint for the v3.5.0 ML track.
+--
+-- This file is a version-controlled reference schema, not a migration ledger
+-- or proof that a deployed PostgreSQL instance is synchronized with Git.
+-- Production/release claims require captured migrations and cross-backend tests.
 
 CREATE SCHEMA IF NOT EXISTS common;
 CREATE SCHEMA IF NOT EXISTS factorforge;
@@ -73,7 +77,56 @@ CREATE TABLE IF NOT EXISTS factorforge.constraint_profile_items (
     action_on_fail VARCHAR(32) DEFAULT 'REJECT'
 );
 
--- 2.4 Design Execution Lineage: Request -> Run -> Candidate -> Evaluation -> Package
+-- 2.4 Research provenance registries
+CREATE TABLE IF NOT EXISTS factorforge.dataset_snapshots (
+    snapshot_id SERIAL PRIMARY KEY,
+    snapshot_name VARCHAR(128) NOT NULL,
+    version VARCHAR(64) NOT NULL,
+    status VARCHAR(64) NOT NULL,
+    host_scope VARCHAR(128),
+    sequence_count INT,
+    deduplication_method VARCHAR(64),
+    split_ratio JSONB,
+    manifest_hash CHAR(64) NOT NULL,
+    manifest_uri TEXT,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (snapshot_name, version, manifest_hash)
+);
+
+CREATE TABLE IF NOT EXISTS factorforge.model_registry (
+    model_id SERIAL PRIMARY KEY,
+    model_name VARCHAR(128) NOT NULL,
+    model_version VARCHAR(64) NOT NULL,
+    architecture VARCHAR(128) NOT NULL,
+    tokenizer_version VARCHAR(64),
+    weights_hash CHAR(64),
+    config_hash CHAR(64),
+    code_commit CHAR(40),
+    dataset_snapshot_id INT REFERENCES factorforge.dataset_snapshots(snapshot_id)
+        ON DELETE RESTRICT,
+    status VARCHAR(32) NOT NULL DEFAULT 'research_scaffold',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (model_name, model_version)
+);
+
+CREATE TABLE IF NOT EXISTS factorforge.ml_features (
+    feature_id SERIAL PRIMARY KEY,
+    sequence_id INT NOT NULL REFERENCES common.sequence_registry(sequence_id)
+        ON DELETE RESTRICT,
+    feature_name VARCHAR(128) NOT NULL,
+    feature_version VARCHAR(64) NOT NULL,
+    feature_value JSONB NOT NULL,
+    observed_at TIMESTAMPTZ NOT NULL,
+    available_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CHECK (available_at >= observed_at)
+);
+
+-- The timestamps above make feature availability explicit. Preventing leakage
+-- at a prediction cutoff remains a query/pipeline responsibility and requires
+-- a separate negative integration test.
+
+-- 2.5 Design Execution Lineage: Request -> Run -> Candidate -> Evaluation -> Package
 CREATE TABLE IF NOT EXISTS factorforge.design_requests (
     request_id SERIAL PRIMARY KEY,
     context_id INT REFERENCES common.biological_context(context_id),
@@ -148,7 +201,7 @@ CREATE TABLE IF NOT EXISTS validationhub.observation_records (
 );
 
 -- ============================================================================
--- 4. AGENTOPO SCHEMA: Policy Enforcement & Workflow Audit
+-- 4. AGENTOPS SCHEMA: Policy Enforcement & Workflow Audit
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS agentops.workflow_runs (
     workflow_id SERIAL PRIMARY KEY,

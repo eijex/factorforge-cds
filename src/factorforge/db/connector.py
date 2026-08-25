@@ -7,11 +7,12 @@ Implements a Context-Aware, Policy-Driven Rule Engine connector that stores:
 4. Execution Lineage: Requests -> Runs -> Candidates -> Evaluations -> Design Packages
 """
 
-from typing import Dict, Any, List, Optional
+from contextlib import closing
 import hashlib
 import json
 import sqlite3
 from pathlib import Path
+from typing import Any, Dict, List, Mapping, Optional
 
 
 class FactorForgeDBConnector:
@@ -30,11 +31,12 @@ class FactorForgeDBConnector:
     def _get_connection(self):
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA foreign_keys = ON")
         return conn
 
     def _init_db(self):
         """Initializes SQLite tables matching the upgraded PRD Job 233 architecture."""
-        with self._get_connection() as conn:
+        with closing(self._get_connection()) as conn:
             cursor = conn.cursor()
 
             # 1. Biological Context
@@ -140,6 +142,25 @@ class FactorForgeDBConnector:
             );
             """)
 
+            # 7. Local dataset-snapshot metadata. This is a SQLite research
+            # checkpoint, not the canonical PostgreSQL evidence ledger.
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS factorforge_dataset_snapshots (
+                snapshot_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                snapshot_name TEXT NOT NULL,
+                version TEXT NOT NULL,
+                status TEXT NOT NULL,
+                host_scope TEXT,
+                sequence_count INTEGER,
+                deduplication_method TEXT,
+                split_ratio_json TEXT,
+                manifest_hash TEXT NOT NULL,
+                manifest_json TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(snapshot_name, version, manifest_hash)
+            );
+            """)
+
             # Migration check: if old schema without candidate_id exists, drop and recreate
             cursor.execute("PRAGMA table_info(factorforge_design_packages);")
             cols = [col[1] for col in cursor.fetchall()]
@@ -157,11 +178,92 @@ class FactorForgeDBConnector:
 
             conn.commit()
 
+    @staticmethod
+    def _manifest_hash(manifest: Mapping[str, Any]) -> str:
+        """Return the canonical SHA-256 hash for a manifest payload."""
+        payload = dict(manifest)
+        payload.pop("manifest_hash", None)
+        canonical = json.dumps(
+            payload,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
+        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+    def register_dataset_snapshot(self, manifest: Mapping[str, Any]) -> int:
+        """Register verified manifest metadata in the local SQLite checkpoint.
+
+        The method validates the supplied canonical hash and is idempotent for
+        the same snapshot name, version, and manifest hash. It does not create
+        a training split or write to the GCP PostgreSQL instance.
+        """
+        required = {"snapshot_name", "version", "status", "manifest_hash"}
+        missing = sorted(required.difference(manifest))
+        if missing:
+            raise ValueError(f"Dataset snapshot manifest missing fields: {missing}")
+
+        expected_hash = self._manifest_hash(manifest)
+        supplied_hash = str(manifest["manifest_hash"])
+        if supplied_hash != expected_hash:
+            raise ValueError(
+                "Dataset snapshot manifest hash mismatch: "
+                f"expected {expected_hash}, received {supplied_hash}"
+            )
+
+        manifest_json = json.dumps(
+            dict(manifest),
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        )
+        split_ratio = manifest.get("split_ratio")
+        split_ratio_json = (
+            json.dumps(split_ratio, sort_keys=True, separators=(",", ":"))
+            if split_ratio is not None
+            else None
+        )
+
+        with closing(self._get_connection()) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT OR IGNORE INTO factorforge_dataset_snapshots
+                (snapshot_name, version, status, host_scope, sequence_count,
+                 deduplication_method, split_ratio_json, manifest_hash, manifest_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    manifest["snapshot_name"],
+                    manifest["version"],
+                    manifest["status"],
+                    manifest.get("host_scope"),
+                    manifest.get("sequence_count"),
+                    manifest.get("deduplication_method"),
+                    split_ratio_json,
+                    supplied_hash,
+                    manifest_json,
+                ),
+            )
+            cursor.execute(
+                """
+                SELECT snapshot_id
+                FROM factorforge_dataset_snapshots
+                WHERE snapshot_name = ? AND version = ? AND manifest_hash = ?
+                """,
+                (manifest["snapshot_name"], manifest["version"], supplied_hash),
+            )
+            row = cursor.fetchone()
+            if row is None:
+                raise RuntimeError("Dataset snapshot registration did not return a row")
+            conn.commit()
+            return int(row["snapshot_id"])
+
 
     def register_sequence(self, raw_sequence: str, molecule_type: str = "CDS") -> int:
         """Registers a canonical sequence in common_sequence_registry with content hashing."""
         seq_hash = hashlib.sha256(raw_sequence.encode("utf-8")).hexdigest()
-        with self._get_connection() as conn:
+        with closing(self._get_connection()) as conn:
             cursor = conn.cursor()
             cursor.execute(
                 "SELECT sequence_id FROM common_sequence_registry WHERE sequence_hash = ?",
@@ -191,7 +293,7 @@ class FactorForgeDBConnector:
         raw_seq = candidate_data["optimized_sequence"]
         seq_id = self.register_sequence(raw_seq)
 
-        with self._get_connection() as conn:
+        with closing(self._get_connection()) as conn:
             cursor = conn.cursor()
 
             # Insert Candidate
