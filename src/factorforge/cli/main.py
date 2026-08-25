@@ -327,6 +327,7 @@ def list_engines():
 )
 @click.option("--scan-include", help="Comma-separated scanner names to include")
 @click.option("--scan-exclude", help="Comma-separated scanner names to exclude")
+@click.option("--save-db/--no-save-db", default=False, help="Save optimization result to PostgreSQL DB")
 def optimize(
     input_file,
     engine,
@@ -344,6 +345,7 @@ def optimize(
     scan_mode,
     scan_include,
     scan_exclude,
+    save_db,
 ):
     """Optimize protein sequence"""
     compare_profile_list = _parse_csv_option(compare_profiles)
@@ -605,6 +607,77 @@ def optimize(
             click.echo("Metrics:")
             for key, value in result.metrics.items():
                 click.echo(f"  - {key}: {value}")
+                
+            if save_db:
+                from factorforge.db.connector import FactorForgeDBConnector
+                
+                click.echo("Saving to PostgreSQL Database...")
+                connector = FactorForgeDBConnector()
+                
+                run_metadata = {
+                    "execution_origin": "standalone_cli",
+                    "actual_engine_name": optimizer.name,
+                    "actual_profile_name": profile,
+                    "actual_engine_objective": objective if engine == "dp" else None,
+                    "generation_performed": True,
+                    "analysis_mode": scan_mode,
+                    "evidence_level": "prospective_factorforge",
+                    "runner_entrypoint": "factorforge.cli.main"
+                }
+
+                candidate_data = {
+                    "optimized_sequence": result.sequence,
+                    "cai": result.metrics.get("cai", None),
+                    "gc_percent": result.metrics.get("gc_content", None),
+                    "computational_status": "passed" if not result.metrics.get("violations", 0) else "rejected"
+                }
+                
+                check_results = []
+                # Map metrics to Configured Constraints where applicable
+                if "gc_target_reached" in result.metrics:
+                    check_results.append({
+                        "check_domain": "configured_constraint",
+                        "result": "PASS" if result.metrics["gc_target_reached"] else "FAIL",
+                        "observed_value": result.metrics.get("gc_percent"),
+                        "details_json": {"rule": "GC Target", "min": gc_min, "max": gc_max}
+                    })
+
+                # Map warnings to Advisory / Assembly Review / Sequence Integrity
+                for scan_warn in result.metadata.get("scan_warnings", []):
+                    rule_name = scan_warn.get("rule_name", "UNKNOWN").lower()
+                    if "bsai" in rule_name or "bsmbi" in rule_name or "type iis" in rule_name:
+                        domain = "assembly_review"
+                    elif "stop" in rule_name or "frame" in rule_name:
+                        domain = "sequence_integrity"
+                    else:
+                        domain = "advisory_sequence_risk"
+                        
+                    check_results.append({
+                        "check_domain": domain,
+                        "result": "WARN",
+                        "observed_value": None,
+                        "details_json": scan_warn
+                    })
+                
+                if not check_results:
+                    check_results.append({
+                        "check_domain": "advisory_sequence_risk",
+                        "result": "PASS",
+                        "observed_value": 1.0,
+                        "details_json": {"message": "All default scans passed cleanly."}
+                    })
+                
+                try:
+                    run_id = connector.save_computational_provenance(
+                        run_metadata=run_metadata,
+                        candidate_data=candidate_data,
+                        check_results=check_results
+                    )
+                    click.echo(f"Successfully recorded execution provenance (Run ID: {run_id})")
+                except Exception as db_e:
+                    click.echo("Optimization completed, but DB persistence failed. No database records were committed.", err=True)
+                    click.echo(f"DB Error Details: {db_e}", err=True)
+                    raise click.Abort()
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)

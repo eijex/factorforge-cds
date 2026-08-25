@@ -149,24 +149,52 @@ class FactorForgeDBConnector:
             conn.commit()
             return seq_id
 
-    def save_candidate_with_evaluations(
+    def save_computational_provenance(
         self,
+        run_metadata: Dict[str, Any],
         candidate_data: Dict[str, Any],
-        evaluations: List[Dict[str, Any]],
-        design_run_id: str,
-    ) -> Dict[str, Any]:
-        """Saves a candidate, its step-by-step constraint evaluations, and creates a frozen design package."""
+        check_results: List[Dict[str, Any]],
+    ) -> str:
+        """
+        Atomically saves the execution provenance (Phase 1):
+        1. design_run
+        2. candidate
+        3. check_results
+        
+        Rolls back the entire transaction if any step fails. Does NOT create a design_package.
+        """
         raw_seq = candidate_data["optimized_sequence"]
+        # Sequence registration could technically be part of the transaction, but it's idempotent.
         seq_id = self.register_sequence(raw_seq)
         
+        run_id = str(uuid.uuid4())
         candidate_id = str(uuid.uuid4())
-        package_id = str(uuid.uuid4())
-        package_candidate_id = str(uuid.uuid4())
 
+        # The context manager automatically commits on success, and rolls back on exception
         with self.get_connection() as conn:
             with conn.cursor() as cursor:
-                # 1. Insert Candidate
-                overall_status = "passed" if candidate_data.get("type2is_clean", True) else "rejected"
+                # 1. Insert Design Run
+                cursor.execute(
+                    """
+                    INSERT INTO factorforge.design_runs 
+                    (design_run_id, execution_origin, actual_engine_name, actual_profile_name, 
+                     generation_performed, analysis_mode, evidence_level, runner_entrypoint)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        run_id,
+                        run_metadata.get("execution_origin", "standalone_cli"),
+                        run_metadata["actual_engine_name"],
+                        run_metadata.get("actual_profile_name"),
+                        run_metadata.get("generation_performed", True),
+                        run_metadata.get("analysis_mode", "cli_generation"),
+                        run_metadata.get("evidence_level", "prospective_factorforge"),
+                        run_metadata.get("runner_entrypoint", "factorforge.cli.main"),
+                    )
+                )
+
+                # 2. Insert Candidate (Metrics)
+                overall_status = candidate_data.get("computational_status", "passed")
                 cursor.execute(
                     """
                     INSERT INTO factorforge.candidates
@@ -175,16 +203,16 @@ class FactorForgeDBConnector:
                     """,
                     (
                         candidate_id,
-                        design_run_id,
+                        run_id,
                         seq_id,
                         overall_status,
-                        candidate_data.get("cai", 0.84),
-                        candidate_data.get("gc_percent", 42.5),
+                        candidate_data.get("cai", None),
+                        candidate_data.get("gc_percent", None),
                     ),
                 )
 
-                # 2. Insert Step-by-Step Constraint Evaluations (Check Results)
-                for ev in evaluations:
+                # 3. Insert Check Results (Constraints)
+                for chk in check_results:
                     check_result_id = str(uuid.uuid4())
                     cursor.execute(
                         """
@@ -195,43 +223,13 @@ class FactorForgeDBConnector:
                         (
                             check_result_id,
                             candidate_id,
-                            ev["constraint_code"],
-                            ev["status"],
-                            ev.get("observed_value"),
-                            json.dumps(ev.get("details", {})),
+                            chk["check_domain"],  # e.g., sequence_integrity, advisory_sequence_risk
+                            chk["result"],        # PASS, WARN, FAIL
+                            chk.get("observed_value"),
+                            json.dumps(chk.get("details_json", {})),
                         ),
                     )
-
-                # 3. Freeze Design Package
-                manifest_payload = json.dumps({
-                    "package_id": package_id, 
-                    "design_run_id": design_run_id,
-                    "candidate_id": candidate_id,
-                    "sequence_id": seq_id
-                })
-                manifest_hash = hashlib.sha256(manifest_payload.encode("utf-8")).hexdigest()
-
-                cursor.execute(
-                    """
-                    INSERT INTO factorforge.design_packages (package_id, design_run_id, frozen_manifest_hash)
-                    VALUES (%s, %s, %s)
-                    """,
-                    (package_id, design_run_id, manifest_hash),
-                )
-                
-                cursor.execute(
-                    """
-                    INSERT INTO factorforge.design_package_candidates (package_candidate_id, package_id, candidate_id)
-                    VALUES (%s, %s, %s)
-                    """,
-                    (package_candidate_id, package_id, candidate_id)
-                )
-
+            # Automatic commit here; if exception occurs, it rolls back.
             conn.commit()
 
-            return {
-                "package_id": package_id,
-                "candidate_id": candidate_id,
-                "sequence_id": seq_id,
-                "frozen_manifest_hash": manifest_hash,
-            }
+        return run_id
