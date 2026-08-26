@@ -60,7 +60,11 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 - ✅ File upload (FASTA)
 - ✅ Text input (paste sequence)
 - ✅ Focused N. benthamiana web workflow
+- ✅ Host selector for N. benthamiana and experimental Tobacco BY-2 workflows
 - ✅ 4 public CDS design profiles
+- 🧪 Deployment-gated ML preview and Rule-vs-ML dual comparison (disabled on public deployments by default)
+- ✅ Windowed codon alignment viewer for long CDS sequences
+- ✅ Capability-gated canonical DB save control (disabled by default)
 - ✅ Real-time results
 - ✅ Custom restriction site input and removal report
 - ✅ Optional reproducibility seed and Type IIS enzyme presets

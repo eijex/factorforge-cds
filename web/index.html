@@ -70,7 +70,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.4.5 Release Notes
+                            v3.4.6 · ML Preview
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -203,6 +203,42 @@
                         <span class="bg-indigo-50 p-2 rounded-lg mr-3 text-indigo-600">⚙️</span>
                         Optimization Settings
                     </h2>
+
+                    <div class="mb-8" id="engineSelector">
+                        <div class="flex items-center justify-between gap-3 mb-3">
+                            <div>
+                                <p class="text-xs font-extrabold text-slate-600 uppercase tracking-widest">Execution Mode</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">ML modes are an experimental preview while model development continues.</p>
+                            </div>
+                            <span id="mlPreviewBadge" class="px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-[9px] font-extrabold uppercase tracking-wider">ML update in progress</span>
+                        </div>
+                        <div class="grid grid-cols-1 gap-2" role="radiogroup" aria-label="Execution mode">
+                            <label class="engine-option">
+                                <input type="radio" name="engineMode" value="profile" checked>
+                                <span><b>Rule-Based</b><small>Stable profile engine</small></span>
+                            </label>
+                            <label class="engine-option">
+                                <input type="radio" name="engineMode" value="slm" disabled>
+                                <span><b>ML Preview</b><small>Experimental constrained decoding scaffold</small></span>
+                            </label>
+                            <label class="engine-option">
+                                <input type="radio" name="engineMode" value="dual_compare" disabled>
+                                <span><b>Dual Compare</b><small>Rule vs ML preview, codon by codon</small></span>
+                            </label>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                            <label class="text-xs font-bold text-slate-600 dark:text-slate-300">Host
+                                <select id="hostSelect" class="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-800 dark:text-slate-100">
+                                    <option value="nbenthamiana">N. benthamiana</option>
+                                    <option value="by2">Tobacco BY-2 (experimental)</option>
+                                </select>
+                            </label>
+                            <label class="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed">
+                                <input id="saveDbToggle" type="checkbox" disabled>
+                                <span>Save to canonical DB<small id="saveDbStatus" class="block font-normal">Unavailable on this deployment</small></span>
+                            </label>
+                        </div>
+                    </div>
 
                     <!-- radio button group -->
                     <div id="designObjectivePolicy" class="space-y-3 mb-8">
@@ -739,6 +775,30 @@
                             <div id="resultsReportBody" class="px-4 pb-4 space-y-2 text-xs text-slate-700 dark:text-slate-300"></div>
                         </details>
 
+                        <section id="comparisonDashboard" class="hidden mb-8 space-y-4" aria-live="polite">
+                            <div class="rounded-2xl border border-amber-200 bg-amber-50/70 dark:bg-amber-900/20 dark:border-amber-800/50 p-4">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <h3 class="font-extrabold text-slate-900 dark:text-slate-100">Rule vs ML Preview</h3>
+                                    <span class="px-2 py-1 rounded-md bg-amber-100 text-amber-800 text-[10px] font-bold uppercase">Experimental · work in progress</span>
+                                </div>
+                                <p id="comparisonNotice" class="text-xs text-amber-800 dark:text-amber-200 mt-2"></p>
+                            </div>
+                            <div class="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-700">
+                                <table class="w-full min-w-[620px] text-xs">
+                                    <thead class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"><tr><th class="p-3 text-left">Metric</th><th class="p-3 text-left">Rule-Based</th><th class="p-3 text-left">ML Preview</th><th class="p-3 text-left">Delta / Status</th></tr></thead>
+                                    <tbody id="comparisonMatrixBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+                                </table>
+                            </div>
+                            <div id="provenanceBadges" class="flex flex-wrap gap-2"></div>
+                            <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-950 p-4">
+                                <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                                    <div><h3 class="text-sm font-extrabold text-white">Codon Alignment</h3><p id="alignmentRange" class="text-[10px] text-slate-400 mt-1"></p></div>
+                                    <div class="flex gap-2"><button id="alignmentPrev" class="alignment-nav">← Previous</button><button id="alignmentNext" class="alignment-nav">Next →</button></div>
+                                </div>
+                                <div id="codonAlignmentViewer" class="codon-alignment font-mono overflow-x-auto custom-scrollbar" tabindex="0" aria-label="Codon-by-codon alignment"></div>
+                            </div>
+                        </section>
+
                         <!-- Optimized Sequence -->
                         <div class="mb-8 flex-grow">
                             <label
@@ -884,7 +944,7 @@
                     class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
             </div>
             <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
-                <!-- Version 3.4.5 -->
+                <!-- Version 3.4.6 -->
                 <div class="relative pl-8 border-l-2 border-emerald-500">
                     <div
                         class="absolute -left-[9px] top-0 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
@@ -892,6 +952,21 @@
                     <div class="flex items-center space-x-2 mb-2">
                         <span
                             class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.4.6 — ML Preview</h3>
+                        <span class="text-slate-400 text-[10px]">2026-08-26</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Preview:</b> Added deployment-gated ML and Dual Compare UI with a windowed codon-by-codon alignment viewer. Public execution remains disabled by default.</li>
+                        <li><b>Status:</b> ML update in progress. The current path is a constrained-decoding research scaffold, not a completed trained production model.</li>
+                        <li><b>Safety:</b> DB saving is capability-gated and verification badges remain not checked until supported by runtime evidence.</li>
+                    </ul>
+                </div>
+                <!-- Version 3.4.5 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-300 dark:bg-slate-600 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
                         <h3 class="font-bold text-slate-800 dark:text-white">v3.4.5 — Interface Reliability Release</h3>
                         <span class="text-slate-400 text-[10px]">2026-08-22</span>
                     </div>

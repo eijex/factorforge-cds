@@ -371,6 +371,99 @@ input[type="checkbox"]:not(#useTemplate)+div {
     tab-size: 4;
 }
 
+.engine-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    background: #fff;
+    transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.engine-option:has(input:checked) {
+    border-color: #10b981;
+    background: #ecfdf5;
+}
+
+.engine-option:has(input:disabled) {
+    cursor: not-allowed;
+    border-style: dashed;
+    opacity: 0.62;
+}
+
+.engine-option small {
+    display: block;
+    margin-top: 0.15rem;
+    color: #64748b;
+    font-size: 0.68rem;
+}
+
+.dark .engine-option {
+    border-color: #334155;
+    background: #1e293b;
+    color: #f1f5f9;
+}
+
+.dark .engine-option:has(input:checked) {
+    border-color: #10b981;
+    background: rgba(6, 78, 59, 0.35);
+}
+
+.alignment-nav {
+    border: 1px solid #475569;
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.65rem;
+    color: #cbd5e1;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.alignment-nav:disabled {
+    cursor: not-allowed;
+    opacity: 0.35;
+}
+
+.codon-alignment {
+    display: grid;
+    grid-template-columns: 3.5rem repeat(var(--codon-count, 1), minmax(3.4rem, 1fr));
+    min-width: max-content;
+    color: #cbd5e1;
+    font-size: 0.72rem;
+}
+
+.codon-label,
+.codon-chip {
+    min-height: 2rem;
+    padding: 0.45rem 0.35rem;
+    border-bottom: 1px solid #1e293b;
+    text-align: center;
+}
+
+.codon-label {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: #020617;
+    color: #64748b;
+    text-align: left;
+    font-weight: 700;
+}
+
+.codon-chip.ml-different {
+    border-radius: 0.35rem;
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    font-weight: 800;
+}
+
+.codon-chip.diff-marker {
+    color: #f59e0b;
+    font-weight: 900;
+}
+
 /* Card Hover micro-interactions */
 section>div:hover {
     transform: translateY(-2px);

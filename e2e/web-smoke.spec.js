@@ -32,7 +32,7 @@ test('opens release notes and toggles dark mode', async ({ page }) => {
 
   await page.locator('#changelogBtn').click();
   await expect(page.locator('#changelogModal')).toBeVisible();
-  await expect(page.locator('#changelogModal')).toContainText('v3.4.5');
+  await expect(page.locator('#changelogModal')).toContainText('v3.4.6 — ML Preview');
   await page.locator('#closeModal').click();
   await expect(page.locator('#changelogModal')).toBeHidden();
 });
@@ -111,13 +111,71 @@ test('shows CDS design review controls and rejects multi-FASTA input', async ({ 
   await expect(page.locator('#optimizeBtn')).toBeDisabled();
 });
 
-test('keeps the public web workflow focused on N. benthamiana', async ({ page }) => {
+test('offers host selection while marking BY-2 experimental', async ({ page }) => {
   await openApp(page);
 
-  await expect(page.getByText('Host System', { exact: true })).toHaveCount(0);
-  await expect(page.locator('input[name="host"]')).toHaveCount(0);
+  await expect(page.locator('#hostSelect')).toHaveValue('nbenthamiana');
+  await expect(page.locator('#hostSelect option[value="by2"]')).toContainText('experimental');
   await expect(page).toHaveTitle('FactorForge | N. benthamiana CDS Design');
   await expect(page.locator('input[name="objective"][value="feasibility_best"]')).toBeEnabled();
+});
+
+test('renders experimental dual comparison and paged codon alignment', async ({ page }) => {
+  await page.route('**/api/optimize', async route => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+        capabilities: {
+          execution_modes: ['profile', 'slm', 'dual_compare'],
+          ml_preview: { available: true, status: 'experimental', trained_model_loaded: false },
+          db_save: { available: false }
+        },
+        validation_checks: []
+      }) });
+      return;
+    }
+    const alignment = Array.from({ length: SAMPLE_PROTEIN.length }, (_, index) => ({
+      position: index + 1,
+      amino_acid: SAMPLE_PROTEIN[index],
+      rule_codon: index === 3 ? 'CTT' : 'GAA',
+      ml_codon: index === 3 ? 'TTA' : 'GAA',
+      is_different: index === 3,
+      rule_frequency: 0.25,
+      ml_frequency: 0.15,
+      rule_gc_bases: 1,
+      ml_gc_bases: 0
+    }));
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+      success: true,
+      mode: 'dual_compare',
+      experimental: true,
+      preview_notice: 'ML update in progress: constrained-decoding research scaffold.',
+      optimized_sequence: MOCK_DNA,
+      original_length: SAMPLE_PROTEIN.length,
+      optimized_length: MOCK_DNA.length,
+      metrics: { cai: 0.91, gc_percent: 45, polya_signals: 0, length: MOCK_DNA.length },
+      profile: 'balanced',
+      host_profile: 'nbenthamiana',
+      validation: { input_type: 'protein', polya: 'PASS', moclo: 'PASS', gc: 'PASS' },
+      comparison: {
+        rule: { cds: MOCK_DNA, metrics: { cai: 0.91, gc_percent: 45, type_iis_clean: true } },
+        ml: { cds: MOCK_DNA, metrics: { cai: 0.88, gc_percent: 43, type_iis_clean: true } },
+        codon_concordance_percent: 94.7,
+        nt_identity_percent: 98.2,
+        alignment,
+        provenance: { canonical_sha256: 'a'.repeat(64), db_save_status: 'not_checked', audit_status: 'not_checked', leakage_check_status: 'not_checked' }
+      }
+    }) });
+  });
+  await openApp(page);
+  await page.locator('input[name="engineMode"][value="dual_compare"]').check();
+  await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  await page.locator('#optimizeBtn').click();
+
+  await expect(page.locator('#comparisonDashboard')).toBeVisible();
+  await expect(page.locator('#comparisonNotice')).toContainText('ML update in progress');
+  await expect(page.locator('#comparisonMatrixBody')).toContainText('94.7% match');
+  await expect(page.locator('#codonAlignmentViewer')).toContainText('▲');
+  await expect(page.locator('#provenanceBadges')).toContainText('not_checked');
 });
 
 test('optimization payload includes host and renders host_profile', async ({ page }) => {

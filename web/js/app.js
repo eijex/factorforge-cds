@@ -33,6 +33,7 @@ const TYPE_IIS_PRESETS = Object.freeze({
     SapI: 'GAAGAGC'
 });
 let hostGcRanges = {};
+let apiCapabilities = {};
 
 function getGcRange(hostId) {
     return hostGcRanges[hostId] || OFFLINE_GC_RANGES[hostId] || OFFLINE_GC_RANGES.nbenthamiana;
@@ -55,8 +56,11 @@ function loadVersionedHistory() {
 // State Management
 const state = {
     sequence: '',
+    engineMode: 'profile',
     objective: 'feasibility_best',
     host: 'nbenthamiana',
+    saveDb: false,
+    alignmentPage: 0,
     useTemplate: false,
     kozak: false,
     dinuc: false,
@@ -104,6 +108,18 @@ const elements = {
     themeToggle: document.getElementById('themeToggle'),
     themeIcon: document.getElementById('themeIcon'),
     objectiveRadios: document.getElementsByName('objective'),
+    engineModeRadios: document.getElementsByName('engineMode'),
+    hostSelect: document.getElementById('hostSelect'),
+    saveDbToggle: document.getElementById('saveDbToggle'),
+    saveDbStatus: document.getElementById('saveDbStatus'),
+    comparisonDashboard: document.getElementById('comparisonDashboard'),
+    comparisonNotice: document.getElementById('comparisonNotice'),
+    comparisonMatrixBody: document.getElementById('comparisonMatrixBody'),
+    provenanceBadges: document.getElementById('provenanceBadges'),
+    codonAlignmentViewer: document.getElementById('codonAlignmentViewer'),
+    alignmentRange: document.getElementById('alignmentRange'),
+    alignmentPrev: document.getElementById('alignmentPrev'),
+    alignmentNext: document.getElementById('alignmentNext'),
     implementedObjectives: document.getElementById('implementedObjectives'),
     experimentalObjectives: document.getElementById('experimentalObjectives'),
     packagedReferenceAssets: document.getElementById('packagedReferenceAssets'),
@@ -202,7 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadApiMetadata();
     initEventListeners();
     renderHistory();
-    console.log('FactorForge v3.4.5 Engaged');
+    console.log('FactorForge v3.4.6 Engaged');
 });
 
 // Loads server-owned GC ranges and validation labels. Supported hosts remain
@@ -223,6 +239,16 @@ async function loadApiMetadata() {
             if (Array.isArray(data.validation_checks)) {
                 validationRegistry = data.validation_checks;
             }
+            apiCapabilities = data.capabilities || {};
+            const mlAvailable = Boolean(apiCapabilities.ml_preview?.available);
+            elements.engineModeRadios.forEach(radio => {
+                if (radio.value !== 'profile') radio.disabled = !mlAvailable;
+            });
+            const dbAvailable = Boolean(apiCapabilities.db_save?.available);
+            elements.saveDbToggle.disabled = !dbAvailable;
+            elements.saveDbStatus.textContent = dbAvailable
+                ? 'Enabled for this deployment'
+                : 'Unavailable on this deployment';
         }
     } catch (_) {
         // Offline/dev fallback — getGcRange() uses OFFLINE_GC_RANGES;
@@ -242,6 +268,20 @@ function initEventListeners() {
             state.objective = e.target.value;
         });
     });
+    elements.engineModeRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            state.engineMode = e.target.value;
+            state.alignmentPage = 0;
+        });
+    });
+    elements.hostSelect.addEventListener('change', (e) => {
+        state.host = e.target.value;
+    });
+    elements.saveDbToggle.addEventListener('change', (e) => {
+        state.saveDb = e.target.checked;
+    });
+    elements.alignmentPrev.addEventListener('click', () => changeAlignmentPage(-1));
+    elements.alignmentNext.addEventListener('click', () => changeAlignmentPage(1));
 
     elements.useTemplateCheck.addEventListener('change', (e) => {
         state.useTemplate = e.target.checked;
@@ -477,12 +517,16 @@ async function runOptimization() {
         const payload = {
             sequence: state.sequence,
             host: state.host,
+            mode: state.engineMode,
+            save_db: state.saveDb,
             use_template: state.useTemplate,
             kozak: state.kozak,
             dinuc: state.dinuc,
             return_candidates: true
         };
-        if (state.objective === 'feasibility_best') {
+        if (state.engineMode !== 'profile') {
+            payload.profile = 'balanced';
+        } else if (state.objective === 'feasibility_best' && state.host === 'nbenthamiana') {
             payload.objective = 'feasibility_best';
             payload.host_profile = state.host;
             // Host-aware default (v3.3.0) — previously hardcoded to
@@ -490,7 +534,7 @@ async function runOptimization() {
             // resolve_host_gc_range() default for every feasibility_best run.
             payload.constraints = getGcRange(state.host);
         } else {
-            payload.profile = state.objective;
+            payload.profile = state.objective === 'feasibility_best' ? 'balanced' : state.objective;
         }
         const seedValue = elements.optimizationSeed.value.trim();
         if (seedValue !== '') {
@@ -709,7 +753,8 @@ function renderResults() {
     renderCandidateComparison(res);
     renderCustomRestrictionResults(res);
     renderMfeWarning(res);
-    renderResultsReport(res, primary, gcTarget);
+        renderResultsReport(res, primary, gcTarget);
+    renderComparisonDashboard(res);
 
     // PolyA color coding
     const polyaCount = primary.metrics.polya_signals;
@@ -730,6 +775,77 @@ function renderResults() {
 
     // JSON Details
     elements.jsonDetails.textContent = JSON.stringify(res, null, 2);
+}
+
+const ALIGNMENT_PAGE_SIZE = 60;
+
+function renderComparisonDashboard(res) {
+    const comparison = res?.comparison;
+    if (!comparison || res.mode !== 'dual_compare') {
+        elements.comparisonDashboard.classList.add('hidden');
+        return;
+    }
+    elements.comparisonDashboard.classList.remove('hidden');
+    elements.comparisonNotice.textContent = res.preview_notice || 'Experimental comparison preview.';
+    const rule = comparison.rule.metrics;
+    const ml = comparison.ml.metrics;
+    const metricRows = [
+        ['AA Translation Identity', '100% Passed', '100% Passed', 'Synonymous design'],
+        ['GC Content', `${Number(rule.gc_percent).toFixed(1)}%`, `${Number(ml.gc_percent).toFixed(1)}%`, `${(Number(ml.gc_percent) - Number(rule.gc_percent)).toFixed(1)} pp`],
+        ['CAI Index', Number(rule.cai || 0).toFixed(3), Number(ml.cai || 0).toFixed(3), `${(Number(ml.cai || 0) - Number(rule.cai || 0)).toFixed(3)}`],
+        ['Type IIS Clearance', rule.type_iis_clean === false ? `${rule.type_iis_site_count || 0} site(s)` : 'Clean', ml.type_iis_clean === false ? `${ml.type_iis_site_count || 0} site(s)` : 'Clean', rule.type_iis_clean && ml.type_iis_clean ? 'Passed' : 'Review'],
+        ['Codon Concordance', '—', '—', `${Number(comparison.codon_concordance_percent).toFixed(1)}% match`],
+        ['NT Identity', '—', '—', `${Number(comparison.nt_identity_percent).toFixed(1)}%`]
+    ];
+    elements.comparisonMatrixBody.innerHTML = metricRows.map(row => `<tr>${row.map((cell, index) => `<td class="p-3 ${index === 0 ? 'font-bold text-slate-700 dark:text-slate-200' : 'text-slate-600 dark:text-slate-300'}">${escapeHtml(String(cell))}</td>`).join('')}</tr>`).join('');
+
+    const provenance = comparison.provenance || {};
+    const badge = (label, status) => {
+        const verified = status === 'verified';
+        const classes = verified ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200';
+        return `<span class="px-2 py-1 rounded-lg border text-[10px] font-bold ${classes}">${escapeHtml(label)}: ${escapeHtml(status || 'unavailable')}</span>`;
+    };
+    elements.provenanceBadges.innerHTML = [
+        badge('Canonical DB', provenance.db_save_status),
+        badge('Audit immutability', provenance.audit_status),
+        badge('Evaluation leakage', provenance.leakage_check_status),
+        provenance.canonical_sha256 ? `<button class="px-2 py-1 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 text-[10px] font-mono" title="${escapeHtml(provenance.canonical_sha256)}" onclick="navigator.clipboard.writeText('${escapeHtml(provenance.canonical_sha256)}')">SHA-256 · Copy</button>` : ''
+    ].join('');
+    renderCodonAlignment(comparison.alignment || []);
+}
+
+function renderCodonAlignment(alignment) {
+    const maxPage = Math.max(0, Math.ceil(alignment.length / ALIGNMENT_PAGE_SIZE) - 1);
+    state.alignmentPage = Math.min(Math.max(state.alignmentPage, 0), maxPage);
+    const start = state.alignmentPage * ALIGNMENT_PAGE_SIZE;
+    const points = alignment.slice(start, start + ALIGNMENT_PAGE_SIZE);
+    elements.codonAlignmentViewer.style.setProperty('--codon-count', points.length);
+    const row = (label, formatter, className = '') => [
+        `<div class="codon-label">${label}</div>`,
+        ...points.map(point => `<div class="codon-chip ${className && formatter(point, true) ? className : ''}" title="${escapeHtml(codonTooltip(point))}">${escapeHtml(String(formatter(point, false)))}</div>`)
+    ].join('');
+    elements.codonAlignmentViewer.innerHTML = [
+        row('AA', point => point.amino_acid),
+        row('Rule', point => point.rule_codon),
+        row('ML', (point, classProbe) => classProbe ? point.is_different : point.ml_codon, 'ml-different'),
+        row('Diff', point => point.is_different ? '▲' : '·', 'diff-marker')
+    ].join('');
+    elements.alignmentRange.textContent = alignment.length
+        ? `Codons ${start + 1}–${Math.min(start + points.length, alignment.length)} of ${alignment.length}`
+        : 'No alignment data';
+    elements.alignmentPrev.disabled = state.alignmentPage === 0;
+    elements.alignmentNext.disabled = state.alignmentPage >= maxPage;
+}
+
+function codonTooltip(point) {
+    return `AA ${point.amino_acid} · position ${point.position}\nRule ${point.rule_codon}: GC ${point.rule_gc_bases}/3, host frequency ${(Number(point.rule_frequency) * 100).toFixed(2)}%\nML ${point.ml_codon}: GC ${point.ml_gc_bases}/3, host frequency ${(Number(point.ml_frequency) * 100).toFixed(2)}%`;
+}
+
+function changeAlignmentPage(delta) {
+    const alignment = state.results?.comparison?.alignment || [];
+    if (!alignment.length) return;
+    state.alignmentPage += delta;
+    renderCodonAlignment(alignment);
 }
 
 function getAcceptanceCriteriaPayload() {
@@ -1628,7 +1744,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.4.5';
+        const version = state.results.engine_versions?.product || '3.4.6';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }

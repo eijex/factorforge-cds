@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.4.5
+Product Version: 3.4.6
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -54,10 +54,12 @@ try:
     )
     from factorforge.design_review import (
         apply_reviewer_disposition,
+        assert_pathway_invariants,
         evaluate_candidate,
         normalize_acceptance_criteria,
         original_cai,
         parse_sequence_input,
+        restore_cds_stop_policy,
     )
 
     FACTORFORGE_AVAILABLE = True
@@ -222,10 +224,14 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": "3.4.5",
-    "rule_engine": "3.4.5",
-    "dp_engine": "3.4.5",
+    "product": "3.4.6",
+    "rule_engine": "3.4.6",
+    "dp_engine": "3.4.6",
+    "ml_preview": "3.5.0-preview",
 }
+VALID_EXECUTION_MODES = ["profile", "slm", "dual_compare"]
+ML_PREVIEW_ENABLED = os.environ.get("FACTORFORGE_ML_PREVIEW_ENABLED", "false").lower() == "true"
+WEB_DB_SAVE_ENABLED = os.environ.get("FACTORFORGE_WEB_DB_SAVE_ENABLED", "false").lower() == "true"
 # Valid characters: ACGT (DNA) or standard 20 Amino Acids (Protein) + * (Stop)
 VALID_AA = "ACDEFGHIKLMNPQRSTVWY"
 VALID_CHARS_PATTERN = re.compile(r"^[ACDEFGHIKLMNPQRSTVWY*]+$", re.IGNORECASE)
@@ -271,10 +277,39 @@ class handler(BaseHTTPRequestHandler):
 
             # Extract parameters
             sequence = data.get("sequence", "")
+            execution_mode = str(data.get("mode", "profile")).strip().lower()
+            if execution_mode not in VALID_EXECUTION_MODES:
+                raise ValueError(
+                    f"Invalid mode: {execution_mode}. Must be one of: "
+                    f"{', '.join(VALID_EXECUTION_MODES)}"
+                )
+            if execution_mode in {"slm", "dual_compare"} and not ML_PREVIEW_ENABLED:
+                self.send_error_response(
+                    400,
+                    {
+                        "error": (
+                            "ML preview execution is not enabled for this deployment. "
+                            "Model development and evidence gates are still in progress."
+                        ),
+                        "error_code": "ML_PREVIEW_NOT_ENABLED",
+                    },
+                )
+                return
+            if data.get("save_db") and not WEB_DB_SAVE_ENABLED:
+                self.send_error_response(
+                    400,
+                    {
+                        "error": "Database save is not enabled for this deployment.",
+                        "error_code": "DB_SAVE_NOT_AVAILABLE",
+                    },
+                )
+                return
             profile = data.get("profile", "balanced")
             host = self.validate_host(data.get("host", DEFAULT_HOST_PROFILE))
             internal_host = HOST_MAP[host]
             objective = data.get("objective")
+            if execution_mode in {"slm", "dual_compare"}:
+                objective = None
             legacy_profile_request = "profile" in data and "objective" not in data
             if objective is None and not legacy_profile_request:
                 if "host" in data and internal_host != DEFAULT_HOST_PROFILE:
@@ -386,20 +421,39 @@ class handler(BaseHTTPRequestHandler):
                     f"profile={profile}, objective={objective}, template={use_template}, "
                     f"kozak={kozak}, dinuc={dinuc}"
                 )
-                result = self.optimize_sequence(
-                    sequence,
-                    profile,
-                    use_template,
-                    kozak,
-                    dinuc,
-                    objective=objective,
-                    host_profile=host_profile,
-                    host=internal_host,
-                    return_candidates=return_candidates,
-                    constraints=constraints,
-                    custom_restriction_sites=custom_restriction_sites,
-                    seed=seed,
-                )
+                if execution_mode == "slm":
+                    result = self.optimize_ml_preview(
+                        input_context=input_context,
+                        host=internal_host,
+                        host_profile=host_profile,
+                        constraints=constraints,
+                    )
+                elif execution_mode == "dual_compare":
+                    result = self.optimize_dual_compare(
+                        sequence=sequence,
+                        input_context=input_context,
+                        profile=profile,
+                        host=internal_host,
+                        host_profile=host_profile,
+                        constraints=constraints,
+                        custom_restriction_sites=custom_restriction_sites,
+                        seed=seed,
+                    )
+                else:
+                    result = self.optimize_sequence(
+                        sequence,
+                        profile,
+                        use_template,
+                        kozak,
+                        dinuc,
+                        objective=objective,
+                        host_profile=host_profile,
+                        host=internal_host,
+                        return_candidates=return_candidates,
+                        constraints=constraints,
+                        custom_restriction_sites=custom_restriction_sites,
+                        seed=seed,
+                    )
                 result = self.attach_design_review(
                     result,
                     input_sequence=sequence,
@@ -447,6 +501,18 @@ class handler(BaseHTTPRequestHandler):
             "supported_hosts": VALID_HOSTS,
             "host_metadata": host_metadata_with_gc,
             "supported_objectives": VALID_OBJECTIVES,
+            "capabilities": {
+                "execution_modes": (
+                    VALID_EXECUTION_MODES if ML_PREVIEW_ENABLED else ["profile"]
+                ),
+                "ml_preview": {
+                    "available": bool(FACTORFORGE_AVAILABLE and ML_PREVIEW_ENABLED),
+                    "status": "experimental" if ML_PREVIEW_ENABLED else "in_progress",
+                    "trained_model_loaded": False,
+                    "label": "ML update in progress",
+                },
+                "db_save": {"available": WEB_DB_SAVE_ENABLED},
+            },
             "mock_enabled": ENABLE_MOCK,
             "engine_versions": ENGINE_VERSIONS,
             "validation_registry_version": VALIDATION_REGISTRY_VERSION,
@@ -464,6 +530,198 @@ class handler(BaseHTTPRequestHandler):
 
         logger.info("Health check requested")
         self.send_json_response(200, health_info)
+
+    @staticmethod
+    def _codon_usage_for_host(host: str) -> tuple[dict[str, float], dict[str, float]]:
+        """Return host codon frequencies and relative CAI weights."""
+        raw = load_codon_table(host, get_data_path())
+        codons = raw.get("codons", {})
+        frequencies = {
+            codon: float(entry.get("frequency", 0.0))
+            for codon, entry in codons.items()
+            if isinstance(entry, dict)
+        }
+        aa_max: dict[str, float] = {}
+        for entry in codons.values():
+            if not isinstance(entry, dict):
+                continue
+            aa = str(entry.get("aa", ""))
+            frequency = float(entry.get("frequency", 0.0))
+            aa_max[aa] = max(aa_max.get(aa, 0.0), frequency)
+        weights = {
+            codon: (frequency / aa_max.get(str(codons[codon].get("aa", "")), 1.0))
+            if aa_max.get(str(codons[codon].get("aa", "")), 0.0) > 0
+            else 0.0
+            for codon, frequency in frequencies.items()
+        }
+        return frequencies, weights
+
+    def _variant_metrics(
+        self, cds: str, host: str, profile_cai: float | None = None
+    ) -> dict[str, Any]:
+        frequencies, weights = self._codon_usage_for_host(host)
+        type_iis_sites = Domesticator().scan_restriction_sites(cds, "golden_gate")
+        cai = profile_cai if profile_cai is not None else calculate_cai(cds, weights)
+        return {
+            "cai": round(float(cai), 3),
+            "gc_percent": round(float(calculate_gc(cds)), 1),
+            "type_iis_clean": not type_iis_sites,
+            "type_iis_site_count": len(type_iis_sites),
+            "length": len(cds),
+            "polya_signals": 0,
+            "codon_frequency_source_available": bool(frequencies),
+        }
+
+    def optimize_ml_preview(
+        self,
+        *,
+        input_context: dict[str, Any],
+        host: str,
+        host_profile: str,
+        constraints: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Run the experimental constrained-decoding scaffold with explicit claim limits."""
+        optimizer = EngineRegistry.get("slm")
+        lm_result = optimizer.optimize(input_context["optimization_sequence"], host=host)
+        cds = restore_cds_stop_policy(lm_result.sequence, input_context)
+        if input_context["input_type"] == "cds":
+            assert_pathway_invariants(input_context["normalized_sequence"], cds, input_context)
+        metrics = self._variant_metrics(cds, host)
+        return {
+            "success": True,
+            "mode": "slm",
+            "experimental": True,
+            "preview_notice": (
+                "ML update in progress: this deployment uses the constrained-decoding "
+                "research scaffold, not a completed trained production model."
+            ),
+            "optimized_sequence": cds,
+            "original_length": len(input_context["normalized_sequence"]),
+            "optimized_length": len(cds),
+            "metrics": metrics,
+            "profile": "slm_preview",
+            "host_profile": host_profile,
+            "validation": {
+                "input_type": input_context["input_type"],
+                "polya": "UNCHECKED",
+                "moclo": "PASS" if metrics["type_iis_clean"] else "WARNING",
+                "gc": self.gc_check(metrics["gc_percent"], constraints),
+            },
+            "engine": {
+                "name": optimizer.name,
+                "version": optimizer.version,
+                "status": "experimental_preview",
+                "trained_model_loaded": False,
+            },
+            "engine_versions": ENGINE_VERSIONS,
+        }
+
+    def optimize_dual_compare(
+        self,
+        *,
+        sequence: str,
+        input_context: dict[str, Any],
+        profile: str,
+        host: str,
+        host_profile: str,
+        constraints: dict[str, Any],
+        custom_restriction_sites: list[dict[str, Any]],
+        seed: int | None,
+    ) -> dict[str, Any]:
+        """Compare original CDS (when supplied), rule output, and the ML preview."""
+        rule = self.optimize_sequence(
+            sequence,
+            profile,
+            False,
+            False,
+            False,
+            objective=None,
+            host_profile=host_profile,
+            host=host,
+            return_candidates=False,
+            constraints=constraints,
+            custom_restriction_sites=custom_restriction_sites,
+            seed=seed,
+        )
+        ml = self.optimize_ml_preview(
+            input_context=input_context,
+            host=host,
+            host_profile=host_profile,
+            constraints=constraints,
+        )
+        aa_sequence = input_context["optimization_sequence"]
+        rule_cds = rule["optimized_sequence"]
+        ml_cds = ml["optimized_sequence"]
+        frequencies, _ = self._codon_usage_for_host(host)
+        alignment = []
+        matching_codons = 0
+        matching_nt = 0
+        for index, amino_acid in enumerate(aa_sequence):
+            start = index * 3
+            rule_codon = rule_cds[start : start + 3]
+            ml_codon = ml_cds[start : start + 3]
+            is_different = rule_codon != ml_codon
+            if not is_different:
+                matching_codons += 1
+            matching_nt += sum(a == b for a, b in zip(rule_codon, ml_codon))
+            alignment.append(
+                {
+                    "position": index + 1,
+                    "amino_acid": amino_acid,
+                    "rule_codon": rule_codon,
+                    "ml_codon": ml_codon,
+                    "is_different": is_different,
+                    "rule_frequency": round(frequencies.get(rule_codon, 0.0), 6),
+                    "ml_frequency": round(frequencies.get(ml_codon, 0.0), 6),
+                    "rule_gc_bases": rule_codon.count("G") + rule_codon.count("C"),
+                    "ml_gc_bases": ml_codon.count("G") + ml_codon.count("C"),
+                }
+            )
+        aa_length = len(aa_sequence)
+        denominator_nt = max(aa_length * 3, 1)
+        denominator_codons = max(aa_length, 1)
+        original_cds = (
+            input_context["normalized_sequence"]
+            if input_context["input_type"] == "cds"
+            else None
+        )
+        comparison = {
+            "target_id": input_context.get("fasta_header") or "factorforge_target",
+            "input_type": input_context["input_type"],
+            "aa_length": aa_length,
+            "aa_sequence": aa_sequence,
+            "wildtype": (
+                {
+                    "cds": original_cds,
+                    "metrics": self._variant_metrics(original_cds, host),
+                }
+                if original_cds
+                else None
+            ),
+            "rule": {"cds": rule_cds, "metrics": rule["metrics"]},
+            "ml": {"cds": ml_cds, "metrics": ml["metrics"]},
+            "nt_identity_percent": round(matching_nt / denominator_nt * 100, 2),
+            "codon_concordance_percent": round(
+                matching_codons / denominator_codons * 100, 2
+            ),
+            "alignment": alignment,
+            "provenance": {
+                "sequence_id": None,
+                "canonical_sha256": hashlib.sha256(ml_cds.encode("ascii")).hexdigest(),
+                "db_save_status": "not_checked",
+                "audit_status": "not_checked",
+                "leakage_check_status": "not_checked",
+            },
+        }
+        return {
+            **rule,
+            "mode": "dual_compare",
+            "experimental": True,
+            "preview_notice": ml["preview_notice"],
+            "comparison": comparison,
+            "host_profile": host_profile,
+            "engine_versions": ENGINE_VERSIONS,
+        }
 
     def do_OPTIONS(self):
         """Handle OPTIONS requests (CORS preflight)"""

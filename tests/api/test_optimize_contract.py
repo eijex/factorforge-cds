@@ -109,6 +109,60 @@ def test_get_optimize_exposes_public_reference_policy_metadata() -> None:
     assert policy["active_default"]["activation_status"] == "enabled"
 
 
+def test_get_optimize_exposes_experimental_ml_capabilities_without_overclaiming() -> None:
+    data = _get_optimize()
+
+    assert data["version"] == "3.4.6"
+    assert data["capabilities"]["execution_modes"] == ["profile"]
+    assert data["capabilities"]["ml_preview"] == {
+        "available": False,
+        "status": "in_progress",
+        "trained_model_loaded": False,
+        "label": "ML update in progress",
+    }
+    assert data["capabilities"]["db_save"]["available"] is False
+
+
+def test_dual_compare_returns_windowable_alignment_and_unverified_provenance(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(optimize_api, "ML_PREVIEW_ENABLED", True)
+    sequence = "MSKGEELFTGVVPILVELD"
+    status_code, result = _post_optimize(
+        {"sequence": sequence, "mode": "dual_compare", "profile": "balanced"}
+    )
+
+    assert status_code == 200
+    assert result["mode"] == "dual_compare"
+    assert result["experimental"] is True
+    assert "not a completed trained production model" in result["preview_notice"]
+    comparison = result["comparison"]
+    assert comparison["aa_length"] == len(sequence)
+    assert len(comparison["alignment"]) == len(sequence)
+    assert comparison["wildtype"] is None
+    assert comparison["provenance"]["audit_status"] == "not_checked"
+    assert comparison["provenance"]["leakage_check_status"] == "not_checked"
+    assert len(comparison["provenance"]["canonical_sha256"]) == 64
+
+
+def test_dual_compare_fails_closed_on_public_deployment() -> None:
+    status_code, result = _post_optimize(
+        {"sequence": "MSKGEELF", "mode": "dual_compare", "profile": "balanced"}
+    )
+
+    assert status_code == 400
+    assert result["error_code"] == "ML_PREVIEW_NOT_ENABLED"
+
+
+def test_web_db_save_fails_closed_when_deployment_capability_is_disabled() -> None:
+    status_code, result = _post_optimize(
+        {"sequence": "MSKGEELF", "mode": "profile", "save_db": True}
+    )
+
+    assert status_code == 400
+    assert result["error_code"] == "DB_SAVE_NOT_AVAILABLE"
+
+
 def test_parse_constraints_defaults() -> None:
     h = _handler()
 
@@ -229,7 +283,7 @@ def test_feasibility_best_response_includes_candidate_contract() -> None:
         "sequence_length": 35,
         "host_profile": "nbenthamiana",
     }
-    assert result["engine_versions"]["product"] == "3.4.5"
+    assert result["engine_versions"]["product"] == "3.4.6"
     assert result["recommended_candidate"]["validator_status"] == "pass"
     assert result["dp_target_observation"]["requested_cai_target"] == DEFAULT_CAI_TARGET
 

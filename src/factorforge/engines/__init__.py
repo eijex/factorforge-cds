@@ -14,7 +14,7 @@ def register_builtin_engines() -> None:
         "profile",
         RuleBasedOptimizer,
         metadata={
-            "version": "3.4.5",
+            "version": "3.4.6",
             "engine_type": "profile_rule_based",
             "role": "stable_profile_engine",
             "stable": True,
@@ -27,7 +27,8 @@ def register_builtin_engines() -> None:
             "version": "3.5.0",
             "engine_type": "constrained_beam_search_lm",
             "role": "experimental_lm_engine",
-            "stable": True,
+            "stable": False,
+            "status": "work_in_progress",
         },
     )
     EngineRegistry.register(
@@ -37,7 +38,8 @@ def register_builtin_engines() -> None:
             "version": "3.5.0",
             "engine_type": "constrained_beam_search_lm",
             "role": "experimental_slm_engine",
-            "stable": True,
+            "stable": False,
+            "status": "work_in_progress",
         },
     )
 

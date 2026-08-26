@@ -18,9 +18,9 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from factorforge.engines.profile.optimizer import RuleBasedOptimizer
+from factorforge.engines.profile.optimizer import RuleBasedOptimizer  # noqa: E402
 
-DEFAULT_REF = SRC / "factorforge" / "data" / "reference" / "herceptin_public_aa.fasta"
+DEFAULT_REF = ROOT / "examples" / "herceptin_public_aa.fasta"
 
 
 def parse_fasta(fasta_path: Path) -> List[Tuple[str, str]]:
@@ -105,7 +105,8 @@ def run_herceptin_benchmark(
             sequence=aa_seq,
             profile="balanced",
             host=host,
-            scan_mode="full"
+            scan_mode="full",
+            seed=350,
         )
         
         # 2. Run FactorForge ML-based Constrained Optimization (LM Engine)
@@ -135,7 +136,7 @@ def run_herceptin_benchmark(
         
         print("   [FACTORFORGE ENGINE PREDICTIONS]")
         print(f"   Rule-based Engine CDS          : CAI={res.metrics.get('cai', 0.0):.3f}, GC={res.metrics.get('gc_percent', 0.0):.2f}%")
-        print(f"   LM-based Engine (v3.5.0) CDS    : GC={lm_res['gc_percent']:.2f}%, TypeIIS Clean={lm_res['type2is_clean']}")
+        print(f"   ML Preview Scaffold CDS         : GC={lm_res['gc_percent']:.2f}%, TypeIIS Clean={lm_res['type2is_clean']}")
         print(f"   Rule vs LM Concordance         : {rule_lm_identity}% NT identity ({rule_lm_codon}% codon match)")
         
         # 3. Compare against Platform CDS (if provided)
