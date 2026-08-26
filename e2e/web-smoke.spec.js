@@ -32,7 +32,7 @@ test('opens release notes and toggles dark mode', async ({ page }) => {
 
   await page.locator('#changelogBtn').click();
   await expect(page.locator('#changelogModal')).toBeVisible();
-  await expect(page.locator('#changelogModal')).toContainText('v3.4.6 — ML Preview');
+  await expect(page.locator('#changelogModal')).toContainText('v3.4.5');
   await page.locator('#closeModal').click();
   await expect(page.locator('#changelogModal')).toBeHidden();
 });

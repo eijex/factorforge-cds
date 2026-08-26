@@ -29,35 +29,6 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
-## [3.4.6] — 2026-08-26
-
-### Added
-
-- Added deployment-gated experimental `slm` and `dual_compare` preview code.
-  Public deployments keep both modes disabled while model and evidence work is
-  incomplete; `profile` remains the only enabled web execution mode.
-- Added an engine and host selector, a rule-versus-ML comparison matrix, and a
-  windowed codon alignment viewer with mismatch markers and host-frequency
-  tooltips.
-- Added explicit database-save capability reporting. Public deployments fail
-  closed unless server-side database saving is deliberately enabled.
-
-### Changed
-
-- Labeled the constrained-decoding LM/SLM path as **ML Preview — Work in
-  Progress**. It is an experimental research scaffold and does not represent a
-  completed trained production model.
-- The ML selector is visibly disabled unless a dedicated preview deployment
-  explicitly enables `FACTORFORGE_ML_PREVIEW_ENABLED`.
-- Provenance badges now report `not_checked` until database persistence, audit
-  immutability, or evaluation-leakage verification has actually occurred.
-
-### Notes
-
-- This remains an in-silico CDS design and pre-synthesis review release. The ML
-  preview adds no wet-lab validation, expression, yield, biological-activity, or
-  model-performance claim.
-
 ## [3.4.5] — 2026-08-22
 
 ### Changed
@@ -670,7 +641,6 @@ First official release of FactorForge.
 
 ---
 
-[3.4.6]: https://github.com/eijex/factorforge-cds/compare/v3.4.5...v3.4.6
 [3.4.5]: https://github.com/eijex/factorforge-cds/compare/v3.4.4...v3.4.5
 [3.4.4]: https://github.com/eijex/factorforge-cds/compare/v3.4.3...v3.4.4
 [3.4.3]: https://github.com/eijex/factorforge-cds/compare/v3.4.2...v3.4.3

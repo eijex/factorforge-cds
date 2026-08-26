@@ -4,18 +4,6 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
-## v3.4.6 — 2026-08-26
-
-- Added deployment-gated experimental ML and dual-comparison preview code, with
-  a windowed codon-by-codon Rule/ML alignment viewer. Public deployments keep
-  these modes disabled by default.
-- The LM/SLM path is explicitly labeled **ML Preview — Work in Progress** and
-  currently uses the constrained-decoding research scaffold rather than a
-  completed trained production model.
-- Database save is deployment-capability gated, and provenance checks remain
-  `not_checked` until the corresponding verification is performed.
-- This release makes no new empirical or wet-lab performance claim.
-
 ## v3.4.5 — 2026-08-22
 
 - Focused Optimization Settings on the current default, refined the structured

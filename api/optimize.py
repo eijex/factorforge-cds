@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.4.6
+Product Version: 3.4.5
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -224,9 +224,9 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": "3.4.6",
-    "rule_engine": "3.4.6",
-    "dp_engine": "3.4.6",
+    "product": "3.4.5",
+    "rule_engine": "3.4.5",
+    "dp_engine": "3.4.5",
     "ml_preview": "3.5.0-preview",
 }
 VALID_EXECUTION_MODES = ["profile", "slm", "dual_compare"]

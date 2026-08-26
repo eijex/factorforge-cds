@@ -2,19 +2,19 @@
 
 FactorForge development direction and planned work.
 
-> Current release: **v3.4.6** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current release: **v3.4.5** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
 
-## Current Release Status (v3.4.6)
+## Current Release Status (v3.4.5)
 
-FactorForge v3.4.6 adds an explicitly disabled-by-default ML preview surface for
-tracking constrained-decoding and dual-comparison development. Public runtime
-execution remains limited to the deterministic profile path; preview execution
-requires a dedicated deployment flag. This does not activate the data-conditional
-v4.0 ML engine described below. The supported public boundary remains
-deterministic in-silico CDS design and pre-synthesis sequence review.
+FactorForge v3.4.5 was released on 2026-08-22. It is the current public
+release and completes the interface-reliability patch line: browser
+interactions were restored, release checks were strengthened, and product,
+API, engine, registry, documentation, and fixture version surfaces were
+synchronized. The supported public boundary remains deterministic in-silico
+CDS design and pre-synthesis sequence review.
 
 Current maintenance and evidence priorities are:
 

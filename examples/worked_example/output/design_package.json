@@ -29,8 +29,8 @@
   },
   "evidence": {
     "sequence_hash": "sha256:9e1e328157668f0cf09fac6f80a07afd9371990f0ef951a4d0129a70571dcd82",
-    "registry_version": "3.4.6",
-    "registry_hash": "sha256:6b5edb501a1546e6289f58b9ed71bcc4369754f1f0241bb7e8612249d38070dc"
+    "registry_version": "3.4.5",
+    "registry_hash": "sha256:0fa8917e121b4d2e6c16a009ddd369b2cb39454de96f7165a84623dce8df2e54"
   },
   "claim_boundary": {
     "in_silico_only": true,
