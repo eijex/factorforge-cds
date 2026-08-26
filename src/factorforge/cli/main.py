@@ -16,8 +16,11 @@ import click
 
 from factorforge import __version__
 from factorforge.analysis.feasibility import DEFAULT_CAI_TARGET
+from factorforge.engines import register_builtin_engines
 from factorforge.engines.registry import EngineRegistry
 from factorforge.engines.profile.utils import parse_fasta_records
+
+register_builtin_engines()
 
 HOST_MAP = {"nbenthamiana": "nbenthamiana", "by2": "ntabacum"}
 HOST_TAXIDS = {"nbenthamiana": 4100, "ntabacum": 4097}
@@ -279,8 +282,8 @@ def list_engines():
     "--engine",
     "-e",
     default="dp",
-    type=click.Choice(["dp", "profile"], case_sensitive=False),
-    help="Engine (dp, profile)",
+    type=click.Choice(["dp", "profile", "lm", "slm"], case_sensitive=False),
+    help="Engine (dp, profile, lm, slm)",
 )
 @click.option(
     "--host",

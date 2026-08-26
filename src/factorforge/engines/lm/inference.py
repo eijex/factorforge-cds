@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any, Optional
 
 from factorforge.analysis.metrics import STANDARD_GENETIC_CODE, calculate_gc
+from factorforge.core.interfaces import OptimizationResult, OptimizerEngine
 from factorforge.engines.lm.adapter import TYPE_IIS_PATTERNS, FactorForgeLogitMasker
 from factorforge.engines.lm.models.mbart_codon import TORCH_AVAILABLE
 from factorforge.engines.lm.tokenizer.control_tokenizer import FactorForgeControlTokenizer
@@ -121,3 +122,41 @@ class ConstrainedBeamSearchEngine:
             "validator_passed": validation["passed"],
             "constraint_pass": bool(validation["passed"] and not type_iis_sites),
         }
+
+
+class LMEngineAdapter(OptimizerEngine):
+    """Adapter wrapping ConstrainedBeamSearchEngine for standard OptimizerEngine interface."""
+
+    def __init__(self, beam_engine: Optional[ConstrainedBeamSearchEngine] = None) -> None:
+        self.beam_engine = beam_engine or ConstrainedBeamSearchEngine()
+
+    @property
+    def name(self) -> str:
+        return "FactorForge-LM"
+
+    @property
+    def version(self) -> str:
+        return "3.5.0"
+
+    def optimize(
+        self,
+        sequence: str,
+        profile: str | None = None,
+        host: str = "nbenthamiana",
+        **kwargs: Any,
+    ) -> OptimizationResult:
+        res = self.beam_engine.optimize_cds(sequence, host=host)
+        metrics = {
+            "cai": res.get("cai", 0.0),
+            "gc_percent": res.get("gc_percent", 0.0),
+            "type_iis_clean": res.get("type_iis_clean", True),
+            "score": res.get("score", 0.0),
+        }
+        return OptimizationResult(
+            sequence=res["optimized_sequence"],
+            metrics=metrics,
+            metadata={"engine": "lm", "version": "3.5.0", "host": host},
+        )
+
+    def validate(self, sequence: str) -> bool:
+        return bool(sequence and isinstance(sequence, str))
