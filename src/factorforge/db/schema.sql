@@ -385,6 +385,29 @@ CREATE TABLE IF NOT EXISTS agentops.audit_events (
 );
 
 -- ============================================================================
+-- 4.1 AUDIT IMMUTABILITY TRIGGERS
+-- ============================================================================
+-- Enforce cryptographic immutability on agentops.audit_events.
+-- Updates and deletes are strictly prohibited at the DB engine layer.
+
+CREATE OR REPLACE FUNCTION agentops.prevent_audit_tampering()
+RETURNS TRIGGER AS $$
+BEGIN
+    RAISE EXCEPTION 'Audit events are immutable. UPDATE or DELETE operations are strictly prohibited on agentops.audit_events.';
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS enforce_audit_immutability_update ON agentops.audit_events;
+CREATE TRIGGER enforce_audit_immutability_update
+BEFORE UPDATE ON agentops.audit_events
+FOR EACH ROW EXECUTE FUNCTION agentops.prevent_audit_tampering();
+
+DROP TRIGGER IF EXISTS enforce_audit_immutability_delete ON agentops.audit_events;
+CREATE TRIGGER enforce_audit_immutability_delete
+BEFORE DELETE ON agentops.audit_events
+FOR EACH ROW EXECUTE FUNCTION agentops.prevent_audit_tampering();
+
+-- ============================================================================
 -- 5. FUTURE EXTENSION CONTRACTS (Research Scaffold)
 -- ============================================================================
 -- NOTE: The ML and BioProcess schemas are currently just research scaffolds

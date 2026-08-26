@@ -19,6 +19,8 @@ from typing import Any, Dict, List, Mapping, Optional
 import psycopg2
 from psycopg2.extras import DictCursor
 
+from factorforge.utils.sequence_identity import canonicalize_sequence
+
 
 class FactorForgeDBConnector:
     """Python DB connector for FactorForge Context-Aware Rule Engine."""
@@ -116,7 +118,7 @@ class FactorForgeDBConnector:
         
         Note: Requires an underlying common.artifacts entry as per v0.3 spec invariant.
         """
-        seq_hash = hashlib.sha256(raw_sequence.encode("utf-8")).hexdigest()
+        normalized_seq, seq_hash = canonicalize_sequence(molecule_class, raw_sequence)
         
         with self.get_connection() as conn:
             with conn.cursor(cursor_factory=DictCursor) as cursor:
@@ -144,7 +146,7 @@ class FactorForgeDBConnector:
                     INSERT INTO common.sequences (sequence_id, molecule_class, canonical_sequence_sha256, artifact_id, length)
                     VALUES (%s, %s, %s, %s, %s)
                     """,
-                    (seq_id, molecule_class, seq_hash, artifact_id, len(raw_sequence)),
+                    (seq_id, molecule_class, seq_hash, artifact_id, len(normalized_seq)),
                 )
             conn.commit()
             return seq_id
