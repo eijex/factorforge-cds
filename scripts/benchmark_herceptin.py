@@ -108,35 +108,54 @@ def run_herceptin_benchmark(
             scan_mode="full"
         )
         
+        # 2. Run FactorForge ML-based Constrained Optimization (LM Engine)
+        from factorforge.engines.lm.inference import ConstrainedBeamSearchEngine
+        lm_engine = ConstrainedBeamSearchEngine()
+        lm_res = lm_engine.optimize_cds(
+            amino_acids=aa_seq,
+            host=host,
+            type2is_clean=True
+        )
+        
         target_res = {
             "target_id": header_id,
             "aa_length": len(aa_seq),
-            "factorforge_cds": res.sequence,
-            "factorforge_cai": res.metrics.get("cai", 0.0),
-            "factorforge_gc": res.metrics.get("gc_percent", 0.0),
+            "factorforge_rule_cds": res.sequence,
+            "factorforge_rule_cai": res.metrics.get("cai", 0.0),
+            "factorforge_rule_gc": res.metrics.get("gc_percent", 0.0),
+            "factorforge_lm_cds": lm_res["optimized_sequence"],
+            "factorforge_lm_gc": lm_res["gc_percent"],
+            "factorforge_lm_type2is_clean": lm_res["type2is_clean"],
             "scan_violations": res.metrics.get("violations", 0),
         }
         
-        print(f"   FactorForge Predicted CDS Length: {len(res.sequence)} bp")
-        print(f"   FactorForge CAI Score          : {res.metrics.get('cai', 0.0)}")
-        print(f"   FactorForge GC Content         : {res.metrics.get('gc_percent', 0.0)}%")
-        print(f"   Scan Warnings / Violations     : {res.metrics.get('violations', 0)}")
+        # Compute Rule vs LM agreement
+        rule_lm_identity = compute_nucleotide_identity(res.sequence, lm_res["optimized_sequence"])
+        rule_lm_codon = compute_codon_match_rate(res.sequence, lm_res["optimized_sequence"])
         
-        # 2. Compare against Platform CDS (if provided)
+        print("   [FACTORFORGE ENGINE PREDICTIONS]")
+        print(f"   Rule-based Engine CDS          : CAI={res.metrics.get('cai', 0.0):.3f}, GC={res.metrics.get('gc_percent', 0.0):.2f}%")
+        print(f"   LM-based Engine (v3.5.0) CDS    : GC={lm_res['gc_percent']:.2f}%, TypeIIS Clean={lm_res['type2is_clean']}")
+        print(f"   Rule vs LM Concordance         : {rule_lm_identity}% NT identity ({rule_lm_codon}% codon match)")
+        
+        # 3. Compare against Platform CDS (if provided)
         if header_id in platform_dict:
             plat_cds = platform_dict[header_id]
-            nt_identity = compute_nucleotide_identity(res.sequence, plat_cds)
-            codon_match = compute_codon_match_rate(res.sequence, plat_cds)
+            nt_identity_rule = compute_nucleotide_identity(res.sequence, plat_cds)
+            nt_identity_lm = compute_nucleotide_identity(lm_res["optimized_sequence"], plat_cds)
+            
+            codon_match_rule = compute_codon_match_rate(res.sequence, plat_cds)
+            codon_match_lm = compute_codon_match_rate(lm_res["optimized_sequence"], plat_cds)
             
             target_res["platform_cds_length"] = len(plat_cds)
-            target_res["nucleotide_identity_pct"] = nt_identity
-            target_res["codon_match_rate_pct"] = codon_match
+            target_res["rule_vs_platform_nt_identity"] = nt_identity_rule
+            target_res["lm_vs_platform_nt_identity"] = nt_identity_lm
             
             print("   --------------------------------------------------------------")
             print("   [GROUND TRUTH COMPARISON WITH PLATFORM CDS]")
             print(f"   Platform CDS Length            : {len(plat_cds)} bp")
-            print(f"   Nucleotide Sequence Identity   : {nt_identity}%")
-            print(f"   Codon Selection Match Rate     : {codon_match}%")
+            print(f"   Rule-based vs Platform Identity : {nt_identity_rule}% (Codon Match: {codon_match_rule}%)")
+            print(f"   LM-based vs Platform Identity   : {nt_identity_lm}% (Codon Match: {codon_match_lm}%)")
             print("   --------------------------------------------------------------")
         else:
             print("   [STATUS] Awaiting Platform CDS for ground truth comparison.")
