@@ -61,6 +61,7 @@ class ConstrainedBeamSearchEngine:
         host: str = "nbenthamiana",
         gc_band: str = "40-47",
         type2is_clean: bool = True,
+        **kwargs: Any,
     ) -> dict[str, Any]:
         """Generate a computational CDS candidate for a protein sequence.
 
@@ -108,7 +109,21 @@ class ConstrainedBeamSearchEngine:
                 raise ValueError(f"No valid synonymous codon remained for residue {aa!r}")
             current_cds += best
 
-        current_cds += "TAA"
+        # Handle terminal stop based on policy
+        terminal_stop_policy = kwargs.get("terminal_stop_policy", "preserve")
+        
+        has_stop = amino_acids.strip().endswith("*")
+        needs_stop = False
+        if terminal_stop_policy == "append":
+            needs_stop = True
+        elif terminal_stop_policy == "preserve":
+            needs_stop = has_stop
+        
+        if needs_stop:
+            current_cds += "TAA"
+        
+        # Set up forbidden Type IIS based on type2is_clean flag
+        forbidden_sites = {"BsaI", "BsmBI", "BpiI"} if type2is_clean else set()
         
         # Delegate to SharedEvaluator instead of ad-hoc checking
         eval_result = self.evaluator.evaluate_candidate(
@@ -117,6 +132,7 @@ class ConstrainedBeamSearchEngine:
             candidate_id="lm-candidate-01",
             target_gc_min=self.target_gc_min,
             target_gc_max=self.target_gc_max,
+            forbidden_type_iis=forbidden_sites,
         )
 
         return {
@@ -152,7 +168,7 @@ class LMEngineAdapter(OptimizerEngine):
         host: str = "nbenthamiana",
         **kwargs: Any,
     ) -> OptimizationResult:
-        res = self.beam_engine.optimize_cds(sequence, host=host)
+        res = self.beam_engine.optimize_cds(sequence, host=host, **kwargs)
         metrics = {
             "cai": res.get("evaluation_report", {}).get("metrics", {}).get("cai", 0.0),
             "gc_percent": res.get("gc_percent", 0.0),
@@ -166,7 +182,8 @@ class LMEngineAdapter(OptimizerEngine):
                 "version": self.version, 
                 "host": host,
                 "inference_mode": res["inference_mode"],
-                "validator_passed": res["validator_passed"]
+                "validator_passed": res["validator_passed"],
+                "evaluation_report": res.get("evaluation_report", {}),
             },
         )
 

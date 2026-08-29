@@ -7,8 +7,9 @@ from .registry import EngineRegistry
 
 def register_builtin_engines() -> None:
     """Register bundled engines."""
-    from .profile import RuleBasedOptimizer
+    from .profile.optimizer import RuleBasedOptimizer
     from .lm.inference import LMEngineAdapter
+    from .dp_mock import DPEngineAdapter
 
     EngineRegistry.register(
         "profile",
@@ -40,6 +41,16 @@ def register_builtin_engines() -> None:
             "role": "experimental_slm_engine",
             "stable": False,
             "status": "work_in_progress",
+        },
+    )
+    EngineRegistry.register(
+        "dp",
+        DPEngineAdapter,
+        metadata={
+            "version": "1.2.0",
+            "engine_type": "deterministic_constrained_optimizer",
+            "role": "stable_dp_engine",
+            "stable": True,
         },
     )
 

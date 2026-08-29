@@ -1,0 +1,670 @@
+{
+  "suite_name": "Engineering Benchmark Suite",
+  "run_timestamp": "2026-08-29T10:33:47.694658",
+  "config": {
+    "suite_name": "Engineering Benchmark Suite",
+    "host": "nbenthamiana",
+    "target_gc_min": 0.4,
+    "target_gc_max": 0.47,
+    "forbidden_type_iis": [
+      "BsaI",
+      "BsmBI",
+      "BpiI"
+    ],
+    "terminal_stop_policy": "append",
+    "seed": 42
+  },
+  "results": [
+    {
+      "engine_name": "profile",
+      "target_id": "eGFP",
+      "provenance": {
+        "input_sequence_hash": "32ec0f54c8ee647b6c7f57c37c60c4e13d2f2e0240328e331ffc2356b5997d30",
+        "input_type": "protein",
+        "terminal_stop_policy": "append",
+        "codon_reference_id": "host_nbenthamiana",
+        "constraint_profile_id": "default_gc",
+        "evaluator_version": "1.0.1",
+        "method_version": "3.4.5",
+        "git_commit": "current",
+        "seed": 42,
+        "inference_mode": "standard",
+        "runtime_environment": "default",
+        "timestamp": "2026-08-29T10:33:45.159896"
+      },
+      "optimized_sequence": "ATGGTTTCTAAAGGAGAAGAACTATTTACTGGAGTTGTTCCTATTCTTGTTGAACTTGATGGTGATGTTAATGGACATAAATTTTCTGTTTCTGGAGAAGGAGAAGGTGATGCTACTTATGGCAAACTTACTCTAAAATTTATTTGTACTACTGGAAAACTTCCTGTTCCATGGCCTACCCTTGTTACAACTTTTAGCTATGGAGTTCAATGTTTTTCTAGATATCCTGATCATATGAAACAACATGACTTTTTCAAATCTGCTATGCCTGAAGGATATGTTCAAGAAAGAACTATTTTTTTTAAGGATGATGGAAATTATAAAACAAGAGCTGAAGTTAAGTTTGAAGGTGATACTTTAGTTAATAGAATTGAACTAAAAGGAATTGATTTTAAGGAAGATGGAAATATCCTTGGTCATAAACTTGAATATAATTATAATTCTCATAATGTTTATATTATGGCTGATAAGCAAAAAAACGGAATTAAAGTTAACTTTAAAATTAGGCATAATATTGAAGATGGAAGCGTTCAACTGGCTGATCATTACCAACAAAATACACCTATTGGAGATGGACCTGTTCTTCTTCCAGATAATCATTATCTTTCTACCCAATCTGCTCTTTCTAAAGATCCTAATGAAAAAAGAGATCATATGGTGCTTCTTGAATTTGTTACTGCTGCAGGAATTACTCATGGTATGGATGAACTTTATAAA",
+      "evaluation": {
+        "candidate_id": "profile-candidate-01",
+        "evaluator_version": "1.0.1",
+        "sequence_integrity": {
+          "aa_identity": 1.0,
+          "frame_valid": true,
+          "internal_stop_count": 0
+        },
+        "metrics": {
+          "cai": null,
+          "gc_percent": 31.799163179916317,
+          "mfe": null
+        },
+        "checks": [
+          {
+            "check_name": "frame_valid",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "Sequence length (717) is not divisible by 3"
+          },
+          {
+            "check_name": "aa_identity",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "AA Identity is 1.000"
+          },
+          {
+            "check_name": "internal_stop",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "Found 0 internal stop codons"
+          },
+          {
+            "check_name": "gc_content",
+            "domain": "codon_composition",
+            "enforcement": "gate",
+            "result": "fail",
+            "message": "GC 3179.92% is outside target 40.00%-47.00%"
+          },
+          {
+            "check_name": "type_iis_bsai",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bpii",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bsmbi",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "polya_signal",
+            "domain": "rna_risk",
+            "enforcement": "warning",
+            "result": "warning",
+            "message": "Found 4 PolyA signals"
+          },
+          {
+            "check_name": "homopolymer",
+            "domain": "rna_risk",
+            "enforcement": "warning",
+            "result": "warning",
+            "message": "Found 3 homopolymer runs"
+          },
+          {
+            "check_name": "direct_repeat",
+            "domain": "assembly",
+            "enforcement": "warning",
+            "result": "warning",
+            "message": "Found 3 direct repeats"
+          }
+        ]
+      },
+      "runtime_seconds": 2.4668827056884766
+    },
+    {
+      "engine_name": "dp",
+      "target_id": "eGFP",
+      "provenance": {
+        "input_sequence_hash": "32ec0f54c8ee647b6c7f57c37c60c4e13d2f2e0240328e331ffc2356b5997d30",
+        "input_type": "protein",
+        "terminal_stop_policy": "append",
+        "codon_reference_id": "host_nbenthamiana",
+        "constraint_profile_id": "default_gc",
+        "evaluator_version": "1.0.1",
+        "method_version": "1.2.0",
+        "git_commit": "current",
+        "seed": 42,
+        "inference_mode": "standard",
+        "runtime_environment": "default",
+        "timestamp": "2026-08-29T10:33:47.626779"
+      },
+      "optimized_sequence": "ATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGTAA",
+      "evaluation": {
+        "candidate_id": "dp-mock-candidate-01",
+        "evaluator_version": "1.0.1",
+        "sequence_integrity": {
+          "aa_identity": 0.02510460251046025,
+          "frame_valid": true,
+          "internal_stop_count": 0
+        },
+        "metrics": {
+          "cai": null,
+          "gc_percent": 33.19444444444444,
+          "mfe": null
+        },
+        "checks": [
+          {
+            "check_name": "frame_valid",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "Sequence length (720) is not divisible by 3"
+          },
+          {
+            "check_name": "aa_identity",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "fail",
+            "message": "AA Identity is 0.025"
+          },
+          {
+            "check_name": "internal_stop",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "Found 0 internal stop codons"
+          },
+          {
+            "check_name": "gc_content",
+            "domain": "codon_composition",
+            "enforcement": "gate",
+            "result": "fail",
+            "message": "GC 3319.44% is outside target 40.00%-47.00%"
+          },
+          {
+            "check_name": "type_iis_bsai",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bpii",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bsmbi",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "polya_signal",
+            "domain": "rna_risk",
+            "enforcement": "warning",
+            "result": "pass",
+            "message": "No PolyA signals found"
+          },
+          {
+            "check_name": "homopolymer",
+            "domain": "rna_risk",
+            "enforcement": "warning",
+            "result": "pass",
+            "message": "No homopolymers >= 6 found"
+          },
+          {
+            "check_name": "direct_repeat",
+            "domain": "assembly",
+            "enforcement": "warning",
+            "result": "warning",
+            "message": "Found 705 direct repeats"
+          }
+        ]
+      },
+      "runtime_seconds": 0.0009996891021728516
+    },
+    {
+      "engine_name": "lm",
+      "target_id": "eGFP",
+      "provenance": {
+        "input_sequence_hash": "32ec0f54c8ee647b6c7f57c37c60c4e13d2f2e0240328e331ffc2356b5997d30",
+        "input_type": "protein",
+        "terminal_stop_policy": "append",
+        "codon_reference_id": "host_nbenthamiana",
+        "constraint_profile_id": "default_gc",
+        "evaluator_version": "1.0.1",
+        "method_version": "3.6.0-scaffold",
+        "git_commit": "current",
+        "seed": 42,
+        "inference_mode": "standard",
+        "runtime_environment": "default",
+        "timestamp": "2026-08-29T10:33:47.627778"
+      },
+      "optimized_sequence": "ATGGTTTCTAAAGGTGAAGAATTATTTACTGGTGTTGTTCCTATCTTGGTTGAATTGGATGGTGATGTTAACGGTCATAAGTTCTCTGTTTCTGGTGAAGGTGAAGGTGATGCTACTTACGGTAAGTTGACTTTGAAGTTCATCTGTACTACTGGTAAGTTGCCTGTTCCTTGGCCTACTTTGGTTACTACTTTCTCTTACGGTGTTCAATGTTTCTCTCGTTACCCTGATCATATGAAGCAACATGATTTCTTCAAGTCTGCTATGCCTGAAGGTTACGTTCAAGAACGTACTATCTTCTTCAAGGATGATGGTAACTACAAGACTCGTGCTGAAGTTAAGTTCGAAGGTGATACTTTGGTTAACCGTATCGAATTGAAGGGTATCGATTTCAAGGAAGATGGTAACATCTTGGGTCATAAGTTGGAATACAACTACAACTCTCATAACGTTTACATCATGGCTGATAAGCAAAAGAACGGTATCAAGGTTAACTTCAAGATCCGTCATAACATCGAAGATGGTTCTGTTCAATTGGCTGATCATTACCAACAAAACACTCCTATCGGTGATGGTCCTGTTTTGTTGCCTGATAACCATTACTTGTCTACTCAATCTGCTTTGTCTAAGGATCCTAACGAAAAGCGTGATCATATGGTTTTGTTGGAATTCGTTACTGCTGCTGGTATCACTCATGGTATGGATGAATTGTACAAGTAA",
+      "evaluation": {
+        "candidate_id": "lm-candidate-01",
+        "evaluator_version": "1.0.0",
+        "sequence_integrity": {
+          "aa_identity": 1.0,
+          "frame_valid": true,
+          "internal_stop_count": 0
+        },
+        "metrics": {
+          "cai": null,
+          "gc_percent": 39.30555555555556,
+          "mfe": null
+        },
+        "checks": [
+          {
+            "check_name": "frame_valid",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "Sequence length (720) is not divisible by 3"
+          },
+          {
+            "check_name": "aa_identity",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "AA Identity is 1.000"
+          },
+          {
+            "check_name": "internal_stop",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "Found 0 internal stop codons"
+          },
+          {
+            "check_name": "gc_content",
+            "domain": "codon_composition",
+            "enforcement": "gate",
+            "result": "fail",
+            "message": "GC 3930.56% is outside target 40.00%-47.00%"
+          },
+          {
+            "check_name": "type_iis_bsai",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bpii",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bsmbi",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "polya_signal",
+            "domain": "rna_risk",
+            "enforcement": "warning",
+            "result": "warning",
+            "message": "Found 1 PolyA signals"
+          },
+          {
+            "check_name": "homopolymer",
+            "domain": "rna_risk",
+            "enforcement": "warning",
+            "result": "pass",
+            "message": "No homopolymers >= 6 found"
+          },
+          {
+            "check_name": "direct_repeat",
+            "domain": "assembly",
+            "enforcement": "warning",
+            "result": "warning",
+            "message": "Found 7 direct repeats"
+          }
+        ]
+      },
+      "runtime_seconds": 0.014570236206054688
+    },
+    {
+      "engine_name": "profile",
+      "target_id": "Humira_HC",
+      "provenance": {
+        "input_sequence_hash": "c0b98ddf1d3132cc0984fdb515251d29fc33fd5907860583fe64cad84873f8a6",
+        "input_type": "protein",
+        "terminal_stop_policy": "append",
+        "codon_reference_id": "host_nbenthamiana",
+        "constraint_profile_id": "default_gc",
+        "evaluator_version": "1.0.1",
+        "method_version": "3.4.5",
+        "git_commit": "current",
+        "seed": 42,
+        "inference_mode": "standard",
+        "runtime_environment": "default",
+        "timestamp": "2026-08-29T10:33:47.643344"
+      },
+      "optimized_sequence": "GAAGTTCAACTTGTTGAATCTGGAGGGGGACTTGTTCAACCAGGAAGATCTCTTAGACTTTCTTGTGCTGCTTCAGGATTTACTTTTGATGATTATGCTATGCACTGGGTTAGACAAGCTCCTGGAAAAGGATTAGAATGGGTGAGTGCTATTACTTGGAATTCAGGACATATTGATTATGCTGATAGTGTTGAAGGAAGATTCACTATTTCTCGCGATAATGCTAAAAATTCTCTTTATCTTCAAATGAACTCTCTTCGAGCTGAAGATACTGCTGTATATTATTGTGCAAAAGTTTCTTATTTGTCTACTGCTTCTTCTCTTGATTACTGGGGCCAAGGAACTTTGGTTACTGTTTCTTCTGCTTCTACTAAAGGACCTTCTGTATTTCCTCTTGCTCCATCTAGTAAATCTACTTCTGGTGGAACTGCAGCTCTTGGTTGTCTTGTTAAAGATTACTTTCCTGAACCAGTTACGGTTTCTTGGAATAGCGGAGCTTTAACTTCTGGAGTGCATACTTTTCCTGCTGTTCTTCAATCTTCTGGACTTTACTCACTTTCGTCTGTTGTTACTGTCCCTTCTTCTTCACTTGGAACTCAAACTTATATCTGTAATGTAAATCATAAACCGTCAAATACTAAAGTTGATAAAAAAGTTGAACCTAAATCTTGCGATAAAACTCATACTTGTCCGCCTTGTCCTGCTCCTGAACTTCTTGGAGGACCTTCTGTTTTTTTGTTCCCTCCTAAACCTAAAGATACTTTAATGATTTCTAGAACACCAGAGGTTACTTGTGTTGTTGTTGATGTTAGTCACGAAGATCCAGAAGTTAAATTCAACTGGTATGTTGATGGAGTTGAAGTTCACAATGCTAAAACAAAACCTCGGGAAGAACAATATAATTCTACTTATAGAGTCGTTTCTGTTCTTACTGTTCTTCATCAAGACTGGCTTAATGGTAAAGAATATAAATGTAAAGTTTCTAATAAAGCTCTTCCTGCTCCTATTGAAAAAACTATTTCTAAAGCTAAAGGACAACCTAGAGAACCACAAGTTTATACTCTCCCTCCTTCTAGAGATGAACTTACTAAAAATCAAGTTTCTCTTACTTGTCTTGTTAAAGGCTTTTACCCTTCTGATATTGCTGTTGAATGGGAATCTAATGGACAACCTGAGAATAATTATAAAACTACTCCTCCCGTCCTTGATTCTGATGGATCTTTTTTTTTATACAGCAAACTTACTGTAGATAAATCAAGATGGCAACAAGGAAATGTTTTTTCTTGTTCTGTAATGCATGAAGCTCTTCATAATCATTATACTCAAAAATCTCTTTCTCTTTCTCCTGGAAAA",
+      "evaluation": {
+        "candidate_id": "profile-candidate-01",
+        "evaluator_version": "1.0.1",
+        "sequence_integrity": {
+          "aa_identity": 1.0,
+          "frame_valid": true,
+          "internal_stop_count": 0
+        },
+        "metrics": {
+          "cai": null,
+          "gc_percent": 36.28972653362897,
+          "mfe": null
+        },
+        "checks": [
+          {
+            "check_name": "frame_valid",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "Sequence length (1353) is not divisible by 3"
+          },
+          {
+            "check_name": "aa_identity",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "AA Identity is 1.000"
+          },
+          {
+            "check_name": "internal_stop",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "Found 0 internal stop codons"
+          },
+          {
+            "check_name": "gc_content",
+            "domain": "codon_composition",
+            "enforcement": "gate",
+            "result": "fail",
+            "message": "GC 3628.97% is outside target 40.00%-47.00%"
+          },
+          {
+            "check_name": "type_iis_bsai",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bpii",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bsmbi",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "polya_signal",
+            "domain": "rna_risk",
+            "enforcement": "warning",
+            "result": "warning",
+            "message": "Found 3 PolyA signals"
+          },
+          {
+            "check_name": "homopolymer",
+            "domain": "rna_risk",
+            "enforcement": "warning",
+            "result": "warning",
+            "message": "Found 5 homopolymer runs"
+          },
+          {
+            "check_name": "direct_repeat",
+            "domain": "assembly",
+            "enforcement": "warning",
+            "result": "warning",
+            "message": "Found 13 direct repeats"
+          }
+        ]
+      },
+      "runtime_seconds": 0.013371706008911133
+    },
+    {
+      "engine_name": "dp",
+      "target_id": "Humira_HC",
+      "provenance": {
+        "input_sequence_hash": "c0b98ddf1d3132cc0984fdb515251d29fc33fd5907860583fe64cad84873f8a6",
+        "input_type": "protein",
+        "terminal_stop_policy": "append",
+        "codon_reference_id": "host_nbenthamiana",
+        "constraint_profile_id": "default_gc",
+        "evaluator_version": "1.0.1",
+        "method_version": "1.2.0",
+        "git_commit": "current",
+        "seed": 42,
+        "inference_mode": "standard",
+        "runtime_environment": "default",
+        "timestamp": "2026-08-29T10:33:47.656716"
+      },
+      "optimized_sequence": "ATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGTAA",
+      "evaluation": {
+        "candidate_id": "dp-mock-candidate-01",
+        "evaluator_version": "1.0.1",
+        "sequence_integrity": {
+          "aa_identity": 0.008869179600886918,
+          "frame_valid": true,
+          "internal_stop_count": 0
+        },
+        "metrics": {
+          "cai": null,
+          "gc_percent": 33.259587020648965,
+          "mfe": null
+        },
+        "checks": [
+          {
+            "check_name": "frame_valid",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "Sequence length (1356) is not divisible by 3"
+          },
+          {
+            "check_name": "aa_identity",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "fail",
+            "message": "AA Identity is 0.009"
+          },
+          {
+            "check_name": "internal_stop",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "Found 0 internal stop codons"
+          },
+          {
+            "check_name": "gc_content",
+            "domain": "codon_composition",
+            "enforcement": "gate",
+            "result": "fail",
+            "message": "GC 3325.96% is outside target 40.00%-47.00%"
+          },
+          {
+            "check_name": "type_iis_bsai",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bpii",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bsmbi",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "polya_signal",
+            "domain": "rna_risk",
+            "enforcement": "warning",
+            "result": "pass",
+            "message": "No PolyA signals found"
+          },
+          {
+            "check_name": "homopolymer",
+            "domain": "rna_risk",
+            "enforcement": "warning",
+            "result": "pass",
+            "message": "No homopolymers >= 6 found"
+          },
+          {
+            "check_name": "direct_repeat",
+            "domain": "assembly",
+            "enforcement": "warning",
+            "result": "warning",
+            "message": "Found 1341 direct repeats"
+          }
+        ]
+      },
+      "runtime_seconds": 0.0016503334045410156
+    },
+    {
+      "engine_name": "lm",
+      "target_id": "Humira_HC",
+      "provenance": {
+        "input_sequence_hash": "c0b98ddf1d3132cc0984fdb515251d29fc33fd5907860583fe64cad84873f8a6",
+        "input_type": "protein",
+        "terminal_stop_policy": "append",
+        "codon_reference_id": "host_nbenthamiana",
+        "constraint_profile_id": "default_gc",
+        "evaluator_version": "1.0.1",
+        "method_version": "3.6.0-scaffold",
+        "git_commit": "current",
+        "seed": 42,
+        "inference_mode": "standard",
+        "runtime_environment": "default",
+        "timestamp": "2026-08-29T10:33:47.658366"
+      },
+      "optimized_sequence": "GAAGTTCAATTAGTTGAATCTGGTGGTGGTTTGGTTCAACCTGGTCGTTCTTTACGTTTATCTTGTGCTGCTTCTGGTTTTACTTTCGATGATTACGCTATGCATTGGGTTCGTCAAGCTCCTGGTAAAGGTTTAGAATGGGTTTCTGCTATTACTTGGAATTCTGGTCATATTGATTACGCTGATTCTGTTGAAGGTCGTTTTACTATCTCTCGTGATAACGCTAAGAACTCTTTGTACTTGCAAATGAACTCTTTGCGTGCTGAAGATACTGCTGTTTACTACTGTGCTAAGGTTTCTTACTTGTCTACTGCTTCTTCTTTGGATTACTGGGGTCAAGGTACTTTGGTTACTGTTTCTTCTGCTTCTACTAAGGGTCCTTCTGTTTTTCCTTTGGCTCCTTCTTCTAAATCTACTTCTGGTGGTACTGCTGCTTTAGGTTGTTTAGTTAAGGATTACTTCCCTGAACCTGTTACTGTTTCTTGGAATTCTGGTGCTTTAACTTCTGGTGTTCATACTTTCCCTGCTGTTTTACAATCTTCTGGTTTGTACTCTTTGTCTAGTGTTGTTACTGTTCCTTCTTCTTCTTTGGGTACTCAAACTTACATCTGTAACGTTAACCATAAGCCTTCTAACACTAAGGTTGATAAGAAGGTTGAACCTAAGTCTTGTGATAAGACTCATACTTGTCCTCCTTGTCCTGCTCCTGAATTGTTGGGTGGTCCTTCTGTTTTCTTGTTCCCTCCTAAACCTAAGGATACTTTGATGATCTCTCGTACTCCTGAAGTTACTTGTGTTGTTGTTGATGTTTCTCATGAAGATCCTGAAGTTAAGTTCAACTGGTACGTTGATGGTGTTGAAGTTCATAACGCTAAGACTAAGCCTCGTGAAGAACAATACAACTCTACTTACCGTGTTGTTTCTGTTTTGACTGTTTTGCATCAAGATTGGTTGAACGGTAAGGAATACAAGTGTAAGGTTTCTAACAAGGCTTTGCCTGCTCCTATCGAAAAGACTATCTCTAAGGCTAAGGGTCAACCTCGTGAACCTCAAGTTTACACTTTGCCTCCTTCTCGTGATGAATTAACTAAGAACCAAGTTTCTTTGACTTGTTTGGTTAAGGGTTTCTACCCTTCTGATATCGCTGTTGAATGGGAATCTAACGGTCAACCTGAAAACAACTACAAGACTACTCCTCCTGTTTTGGATTCTGATGGTTCTTTCTTCTTGTACTCTAAGTTGACTGTTGATAAGTCTCGTTGGCAACAAGGTAACGTTTTCTCTTGTTCTGTTATGCATGAAGCTTTGCATAACCATTACACTCAAAAGTCTTTGTCTTTGTCTCCTGGTAAGTAA",
+      "evaluation": {
+        "candidate_id": "lm-candidate-01",
+        "evaluator_version": "1.0.0",
+        "sequence_integrity": {
+          "aa_identity": 1.0,
+          "frame_valid": true,
+          "internal_stop_count": 0
+        },
+        "metrics": {
+          "cai": null,
+          "gc_percent": 39.74926253687316,
+          "mfe": null
+        },
+        "checks": [
+          {
+            "check_name": "frame_valid",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "Sequence length (1356) is not divisible by 3"
+          },
+          {
+            "check_name": "aa_identity",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "AA Identity is 1.000"
+          },
+          {
+            "check_name": "internal_stop",
+            "domain": "sequence_integrity",
+            "enforcement": "hard_fail",
+            "result": "pass",
+            "message": "Found 0 internal stop codons"
+          },
+          {
+            "check_name": "gc_content",
+            "domain": "codon_composition",
+            "enforcement": "gate",
+            "result": "fail",
+            "message": "GC 3974.93% is outside target 40.00%-47.00%"
+          },
+          {
+            "check_name": "type_iis_bsai",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bpii",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bsmbi",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "polya_signal",
+            "domain": "rna_risk",
+            "enforcement": "warning",
+            "result": "warning",
+            "message": "Found 3 PolyA signals"
+          },
+          {
+            "check_name": "homopolymer",
+            "domain": "rna_risk",
+            "enforcement": "warning",
+            "result": "pass",
+            "message": "No homopolymers >= 6 found"
+          },
+          {
+            "check_name": "direct_repeat",
+            "domain": "assembly",
+            "enforcement": "warning",
+            "result": "warning",
+            "message": "Found 30 direct repeats"
+          }
+        ]
+      },
+      "runtime_seconds": 0.036292314529418945
+    }
+  ],
+  "pass_counts": {
+    "profile": "0/2",
+    "dp": "0/2",
+    "lm": "0/2"
+  },
+  "average_cai": {
+    "profile": 0.0,
+    "dp": 0.0,
+    "lm": 0.0
+  },
+  "average_gc": {
+    "profile": 34.04444485677264,
+    "dp": 33.227015732546704,
+    "lm": 39.52740904621436
+  }
+}
