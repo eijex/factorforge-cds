@@ -23,9 +23,10 @@ def generate_markdown_report(report_json: dict, output_path: str):
     lines.append("|--------|-------------|-------------|")
     
     for engine in report_json['average_cai']:
-        cai = report_json['average_cai'][engine]
-        gc = report_json['average_gc'][engine] * 100
-        lines.append(f"| {engine} | {cai:.3f} | {gc:.1f}% |")
+        cai_val = report_json['average_cai'][engine]
+        cai_str = f"{cai_val:.3f}" if cai_val is not None else "N/A"
+        gc = report_json['average_gc'][engine]
+        lines.append(f"| {engine} | {cai_str} | {gc:.1f}% |")
         
     lines.append("")
     lines.append("## Target Results")
@@ -39,12 +40,40 @@ def generate_markdown_report(report_json: dict, output_path: str):
         )
         lines.append(f"### Target: {target} | Engine: {engine} | Passed: {'✅' if passed else '❌'}")
         lines.append(f"- **Runtime**: {res['runtime_seconds']:.2f}s")
-        lines.append(f"- **GC%**: {res['evaluation']['metrics']['gc_percent'] * 100:.1f}%")
-        if not passed:
-            lines.append("- **Failing Checks**:")
-            for check in res['evaluation']['checks']:
-                if check['result'] != "PASS":
-                    lines.append(f"  - {check['check_name']} ({check['enforcement']}): {check['message']}")
+        lines.append(f"- **GC%**: {res['evaluation']['metrics']['gc_percent']:.1f}%")
+        
+        cai_m = res['evaluation']['metrics']['cai']
+        lines.append(f"- **CAI**: {cai_m:.3f}" if cai_m is not None else "- **CAI**: N/A")
+        
+        hard_fails = []
+        warnings = []
+        passed_checks = []
+        for check in res['evaluation']['checks']:
+            if check['result'] == 'fail' and check['enforcement'] in ('hard_fail', 'gate'):
+                hard_fails.append(check)
+            elif check['result'] == 'warning' or (check['result'] == 'fail' and check['enforcement'] == 'warning'):
+                warnings.append(check)
+            elif check['result'] == 'pass':
+                passed_checks.append(check)
+
+        if hard_fails:
+            lines.append("")
+            lines.append("**Hard/Gate Failures**")
+            for c in hard_fails:
+                lines.append(f"- {c['check_name']}: {c['message']}")
+                
+        if warnings:
+            lines.append("")
+            lines.append("**Warnings**")
+            for c in warnings:
+                lines.append(f"- {c['check_name']}: {c['message']}")
+                
+        if passed_checks:
+            lines.append("")
+            lines.append("**Passed Invariants**")
+            for c in passed_checks:
+                lines.append(f"- {c['check_name']}")
+                
         lines.append("")
 
     with open(output_path, "w", encoding="utf-8") as f:
@@ -70,8 +99,8 @@ def main():
     config = BenchmarkRunConfig(
         suite_name=args.suite,
         host=args.host,
-        target_gc_min=0.40,
-        target_gc_max=0.47,
+        target_gc_min_percent=40.0,
+        target_gc_max_percent=47.0,
         terminal_stop_policy="append",
         forbidden_type_iis=["BsaI", "BsmBI", "BpiI"]
     )

@@ -43,8 +43,8 @@ class SharedEvaluator:
         candidate_dna: str,
         expected_protein: str,
         candidate_id: str = "unknown",
-        target_gc_min: Optional[float] = None,
-        target_gc_max: Optional[float] = None,
+        target_gc_min_percent: Optional[float] = None,
+        target_gc_max_percent: Optional[float] = None,
         forbidden_type_iis: Optional[Set[str]] = None,
     ) -> EvaluationResult:
         """Evaluate a candidate DNA against an expected protein sequence."""
@@ -64,12 +64,12 @@ class SharedEvaluator:
         )
 
         # 2. Metrics
-        gc = calculate_gc(dna)
+        gc_percent = calculate_gc(dna)
         cai_val = calculate_cai(dna, self.codon_weights) if self.codon_weights else None
         
         metrics = Metrics(
             cai=cai_val, 
-            gc_percent=gc,
+            gc_percent=gc_percent,
             mfe=None,  # Not implemented in core yet, requires ViennaRNA
         )
 
@@ -82,7 +82,7 @@ class SharedEvaluator:
             domain=CheckDomain.SEQUENCE_INTEGRITY,
             enforcement=CheckEnforcement.HARD_FAIL,
             result=CheckResultValue.PASS if frame_valid else CheckResultValue.FAIL,
-            message=f"Sequence length ({len(dna)}) is not divisible by 3",
+            message=None if frame_valid else f"Sequence length ({len(dna)}) is not divisible by 3",
         ))
 
         # Invariant: AA Identity must be 1.0
@@ -91,7 +91,7 @@ class SharedEvaluator:
             domain=CheckDomain.SEQUENCE_INTEGRITY,
             enforcement=CheckEnforcement.HARD_FAIL,
             result=CheckResultValue.PASS if aa_id == 1.0 else CheckResultValue.FAIL,
-            message=f"AA Identity is {aa_id:.3f}",
+            message=None if aa_id == 1.0 else f"AA Identity is {aa_id:.3f}",
         ))
 
         # Invariant: No internal stops
@@ -100,18 +100,19 @@ class SharedEvaluator:
             domain=CheckDomain.SEQUENCE_INTEGRITY,
             enforcement=CheckEnforcement.HARD_FAIL,
             result=CheckResultValue.PASS if internal_stop_count == 0 else CheckResultValue.FAIL,
-            message=f"Found {internal_stop_count} internal stop codons",
+            message=None if internal_stop_count == 0 else f"Found {internal_stop_count} internal stop codons",
         ))
 
         # Configured Gate: GC Content (only if requested)
-        if target_gc_min is not None and target_gc_max is not None:
-            gc_pass = target_gc_min <= gc <= target_gc_max
+        if target_gc_min_percent is not None and target_gc_max_percent is not None:
+            # Assuming min/max are provided as percentages (0-100)
+            gc_pass = target_gc_min_percent <= gc_percent <= target_gc_max_percent
             checks.append(CheckResult(
                 check_name="gc_content",
                 domain=CheckDomain.CODON_COMPOSITION,
                 enforcement=CheckEnforcement.GATE,
                 result=CheckResultValue.PASS if gc_pass else CheckResultValue.FAIL,
-                message=f"GC {gc:.2%} is outside target {target_gc_min:.2%}-{target_gc_max:.2%}",
+                message=None if gc_pass else f"GC {gc_percent:.2f}% is outside target {target_gc_min_percent:.1f}%-{target_gc_max_percent:.1f}%",
             ))
 
         # Configured Gate: Type IIS

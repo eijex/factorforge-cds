@@ -9,7 +9,7 @@ def register_builtin_engines() -> None:
     """Register bundled engines."""
     from .profile.optimizer import RuleBasedOptimizer
     from .lm.inference import LMEngineAdapter
-    from .dp_mock import DPEngineAdapter
+    from .dp_adapter import DPEngineAdapter
 
     EngineRegistry.register(
         "profile",

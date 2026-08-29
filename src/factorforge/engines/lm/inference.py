@@ -130,8 +130,8 @@ class ConstrainedBeamSearchEngine:
             candidate_dna=current_cds,
             expected_protein=protein,
             candidate_id="lm-candidate-01",
-            target_gc_min=self.target_gc_min,
-            target_gc_max=self.target_gc_max,
+            target_gc_min_percent=self.target_gc_min * 100 if self.target_gc_min and self.target_gc_min <= 1.0 else self.target_gc_min,
+            target_gc_max_percent=self.target_gc_max * 100 if self.target_gc_max and self.target_gc_max <= 1.0 else self.target_gc_max,
             forbidden_type_iis=forbidden_sites,
         )
 
@@ -160,6 +160,10 @@ class LMEngineAdapter(OptimizerEngine):
     @property
     def version(self) -> str:
         return "3.6.0-scaffold"
+
+    @property
+    def inference_mode(self) -> str:
+        return "deterministic_scaffold"
 
     def optimize(
         self,

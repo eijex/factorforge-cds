@@ -192,8 +192,8 @@ class RuleBasedOptimizer(OptimizerEngine):
             candidate_dna=optimized_dna,
             expected_protein=expected_protein,
             candidate_id="profile-candidate-01",
-            target_gc_min=target_gc_min,
-            target_gc_max=target_gc_max,
+            target_gc_min_percent=target_gc_min * 100 if target_gc_min and target_gc_min <= 1.0 else target_gc_min,
+            target_gc_max_percent=target_gc_max * 100 if target_gc_max and target_gc_max <= 1.0 else target_gc_max,
             forbidden_type_iis=forbidden_type_iis,
         )
 

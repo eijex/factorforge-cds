@@ -32,8 +32,8 @@ class BenchmarkRunConfig(BaseModel):
     """Configuration for a benchmark execution."""
     suite_name: str = Field(..., description="e.g., Engineering Benchmark Suite")
     host: str = "nbenthamiana"
-    target_gc_min: float
-    target_gc_max: float
+    target_gc_min_percent: float
+    target_gc_max_percent: float
     forbidden_type_iis: List[str] = Field(default_factory=list)
     terminal_stop_policy: str = "append"
     seed: int = 42
@@ -58,5 +58,5 @@ class BenchmarkSuiteReport(BaseModel):
     
     # Summary statistics mapped by engine
     pass_counts: Dict[str, str] = Field(description="Raw pass counts e.g., '3/4'")
-    average_cai: Dict[str, float]
+    average_cai: Dict[str, Optional[float]]
     average_gc: Dict[str, float]

@@ -12,6 +12,7 @@ from factorforge.benchmark.models import (
     BenchmarkSuiteReport,
     BenchmarkProvenance
 )
+from factorforge.analysis.metrics import load_codon_usage_table
 
 # Initialize engines
 register_builtin_engines()
@@ -21,7 +22,15 @@ class BenchmarkRunner:
 
     def __init__(self, config: BenchmarkRunConfig):
         self.config = config
-        self.evaluator = SharedEvaluator(version="1.0.1")
+        
+        # Load canonical host table to enable CAI in the SharedEvaluator
+        # Default internal path loads N. benthamiana by default, which is our benchmark host.
+        table = load_codon_usage_table() 
+        
+        self.evaluator = SharedEvaluator(
+            version="1.0.1", 
+            codon_weights=table.codon_weights
+        )
 
     def run_suite(self, targets: List[BenchmarkTarget], engine_names: List[str]) -> BenchmarkSuiteReport:
         """Execute the benchmark suite across requested engines and targets."""
@@ -40,7 +49,8 @@ class BenchmarkRunner:
 
             for engine_name, engine in engines.items():
                 
-                # Setup provenance tracking
+                mode = getattr(engine, "inference_mode", "standard")
+                
                 provenance = BenchmarkProvenance(
                     input_sequence_hash=input_hash,
                     input_type="protein",
@@ -51,7 +61,7 @@ class BenchmarkRunner:
                     method_version=engine.version,
                     git_commit="current", # In real usage, this would be git rev-parse HEAD
                     seed=self.config.seed,
-                    inference_mode=getattr(engine, "inference_mode", "standard"),
+                    inference_mode=mode,
                     runtime_environment="default"
                 )
 
@@ -61,8 +71,8 @@ class BenchmarkRunner:
                 opt_result = engine.optimize(
                     sequence=target.protein_sequence,
                     host=self.config.host,
-                    target_gc_min=self.config.target_gc_min,
-                    target_gc_max=self.config.target_gc_max,
+                    target_gc_min=self.config.target_gc_min_percent / 100.0, # Some engines still expect fraction
+                    target_gc_max=self.config.target_gc_max_percent / 100.0,
                     forbidden_type_iis=set(self.config.forbidden_type_iis),
                     terminal_stop_policy=self.config.terminal_stop_policy,
                     seed=self.config.seed
@@ -70,14 +80,15 @@ class BenchmarkRunner:
                 
                 runtime = time.time() - start_time
                 
-                # We expect the engine to attach the evaluation_report
-                if "evaluation_report" not in opt_result.metadata:
-                    raise ValueError(f"Engine {engine_name} did not return a valid evaluation_report in metadata.")
-                
-                # Parse evaluation result
-                # Note: evaluation_report is a dict, we convert it to the Pydantic model for type safety in BenchmarkReport
-                from factorforge.evaluation.models import EvaluationResult
-                eval_result_obj = EvaluationResult.model_validate(opt_result.metadata["evaluation_report"])
+                # ONE SharedEvaluator for all generated candidates
+                eval_result_obj = self.evaluator.evaluate_candidate(
+                    candidate_dna=opt_result.sequence,
+                    expected_protein=target.protein_sequence,
+                    candidate_id=f"{engine_name}-{target.target_id}",
+                    target_gc_min_percent=self.config.target_gc_min_percent,
+                    target_gc_max_percent=self.config.target_gc_max_percent,
+                    forbidden_type_iis=set(self.config.forbidden_type_iis)
+                )
 
                 res = EngineBenchmarkResult(
                     engine_name=engine_name,
@@ -98,6 +109,7 @@ class BenchmarkRunner:
         total_targets = len(set(r.target_id for r in results))
         
         cai_sums = {}
+        cai_vals = {}
         gc_sums = {}
         engine_counts = {}
         
@@ -105,20 +117,22 @@ class BenchmarkRunner:
             eng = r.engine_name
             if eng not in pass_counts:
                 pass_counts[eng] = 0
-                cai_sums[eng] = 0.0
+                cai_vals[eng] = []
                 gc_sums[eng] = 0.0
                 engine_counts[eng] = 0
                 
             if r.evaluation.passed:
                 pass_counts[eng] += 1
                 
-            cai_sums[eng] += r.evaluation.metrics.cai or 0.0
+            if r.evaluation.metrics.cai is not None:
+                cai_vals[eng].append(r.evaluation.metrics.cai)
+                
             gc_sums[eng] += r.evaluation.metrics.gc_percent
             engine_counts[eng] += 1
             
         pass_counts_str = {e: f"{count}/{total_targets}" for e, count in pass_counts.items()}
-        avg_cai = {e: (cai_sums[e] / engine_counts[e]) for e in engine_counts}
-        avg_gc = {e: (gc_sums[e] / engine_counts[e]) for e in engine_counts}
+        avg_cai = {e: (sum(cai_vals[e]) / len(cai_vals[e]) if cai_vals[e] else None) for e in pass_counts}
+        avg_gc = {e: (gc_sums[e] / engine_counts[e]) for e in pass_counts}
         
         return BenchmarkSuiteReport(
             suite_name=self.config.suite_name,

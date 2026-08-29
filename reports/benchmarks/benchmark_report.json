@@ -1,11 +1,11 @@
 {
   "suite_name": "Engineering Benchmark Suite",
-  "run_timestamp": "2026-08-29T10:33:47.694658",
+  "run_timestamp": "2026-08-29T11:14:58.565312",
   "config": {
     "suite_name": "Engineering Benchmark Suite",
     "host": "nbenthamiana",
-    "target_gc_min": 0.4,
-    "target_gc_max": 0.47,
+    "target_gc_min_percent": 40.0,
+    "target_gc_max_percent": 47.0,
     "forbidden_type_iis": [
       "BsaI",
       "BsmBI",
@@ -30,11 +30,11 @@
         "seed": 42,
         "inference_mode": "standard",
         "runtime_environment": "default",
-        "timestamp": "2026-08-29T10:33:45.159896"
+        "timestamp": "2026-08-29T11:14:53.172262"
       },
       "optimized_sequence": "ATGGTTTCTAAAGGAGAAGAACTATTTACTGGAGTTGTTCCTATTCTTGTTGAACTTGATGGTGATGTTAATGGACATAAATTTTCTGTTTCTGGAGAAGGAGAAGGTGATGCTACTTATGGCAAACTTACTCTAAAATTTATTTGTACTACTGGAAAACTTCCTGTTCCATGGCCTACCCTTGTTACAACTTTTAGCTATGGAGTTCAATGTTTTTCTAGATATCCTGATCATATGAAACAACATGACTTTTTCAAATCTGCTATGCCTGAAGGATATGTTCAAGAAAGAACTATTTTTTTTAAGGATGATGGAAATTATAAAACAAGAGCTGAAGTTAAGTTTGAAGGTGATACTTTAGTTAATAGAATTGAACTAAAAGGAATTGATTTTAAGGAAGATGGAAATATCCTTGGTCATAAACTTGAATATAATTATAATTCTCATAATGTTTATATTATGGCTGATAAGCAAAAAAACGGAATTAAAGTTAACTTTAAAATTAGGCATAATATTGAAGATGGAAGCGTTCAACTGGCTGATCATTACCAACAAAATACACCTATTGGAGATGGACCTGTTCTTCTTCCAGATAATCATTATCTTTCTACCCAATCTGCTCTTTCTAAAGATCCTAATGAAAAAAGAGATCATATGGTGCTTCTTGAATTTGTTACTGCTGCAGGAATTACTCATGGTATGGATGAACTTTATAAA",
       "evaluation": {
-        "candidate_id": "profile-candidate-01",
+        "candidate_id": "profile-eGFP",
         "evaluator_version": "1.0.1",
         "sequence_integrity": {
           "aa_identity": 1.0,
@@ -42,7 +42,7 @@
           "internal_stop_count": 0
         },
         "metrics": {
-          "cai": null,
+          "cai": 0.9439615218408719,
           "gc_percent": 31.799163179916317,
           "mfe": null
         },
@@ -52,28 +52,35 @@
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "Sequence length (717) is not divisible by 3"
+            "message": null
           },
           {
             "check_name": "aa_identity",
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "AA Identity is 1.000"
+            "message": null
           },
           {
             "check_name": "internal_stop",
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "Found 0 internal stop codons"
+            "message": null
           },
           {
             "check_name": "gc_content",
             "domain": "codon_composition",
             "enforcement": "gate",
             "result": "fail",
-            "message": "GC 3179.92% is outside target 40.00%-47.00%"
+            "message": "GC 31.80% is outside target 40.0%-47.0%"
+          },
+          {
+            "check_name": "type_iis_bsmbi",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
           },
           {
             "check_name": "type_iis_bsai",
@@ -84,13 +91,6 @@
           },
           {
             "check_name": "type_iis_bpii",
-            "domain": "assembly",
-            "enforcement": "gate",
-            "result": "pass",
-            "message": null
-          },
-          {
-            "check_name": "type_iis_bsmbi",
             "domain": "assembly",
             "enforcement": "gate",
             "result": "pass",
@@ -119,7 +119,7 @@
           }
         ]
       },
-      "runtime_seconds": 2.4668827056884766
+      "runtime_seconds": 4.7333948612213135
     },
     {
       "engine_name": "dp",
@@ -136,20 +136,20 @@
         "seed": 42,
         "inference_mode": "standard",
         "runtime_environment": "default",
-        "timestamp": "2026-08-29T10:33:47.626779"
+        "timestamp": "2026-08-29T11:14:57.907669"
       },
-      "optimized_sequence": "ATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGTAA",
+      "optimized_sequence": "ATGGTTTCTAAGGGAGAGGAGCTTTTCACTGGAGTTGTTCCTATTCTTGTGGAGCTTGATGGAGATGTGAATGGACATAAGTTCTCTGTGTCTGGAGAGGGAGAGGGAGATGCTACTTATGGAAAGCTTACTCTTAAGTTCATTTGCACTACTGGAAAGCTTCCTGTGCCTTGGCCTACTCTTGTGACTACTTTCTCTTATGGAGTGCAGTGCTTCTCTAGGTATCCTGATCATATGAAGCAGCATGATTTCTTCAAGTCTGCTATGCCTGAGGGATATGTTCAGGAGAGGACTATTTTCTTCAAGGATGATGGAAATTATAAGACTAGGGCTGAGGTTAAGTTCGAGGGAGATACTCTTGTTAATAGGATTGAGCTTAAGGGAATTGATTTCAAGGAGGATGGAAATATTCTTGGACATAAGCTTGAGTATAATTATAATTCTCATAATGTTTATATTATGGCTGATAAGCAGAAGAATGGAATTAAGGTGAATTTCAAGATTAGGCATAATATTGAGGATGGATCTGTGCAGCTTGCTGATCATTATCAGCAGAATACTCCTATTGGAGATGGACCTGTGCTTCTTCCTGATAATCATTATCTTTCTACTCAGTCTGCTCTTTCTAAGGATCCTAATGAGAAGAGGGATCATATGGTGCTTCTTGAGTTCGTGACTGCTGCTGGAATTACTCATGGAATGGATGAGCTTTATAAGTAA",
       "evaluation": {
-        "candidate_id": "dp-mock-candidate-01",
+        "candidate_id": "dp-eGFP",
         "evaluator_version": "1.0.1",
         "sequence_integrity": {
-          "aa_identity": 0.02510460251046025,
+          "aa_identity": 1.0,
           "frame_valid": true,
           "internal_stop_count": 0
         },
         "metrics": {
-          "cai": null,
-          "gc_percent": 33.19444444444444,
+          "cai": 0.9158270637945738,
+          "gc_percent": 39.861111111111114,
           "mfe": null
         },
         "checks": [
@@ -158,28 +158,35 @@
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "Sequence length (720) is not divisible by 3"
+            "message": null
           },
           {
             "check_name": "aa_identity",
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
-            "result": "fail",
-            "message": "AA Identity is 0.025"
+            "result": "pass",
+            "message": null
           },
           {
             "check_name": "internal_stop",
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "Found 0 internal stop codons"
+            "message": null
           },
           {
             "check_name": "gc_content",
             "domain": "codon_composition",
             "enforcement": "gate",
             "result": "fail",
-            "message": "GC 3319.44% is outside target 40.00%-47.00%"
+            "message": "GC 39.86% is outside target 40.0%-47.0%"
+          },
+          {
+            "check_name": "type_iis_bsmbi",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
           },
           {
             "check_name": "type_iis_bsai",
@@ -190,13 +197,6 @@
           },
           {
             "check_name": "type_iis_bpii",
-            "domain": "assembly",
-            "enforcement": "gate",
-            "result": "pass",
-            "message": null
-          },
-          {
-            "check_name": "type_iis_bsmbi",
             "domain": "assembly",
             "enforcement": "gate",
             "result": "pass",
@@ -221,11 +221,11 @@
             "domain": "assembly",
             "enforcement": "warning",
             "result": "warning",
-            "message": "Found 705 direct repeats"
+            "message": "Found 5 direct repeats"
           }
         ]
       },
-      "runtime_seconds": 0.0009996891021728516
+      "runtime_seconds": 0.15152406692504883
     },
     {
       "engine_name": "lm",
@@ -240,21 +240,21 @@
         "method_version": "3.6.0-scaffold",
         "git_commit": "current",
         "seed": 42,
-        "inference_mode": "standard",
+        "inference_mode": "deterministic_scaffold",
         "runtime_environment": "default",
-        "timestamp": "2026-08-29T10:33:47.627778"
+        "timestamp": "2026-08-29T11:14:58.061193"
       },
       "optimized_sequence": "ATGGTTTCTAAAGGTGAAGAATTATTTACTGGTGTTGTTCCTATCTTGGTTGAATTGGATGGTGATGTTAACGGTCATAAGTTCTCTGTTTCTGGTGAAGGTGAAGGTGATGCTACTTACGGTAAGTTGACTTTGAAGTTCATCTGTACTACTGGTAAGTTGCCTGTTCCTTGGCCTACTTTGGTTACTACTTTCTCTTACGGTGTTCAATGTTTCTCTCGTTACCCTGATCATATGAAGCAACATGATTTCTTCAAGTCTGCTATGCCTGAAGGTTACGTTCAAGAACGTACTATCTTCTTCAAGGATGATGGTAACTACAAGACTCGTGCTGAAGTTAAGTTCGAAGGTGATACTTTGGTTAACCGTATCGAATTGAAGGGTATCGATTTCAAGGAAGATGGTAACATCTTGGGTCATAAGTTGGAATACAACTACAACTCTCATAACGTTTACATCATGGCTGATAAGCAAAAGAACGGTATCAAGGTTAACTTCAAGATCCGTCATAACATCGAAGATGGTTCTGTTCAATTGGCTGATCATTACCAACAAAACACTCCTATCGGTGATGGTCCTGTTTTGTTGCCTGATAACCATTACTTGTCTACTCAATCTGCTTTGTCTAAGGATCCTAACGAAAAGCGTGATCATATGGTTTTGTTGGAATTCGTTACTGCTGCTGGTATCACTCATGGTATGGATGAATTGTACAAGTAA",
       "evaluation": {
-        "candidate_id": "lm-candidate-01",
-        "evaluator_version": "1.0.0",
+        "candidate_id": "lm-eGFP",
+        "evaluator_version": "1.0.1",
         "sequence_integrity": {
           "aa_identity": 1.0,
           "frame_valid": true,
           "internal_stop_count": 0
         },
         "metrics": {
-          "cai": null,
+          "cai": 0.8541057196315579,
           "gc_percent": 39.30555555555556,
           "mfe": null
         },
@@ -264,28 +264,35 @@
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "Sequence length (720) is not divisible by 3"
+            "message": null
           },
           {
             "check_name": "aa_identity",
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "AA Identity is 1.000"
+            "message": null
           },
           {
             "check_name": "internal_stop",
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "Found 0 internal stop codons"
+            "message": null
           },
           {
             "check_name": "gc_content",
             "domain": "codon_composition",
             "enforcement": "gate",
             "result": "fail",
-            "message": "GC 3930.56% is outside target 40.00%-47.00%"
+            "message": "GC 39.31% is outside target 40.0%-47.0%"
+          },
+          {
+            "check_name": "type_iis_bsmbi",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
           },
           {
             "check_name": "type_iis_bsai",
@@ -296,13 +303,6 @@
           },
           {
             "check_name": "type_iis_bpii",
-            "domain": "assembly",
-            "enforcement": "gate",
-            "result": "pass",
-            "message": null
-          },
-          {
-            "check_name": "type_iis_bsmbi",
             "domain": "assembly",
             "enforcement": "gate",
             "result": "pass",
@@ -331,7 +331,7 @@
           }
         ]
       },
-      "runtime_seconds": 0.014570236206054688
+      "runtime_seconds": 0.01364755630493164
     },
     {
       "engine_name": "profile",
@@ -348,11 +348,11 @@
         "seed": 42,
         "inference_mode": "standard",
         "runtime_environment": "default",
-        "timestamp": "2026-08-29T10:33:47.643344"
+        "timestamp": "2026-08-29T11:14:58.074840"
       },
       "optimized_sequence": "GAAGTTCAACTTGTTGAATCTGGAGGGGGACTTGTTCAACCAGGAAGATCTCTTAGACTTTCTTGTGCTGCTTCAGGATTTACTTTTGATGATTATGCTATGCACTGGGTTAGACAAGCTCCTGGAAAAGGATTAGAATGGGTGAGTGCTATTACTTGGAATTCAGGACATATTGATTATGCTGATAGTGTTGAAGGAAGATTCACTATTTCTCGCGATAATGCTAAAAATTCTCTTTATCTTCAAATGAACTCTCTTCGAGCTGAAGATACTGCTGTATATTATTGTGCAAAAGTTTCTTATTTGTCTACTGCTTCTTCTCTTGATTACTGGGGCCAAGGAACTTTGGTTACTGTTTCTTCTGCTTCTACTAAAGGACCTTCTGTATTTCCTCTTGCTCCATCTAGTAAATCTACTTCTGGTGGAACTGCAGCTCTTGGTTGTCTTGTTAAAGATTACTTTCCTGAACCAGTTACGGTTTCTTGGAATAGCGGAGCTTTAACTTCTGGAGTGCATACTTTTCCTGCTGTTCTTCAATCTTCTGGACTTTACTCACTTTCGTCTGTTGTTACTGTCCCTTCTTCTTCACTTGGAACTCAAACTTATATCTGTAATGTAAATCATAAACCGTCAAATACTAAAGTTGATAAAAAAGTTGAACCTAAATCTTGCGATAAAACTCATACTTGTCCGCCTTGTCCTGCTCCTGAACTTCTTGGAGGACCTTCTGTTTTTTTGTTCCCTCCTAAACCTAAAGATACTTTAATGATTTCTAGAACACCAGAGGTTACTTGTGTTGTTGTTGATGTTAGTCACGAAGATCCAGAAGTTAAATTCAACTGGTATGTTGATGGAGTTGAAGTTCACAATGCTAAAACAAAACCTCGGGAAGAACAATATAATTCTACTTATAGAGTCGTTTCTGTTCTTACTGTTCTTCATCAAGACTGGCTTAATGGTAAAGAATATAAATGTAAAGTTTCTAATAAAGCTCTTCCTGCTCCTATTGAAAAAACTATTTCTAAAGCTAAAGGACAACCTAGAGAACCACAAGTTTATACTCTCCCTCCTTCTAGAGATGAACTTACTAAAAATCAAGTTTCTCTTACTTGTCTTGTTAAAGGCTTTTACCCTTCTGATATTGCTGTTGAATGGGAATCTAATGGACAACCTGAGAATAATTATAAAACTACTCCTCCCGTCCTTGATTCTGATGGATCTTTTTTTTTATACAGCAAACTTACTGTAGATAAATCAAGATGGCAACAAGGAAATGTTTTTTCTTGTTCTGTAATGCATGAAGCTCTTCATAATCATTATACTCAAAAATCTCTTTCTCTTTCTCCTGGAAAA",
       "evaluation": {
-        "candidate_id": "profile-candidate-01",
+        "candidate_id": "profile-Humira_HC",
         "evaluator_version": "1.0.1",
         "sequence_integrity": {
           "aa_identity": 1.0,
@@ -360,7 +360,7 @@
           "internal_stop_count": 0
         },
         "metrics": {
-          "cai": null,
+          "cai": 0.917286012244309,
           "gc_percent": 36.28972653362897,
           "mfe": null
         },
@@ -370,28 +370,35 @@
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "Sequence length (1353) is not divisible by 3"
+            "message": null
           },
           {
             "check_name": "aa_identity",
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "AA Identity is 1.000"
+            "message": null
           },
           {
             "check_name": "internal_stop",
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "Found 0 internal stop codons"
+            "message": null
           },
           {
             "check_name": "gc_content",
             "domain": "codon_composition",
             "enforcement": "gate",
             "result": "fail",
-            "message": "GC 3628.97% is outside target 40.00%-47.00%"
+            "message": "GC 36.29% is outside target 40.0%-47.0%"
+          },
+          {
+            "check_name": "type_iis_bsmbi",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
           },
           {
             "check_name": "type_iis_bsai",
@@ -402,13 +409,6 @@
           },
           {
             "check_name": "type_iis_bpii",
-            "domain": "assembly",
-            "enforcement": "gate",
-            "result": "pass",
-            "message": null
-          },
-          {
-            "check_name": "type_iis_bsmbi",
             "domain": "assembly",
             "enforcement": "gate",
             "result": "pass",
@@ -437,7 +437,7 @@
           }
         ]
       },
-      "runtime_seconds": 0.013371706008911133
+      "runtime_seconds": 0.011738061904907227
     },
     {
       "engine_name": "dp",
@@ -454,20 +454,20 @@
         "seed": 42,
         "inference_mode": "standard",
         "runtime_environment": "default",
-        "timestamp": "2026-08-29T10:33:47.656716"
+        "timestamp": "2026-08-29T11:14:58.088804"
       },
-      "optimized_sequence": "ATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGATGTAA",
+      "optimized_sequence": "GAGGTTCAGCTTGTTGAGTCTGGAGGAGGACTTGTTCAGCCTGGAAGGTCTCTTAGGCTTTCTTGTGCTGCTTCTGGATTTACTTTTGATGATTATGCTATGCATTGGGTTAGGCAGGCTCCTGGAAAGGGACTTGAGTGGGTTTCTGCTATTACTTGGAATTCTGGACATATTGATTATGCTGATTCTGTTGAGGGAAGGTTTACTATTTCTAGGGATAATGCTAAGAATTCTCTTTATCTTCAGATGAATTCTCTTAGGGCTGAGGATACTGCTGTTTATTATTGTGCTAAGGTTTCTTATCTTTCTACTGCTTCTTCTCTTGATTATTGGGGACAGGGAACTCTTGTTACTGTTTCTTCTGCTTCTACTAAGGGACCTTCTGTTTTTCCTCTTGCTCCTTCTTCTAAGTCTACTTCTGGAGGAACTGCTGCTCTTGGATGCCTTGTTAAGGATTATTTTCCTGAGCCTGTTACTGTTTCTTGGAATTCTGGAGCTCTTACTTCTGGAGTTCATACTTTTCCTGCTGTTCTTCAGTCTTCTGGACTTTATTCTCTTTCTTCTGTTGTTACTGTTCCTTCTTCTTCTCTTGGAACTCAGACTTATATTTGCAATGTTAATCATAAGCCTTCTAATACTAAGGTTGATAAGAAGGTTGAGCCTAAGTCTTGCGATAAGACTCATACTTGCCCTCCTTGCCCTGCTCCTGAGCTTCTTGGAGGACCTTCTGTTTTTCTTTTTCCTCCTAAGCCTAAGGATACTCTTATGATTTCTAGGACTCCTGAGGTTACTTGTGTTGTTGTTGATGTTTCTCATGAGGATCCTGAGGTTAAGTTTAATTGGTATGTTGATGGAGTTGAGGTTCATAATGCTAAGACTAAGCCTAGGGAGGAGCAGTATAATTCTACTTATAGGGTTGTTTCTGTTCTTACTGTTCTTCATCAGGATTGGCTTAATGGAAAGGAGTATAAGTGTAAGGTTTCTAATAAGGCTCTTCCTGCTCCTATTGAGAAGACTATTTCTAAGGCTAAGGGACAGCCTAGGGAGCCTCAGGTTTATACTCTTCCTCCTTCTAGGGATGAGCTTACTAAGAATCAGGTTTCTCTTACTTGTCTTGTTAAGGGATTTTATCCTTCTGATATTGCTGTTGAGTGGGAGTCTAATGGACAGCCTGAGAATAATTATAAGACTACTCCTCCTGTTCTTGATTCTGATGGATCTTTTTTTCTTTATTCTAAGCTTACTGTTGATAAGTCTAGGTGGCAGCAGGGAAATGTTTTTTCTTGTTCTGTTATGCATGAGGCTCTTCATAATCATTATACTCAGAAGTCTCTTTCTCTTTCTCCTGGAAAGTAA",
       "evaluation": {
-        "candidate_id": "dp-mock-candidate-01",
+        "candidate_id": "dp-Humira_HC",
         "evaluator_version": "1.0.1",
         "sequence_integrity": {
-          "aa_identity": 0.008869179600886918,
+          "aa_identity": 1.0,
           "frame_valid": true,
           "internal_stop_count": 0
         },
         "metrics": {
-          "cai": null,
-          "gc_percent": 33.259587020648965,
+          "cai": 0.9643449462707757,
+          "gc_percent": 39.97050147492625,
           "mfe": null
         },
         "checks": [
@@ -476,42 +476,28 @@
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "Sequence length (1356) is not divisible by 3"
+            "message": null
           },
           {
             "check_name": "aa_identity",
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
-            "result": "fail",
-            "message": "AA Identity is 0.009"
+            "result": "pass",
+            "message": null
           },
           {
             "check_name": "internal_stop",
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "Found 0 internal stop codons"
+            "message": null
           },
           {
             "check_name": "gc_content",
             "domain": "codon_composition",
             "enforcement": "gate",
             "result": "fail",
-            "message": "GC 3325.96% is outside target 40.00%-47.00%"
-          },
-          {
-            "check_name": "type_iis_bsai",
-            "domain": "assembly",
-            "enforcement": "gate",
-            "result": "pass",
-            "message": null
-          },
-          {
-            "check_name": "type_iis_bpii",
-            "domain": "assembly",
-            "enforcement": "gate",
-            "result": "pass",
-            "message": null
+            "message": "GC 39.97% is outside target 40.0%-47.0%"
           },
           {
             "check_name": "type_iis_bsmbi",
@@ -519,6 +505,20 @@
             "enforcement": "gate",
             "result": "pass",
             "message": null
+          },
+          {
+            "check_name": "type_iis_bsai",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "fail",
+            "message": "Found forbidden BsaI sites: ['GGTCTC']"
+          },
+          {
+            "check_name": "type_iis_bpii",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "fail",
+            "message": "Found forbidden BpiI sites: ['GAAGAC', 'GTCTTC']"
           },
           {
             "check_name": "polya_signal",
@@ -531,19 +531,19 @@
             "check_name": "homopolymer",
             "domain": "rna_risk",
             "enforcement": "warning",
-            "result": "pass",
-            "message": "No homopolymers >= 6 found"
+            "result": "warning",
+            "message": "Found 2 homopolymer runs"
           },
           {
             "check_name": "direct_repeat",
             "domain": "assembly",
             "enforcement": "warning",
             "result": "warning",
-            "message": "Found 1341 direct repeats"
+            "message": "Found 41 direct repeats"
           }
         ]
       },
-      "runtime_seconds": 0.0016503334045410156
+      "runtime_seconds": 0.43425440788269043
     },
     {
       "engine_name": "lm",
@@ -558,21 +558,21 @@
         "method_version": "3.6.0-scaffold",
         "git_commit": "current",
         "seed": 42,
-        "inference_mode": "standard",
+        "inference_mode": "deterministic_scaffold",
         "runtime_environment": "default",
-        "timestamp": "2026-08-29T10:33:47.658366"
+        "timestamp": "2026-08-29T11:14:58.524103"
       },
       "optimized_sequence": "GAAGTTCAATTAGTTGAATCTGGTGGTGGTTTGGTTCAACCTGGTCGTTCTTTACGTTTATCTTGTGCTGCTTCTGGTTTTACTTTCGATGATTACGCTATGCATTGGGTTCGTCAAGCTCCTGGTAAAGGTTTAGAATGGGTTTCTGCTATTACTTGGAATTCTGGTCATATTGATTACGCTGATTCTGTTGAAGGTCGTTTTACTATCTCTCGTGATAACGCTAAGAACTCTTTGTACTTGCAAATGAACTCTTTGCGTGCTGAAGATACTGCTGTTTACTACTGTGCTAAGGTTTCTTACTTGTCTACTGCTTCTTCTTTGGATTACTGGGGTCAAGGTACTTTGGTTACTGTTTCTTCTGCTTCTACTAAGGGTCCTTCTGTTTTTCCTTTGGCTCCTTCTTCTAAATCTACTTCTGGTGGTACTGCTGCTTTAGGTTGTTTAGTTAAGGATTACTTCCCTGAACCTGTTACTGTTTCTTGGAATTCTGGTGCTTTAACTTCTGGTGTTCATACTTTCCCTGCTGTTTTACAATCTTCTGGTTTGTACTCTTTGTCTAGTGTTGTTACTGTTCCTTCTTCTTCTTTGGGTACTCAAACTTACATCTGTAACGTTAACCATAAGCCTTCTAACACTAAGGTTGATAAGAAGGTTGAACCTAAGTCTTGTGATAAGACTCATACTTGTCCTCCTTGTCCTGCTCCTGAATTGTTGGGTGGTCCTTCTGTTTTCTTGTTCCCTCCTAAACCTAAGGATACTTTGATGATCTCTCGTACTCCTGAAGTTACTTGTGTTGTTGTTGATGTTTCTCATGAAGATCCTGAAGTTAAGTTCAACTGGTACGTTGATGGTGTTGAAGTTCATAACGCTAAGACTAAGCCTCGTGAAGAACAATACAACTCTACTTACCGTGTTGTTTCTGTTTTGACTGTTTTGCATCAAGATTGGTTGAACGGTAAGGAATACAAGTGTAAGGTTTCTAACAAGGCTTTGCCTGCTCCTATCGAAAAGACTATCTCTAAGGCTAAGGGTCAACCTCGTGAACCTCAAGTTTACACTTTGCCTCCTTCTCGTGATGAATTAACTAAGAACCAAGTTTCTTTGACTTGTTTGGTTAAGGGTTTCTACCCTTCTGATATCGCTGTTGAATGGGAATCTAACGGTCAACCTGAAAACAACTACAAGACTACTCCTCCTGTTTTGGATTCTGATGGTTCTTTCTTCTTGTACTCTAAGTTGACTGTTGATAAGTCTCGTTGGCAACAAGGTAACGTTTTCTCTTGTTCTGTTATGCATGAAGCTTTGCATAACCATTACACTCAAAAGTCTTTGTCTTTGTCTCCTGGTAAGTAA",
       "evaluation": {
-        "candidate_id": "lm-candidate-01",
-        "evaluator_version": "1.0.0",
+        "candidate_id": "lm-Humira_HC",
+        "evaluator_version": "1.0.1",
         "sequence_integrity": {
           "aa_identity": 1.0,
           "frame_valid": true,
           "internal_stop_count": 0
         },
         "metrics": {
-          "cai": null,
+          "cai": 0.8958269890290298,
           "gc_percent": 39.74926253687316,
           "mfe": null
         },
@@ -582,28 +582,35 @@
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "Sequence length (1356) is not divisible by 3"
+            "message": null
           },
           {
             "check_name": "aa_identity",
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "AA Identity is 1.000"
+            "message": null
           },
           {
             "check_name": "internal_stop",
             "domain": "sequence_integrity",
             "enforcement": "hard_fail",
             "result": "pass",
-            "message": "Found 0 internal stop codons"
+            "message": null
           },
           {
             "check_name": "gc_content",
             "domain": "codon_composition",
             "enforcement": "gate",
             "result": "fail",
-            "message": "GC 3974.93% is outside target 40.00%-47.00%"
+            "message": "GC 39.75% is outside target 40.0%-47.0%"
+          },
+          {
+            "check_name": "type_iis_bsmbi",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
           },
           {
             "check_name": "type_iis_bsai",
@@ -614,13 +621,6 @@
           },
           {
             "check_name": "type_iis_bpii",
-            "domain": "assembly",
-            "enforcement": "gate",
-            "result": "pass",
-            "message": null
-          },
-          {
-            "check_name": "type_iis_bsmbi",
             "domain": "assembly",
             "enforcement": "gate",
             "result": "pass",
@@ -649,7 +649,7 @@
           }
         ]
       },
-      "runtime_seconds": 0.036292314529418945
+      "runtime_seconds": 0.038701534271240234
     }
   ],
   "pass_counts": {
@@ -658,13 +658,13 @@
     "lm": "0/2"
   },
   "average_cai": {
-    "profile": 0.0,
-    "dp": 0.0,
-    "lm": 0.0
+    "profile": 0.9306237670425904,
+    "dp": 0.9400860050326747,
+    "lm": 0.8749663543302939
   },
   "average_gc": {
     "profile": 34.04444485677264,
-    "dp": 33.227015732546704,
+    "dp": 39.91580629301868,
     "lm": 39.52740904621436
   }
 }

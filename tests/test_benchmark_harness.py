@@ -9,8 +9,8 @@ def test_benchmark_runner_engineering_suite():
     config = BenchmarkRunConfig(
         suite_name="Engineering Benchmark Suite Test",
         host="nbenthamiana",
-        target_gc_min=0.40,
-        target_gc_max=0.47,
+        target_gc_min_percent=40.0,
+        target_gc_max_percent=47.0,
         terminal_stop_policy="append",
         forbidden_type_iis=["BsaI"]
     )
