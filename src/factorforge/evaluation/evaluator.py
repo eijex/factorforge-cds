@@ -67,10 +67,16 @@ class SharedEvaluator:
         gc_percent = calculate_gc(dna)
         cai_val = calculate_cai(dna, self.codon_weights) if self.codon_weights else None
         
+        from factorforge.engines.profile.scoring import compute_mfe_evidence
+        mfe_evidence = compute_mfe_evidence(dna)
+        
         metrics = Metrics(
             cai=cai_val, 
             gc_percent=gc_percent,
-            mfe=None,  # Not implemented in core yet, requires ViennaRNA
+            mfe=mfe_evidence.get("mfe_kcal_mol"),
+            mfe_status=mfe_evidence.get("mfe_status"),
+            mfe_reason=mfe_evidence.get("mfe_reason"),
+            mfe_warning=mfe_evidence.get("mfe_warning"),
         )
 
         # 3. Apply Checks

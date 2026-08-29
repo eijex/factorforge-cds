@@ -167,6 +167,10 @@ class RuleBasedOptimizer(OptimizerEngine):
             if not candidates:
                 raise ValueError("No candidates generated for input sequence.")
             optimized_dna = candidates[0]["sequence"]
+            
+            terminal_stop_policy = kwargs.get("terminal_stop_policy", "preserve")
+            if terminal_stop_policy == "append" or (terminal_stop_policy == "preserve" and sequence.endswith("*")):
+                optimized_dna += "TAA"
 
         # 4. Shared Evaluator checks
         from factorforge.evaluation.evaluator import SharedEvaluator

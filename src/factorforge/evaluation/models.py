@@ -47,6 +47,9 @@ class Metrics(BaseModel):
     cai: Optional[float] = None
     gc_percent: Optional[float] = None
     mfe: Optional[float] = None
+    mfe_status: Optional[str] = None
+    mfe_reason: Optional[str] = None
+    mfe_warning: Optional[str] = None
 
 
 class EvaluationResult(BaseModel):

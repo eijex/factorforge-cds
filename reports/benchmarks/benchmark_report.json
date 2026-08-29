@@ -1,6 +1,6 @@
 {
   "suite_name": "Engineering Benchmark Suite",
-  "run_timestamp": "2026-08-29T11:14:58.565312",
+  "run_timestamp": "2026-08-29T14:35:06.721958",
   "config": {
     "suite_name": "Engineering Benchmark Suite",
     "host": "nbenthamiana",
@@ -30,9 +30,9 @@
         "seed": 42,
         "inference_mode": "standard",
         "runtime_environment": "default",
-        "timestamp": "2026-08-29T11:14:53.172262"
+        "timestamp": "2026-08-29T14:34:46.651973"
       },
-      "optimized_sequence": "ATGGTTTCTAAAGGAGAAGAACTATTTACTGGAGTTGTTCCTATTCTTGTTGAACTTGATGGTGATGTTAATGGACATAAATTTTCTGTTTCTGGAGAAGGAGAAGGTGATGCTACTTATGGCAAACTTACTCTAAAATTTATTTGTACTACTGGAAAACTTCCTGTTCCATGGCCTACCCTTGTTACAACTTTTAGCTATGGAGTTCAATGTTTTTCTAGATATCCTGATCATATGAAACAACATGACTTTTTCAAATCTGCTATGCCTGAAGGATATGTTCAAGAAAGAACTATTTTTTTTAAGGATGATGGAAATTATAAAACAAGAGCTGAAGTTAAGTTTGAAGGTGATACTTTAGTTAATAGAATTGAACTAAAAGGAATTGATTTTAAGGAAGATGGAAATATCCTTGGTCATAAACTTGAATATAATTATAATTCTCATAATGTTTATATTATGGCTGATAAGCAAAAAAACGGAATTAAAGTTAACTTTAAAATTAGGCATAATATTGAAGATGGAAGCGTTCAACTGGCTGATCATTACCAACAAAATACACCTATTGGAGATGGACCTGTTCTTCTTCCAGATAATCATTATCTTTCTACCCAATCTGCTCTTTCTAAAGATCCTAATGAAAAAAGAGATCATATGGTGCTTCTTGAATTTGTTACTGCTGCAGGAATTACTCATGGTATGGATGAACTTTATAAA",
+      "optimized_sequence": "ATGGTTTCTAAAGGAGAAGAACTATTTACTGGAGTTGTTCCTATTCTTGTTGAACTTGATGGTGATGTTAATGGACATAAATTTTCTGTTTCTGGAGAAGGAGAAGGTGATGCTACTTATGGCAAACTTACTCTAAAATTTATTTGTACTACTGGAAAACTTCCTGTTCCATGGCCTACCCTTGTTACAACTTTTAGCTATGGAGTTCAATGTTTTTCTAGATATCCTGATCATATGAAACAACATGACTTTTTCAAATCTGCTATGCCTGAAGGATATGTTCAAGAAAGAACTATTTTTTTTAAGGATGATGGAAATTATAAAACAAGAGCTGAAGTTAAGTTTGAAGGTGATACTTTAGTTAATAGAATTGAACTAAAAGGAATTGATTTTAAGGAAGATGGAAATATCCTTGGTCATAAACTTGAATATAATTATAATTCTCATAATGTTTATATTATGGCTGATAAGCAAAAAAACGGAATTAAAGTTAACTTTAAAATTAGGCATAATATTGAAGATGGAAGCGTTCAACTGGCTGATCATTACCAACAAAATACACCTATTGGAGATGGACCTGTTCTTCTTCCAGATAATCATTATCTTTCTACCCAATCTGCTCTTTCTAAAGATCCTAATGAAAAAAGAGATCATATGGTGCTTCTTGAATTTGTTACTGCTGCAGGAATTACTCATGGTATGGATGAACTTTATAAATAA",
       "evaluation": {
         "candidate_id": "profile-eGFP",
         "evaluator_version": "1.0.1",
@@ -43,8 +43,11 @@
         },
         "metrics": {
           "cai": 0.9439615218408719,
-          "gc_percent": 31.799163179916317,
-          "mfe": null
+          "gc_percent": 31.666666666666664,
+          "mfe": -140.0,
+          "mfe_status": "computed",
+          "mfe_reason": null,
+          "mfe_warning": null
         },
         "checks": [
           {
@@ -73,14 +76,7 @@
             "domain": "codon_composition",
             "enforcement": "gate",
             "result": "fail",
-            "message": "GC 31.80% is outside target 40.0%-47.0%"
-          },
-          {
-            "check_name": "type_iis_bsmbi",
-            "domain": "assembly",
-            "enforcement": "gate",
-            "result": "pass",
-            "message": null
+            "message": "GC 31.67% is outside target 40.0%-47.0%"
           },
           {
             "check_name": "type_iis_bsai",
@@ -91,6 +87,13 @@
           },
           {
             "check_name": "type_iis_bpii",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bsmbi",
             "domain": "assembly",
             "enforcement": "gate",
             "result": "pass",
@@ -114,12 +117,12 @@
             "check_name": "direct_repeat",
             "domain": "assembly",
             "enforcement": "warning",
-            "result": "warning",
-            "message": "Found 3 direct repeats"
+            "result": "pass",
+            "message": "No major direct repeats found"
           }
         ]
       },
-      "runtime_seconds": 4.7333948612213135
+      "runtime_seconds": 7.170472860336304
     },
     {
       "engine_name": "dp",
@@ -136,7 +139,7 @@
         "seed": 42,
         "inference_mode": "standard",
         "runtime_environment": "default",
-        "timestamp": "2026-08-29T11:14:57.907669"
+        "timestamp": "2026-08-29T14:34:55.676105"
       },
       "optimized_sequence": "ATGGTTTCTAAGGGAGAGGAGCTTTTCACTGGAGTTGTTCCTATTCTTGTGGAGCTTGATGGAGATGTGAATGGACATAAGTTCTCTGTGTCTGGAGAGGGAGAGGGAGATGCTACTTATGGAAAGCTTACTCTTAAGTTCATTTGCACTACTGGAAAGCTTCCTGTGCCTTGGCCTACTCTTGTGACTACTTTCTCTTATGGAGTGCAGTGCTTCTCTAGGTATCCTGATCATATGAAGCAGCATGATTTCTTCAAGTCTGCTATGCCTGAGGGATATGTTCAGGAGAGGACTATTTTCTTCAAGGATGATGGAAATTATAAGACTAGGGCTGAGGTTAAGTTCGAGGGAGATACTCTTGTTAATAGGATTGAGCTTAAGGGAATTGATTTCAAGGAGGATGGAAATATTCTTGGACATAAGCTTGAGTATAATTATAATTCTCATAATGTTTATATTATGGCTGATAAGCAGAAGAATGGAATTAAGGTGAATTTCAAGATTAGGCATAATATTGAGGATGGATCTGTGCAGCTTGCTGATCATTATCAGCAGAATACTCCTATTGGAGATGGACCTGTGCTTCTTCCTGATAATCATTATCTTTCTACTCAGTCTGCTCTTTCTAAGGATCCTAATGAGAAGAGGGATCATATGGTGCTTCTTGAGTTCGTGACTGCTGCTGGAATTACTCATGGAATGGATGAGCTTTATAAGTAA",
       "evaluation": {
@@ -150,7 +153,10 @@
         "metrics": {
           "cai": 0.9158270637945738,
           "gc_percent": 39.861111111111114,
-          "mfe": null
+          "mfe": -203.8,
+          "mfe_status": "computed",
+          "mfe_reason": null,
+          "mfe_warning": null
         },
         "checks": [
           {
@@ -182,13 +188,6 @@
             "message": "GC 39.86% is outside target 40.0%-47.0%"
           },
           {
-            "check_name": "type_iis_bsmbi",
-            "domain": "assembly",
-            "enforcement": "gate",
-            "result": "pass",
-            "message": null
-          },
-          {
             "check_name": "type_iis_bsai",
             "domain": "assembly",
             "enforcement": "gate",
@@ -197,6 +196,13 @@
           },
           {
             "check_name": "type_iis_bpii",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bsmbi",
             "domain": "assembly",
             "enforcement": "gate",
             "result": "pass",
@@ -220,12 +226,12 @@
             "check_name": "direct_repeat",
             "domain": "assembly",
             "enforcement": "warning",
-            "result": "warning",
-            "message": "Found 5 direct repeats"
+            "result": "pass",
+            "message": "No major direct repeats found"
           }
         ]
       },
-      "runtime_seconds": 0.15152406692504883
+      "runtime_seconds": 0.13914847373962402
     },
     {
       "engine_name": "lm",
@@ -242,7 +248,7 @@
         "seed": 42,
         "inference_mode": "deterministic_scaffold",
         "runtime_environment": "default",
-        "timestamp": "2026-08-29T11:14:58.061193"
+        "timestamp": "2026-08-29T14:34:58.158809"
       },
       "optimized_sequence": "ATGGTTTCTAAAGGTGAAGAATTATTTACTGGTGTTGTTCCTATCTTGGTTGAATTGGATGGTGATGTTAACGGTCATAAGTTCTCTGTTTCTGGTGAAGGTGAAGGTGATGCTACTTACGGTAAGTTGACTTTGAAGTTCATCTGTACTACTGGTAAGTTGCCTGTTCCTTGGCCTACTTTGGTTACTACTTTCTCTTACGGTGTTCAATGTTTCTCTCGTTACCCTGATCATATGAAGCAACATGATTTCTTCAAGTCTGCTATGCCTGAAGGTTACGTTCAAGAACGTACTATCTTCTTCAAGGATGATGGTAACTACAAGACTCGTGCTGAAGTTAAGTTCGAAGGTGATACTTTGGTTAACCGTATCGAATTGAAGGGTATCGATTTCAAGGAAGATGGTAACATCTTGGGTCATAAGTTGGAATACAACTACAACTCTCATAACGTTTACATCATGGCTGATAAGCAAAAGAACGGTATCAAGGTTAACTTCAAGATCCGTCATAACATCGAAGATGGTTCTGTTCAATTGGCTGATCATTACCAACAAAACACTCCTATCGGTGATGGTCCTGTTTTGTTGCCTGATAACCATTACTTGTCTACTCAATCTGCTTTGTCTAAGGATCCTAACGAAAAGCGTGATCATATGGTTTTGTTGGAATTCGTTACTGCTGCTGGTATCACTCATGGTATGGATGAATTGTACAAGTAA",
       "evaluation": {
@@ -256,7 +262,10 @@
         "metrics": {
           "cai": 0.8541057196315579,
           "gc_percent": 39.30555555555556,
-          "mfe": null
+          "mfe": -172.7,
+          "mfe_status": "computed",
+          "mfe_reason": null,
+          "mfe_warning": null
         },
         "checks": [
           {
@@ -288,13 +297,6 @@
             "message": "GC 39.31% is outside target 40.0%-47.0%"
           },
           {
-            "check_name": "type_iis_bsmbi",
-            "domain": "assembly",
-            "enforcement": "gate",
-            "result": "pass",
-            "message": null
-          },
-          {
             "check_name": "type_iis_bsai",
             "domain": "assembly",
             "enforcement": "gate",
@@ -303,6 +305,13 @@
           },
           {
             "check_name": "type_iis_bpii",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bsmbi",
             "domain": "assembly",
             "enforcement": "gate",
             "result": "pass",
@@ -326,12 +335,12 @@
             "check_name": "direct_repeat",
             "domain": "assembly",
             "enforcement": "warning",
-            "result": "warning",
-            "message": "Found 7 direct repeats"
+            "result": "pass",
+            "message": "No major direct repeats found"
           }
         ]
       },
-      "runtime_seconds": 0.01364755630493164
+      "runtime_seconds": 4.082321882247925
     },
     {
       "engine_name": "profile",
@@ -348,9 +357,9 @@
         "seed": 42,
         "inference_mode": "standard",
         "runtime_environment": "default",
-        "timestamp": "2026-08-29T11:14:58.074840"
+        "timestamp": "2026-08-29T14:35:05.350397"
       },
-      "optimized_sequence": "GAAGTTCAACTTGTTGAATCTGGAGGGGGACTTGTTCAACCAGGAAGATCTCTTAGACTTTCTTGTGCTGCTTCAGGATTTACTTTTGATGATTATGCTATGCACTGGGTTAGACAAGCTCCTGGAAAAGGATTAGAATGGGTGAGTGCTATTACTTGGAATTCAGGACATATTGATTATGCTGATAGTGTTGAAGGAAGATTCACTATTTCTCGCGATAATGCTAAAAATTCTCTTTATCTTCAAATGAACTCTCTTCGAGCTGAAGATACTGCTGTATATTATTGTGCAAAAGTTTCTTATTTGTCTACTGCTTCTTCTCTTGATTACTGGGGCCAAGGAACTTTGGTTACTGTTTCTTCTGCTTCTACTAAAGGACCTTCTGTATTTCCTCTTGCTCCATCTAGTAAATCTACTTCTGGTGGAACTGCAGCTCTTGGTTGTCTTGTTAAAGATTACTTTCCTGAACCAGTTACGGTTTCTTGGAATAGCGGAGCTTTAACTTCTGGAGTGCATACTTTTCCTGCTGTTCTTCAATCTTCTGGACTTTACTCACTTTCGTCTGTTGTTACTGTCCCTTCTTCTTCACTTGGAACTCAAACTTATATCTGTAATGTAAATCATAAACCGTCAAATACTAAAGTTGATAAAAAAGTTGAACCTAAATCTTGCGATAAAACTCATACTTGTCCGCCTTGTCCTGCTCCTGAACTTCTTGGAGGACCTTCTGTTTTTTTGTTCCCTCCTAAACCTAAAGATACTTTAATGATTTCTAGAACACCAGAGGTTACTTGTGTTGTTGTTGATGTTAGTCACGAAGATCCAGAAGTTAAATTCAACTGGTATGTTGATGGAGTTGAAGTTCACAATGCTAAAACAAAACCTCGGGAAGAACAATATAATTCTACTTATAGAGTCGTTTCTGTTCTTACTGTTCTTCATCAAGACTGGCTTAATGGTAAAGAATATAAATGTAAAGTTTCTAATAAAGCTCTTCCTGCTCCTATTGAAAAAACTATTTCTAAAGCTAAAGGACAACCTAGAGAACCACAAGTTTATACTCTCCCTCCTTCTAGAGATGAACTTACTAAAAATCAAGTTTCTCTTACTTGTCTTGTTAAAGGCTTTTACCCTTCTGATATTGCTGTTGAATGGGAATCTAATGGACAACCTGAGAATAATTATAAAACTACTCCTCCCGTCCTTGATTCTGATGGATCTTTTTTTTTATACAGCAAACTTACTGTAGATAAATCAAGATGGCAACAAGGAAATGTTTTTTCTTGTTCTGTAATGCATGAAGCTCTTCATAATCATTATACTCAAAAATCTCTTTCTCTTTCTCCTGGAAAA",
+      "optimized_sequence": "GAAGTTCAACTTGTTGAATCTGGAGGGGGACTTGTTCAACCAGGAAGATCTCTTAGACTTTCTTGTGCTGCTTCAGGATTTACTTTTGATGATTATGCTATGCACTGGGTTAGACAAGCTCCTGGAAAAGGATTAGAATGGGTGAGTGCTATTACTTGGAATTCAGGACATATTGATTATGCTGATAGTGTTGAAGGAAGATTCACTATTTCTCGCGATAATGCTAAAAATTCTCTTTATCTTCAAATGAACTCTCTTCGAGCTGAAGATACTGCTGTATATTATTGTGCAAAAGTTTCTTATTTGTCTACTGCTTCTTCTCTTGATTACTGGGGCCAAGGAACTTTGGTTACTGTTTCTTCTGCTTCTACTAAAGGACCTTCTGTATTTCCTCTTGCTCCATCTAGTAAATCTACTTCTGGTGGAACTGCAGCTCTTGGTTGTCTTGTTAAAGATTACTTTCCTGAACCAGTTACGGTTTCTTGGAATAGCGGAGCTTTAACTTCTGGAGTGCATACTTTTCCTGCTGTTCTTCAATCTTCTGGACTTTACTCACTTTCGTCTGTTGTTACTGTCCCTTCTTCTTCACTTGGAACTCAAACTTATATCTGTAATGTAAATCATAAACCGTCAAATACTAAAGTTGATAAAAAAGTTGAACCTAAATCTTGCGATAAAACTCATACTTGTCCGCCTTGTCCTGCTCCTGAACTTCTTGGAGGACCTTCTGTTTTTTTGTTCCCTCCTAAACCTAAAGATACTTTAATGATTTCTAGAACACCAGAGGTTACTTGTGTTGTTGTTGATGTTAGTCACGAAGATCCAGAAGTTAAATTCAACTGGTATGTTGATGGAGTTGAAGTTCACAATGCTAAAACAAAACCTCGGGAAGAACAATATAATTCTACTTATAGAGTCGTTTCTGTTCTTACTGTTCTTCATCAAGACTGGCTTAATGGTAAAGAATATAAATGTAAAGTTTCTAATAAAGCTCTTCCTGCTCCTATTGAAAAAACTATTTCTAAAGCTAAAGGACAACCTAGAGAACCACAAGTTTATACTCTCCCTCCTTCTAGAGATGAACTTACTAAAAATCAAGTTTCTCTTACTTGTCTTGTTAAAGGCTTTTACCCTTCTGATATTGCTGTTGAATGGGAATCTAATGGACAACCTGAGAATAATTATAAAACTACTCCTCCCGTCCTTGATTCTGATGGATCTTTTTTTTTATACAGCAAACTTACTGTAGATAAATCAAGATGGCAACAAGGAAATGTTTTTTCTTGTTCTGTAATGCATGAAGCTCTTCATAATCATTATACTCAAAAATCTCTTTCTCTTTCTCCTGGAAAATAA",
       "evaluation": {
         "candidate_id": "profile-Humira_HC",
         "evaluator_version": "1.0.1",
@@ -361,8 +370,11 @@
         },
         "metrics": {
           "cai": 0.917286012244309,
-          "gc_percent": 36.28972653362897,
-          "mfe": null
+          "gc_percent": 36.2094395280236,
+          "mfe": null,
+          "mfe_status": "not_computed",
+          "mfe_reason": null,
+          "mfe_warning": "MFE was skipped because the sequence (1356 nt) exceeds the 1000 nt limit for global MFE folding."
         },
         "checks": [
           {
@@ -391,14 +403,7 @@
             "domain": "codon_composition",
             "enforcement": "gate",
             "result": "fail",
-            "message": "GC 36.29% is outside target 40.0%-47.0%"
-          },
-          {
-            "check_name": "type_iis_bsmbi",
-            "domain": "assembly",
-            "enforcement": "gate",
-            "result": "pass",
-            "message": null
+            "message": "GC 36.21% is outside target 40.0%-47.0%"
           },
           {
             "check_name": "type_iis_bsai",
@@ -409,6 +414,13 @@
           },
           {
             "check_name": "type_iis_bpii",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bsmbi",
             "domain": "assembly",
             "enforcement": "gate",
             "result": "pass",
@@ -432,12 +444,12 @@
             "check_name": "direct_repeat",
             "domain": "assembly",
             "enforcement": "warning",
-            "result": "warning",
-            "message": "Found 13 direct repeats"
+            "result": "pass",
+            "message": "No major direct repeats found"
           }
         ]
       },
-      "runtime_seconds": 0.011738061904907227
+      "runtime_seconds": 0.03346753120422363
     },
     {
       "engine_name": "dp",
@@ -454,7 +466,7 @@
         "seed": 42,
         "inference_mode": "standard",
         "runtime_environment": "default",
-        "timestamp": "2026-08-29T11:14:58.088804"
+        "timestamp": "2026-08-29T14:35:05.397242"
       },
       "optimized_sequence": "GAGGTTCAGCTTGTTGAGTCTGGAGGAGGACTTGTTCAGCCTGGAAGGTCTCTTAGGCTTTCTTGTGCTGCTTCTGGATTTACTTTTGATGATTATGCTATGCATTGGGTTAGGCAGGCTCCTGGAAAGGGACTTGAGTGGGTTTCTGCTATTACTTGGAATTCTGGACATATTGATTATGCTGATTCTGTTGAGGGAAGGTTTACTATTTCTAGGGATAATGCTAAGAATTCTCTTTATCTTCAGATGAATTCTCTTAGGGCTGAGGATACTGCTGTTTATTATTGTGCTAAGGTTTCTTATCTTTCTACTGCTTCTTCTCTTGATTATTGGGGACAGGGAACTCTTGTTACTGTTTCTTCTGCTTCTACTAAGGGACCTTCTGTTTTTCCTCTTGCTCCTTCTTCTAAGTCTACTTCTGGAGGAACTGCTGCTCTTGGATGCCTTGTTAAGGATTATTTTCCTGAGCCTGTTACTGTTTCTTGGAATTCTGGAGCTCTTACTTCTGGAGTTCATACTTTTCCTGCTGTTCTTCAGTCTTCTGGACTTTATTCTCTTTCTTCTGTTGTTACTGTTCCTTCTTCTTCTCTTGGAACTCAGACTTATATTTGCAATGTTAATCATAAGCCTTCTAATACTAAGGTTGATAAGAAGGTTGAGCCTAAGTCTTGCGATAAGACTCATACTTGCCCTCCTTGCCCTGCTCCTGAGCTTCTTGGAGGACCTTCTGTTTTTCTTTTTCCTCCTAAGCCTAAGGATACTCTTATGATTTCTAGGACTCCTGAGGTTACTTGTGTTGTTGTTGATGTTTCTCATGAGGATCCTGAGGTTAAGTTTAATTGGTATGTTGATGGAGTTGAGGTTCATAATGCTAAGACTAAGCCTAGGGAGGAGCAGTATAATTCTACTTATAGGGTTGTTTCTGTTCTTACTGTTCTTCATCAGGATTGGCTTAATGGAAAGGAGTATAAGTGTAAGGTTTCTAATAAGGCTCTTCCTGCTCCTATTGAGAAGACTATTTCTAAGGCTAAGGGACAGCCTAGGGAGCCTCAGGTTTATACTCTTCCTCCTTCTAGGGATGAGCTTACTAAGAATCAGGTTTCTCTTACTTGTCTTGTTAAGGGATTTTATCCTTCTGATATTGCTGTTGAGTGGGAGTCTAATGGACAGCCTGAGAATAATTATAAGACTACTCCTCCTGTTCTTGATTCTGATGGATCTTTTTTTCTTTATTCTAAGCTTACTGTTGATAAGTCTAGGTGGCAGCAGGGAAATGTTTTTTCTTGTTCTGTTATGCATGAGGCTCTTCATAATCATTATACTCAGAAGTCTCTTTCTCTTTCTCCTGGAAAGTAA",
       "evaluation": {
@@ -468,7 +480,10 @@
         "metrics": {
           "cai": 0.9643449462707757,
           "gc_percent": 39.97050147492625,
-          "mfe": null
+          "mfe": null,
+          "mfe_status": "not_computed",
+          "mfe_reason": null,
+          "mfe_warning": "MFE was skipped because the sequence (1356 nt) exceeds the 1000 nt limit for global MFE folding."
         },
         "checks": [
           {
@@ -500,13 +515,6 @@
             "message": "GC 39.97% is outside target 40.0%-47.0%"
           },
           {
-            "check_name": "type_iis_bsmbi",
-            "domain": "assembly",
-            "enforcement": "gate",
-            "result": "pass",
-            "message": null
-          },
-          {
             "check_name": "type_iis_bsai",
             "domain": "assembly",
             "enforcement": "gate",
@@ -519,6 +527,13 @@
             "enforcement": "gate",
             "result": "fail",
             "message": "Found forbidden BpiI sites: ['GAAGAC', 'GTCTTC']"
+          },
+          {
+            "check_name": "type_iis_bsmbi",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
           },
           {
             "check_name": "polya_signal",
@@ -538,12 +553,12 @@
             "check_name": "direct_repeat",
             "domain": "assembly",
             "enforcement": "warning",
-            "result": "warning",
-            "message": "Found 41 direct repeats"
+            "result": "pass",
+            "message": "No major direct repeats found"
           }
         ]
       },
-      "runtime_seconds": 0.43425440788269043
+      "runtime_seconds": 1.1456241607666016
     },
     {
       "engine_name": "lm",
@@ -560,7 +575,7 @@
         "seed": 42,
         "inference_mode": "deterministic_scaffold",
         "runtime_environment": "default",
-        "timestamp": "2026-08-29T11:14:58.524103"
+        "timestamp": "2026-08-29T14:35:06.547995"
       },
       "optimized_sequence": "GAAGTTCAATTAGTTGAATCTGGTGGTGGTTTGGTTCAACCTGGTCGTTCTTTACGTTTATCTTGTGCTGCTTCTGGTTTTACTTTCGATGATTACGCTATGCATTGGGTTCGTCAAGCTCCTGGTAAAGGTTTAGAATGGGTTTCTGCTATTACTTGGAATTCTGGTCATATTGATTACGCTGATTCTGTTGAAGGTCGTTTTACTATCTCTCGTGATAACGCTAAGAACTCTTTGTACTTGCAAATGAACTCTTTGCGTGCTGAAGATACTGCTGTTTACTACTGTGCTAAGGTTTCTTACTTGTCTACTGCTTCTTCTTTGGATTACTGGGGTCAAGGTACTTTGGTTACTGTTTCTTCTGCTTCTACTAAGGGTCCTTCTGTTTTTCCTTTGGCTCCTTCTTCTAAATCTACTTCTGGTGGTACTGCTGCTTTAGGTTGTTTAGTTAAGGATTACTTCCCTGAACCTGTTACTGTTTCTTGGAATTCTGGTGCTTTAACTTCTGGTGTTCATACTTTCCCTGCTGTTTTACAATCTTCTGGTTTGTACTCTTTGTCTAGTGTTGTTACTGTTCCTTCTTCTTCTTTGGGTACTCAAACTTACATCTGTAACGTTAACCATAAGCCTTCTAACACTAAGGTTGATAAGAAGGTTGAACCTAAGTCTTGTGATAAGACTCATACTTGTCCTCCTTGTCCTGCTCCTGAATTGTTGGGTGGTCCTTCTGTTTTCTTGTTCCCTCCTAAACCTAAGGATACTTTGATGATCTCTCGTACTCCTGAAGTTACTTGTGTTGTTGTTGATGTTTCTCATGAAGATCCTGAAGTTAAGTTCAACTGGTACGTTGATGGTGTTGAAGTTCATAACGCTAAGACTAAGCCTCGTGAAGAACAATACAACTCTACTTACCGTGTTGTTTCTGTTTTGACTGTTTTGCATCAAGATTGGTTGAACGGTAAGGAATACAAGTGTAAGGTTTCTAACAAGGCTTTGCCTGCTCCTATCGAAAAGACTATCTCTAAGGCTAAGGGTCAACCTCGTGAACCTCAAGTTTACACTTTGCCTCCTTCTCGTGATGAATTAACTAAGAACCAAGTTTCTTTGACTTGTTTGGTTAAGGGTTTCTACCCTTCTGATATCGCTGTTGAATGGGAATCTAACGGTCAACCTGAAAACAACTACAAGACTACTCCTCCTGTTTTGGATTCTGATGGTTCTTTCTTCTTGTACTCTAAGTTGACTGTTGATAAGTCTCGTTGGCAACAAGGTAACGTTTTCTCTTGTTCTGTTATGCATGAAGCTTTGCATAACCATTACACTCAAAAGTCTTTGTCTTTGTCTCCTGGTAAGTAA",
       "evaluation": {
@@ -574,7 +589,10 @@
         "metrics": {
           "cai": 0.8958269890290298,
           "gc_percent": 39.74926253687316,
-          "mfe": null
+          "mfe": null,
+          "mfe_status": "not_computed",
+          "mfe_reason": null,
+          "mfe_warning": "MFE was skipped because the sequence (1356 nt) exceeds the 1000 nt limit for global MFE folding."
         },
         "checks": [
           {
@@ -606,13 +624,6 @@
             "message": "GC 39.75% is outside target 40.0%-47.0%"
           },
           {
-            "check_name": "type_iis_bsmbi",
-            "domain": "assembly",
-            "enforcement": "gate",
-            "result": "pass",
-            "message": null
-          },
-          {
             "check_name": "type_iis_bsai",
             "domain": "assembly",
             "enforcement": "gate",
@@ -621,6 +632,13 @@
           },
           {
             "check_name": "type_iis_bpii",
+            "domain": "assembly",
+            "enforcement": "gate",
+            "result": "pass",
+            "message": null
+          },
+          {
+            "check_name": "type_iis_bsmbi",
             "domain": "assembly",
             "enforcement": "gate",
             "result": "pass",
@@ -644,12 +662,12 @@
             "check_name": "direct_repeat",
             "domain": "assembly",
             "enforcement": "warning",
-            "result": "warning",
-            "message": "Found 30 direct repeats"
+            "result": "pass",
+            "message": "No major direct repeats found"
           }
         ]
       },
-      "runtime_seconds": 0.038701534271240234
+      "runtime_seconds": 0.1708216667175293
     }
   ],
   "pass_counts": {
@@ -663,7 +681,7 @@
     "lm": 0.8749663543302939
   },
   "average_gc": {
-    "profile": 34.04444485677264,
+    "profile": 33.93805309734513,
     "dp": 39.91580629301868,
     "lm": 39.52740904621436
   }

@@ -67,8 +67,12 @@ def scan_homopolymers(seq: str, threshold: int = 6) -> List[Dict[str, Any]]:
             pos = idx + length
     return violations
 
-def scan_repeats(seq: str, min_length: int = 10, max_distance: int = 1000) -> List[Dict[str, Any]]:
-    """Detect direct or inverted repeats causing assembly/stability issues."""
+def scan_repeats(seq: str, min_length: int = 20, max_distance: int = 1000) -> List[Dict[str, Any]]:
+    """Detect direct or inverted repeats causing assembly/stability issues.
+    
+    Direct repeats (exact k-mer matches) >= 20 bp are known to cause issues with 
+    DNA synthesis (e.g. Twist/IDT) and homologous recombination in host organisms.
+    """
     seq_upper = seq.upper()
     violations: List[Dict[str, Any]] = []
     
