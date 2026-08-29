@@ -9,12 +9,12 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from factorforge.analysis.metrics import STANDARD_GENETIC_CODE, calculate_gc
+from factorforge.analysis.metrics import STANDARD_GENETIC_CODE
 from factorforge.core.interfaces import OptimizationResult, OptimizerEngine
-from factorforge.engines.lm.adapter import TYPE_IIS_PATTERNS, FactorForgeLogitMasker
+from factorforge.engines.lm.adapter import FactorForgeLogitMasker
 from factorforge.engines.lm.models.mbart_codon import TORCH_AVAILABLE
 from factorforge.engines.lm.tokenizer.control_tokenizer import FactorForgeControlTokenizer
-from factorforge.utils.sequence_validator import validate_cds_output
+from factorforge.evaluation.evaluator import SharedEvaluator
 
 if TORCH_AVAILABLE:
     import torch  # noqa: F401
@@ -44,13 +44,16 @@ class ConstrainedBeamSearchEngine:
         target_gc_max: float = 0.47,
     ) -> None:
         self.tokenizer = tokenizer or FactorForgeControlTokenizer()
+        self.target_gc_min = target_gc_min
+        self.target_gc_max = target_gc_max
         self.masker = masker or FactorForgeLogitMasker(
             tokenizer=self.tokenizer,
-            target_gc_min=target_gc_min,
-            target_gc_max=target_gc_max,
+            target_gc_min=self.target_gc_min,
+            target_gc_max=self.target_gc_max,
         )
         self.model = model
         self.beam_width = beam_width
+        self.evaluator = SharedEvaluator(version="1.0.0")
 
     def optimize_cds(
         self,
@@ -106,21 +109,25 @@ class ConstrainedBeamSearchEngine:
             current_cds += best
 
         current_cds += "TAA"
-        validation = validate_cds_output(protein, current_cds)
-        type_iis_sites = [pattern for pattern in TYPE_IIS_PATTERNS if pattern in current_cds]
+        
+        # Delegate to SharedEvaluator instead of ad-hoc checking
+        eval_result = self.evaluator.evaluate_candidate(
+            candidate_dna=current_cds,
+            expected_protein=protein,
+            candidate_id="lm-candidate-01",
+            target_gc_min=self.target_gc_min,
+            target_gc_max=self.target_gc_max,
+        )
 
         return {
-            "engine": "lm",
-            "model_version": "v3.5.0-SynCodonLM-V2",
+            "generation_engine": "lm",
+            "inference_mode": "deterministic_scaffold",
+            "trained_model_used": False,
             "optimized_sequence": current_cds,
             "sequence_length": len(current_cds),
-            "gc_percent": round(calculate_gc(current_cds), 2),
-            "type_iis_clean": not type_iis_sites,
-            "type2is_clean": not type_iis_sites,
-            "type_iis_sites": type_iis_sites,
-            "aa_identity": validation["aa_identity"],
-            "validator_passed": validation["passed"],
-            "constraint_pass": bool(validation["passed"] and not type_iis_sites),
+            "gc_percent": eval_result.metrics.gc_percent,
+            "validator_passed": eval_result.passed,
+            "evaluation_report": eval_result.model_dump(),
         }
 
 
@@ -136,7 +143,7 @@ class LMEngineAdapter(OptimizerEngine):
 
     @property
     def version(self) -> str:
-        return "3.5.0"
+        return "3.6.0-scaffold"
 
     def optimize(
         self,
@@ -147,15 +154,20 @@ class LMEngineAdapter(OptimizerEngine):
     ) -> OptimizationResult:
         res = self.beam_engine.optimize_cds(sequence, host=host)
         metrics = {
-            "cai": res.get("cai", 0.0),
+            "cai": res.get("evaluation_report", {}).get("metrics", {}).get("cai", 0.0),
             "gc_percent": res.get("gc_percent", 0.0),
-            "type_iis_clean": res.get("type_iis_clean", True),
-            "score": res.get("score", 0.0),
+            "score": 0.0,
         }
         return OptimizationResult(
             sequence=res["optimized_sequence"],
             metrics=metrics,
-            metadata={"engine": "lm", "version": "3.5.0", "host": host},
+            metadata={
+                "engine": "lm", 
+                "version": self.version, 
+                "host": host,
+                "inference_mode": res["inference_mode"],
+                "validator_passed": res["validator_passed"]
+            },
         )
 
     def validate(self, sequence: str) -> bool:
