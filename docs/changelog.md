@@ -4,6 +4,11 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.4.6  2026-09-05
+
+- **AgentOS Hard Gate as Production**: The deterministic AgentOS evaluator is now officially exposed as a production-ready MCP tool.
+- **FactorForge SLLM as Research Preview**: The generative 4.0 SLLM model is now available as a Research Preview.
+
 ## v3.4.5 — 2026-08-22
 
 - Focused Optimization Settings on the current default, refined the structured
