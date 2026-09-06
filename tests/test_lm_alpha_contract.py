@@ -4,10 +4,11 @@ Verifies control token encoding, Type IIS logit masking, autoregressive
 candidate generation, and design package contract adherence.
 """
 
-import pytest
 from factorforge.engines.lm.tokenizer.control_tokenizer import FactorForgeControlTokenizer
 from factorforge.engines.lm.adapter import FactorForgeLogitMasker
 from factorforge.engines.lm.inference import ConstrainedBeamSearchEngine
+from factorforge.analysis.metrics import translate_dna
+from factorforge.evaluation.models import EvaluationResult
 
 
 def test_control_tokenizer_vocab_and_encoding():
@@ -44,13 +45,25 @@ def test_logit_masker_bsai_exclusion():
 
 def test_constrained_beam_search_engine_optimize():
     engine = ConstrainedBeamSearchEngine()
-    result = engine.optimize_cds("MAKW", host="nbenthamiana", gc_band="40-47")
+    result = engine.optimize_cds(
+        "MAKW", host="nbenthamiana", gc_band="40-47", terminal_stop_policy="append"
+    )
 
-    assert result["engine"].startswith("lm")
-
-
-    assert result["model_version"] == "v3.5.0-SynCodonLM-V2"
-    assert result["type2is_clean"] is True
-    assert result["constraint_pass"] is True
+    assert result["generation_engine"] == "lm"
+    assert result["inference_mode"] == "deterministic_scaffold"
+    assert result["trained_model_used"] is False
     assert result["optimized_sequence"].startswith("ATG")
     assert result["optimized_sequence"].endswith(("TAA", "TAG", "TGA"))
+    assert translate_dna(result["optimized_sequence"]) == "MAKW*"
+    report = EvaluationResult.model_validate(result["evaluation_report"])
+    assert report.sequence_integrity.aa_identity == 1.0
+    assert report.sequence_integrity.internal_stop_count == 0
+    checks = {check.check_name: check.result.value for check in report.checks}
+    assert checks["type_iis_bsai"] == "pass"
+    assert checks["type_iis_bsmbi"] == "pass"
+    assert checks["type_iis_bpii"] == "pass"
+    # This deterministic short fixture falls below the requested GC band.
+    # Translation validity must not turn its failed GC gate into an overall pass.
+    assert report.metrics.gc_percent < 40
+    assert checks["gc_content"] == "fail"
+    assert result["validator_passed"] is report.passed is False

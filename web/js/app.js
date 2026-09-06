@@ -779,6 +779,36 @@ function renderResults() {
 
 const ALIGNMENT_PAGE_SIZE = 60;
 
+function comparisonNumber(value, minimum, maximum) {
+    return typeof value === 'number' && Number.isFinite(value)
+        && value >= minimum && value <= maximum ? value : null;
+}
+
+function comparisonIdentity(metrics) {
+    const identity = comparisonNumber(metrics.aa_identity, 0, 1);
+    if (identity === null) return { text: 'Not evaluated', status: 'unknown' };
+    const passed = identity === 1;
+    return { text: `${(identity * 100).toFixed(2)}% ${passed ? 'Passed' : 'Failed'}`, status: passed ? 'pass' : 'fail' };
+}
+
+function comparisonTypeIIS(metrics) {
+    const clean = metrics.type_iis_clean;
+    const count = metrics.type_iis_site_count;
+    const validCount = Number.isInteger(count) && count >= 0;
+    if (clean === false) {
+        return { text: validCount && count > 0 ? `${count} site(s) — Failed` : 'Failed', status: 'fail' };
+    }
+    if (clean === true && (count === undefined || (validCount && count === 0))) {
+        return { text: 'Clean', status: 'pass' };
+    }
+    return { text: 'Not evaluated', status: 'unknown' };
+}
+
+function comparisonStatus(rule, ml) {
+    if (rule.status === 'fail' || ml.status === 'fail') return 'Failed';
+    return rule.status === 'pass' && ml.status === 'pass' ? 'Passed' : 'Not evaluated';
+}
+
 function renderComparisonDashboard(res) {
     const comparison = res?.comparison;
     if (!comparison || res.mode !== 'dual_compare') {
@@ -787,15 +817,31 @@ function renderComparisonDashboard(res) {
     }
     elements.comparisonDashboard.classList.remove('hidden');
     elements.comparisonNotice.textContent = res.preview_notice || 'Experimental comparison preview.';
-    const rule = comparison.rule.metrics;
-    const ml = comparison.ml.metrics;
+    const rule = comparison.rule?.metrics || {};
+    const ml = comparison.ml?.metrics || {};
+    const ruleIdentity = comparisonIdentity(rule);
+    const mlIdentity = comparisonIdentity(ml);
+    const ruleTypeIIS = comparisonTypeIIS(rule);
+    const mlTypeIIS = comparisonTypeIIS(ml);
+    const numericRow = (label, key, max, digits, suffix, deltaSuffix) => {
+        const left = comparisonNumber(rule[key], 0, max);
+        const right = comparisonNumber(ml[key], 0, max);
+        return [label,
+            left === null ? 'Not evaluated' : `${left.toFixed(digits)}${suffix}`,
+            right === null ? 'Not evaluated' : `${right.toFixed(digits)}${suffix}`,
+            left === null || right === null ? 'Not evaluated' : `${(right - left).toFixed(digits)}${deltaSuffix}`];
+    };
+    const percentText = (value, suffix) => {
+        const number = comparisonNumber(value, 0, 100);
+        return number === null ? 'Not evaluated' : `${number.toFixed(1)}%${suffix}`;
+    };
     const metricRows = [
-        ['AA Translation Identity', '100% Passed', '100% Passed', 'Synonymous design'],
-        ['GC Content', `${Number(rule.gc_percent).toFixed(1)}%`, `${Number(ml.gc_percent).toFixed(1)}%`, `${(Number(ml.gc_percent) - Number(rule.gc_percent)).toFixed(1)} pp`],
-        ['CAI Index', Number(rule.cai || 0).toFixed(3), Number(ml.cai || 0).toFixed(3), `${(Number(ml.cai || 0) - Number(rule.cai || 0)).toFixed(3)}`],
-        ['Type IIS Clearance', rule.type_iis_clean === false ? `${rule.type_iis_site_count || 0} site(s)` : 'Clean', ml.type_iis_clean === false ? `${ml.type_iis_site_count || 0} site(s)` : 'Clean', rule.type_iis_clean && ml.type_iis_clean ? 'Passed' : 'Review'],
-        ['Codon Concordance', '—', '—', `${Number(comparison.codon_concordance_percent).toFixed(1)}% match`],
-        ['NT Identity', '—', '—', `${Number(comparison.nt_identity_percent).toFixed(1)}%`]
+        ['AA Translation Identity', ruleIdentity.text, mlIdentity.text, comparisonStatus(ruleIdentity, mlIdentity)],
+        numericRow('GC Content', 'gc_percent', 100, 1, '%', ' pp'),
+        numericRow('CAI Index', 'cai', 1, 3, '', ''),
+        ['Type IIS Clearance', ruleTypeIIS.text, mlTypeIIS.text, comparisonStatus(ruleTypeIIS, mlTypeIIS)],
+        ['Codon Concordance', '—', '—', percentText(comparison.codon_concordance_percent, ' match')],
+        ['NT Identity', '—', '—', percentText(comparison.nt_identity_percent, '')]
     ];
     elements.comparisonMatrixBody.innerHTML = metricRows.map(row => `<tr>${row.map((cell, index) => `<td class="p-3 ${index === 0 ? 'font-bold text-slate-700 dark:text-slate-200' : 'text-slate-600 dark:text-slate-300'}">${escapeHtml(String(cell))}</td>`).join('')}</tr>`).join('');
 

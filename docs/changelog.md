@@ -4,10 +4,12 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
-## v3.4.6  2026-09-05
+## v3.4.6 — in preparation
 
-- **AgentOS Hard Gate as Production**: The deterministic AgentOS evaluator is now officially exposed as a production-ready MCP tool.
-- **FactorForge SLLM as Research Preview**: The generative 4.0 SLLM model is now available as a Research Preview.
+- Experimental Rule/ML comparison UI is gated by deployment capabilities; its presence does not establish a trained-model release.
+- Missing comparison evaluations display as Not evaluated; explicit failures remain visible.
+- PostgreSQL dependencies are optional for SQLite checkpoints, and unconfigured database integration tests skip before importing the database engine.
+- Docker publication now requires the same checkout's CI and browser workflows to succeed.
 
 ## v3.4.5 — 2026-08-22
 

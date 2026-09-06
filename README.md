@@ -72,6 +72,12 @@ Eijex. https://github.com/eijex/factorforge-cds
 
 Mun-Kyu Kim ([@eijex](https://github.com/eijex))
 
+## Optional PostgreSQL support
+
+Install `pip install "factorforge-cds[postgres]"` only when using the PostgreSQL
+connector. Explicit local SQLite checkpoints do not require a PostgreSQL driver.
+Database integration tests require an explicitly configured `DATABASE_URL`.
+
 ## License
 
 GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).

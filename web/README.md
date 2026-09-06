@@ -77,6 +77,13 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 
 ## 🔧 Tech Stack
 
+The experimental comparison panel displays missing or invalid metrics as
+`Not evaluated`. AA identity uses an explicit numeric `aa_identity` fraction;
+responses without it cannot display a pass. Type IIS clearance requires an
+explicit Boolean result, and conflicting site counts do not display as clean.
+ML preview and database controls remain gated by deployment capabilities.
+
+
 - **Frontend**: HTML5 + Tailwind CSS + Vanilla JS
 - **Backend**: Vercel Serverless Functions (Python)
 - **Hosting**: Vercel

@@ -1,6 +1,10 @@
+import os
 import uuid
 
 import pytest
+
+if not os.environ.get("DATABASE_URL", "").strip():
+    pytest.skip("DATABASE_URL is not configured", allow_module_level=True)
 
 pytest.importorskip("sqlalchemy")
 pytest.importorskip("psycopg2")

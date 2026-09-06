@@ -19,9 +19,6 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional
 
-import psycopg2
-from psycopg2.extras import DictCursor
-
 from factorforge.utils.sequence_identity import canonicalize_sequence
 
 
@@ -123,6 +120,15 @@ class FactorForgeDBConnector:
     @contextmanager
     def get_connection(self):
         """Context manager for DB connections."""
+        try:
+            import psycopg2
+        except ModuleNotFoundError as exc:
+            if exc.name != "psycopg2":
+                raise
+            raise RuntimeError(
+                "PostgreSQL support requires factorforge-cds[postgres]. "
+                "Install it before connecting to PostgreSQL."
+            ) from exc
         conn = psycopg2.connect(self.dsn)
         try:
             yield conn
@@ -266,6 +272,8 @@ class FactorForgeDBConnector:
                 return str(cursor.lastrowid)
         
         with self.get_connection() as conn:
+            from psycopg2.extras import DictCursor
+
             with conn.cursor(cursor_factory=DictCursor) as cursor:
                 cursor.execute(
                     "SELECT sequence_id FROM common.sequences WHERE canonical_sequence_sha256 = %s",
