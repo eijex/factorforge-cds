@@ -22,7 +22,8 @@ test('loads the main web UI', async ({ page }) => {
   await expect(page.locator('#sequenceInput')).toBeVisible();
   await expect(page.getByRole('heading', { name: '⚙️ Design Brief' })).toBeVisible();
   await expect(page.locator('#optimizeBtn')).toBeVisible();
-  await expect(page.locator('#resultsPanel')).toBeHidden();
+  await expect(page.locator('#resultsPanel')).toBeVisible();
+  await expect(page.locator('#emptyState')).toContainText('Awaiting a sequence');
   await expect(page.locator('#engineSelector')).toBeHidden();
   await expect(page.locator('#appliedPolicySummary')).toContainText('recommended feasibility design');
 });

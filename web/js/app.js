@@ -736,9 +736,6 @@ function renderResults() {
 
     elements.emptyState.classList.add('hidden');
     elements.resultsContainer.classList.remove('hidden');
-    elements.resultsPanel?.classList.remove('hidden');
-    elements.resultsPanel?.classList.add('flex');
-    elements.designWorkspace?.classList.add('has-results');
     if (elements.resultContextSummary) {
         const host = formatHostProfile(getResultHostProfile(res));
         elements.resultContextSummary.textContent = `${host} · Review the computational checks before synthesis or experimental use.`;
@@ -1699,9 +1696,6 @@ function clearAll() {
     elements.inputTypeBadge.classList.add('hidden');
     updateInputStats('');
     elements.resultsContainer.classList.add('hidden');
-    elements.resultsPanel?.classList.add('hidden');
-    elements.resultsPanel?.classList.remove('flex');
-    elements.designWorkspace?.classList.remove('has-results');
     elements.constructIdDisplay.textContent = '';
     elements.constructIdRow.classList.add('hidden');
     if (elements.candidateComparisonContainer) elements.candidateComparisonContainer.classList.add('hidden');

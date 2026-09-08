@@ -79,14 +79,15 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 
 ### Researcher design-review workflow
 
-The initial screen is a two-column workbench: sequence input on the left and a
-compact Design Brief on the right. The brief exposes the expression host,
-recommended deterministic method, and applied requirements. Optional sequence,
-assembly, and review-policy controls retain their existing API semantics.
-Unavailable execution modes, disabled objectives, and immutable reference
-policy are excluded from the primary path. After a successful run, the result
-appears as a full-width Design Review workspace with computational checks,
-candidate evidence, sequence output, and downloads.
+The desktop screen is a persistent three-column workbench: sequence input,
+a compact Design Brief, and Design Review. The review column keeps the research
+workflow and result destination visible before and after generation. The brief
+exposes the expression host, recommended deterministic method, and applied
+requirements. Optional sequence, assembly, and review-policy controls retain
+their existing API semantics through progressive disclosure. Unavailable
+execution modes, disabled objectives, and immutable reference policy are
+excluded from the primary path. After a successful run, the same review column
+shows computational checks, candidate evidence, sequence output, and downloads.
 
 The experimental comparison panel displays missing or invalid metrics as
 `Not evaluated`. AA identity uses an explicit numeric `aa_identity` fraction;

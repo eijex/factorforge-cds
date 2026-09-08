@@ -32,12 +32,13 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 ## [Unreleased]
 
 ### Changed
-- Reorganized the web app around a researcher-facing sequence and design-brief
-  workspace. Unavailable execution modes, disabled objectives, and immutable
-  codon-reference policy no longer occupy the primary design path.
-- Results now open as a full-width design-review workspace after generation,
-  while optional sequence, assembly, and review requirements remain available
-  without changing optimizer or API behavior.
+- Reorganized the web app as a persistent three-column researcher workflow:
+  sequence input, a compact design brief, and design review. The review position
+  remains visible before and after generation instead of appearing below the form.
+- Unavailable execution modes, disabled objectives, and immutable codon-reference
+  policy no longer occupy the primary design path. Optional sequence, assembly,
+  and review requirements remain progressively disclosed without changing
+  optimizer or API behavior.
 
 ### Fixed
 - Comparison metrics now distinguish explicit pass/fail results from missing or
