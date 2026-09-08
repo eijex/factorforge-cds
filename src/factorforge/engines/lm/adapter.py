@@ -52,27 +52,24 @@ class FactorForgeLogitMasker:
             if codon in tokenizer.token_to_id
         }
 
-    def apply_logit_masks(
+    def apply_logit_masks_with_reasons(
         self,
         current_cds_prefix: str,
         logits: list[float],
         expected_next_aa: Optional[str] = None,
-    ) -> list[float]:
-        """Return a masked copy of ``logits`` for the next codon.
-
-        ``expected_next_aa`` should be a one-letter amino-acid code. When provided,
-        any codon not translating to that amino acid is masked closed.
-        """
+    ) -> tuple[list[float], dict[str, str]]:
         if len(logits) < self.tokenizer.vocab_size:
             raise ValueError("logits length is smaller than tokenizer vocabulary")
 
         prefix = "".join(current_cds_prefix.upper().replace("U", "T").split())
         expected = expected_next_aa.upper() if expected_next_aa else None
         masked_logits = list(logits)
+        rejections = {}
 
         for codon, token_id in self.codon_to_id.items():
             if expected is not None and STANDARD_GENETIC_CODE.get(codon) != expected:
                 masked_logits[token_id] = -float("inf")
+                rejections[codon] = "HARD_REJECT: non-synonymous"
                 continue
 
             candidate_prefix = prefix + codon
@@ -80,6 +77,7 @@ class FactorForgeLogitMasker:
                 pattern in candidate_prefix for pattern in TYPE_IIS_PATTERNS
             ):
                 masked_logits[token_id] = -float("inf")
+                rejections[codon] = "HARD_REJECT: Type IIS"
                 continue
 
             if len(candidate_prefix) >= 30:
@@ -89,7 +87,17 @@ class FactorForgeLogitMasker:
                 codon_gc = (codon.count("G") + codon.count("C")) / 3.0
                 if gc_ratio < self.target_gc_min and codon_gc == 0:
                     masked_logits[token_id] -= 5.0
+                    rejections[codon] = f"SOFT_PENALTY: cumulative GC lower bound (cumulative GC {gc_ratio*100:.1f}%)"
                 elif gc_ratio > self.target_gc_max and codon_gc > 0.66:
                     masked_logits[token_id] -= 5.0
+                    rejections[codon] = f"SOFT_PENALTY: cumulative GC upper bound (cumulative GC {gc_ratio*100:.1f}%)"
 
-        return masked_logits
+        return masked_logits, rejections
+
+    def apply_logit_masks(
+        self,
+        current_cds_prefix: str,
+        logits: list[float],
+        expected_next_aa: Optional[str] = None,
+    ) -> list[float]:
+        return self.apply_logit_masks_with_reasons(current_cds_prefix, logits, expected_next_aa)[0]

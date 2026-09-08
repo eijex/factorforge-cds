@@ -24,7 +24,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 # Try to import FactorForge
 try:
-    from factorforge.engines import EngineRegistry
+    from factorforge.engines import EngineRegistry, register_builtin_engines
+    register_builtin_engines()
     from factorforge.engines.profile.rules.domesticator import Domesticator
     from factorforge.engines.profile.rules.rule_engine import RuleEngine
     from factorforge.engines.profile.utils import get_data_path, load_codon_table

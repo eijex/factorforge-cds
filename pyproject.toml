@@ -27,6 +27,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+postgres = [
+    "psycopg2-binary>=2.9",
+    "sqlalchemy>=2.0",
+]
 dev = [
     "jsonschema>=4.0",
     "pandas>=2.0",

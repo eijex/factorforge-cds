@@ -35,12 +35,15 @@ class DPEngineAdapter(OptimizerEngine):
         gc_high = target_gc_max * 100 if target_gc_max <= 1.0 else target_gc_max
 
         # Load host table (e.g. from built-in standard table)
-        table = load_codon_usage_table(path=None) # We just use the default internal for the host 
-        # Actually load_codon_usage_table() might not take a host, let's just pass table.codon_weights
+        from factorforge.engines.profile.utils import load_golden_set
+        from factorforge.engines.profile.rules.reverse_translator import ReverseTranslator
+        
+        golden_table = load_golden_set()
+        codon_weights = ReverseTranslator._build_ref_weights(golden_table)
         
         res = analyze_feasibility(
             protein_sequence=protein,
-            codon_weights=table.codon_weights,
+            codon_weights=codon_weights,
             target_gc_low=gc_low,
             target_gc_high=gc_high,
             codon_reference_id=f"host_{host}"
@@ -48,6 +51,7 @@ class DPEngineAdapter(OptimizerEngine):
         
         target_info = res["target"]
         best_cand = target_info.get("best_candidate")
+        target_intersection_exists = best_cand is not None
         
         # Fallback if unfeasible under target GC: use best without GC constraints
         if best_cand is None:
@@ -74,7 +78,10 @@ class DPEngineAdapter(OptimizerEngine):
                 "version": self.version,
                 "host": host,
                 "inference_mode": "deterministic_solver",
-                # The benchmark runner will inject the real evaluation report here
+                "min_achievable_gc": res.get("minimum_possible_gc"),
+                "max_achievable_gc": res.get("maximum_possible_gc"),
+                "target_intersection_exists": target_intersection_exists,
+                "feasible": target_info.get("feasible", False),
             },
         )
 
