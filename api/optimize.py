@@ -20,12 +20,26 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+base_dir = os.path.dirname(__file__)
+for p in [
+    os.path.abspath(os.path.join(base_dir, "..", "src")),
+    os.path.abspath(os.path.join(base_dir, "src")),
+    os.path.abspath(os.path.join(base_dir, "..")),
+    base_dir,
+]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
+
+IMPORT_ERROR = None
 
 # Try to import FactorForge
 try:
     from factorforge.engines import EngineRegistry, register_builtin_engines
-    register_builtin_engines()
+    try:
+        register_builtin_engines()
+    except Exception as re_err:
+        logger.warning(f"register_builtin_engines warning: {re_err}")
+
     from factorforge.engines.profile.rules.domesticator import Domesticator
     from factorforge.engines.profile.rules.rule_engine import RuleEngine
     from factorforge.engines.profile.utils import get_data_path, load_codon_table
@@ -65,10 +79,11 @@ try:
 
     FACTORFORGE_AVAILABLE = True
     logger.info("FactorForge v3.x profile engine loaded successfully")
-except ImportError as e:
+except Exception as e:
     FACTORFORGE_AVAILABLE = False
+    IMPORT_ERROR = f"{type(e).__name__}: {str(e)}"
     DEFAULT_CAI_TARGET = 0.82
-    logger.warning(f"FactorForge not available: {e}")
+    logger.error(f"FactorForge import failed: {e}", exc_info=True)
 
 # Constants
 MIN_SEQUENCE_LENGTH = 3
@@ -260,6 +275,10 @@ class handler(BaseHTTPRequestHandler):
             reference_override_error = _reject_reference_override_fields(data)
             if reference_override_error is not None:
                 self.send_error_response(400, reference_override_error)
+                return
+
+            if not FACTORFORGE_AVAILABLE:
+                self.send_error_response(500, f"Backend engine initialization failed: {IMPORT_ERROR}")
                 return
 
             logger.info(
