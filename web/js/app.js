@@ -40,13 +40,18 @@ function getGcRange(hostId) {
 }
 
 let validationRegistry = [];
-const HISTORY_SCHEMA_VERSION = 2;
+const HISTORY_SCHEMA_VERSION = 3;
 
 function loadVersionedHistory() {
     try {
         const raw = JSON.parse(localStorage.getItem('factorforge_history') || '[]');
-        if (Array.isArray(raw)) return raw.map(item => ({ ...item, schemaVersion: HISTORY_SCHEMA_VERSION }));
-        if (raw && Array.isArray(raw.items)) return raw.items;
+        if (Array.isArray(raw)) return raw.map(item => ({ ...item, schemaVersion: item.schemaVersion || 1 }));
+        if (raw && Array.isArray(raw.items)) {
+            return raw.items.map(item => ({
+                ...item,
+                schemaVersion: item.schemaVersion || raw.schemaVersion || 1,
+            }));
+        }
     } catch (_) {
         localStorage.removeItem('factorforge_history');
     }
@@ -681,7 +686,11 @@ function setLoading(loading) {
 
 function updateStructureLinks() {
     const seq = (state.sequence || '').replace(/[^A-Za-z]/g, '').toUpperCase();
-    if (!seq || seq.length < 10) return;
+    if (!seq || seq.length < 10) {
+        if (elements.alphafoldLink) elements.alphafoldLink.href = '#';
+        if (elements.esmatlasFoldLink) elements.esmatlasFoldLink.href = '#';
+        return;
+    }
     const encoded = encodeURIComponent(seq);
     if (elements.alphafoldLink) {
         elements.alphafoldLink.href = `https://alphafold.ebi.ac.uk/search/sequence/${encoded}`;
@@ -764,11 +773,12 @@ function renderResults() {
 
     // Variables for calculations
     const origSeq = state.sequence;
+    const hasOriginalSequence = Boolean(origSeq);
     const optSeq = primary.optimized_sequence;
     const calculatedGC = calculateGC(optSeq);
-    const oGC = isProteinInput ? null : calculateGC(origSeq);
+    const oGC = isProteinInput || !hasOriginalSequence ? null : calculateGC(origSeq);
 
-    elements.origGC.textContent = isProteinInput ? 'N/A' : `${oGC}%`;
+    elements.origGC.textContent = isProteinInput ? 'N/A' : (hasOriginalSequence ? `${oGC}%` : 'Not recorded');
     elements.optGCComp.textContent = `${calculatedGC.toFixed(1)}%`;
     elements.gcValue.textContent = `${calculatedGC.toFixed(1)}%`;
     const gcTarget = getResultGcTarget(res, primary);
@@ -782,6 +792,9 @@ function renderResults() {
     if (isProteinInput) {
         elements.mutationRate.textContent = 'N/A';
         if (mutationRow) mutationRow.classList.add('hidden');
+    } else if (!hasOriginalSequence) {
+        if (mutationRow) mutationRow.classList.remove('hidden');
+        elements.mutationRate.textContent = 'Not recorded';
     } else {
         if (mutationRow) mutationRow.classList.remove('hidden');
         // Calculate Mutation Rate
@@ -1133,9 +1146,10 @@ function getResultGcTarget(res, primary) {
 
 function getMfeStatus(res) {
     const metrics = res.metrics || {};
+    const status = metrics.mfe_status || 'not_computed';
     return {
-        status: metrics.mfe_status || 'not_computed',
-        reason: metrics.mfe_status_reason || 'status unavailable'
+        status,
+        reason: metrics.mfe_status_reason ?? (status === 'computed' ? null : 'status unavailable')
     };
 }
 
@@ -1151,222 +1165,365 @@ function renderMfeWarning(res) {
     elements.mfeWarningBanner.classList.remove('hidden');
 }
 
-function reportStatCard({ label, value, sub, tone = 'neutral' }) {
+const REPORT_CHECK_LABELS = Object.freeze({
+    cai: 'Codon Adaptation Index (CAI)',
+    overall_gc: 'Overall GC content',
+    local_gc: 'Local GC window',
+    type_iis: 'Type IIS sites',
+    repeats: 'Direct repeats',
+    homopolymers: 'Homopolymers',
+    forbidden_motifs: 'Forbidden motifs',
+    mfe: 'RNA secondary structure / MFE',
+});
+
+const REPORT_LIMITATIONS = Object.freeze([
+    'This report describes deterministic in-silico CDS design checks only.',
+    'It does not demonstrate or guarantee expression, yield, folding, biological activity, synthesis acceptance, or regulatory acceptance.',
+    'Independent construct review and wet-lab validation are required before experimental reliance.',
+]);
+
+function finiteNumber(value) {
+    const parsed = Number(value);
+    return value !== null && value !== '' && Number.isFinite(parsed) ? parsed : null;
+}
+
+function reportValue(value, suffix = '') {
+    if (value === null || value === undefined || value === '') return 'Not recorded';
+    if (typeof value === 'object') return JSON.stringify(value);
+    return `${value}${suffix}`;
+}
+
+function reportStatusTone(status) {
+    if (status === 'FAIL') return 'bad';
+    if (status === 'WARNING' || status === 'CONDITIONAL_PASS') return 'warn';
+    if (status === 'PASS' || status === 'COMPUTED') return 'good';
+    return 'neutral';
+}
+
+function checkDetail(criterion, details) {
+    if (!details || typeof details !== 'object') return null;
+    if (criterion === 'type_iis' && Array.isArray(details.type_iis_sites)) {
+        return details.type_iis_sites.map(site => `${site.enzyme || 'site'} at nt ${Number(site.start) + 1}`).join(', ') || null;
+    }
+    if (criterion === 'forbidden_motifs' && Array.isArray(details.forbidden_motifs)) {
+        return details.forbidden_motifs.map(item => typeof item === 'string' ? item : JSON.stringify(item)).join(', ') || null;
+    }
+    if (criterion === 'local_gc' && details.local_gc_min != null && details.local_gc_max != null) {
+        return `Observed range ${details.local_gc_min}–${details.local_gc_max}%`;
+    }
+    if (criterion === 'repeats' && details.repeat_count != null) return `${details.repeat_count} repeat(s) detected`;
+    if (criterion === 'homopolymers' && details.longest_homopolymer != null) return `Longest run: ${details.longest_homopolymer} bp`;
+    return null;
+}
+
+function normalizedReportChecks(res) {
+    const sourceRows = Array.isArray(res.qc_decision_matrix) && res.qc_decision_matrix.length
+        ? res.qc_decision_matrix
+        : (Array.isArray(res.acceptance_evaluation?.optimized?.criteria)
+            ? res.acceptance_evaluation.optimized.criteria
+            : []);
+    const details = res.acceptance_evaluation?.optimized?.details || {};
+    const statusMap = { PASS: 'PASS', FAIL: 'FAIL', WARN: 'WARNING', WARNING: 'WARNING', IGNORED: 'NOT_APPLICABLE' };
+    const priority = { FAIL: 0, WARNING: 1, NOT_COMPUTED: 2, NOT_AVAILABLE: 3, NOT_APPLICABLE: 4, PASS: 5, COMPUTED: 5 };
+    const checks = sourceRows.map(row => ({
+        id: String(row.criterion || 'unknown'),
+        label: REPORT_CHECK_LABELS[row.criterion] || String(row.criterion || 'Unknown check'),
+        mode: row.mode || 'not_recorded',
+        observed: row.observed ?? null,
+        threshold: row.threshold ?? null,
+        status: statusMap[String(row.result || '').toUpperCase()] || 'NOT_AVAILABLE',
+        detail: checkDetail(row.criterion, details),
+    }));
+
+    const mfe = getMfeStatus(res);
+    checks.push({
+        id: 'mfe',
+        label: REPORT_CHECK_LABELS.mfe,
+        mode: 'informational',
+        observed: res.metrics?.mfe_kcal_mol ?? null,
+        threshold: 'Informational only',
+        status: mfe.status === 'computed' ? 'COMPUTED' : 'NOT_COMPUTED',
+        detail: mfe.status === 'computed' ? 'MFE was computed.' : mfe.reason,
+    });
+    return checks.sort((a, b) => (priority[a.status] ?? 9) - (priority[b.status] ?? 9));
+}
+
+function buildResultsReportModel(res, primary, gcTarget) {
+    const checks = normalizedReportChecks(res);
+    const summary = res.decision_summary || {};
+    const decision = ['PASS', 'CONDITIONAL_PASS', 'FAIL'].includes(res.automated_decision)
+        ? res.automated_decision
+        : 'NOT_AVAILABLE';
+    const rawCandidates = Array.isArray(res.report_candidates)
+        ? res.report_candidates
+        : (Array.isArray(res.candidates) ? res.candidates : []);
+    const custom = res.custom_restriction_sites;
+    const requestedNames = Array.isArray(custom?.requested)
+        ? custom.requested.map(site => site.name).filter(Boolean)
+        : [];
+    const selected = requestedNames.length ? requestedNames : state.selectedTypeIisEnzymes;
+    const inputType = res.input_type || res.validation?.input_type || res.provenance?.normalized_input_type || 'not_recorded';
+    const outputSequence = primary.optimized_sequence || '';
+    const hasComparableInput = inputType === 'cds' && Boolean(state.sequence);
+    let baseChanges = null;
+    if (hasComparableInput) {
+        const comparableLength = Math.min(state.sequence.length, outputSequence.length);
+        baseChanges = Math.abs(state.sequence.length - outputSequence.length);
+        for (let index = 0; index < comparableLength; index += 1) {
+            if (state.sequence[index] !== outputSequence[index]) baseChanges += 1;
+        }
+    }
+    const cai = finiteNumber(primary.metrics?.cai);
+    const gc = finiteNumber(primary.metrics?.gc_percent);
+    const mfe = getMfeStatus(res);
+    const criteriaRows = checks.filter(check => check.id !== 'mfe');
+    const requiredFailures = Number.isInteger(summary.required_failure_count)
+        ? summary.required_failure_count
+        : (criteriaRows.length ? criteriaRows.filter(check => check.status === 'FAIL').length : null);
+    const preferredWarnings = Number.isInteger(summary.preferred_warning_count)
+        ? summary.preferred_warning_count
+        : (criteriaRows.length ? criteriaRows.filter(check => check.status === 'WARNING').length : null);
+
+    return {
+        report_schema_version: '1.0',
+        identity: {
+            result_id: res.result_identifier || res.construct_id || null,
+            construct_id: res.construct_id || null,
+            result_created_at: res.created_at || null,
+            report_generated_at: new Date().toISOString(),
+        },
+        context: {
+            input_type: inputType,
+            input_length: finiteNumber(res.original_length ?? res.input_summary?.length),
+            host_profile: getResultHostProfile(res),
+            profile: res.profile || state.objective || null,
+            objective: res.cds_design?.objective || res.profile || state.objective || null,
+            engine: res.cds_design?.engine || res.mode || null,
+            seed: res.seed ?? null,
+        },
+        disposition: {
+            automated_decision: decision,
+            required_failure_count: requiredFailures,
+            preferred_warning_count: preferredWarnings,
+            unavailable_check_count: checks.filter(check => ['NOT_COMPUTED', 'NOT_AVAILABLE'].includes(check.status)).length,
+            explanation: summary.explanation || (decision === 'NOT_AVAILABLE' ? 'Acceptance criteria were not recorded by this result.' : null),
+        },
+        metrics: {
+            cai,
+            gc_percent: gc,
+            gc_target_min_percent: finiteNumber(gcTarget?.min),
+            gc_target_max_percent: finiteNumber(gcTarget?.max),
+            mfe_kcal_mol: finiteNumber(res.metrics?.mfe_kcal_mol),
+            mfe_status: mfe.status,
+            mfe_status_reason: mfe.reason,
+            mfe_used: res.metrics?.mfe_used ?? null,
+        },
+        checks,
+        candidates: rawCandidates.map(candidate => ({
+            id: candidate.id || null,
+            label: candidate.label || candidate.id || 'Unnamed candidate',
+            automated_decision: candidate.automated_decision || 'NOT_AVAILABLE',
+            cai: finiteNumber(candidate.cai),
+            gc_percent: finiteNumber(candidate.gc_percent),
+            required_failure_count: Number.isInteger(candidate.required_failure_count) ? candidate.required_failure_count : null,
+            preferred_warning_count: Number.isInteger(candidate.preferred_warning_count) ? candidate.preferred_warning_count : null,
+        })),
+        sequence_summary: {
+            output_length_nt: outputSequence.length || finiteNumber(res.optimized_length),
+            amino_acid_identity: finiteNumber(res.constraint_report?.aa_identity),
+            nucleotide_changes: baseChanges,
+            comparison_available: hasComparableInput,
+        },
+        process: {
+            type_iis_requested: selected,
+            domestication_attempted: Boolean(custom),
+            restriction_sites_removed_count: Array.isArray(custom?.removed) ? custom.removed.length : null,
+            restriction_sites_unresolved_count: Array.isArray(custom?.unresolved) ? custom.unresolved.length : null,
+        },
+        provenance: {
+            product_version: res.product_version || res.metadata?.product_version || res.cds_design?.product_version || null,
+            codon_reference_id: res.codon_reference_id || res.metadata?.codon_reference_id || res.cds_design?.codon_reference_id || null,
+            reference_policy_version: res.reference_policy_version || res.metadata?.reference_policy_version || res.cds_design?.reference_policy_version || null,
+            gc_reference_band: res.gc_reference_band || res.metadata?.gc_reference_band || res.cds_design?.gc_reference_band || null,
+            input_sequence_hash: res.provenance?.input_sequence_hash || null,
+            output_cds_hash: res.provenance?.output_cds_hash || null,
+            parameter_hash: res.provenance?.parameter_hash || null,
+            acceptance_criteria_snapshot: res.acceptance_criteria_snapshot || res.provenance?.acceptance_criteria_snapshot || null,
+        },
+        interpretation: {
+            scope: 'Deterministic in-silico CDS design and pre-synthesis review.',
+            next_steps: ['Review the sequence and construct context.', 'Confirm synthesis requirements.', 'Perform fit-for-purpose wet-lab validation.'],
+            limitations: [...REPORT_LIMITATIONS],
+        },
+        artifacts: { optimized_sequence: outputSequence },
+    };
+}
+
+function reportStatCard({ label, value, sub, status = 'NOT_AVAILABLE' }) {
     const toneClasses = {
         good: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
         warn: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300',
         bad: 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300',
         neutral: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200',
-    }[tone] || 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200';
+    }[reportStatusTone(status)];
+    return `<div class="min-w-0 rounded-xl p-2.5 ${toneClasses}">
+        <p class="text-[9px] font-extrabold uppercase tracking-widest opacity-70">${escapeHtml(label)}</p>
+        <p class="mt-1 text-xs font-black leading-tight break-words">${escapeHtml(reportValue(value))}</p>
+        ${sub ? `<p class="mt-0.5 text-[10px] font-medium opacity-80 break-words">${escapeHtml(sub)}</p>` : ''}
+    </div>`;
+}
 
-    return `
-        <div class="min-w-0 rounded-xl p-2.5 ${toneClasses}">
-            <p class="text-[9px] font-extrabold uppercase tracking-widest opacity-70 truncate">${escapeHtml(label)}</p>
-            <p class="mt-1 text-xs font-black leading-tight break-words">${escapeHtml(value)}</p>
-            ${sub ? `<p class="mt-0.5 text-[10px] font-medium opacity-80 break-words">${escapeHtml(sub)}</p>` : ''}
+function reportCheckRowsHtml(checks) {
+    return checks.map(check => `<article class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 p-3">
+        <div class="flex items-start justify-between gap-3">
+            <h5 class="font-bold text-slate-800 dark:text-slate-100">${escapeHtml(check.label)}</h5>
+            <span class="shrink-0 text-[9px] font-extrabold tracking-wide" data-report-status="${escapeHtml(check.status)}">${escapeHtml(check.status.replaceAll('_', ' '))}</span>
         </div>
-    `;
+        <dl class="mt-2 grid grid-cols-2 gap-2 text-[10px]">
+            <div><dt class="uppercase tracking-widest text-slate-400">Observed</dt><dd class="mt-0.5 font-mono break-all">${escapeHtml(reportValue(check.observed))}</dd></div>
+            <div><dt class="uppercase tracking-widest text-slate-400">Policy</dt><dd class="mt-0.5">${escapeHtml(`${check.mode} · ${reportValue(check.threshold)}`)}</dd></div>
+        </dl>
+        ${check.detail ? `<p class="mt-2 text-[10px] text-slate-500 dark:text-slate-400">${escapeHtml(check.detail)}</p>` : ''}
+    </article>`).join('');
 }
 
-function computeResultsReportData(res, primary, gcTarget) {
-    const host = getResultHostProfile(res);
-    const profile = res.profile || state.objective;
-    const seedText = res.seed == null ? 'seed not specified' : `seed=${res.seed}`;
-
-    const cai = Number(primary.metrics.cai || 0);
-    const gc = Number(primary.metrics.gc_percent || 0);
-    const gcInRange = gc >= gcTarget.min && gc <= gcTarget.max;
-
-    const custom = res.custom_restriction_sites;
-    const removed = Array.isArray(custom?.removed) ? custom.removed : [];
-    const unresolved = Array.isArray(custom?.unresolved) ? custom.unresolved : [];
-    const attempted = Boolean(custom);
-    const requestedNames = Array.isArray(custom?.requested)
-        ? custom.requested.map(site => site.name).filter(name => Object.hasOwn(TYPE_IIS_PRESETS, name))
-        : [];
-    const selected = requestedNames.length > 0 ? requestedNames : state.selectedTypeIisEnzymes;
-    const typeIisFail = unresolved.length > 0;
-
-    const mfe = getMfeStatus(res);
-    const mfeComputed = mfe.status === 'computed';
-
-    return {
-        generatedAt: new Date().toISOString(),
-        host, profile, seedText, seed: res.seed ?? null,
-        cai, gc, gcTarget, gcInRange,
-        typeIis: { selected, fail: typeIisFail, checked: selected.length > 0 },
-        domestication: { attempted, removed, unresolved },
-        mfe: { computed: mfeComputed, reason: mfe.reason },
-        candidates: Array.isArray(res.candidates) ? res.candidates : [],
-    };
-}
-
-function reportCardsFromData(data) {
-    return [
-        reportStatCard({ label: 'Host / Profile', value: `${data.host} · ${data.profile}`, sub: data.seedText, tone: 'neutral' }),
-        reportStatCard({
-            label: 'CAI',
-            value: data.cai.toFixed(3),
-            sub: data.cai >= 0.8 ? 'meets 0.800 minimum' : 'below 0.800 minimum',
-            tone: data.cai >= 0.8 ? 'good' : 'warn',
-        }),
-        reportStatCard({
-            label: 'GC content',
-            value: `${data.gc.toFixed(1)}%`,
-            sub: `target ${data.gcTarget.min.toFixed(1)}–${data.gcTarget.max.toFixed(1)}%`,
-            tone: data.gcInRange ? 'good' : 'warn',
-        }),
-        reportStatCard({
-            label: 'Type IIS',
-            value: data.typeIis.checked ? (data.typeIis.fail ? 'FAIL' : 'PASS') : 'Not checked',
-            sub: data.typeIis.checked ? data.typeIis.selected.join(', ') : 'no preset enzymes selected',
-            tone: !data.typeIis.checked ? 'neutral' : (data.typeIis.fail ? 'bad' : 'good'),
-        }),
-        reportStatCard({
-            label: 'Domestication',
-            value: data.domestication.attempted ? 'Attempted' : 'Not attempted',
-            sub: data.domestication.attempted
-                ? `${data.domestication.removed.length} removed · ${data.domestication.unresolved.length} unresolved`
-                : 'no enzymes selected to fix',
-            tone: !data.domestication.attempted ? 'neutral' : (data.domestication.unresolved.length > 0 ? 'warn' : 'good'),
-        }),
-        reportStatCard({
-            label: 'MFE',
-            value: data.mfe.computed ? 'Computed' : 'Not computed',
-            sub: data.mfe.computed ? '' : data.mfe.reason,
-            tone: data.mfe.computed ? 'good' : 'warn',
-        }),
+function reportProvenanceHtml(model) {
+    const fields = [
+        ['Product version', model.provenance.product_version],
+        ['Codon reference', model.provenance.codon_reference_id],
+        ['Reference policy', model.provenance.reference_policy_version],
+        ['GC reference band', model.provenance.gc_reference_band],
+        ['Seed', model.context.seed === null ? 'Not specified' : model.context.seed],
+        ['Result created (UTC)', model.identity.result_created_at],
+        ['Input SHA-256', model.provenance.input_sequence_hash],
+        ['Output SHA-256', model.provenance.output_cds_hash],
+        ['Parameter SHA-256', model.provenance.parameter_hash],
     ];
+    return fields.map(([label, value]) => `<div class="min-w-0"><dt class="text-[9px] uppercase tracking-widest text-slate-500 dark:text-slate-400">${escapeHtml(label)}</dt><dd class="mt-0.5 font-mono break-all text-[10px]">${escapeHtml(reportValue(value))}</dd></div>`).join('');
+}
+
+function candidateReportHtml(candidates) {
+    if (candidates.length <= 1) return '';
+    return `<section aria-labelledby="report-candidates-title" class="pt-2">
+        <h4 id="report-candidates-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Candidate comparison</h4>
+        <div class="overflow-x-auto"><table class="w-full text-left text-xs">
+            <thead><tr class="text-slate-500 dark:text-slate-400"><th class="py-1 pr-3">Candidate</th><th class="py-1 pr-3">Decision</th><th class="py-1 pr-3">CAI</th><th class="py-1 pr-3">GC%</th><th class="py-1">Issues</th></tr></thead>
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-700">${candidates.map(candidate => `<tr><th scope="row" class="py-2 pr-3 font-semibold">${escapeHtml(candidate.label)}</th><td class="py-2 pr-3 font-bold">${escapeHtml(candidate.automated_decision.replaceAll('_', ' '))}</td><td class="py-2 pr-3 font-mono">${escapeHtml(candidate.cai == null ? 'Not recorded' : candidate.cai.toFixed(3))}</td><td class="py-2 pr-3 font-mono">${escapeHtml(candidate.gc_percent == null ? 'Not recorded' : candidate.gc_percent.toFixed(1))}</td><td class="py-2">${escapeHtml(`${reportValue(candidate.required_failure_count)} fail · ${reportValue(candidate.preferred_warning_count)} warn`)}</td></tr>`).join('')}</tbody>
+        </table></div>
+    </section>`;
 }
 
 function renderResultsReport(res, primary, gcTarget) {
     if (!elements.resultsReport || !elements.resultsReportBody) return;
-    const data = computeResultsReportData(res, primary, gcTarget);
-    const cards = reportCardsFromData(data);
+    const model = buildResultsReportModel(res, primary, gcTarget);
+    const disposition = model.disposition.automated_decision;
+    const cards = [
+        reportStatCard({ label: 'Automated decision', value: disposition.replaceAll('_', ' '), sub: model.disposition.explanation, status: disposition }),
+        reportStatCard({ label: 'Required failures', value: model.disposition.required_failure_count, sub: 'blocking criteria', status: model.disposition.required_failure_count == null ? 'NOT_AVAILABLE' : (model.disposition.required_failure_count ? 'FAIL' : 'PASS') }),
+        reportStatCard({ label: 'Preferred warnings', value: model.disposition.preferred_warning_count, sub: 'review recommended', status: model.disposition.preferred_warning_count == null ? 'NOT_AVAILABLE' : (model.disposition.preferred_warning_count ? 'WARNING' : 'PASS') }),
+        reportStatCard({ label: 'Not computed', value: model.disposition.unavailable_check_count, sub: 'not treated as zero', status: model.disposition.unavailable_check_count ? 'NOT_COMPUTED' : 'PASS' }),
+        reportStatCard({ label: 'CAI', value: model.metrics.cai == null ? null : model.metrics.cai.toFixed(3), sub: 'policy shown in checks', status: model.checks.find(check => check.id === 'cai')?.status }),
+        reportStatCard({ label: 'GC content', value: model.metrics.gc_percent == null ? null : `${model.metrics.gc_percent.toFixed(1)}%`, sub: `reference ${reportValue(model.provenance.gc_reference_band)}`, status: model.checks.find(check => check.id === 'overall_gc')?.status }),
+    ];
+    const comparisonText = model.context.input_type === 'protein'
+        ? `Protein input · amino-acid identity ${model.sequence_summary.amino_acid_identity == null ? 'Not recorded' : `${(model.sequence_summary.amino_acid_identity * 100).toFixed(2)}%`}`
+        : `CDS input · nucleotide changes ${reportValue(model.sequence_summary.nucleotide_changes)}`;
+    const domesticationText = model.process.domestication_attempted
+        ? `Attempted · ${reportValue(model.process.restriction_sites_removed_count)} removed · ${reportValue(model.process.restriction_sites_unresolved_count)} unresolved`
+        : 'Not attempted';
 
-    const comparisonRows = data.candidates.length > 1
-        ? `
-            <div class="overflow-x-auto pt-1">
-                <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Candidate comparison</p>
-                <table class="w-full text-left text-xs">
-                    <thead>
-                        <tr class="text-slate-500 dark:text-slate-400">
-                            <th class="py-1 pr-3 font-bold">Profile</th>
-                            <th class="py-1 pr-3 font-bold">CAI</th>
-                            <th class="py-1 font-bold">GC%</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        ${data.candidates.map(candidate => `
-                            <tr>
-                                <td class="py-1.5 pr-3 font-semibold text-slate-700 dark:text-slate-200">${escapeHtml(candidate.label || candidate.id)}</td>
-                                <td class="py-1.5 pr-3 font-mono">${Number(candidate.cai || 0).toFixed(3)}</td>
-                                <td class="py-1.5 font-mono">${Number(candidate.gc_percent || 0).toFixed(1)}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        `
-        : '';
-
-    elements.resultsReportBody.innerHTML = `
+    elements.resultsReportBody.innerHTML = `<article aria-labelledby="design-review-report-title" class="space-y-4">
+        <header>
+            <h3 id="design-review-report-title" class="text-sm font-black text-slate-900 dark:text-white">FactorForge Design Review Report</h3>
+            <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">${escapeHtml(`${reportValue(model.identity.result_id)} · ${model.context.host_profile} · ${model.context.profile} · ${model.context.seed === null ? 'seed not specified' : `seed=${model.context.seed}`}`)}</p>
+        </header>
         <div class="grid grid-cols-2 gap-2">${cards.join('')}</div>
-        ${comparisonRows}
-        <button type="button" id="downloadResultsReportBtn" class="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-xs font-bold py-2.5 transition-colors">
-            <span>📄</span> Download Report (HTML)
-        </button>
-    `;
+        <section aria-labelledby="report-checks-title">
+            <h4 id="report-checks-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Detailed checks</h4>
+            <div class="grid gap-2">${reportCheckRowsHtml(model.checks)}</div>
+        </section>
+        <section aria-labelledby="report-sequence-title" class="rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+            <h4 id="report-sequence-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Sequence and process</h4>
+            <p class="mt-2 font-semibold">${escapeHtml(comparisonText)}</p>
+            <p class="mt-1">Output length: ${escapeHtml(reportValue(model.sequence_summary.output_length_nt, ' nt'))}</p>
+            <p class="mt-1">Type IIS requested: ${escapeHtml(model.process.type_iis_requested.length ? model.process.type_iis_requested.join(', ') : 'None recorded')}</p>
+            <p class="mt-1">Domestication: ${escapeHtml(domesticationText)}</p>
+            <p class="mt-1">MFE: ${escapeHtml(model.metrics.mfe_status === 'computed' ? `Computed${model.metrics.mfe_kcal_mol == null ? '' : ` · ${model.metrics.mfe_kcal_mol} kcal/mol`}` : `Not computed · ${model.metrics.mfe_status_reason}`)}</p>
+        </section>
+        ${candidateReportHtml(model.candidates)}
+        <section aria-labelledby="report-provenance-title"><h4 id="report-provenance-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Reproducibility and provenance</h4><dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">${reportProvenanceHtml(model)}</dl></section>
+        <section aria-labelledby="report-interpretation-title" class="grid gap-2">
+            <div class="rounded-xl bg-blue-50 dark:bg-blue-900/20 p-3"><h4 id="report-interpretation-title" class="font-extrabold">Interpretation</h4><p class="mt-1">${escapeHtml(model.interpretation.scope)}</p></div>
+            <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-3"><h4 class="font-extrabold">Recommended next steps</h4><ul class="mt-1 list-disc pl-4">${model.interpretation.next_steps.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>
+            <div class="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-3"><h4 class="font-extrabold">Limitations</h4><ul class="mt-1 list-disc pl-4">${model.interpretation.limitations.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>
+        </section>
+        <p class="rounded-xl border border-amber-200 dark:border-amber-800 p-3 text-[10px] text-amber-800 dark:text-amber-200">The HTML report contains the optimized DNA sequence. Treat it according to your sequence-data policy. The evidence JSON intentionally excludes raw sequences.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button type="button" id="downloadResultsReportBtn" class="w-full rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-xs font-bold py-2.5 transition-colors">📄 Download Report (HTML)</button>
+            <button type="button" id="downloadEvidenceRecordBtn" class="w-full rounded-xl bg-indigo-700 hover:bg-indigo-600 text-white text-xs font-bold py-2.5 transition-colors">🧾 Download Evidence Record (JSON)</button>
+        </div>
+    </article>`;
     elements.resultsReport.classList.remove('hidden');
-
-    const downloadBtn = document.getElementById('downloadResultsReportBtn');
-    if (downloadBtn) {
-        downloadBtn.addEventListener('click', () => downloadResultsReportHtml(res, primary, gcTarget));
-    }
+    document.getElementById('downloadResultsReportBtn')?.addEventListener('click', () => downloadResultsReportHtml(model));
+    document.getElementById('downloadEvidenceRecordBtn')?.addEventListener('click', () => downloadEvidenceRecordJson(model));
 }
 
-function downloadResultsReportHtml(res, primary, gcTarget) {
-    trackEvent('report_download', { format: 'html' });
-    const data = computeResultsReportData(res, primary, gcTarget);
-    const toneHex = { good: '#059669', warn: '#d97706', bad: '#e11d48', neutral: '#475569' };
-    const cardTone = (t) => toneHex[t] || toneHex.neutral;
+function reportFileStem(model) {
+    const raw = model.identity.result_id || model.identity.report_generated_at || Date.now();
+    return String(raw).replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || String(Date.now());
+}
 
-    const cardDefs = [
-        { label: 'Host / Profile', value: `${data.host} · ${data.profile}`, sub: data.seedText, tone: 'neutral' },
-        { label: 'CAI', value: data.cai.toFixed(3), sub: data.cai >= 0.8 ? 'meets 0.800 minimum' : 'below 0.800 minimum', tone: data.cai >= 0.8 ? 'good' : 'warn' },
-        { label: 'GC content', value: `${data.gc.toFixed(1)}%`, sub: `target ${data.gcTarget.min.toFixed(1)}–${data.gcTarget.max.toFixed(1)}%`, tone: data.gcInRange ? 'good' : 'warn' },
-        { label: 'Type IIS', value: data.typeIis.checked ? (data.typeIis.fail ? 'FAIL' : 'PASS') : 'Not checked', sub: data.typeIis.checked ? data.typeIis.selected.join(', ') : 'no preset enzymes selected', tone: !data.typeIis.checked ? 'neutral' : (data.typeIis.fail ? 'bad' : 'good') },
-        { label: 'Domestication', value: data.domestication.attempted ? 'Attempted' : 'Not attempted', sub: data.domestication.attempted ? `${data.domestication.removed.length} removed · ${data.domestication.unresolved.length} unresolved` : 'no enzymes selected to fix', tone: !data.domestication.attempted ? 'neutral' : (data.domestication.unresolved.length > 0 ? 'warn' : 'good') },
-        { label: 'MFE', value: data.mfe.computed ? 'Computed' : 'Not computed', sub: data.mfe.computed ? '' : data.mfe.reason, tone: data.mfe.computed ? 'good' : 'warn' },
-    ];
-
-    const cardsHtml = cardDefs.map(c => `
-        <div style="border-radius:14px;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid ${cardTone(c.tone)};">
-            <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#64748b;">${escapeHtml(c.label)}</p>
-            <p style="margin:6px 0 0;font-size:20px;font-weight:800;color:${cardTone(c.tone)};">${escapeHtml(c.value)}</p>
-            ${c.sub ? `<p style="margin:4px 0 0;font-size:12px;color:#475569;">${escapeHtml(c.sub)}</p>` : ''}
-        </div>
-    `).join('');
-
-    const comparisonHtml = data.candidates.length > 1 ? `
-        <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin:32px 0 12px;">Candidate comparison</h2>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <thead><tr style="text-align:left;color:#64748b;">
-                <th style="padding:6px 12px 6px 0;border-bottom:1px solid #e2e8f0;">Profile</th>
-                <th style="padding:6px 12px 6px 0;border-bottom:1px solid #e2e8f0;">CAI</th>
-                <th style="padding:6px 0;border-bottom:1px solid #e2e8f0;">GC%</th>
-            </tr></thead>
-            <tbody>
-                ${data.candidates.map(c => `
-                    <tr>
-                        <td style="padding:8px 12px 8px 0;border-bottom:1px solid #f1f5f9;font-weight:600;">${escapeHtml(c.label || c.id)}</td>
-                        <td style="padding:8px 12px 8px 0;border-bottom:1px solid #f1f5f9;font-family:monospace;">${Number(c.cai || 0).toFixed(3)}</td>
-                        <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-family:monospace;">${Number(c.gc_percent || 0).toFixed(1)}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    ` : '';
-
-    const seq = primary.optimized_sequence || '';
-    const seqWrapped = seq.match(/.{1,60}/g)?.join('\n') || seq;
-
-    const html = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>FactorForge Results Report — ${escapeHtml(data.host)} / ${escapeHtml(data.profile)}</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  body { margin:0; background:#f1f5f9; color:#0f172a; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
-  .page { max-width:820px; margin:0 auto; padding:48px 24px 80px; }
-  .grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
-  @media (max-width:640px) { .grid { grid-template-columns:repeat(2, 1fr); } }
-  pre { background:#0f172a; color:#a7f3d0; padding:16px; border-radius:12px; overflow-x:auto; font-size:12px; line-height:1.6; }
-</style>
-</head>
-<body>
-<div class="page">
-  <p style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#059669;margin:0;">FactorForge CDS Design Review</p>
-  <h1 style="font-size:26px;margin:6px 0 4px;">Results Report</h1>
-  <p style="color:#64748b;font-size:13px;margin:0 0 28px;">Generated ${escapeHtml(new Date(data.generatedAt).toLocaleString())}</p>
-  <div class="grid">${cardsHtml}</div>
-  ${comparisonHtml}
-  <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin:32px 0 12px;">Optimized sequence (DNA)</h2>
-  <pre>${escapeHtml(seqWrapped)}</pre>
-  <p style="margin-top:32px;font-size:11px;color:#94a3b8;">This is an in-silico CDS design candidate and pre-synthesis review artifact. Review and wet-lab testing are required before relying on any design in experiments.</p>
-</div>
-</body>
-</html>`;
-
-    const blob = new Blob([html], { type: 'text/html' });
+function downloadTextArtifact(content, mimeType, fileName) {
+    const blob = new Blob([content], { type: mimeType });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `factorforge_results_report_${Date.now()}.html`;
-    a.click();
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
     window.URL.revokeObjectURL(url);
-    showToast('Report downloaded', 'success');
+}
+
+function evidenceRecordFromModel(model) {
+    const { artifacts: _artifacts, ...evidence } = model;
+    return evidence;
+}
+
+function standaloneReportHtml(model) {
+    const statusColor = status => ({ good: '#059669', warn: '#d97706', bad: '#e11d48', neutral: '#475569' })[reportStatusTone(status)];
+    const summaryCards = [
+        ['Automated decision', model.disposition.automated_decision.replaceAll('_', ' '), model.disposition.automated_decision],
+        ['Required failures', model.disposition.required_failure_count, model.disposition.required_failure_count == null ? 'NOT_AVAILABLE' : (model.disposition.required_failure_count ? 'FAIL' : 'PASS')],
+        ['Preferred warnings', model.disposition.preferred_warning_count, model.disposition.preferred_warning_count == null ? 'NOT_AVAILABLE' : (model.disposition.preferred_warning_count ? 'WARNING' : 'PASS')],
+        ['Not computed', model.disposition.unavailable_check_count, model.disposition.unavailable_check_count ? 'NOT_COMPUTED' : 'PASS'],
+        ['CAI', model.metrics.cai == null ? 'Not recorded' : model.metrics.cai.toFixed(3), model.checks.find(check => check.id === 'cai')?.status],
+        ['GC content', model.metrics.gc_percent == null ? 'Not recorded' : `${model.metrics.gc_percent.toFixed(1)}%`, model.checks.find(check => check.id === 'overall_gc')?.status],
+    ].map(([label, value, status]) => `<div class="card" style="border-left-color:${statusColor(status)}"><small>${escapeHtml(label)}</small><strong style="color:${statusColor(status)}">${escapeHtml(reportValue(value))}</strong></div>`).join('');
+    const checks = model.checks.map(check => `<tr><th scope="row">${escapeHtml(check.label)}</th><td>${escapeHtml(reportValue(check.observed))}</td><td>${escapeHtml(`${check.mode} · ${reportValue(check.threshold)}`)}</td><td><b style="color:${statusColor(check.status)}">${escapeHtml(check.status.replaceAll('_', ' '))}</b>${check.detail ? `<br><small>${escapeHtml(check.detail)}</small>` : ''}</td></tr>`).join('');
+    const candidates = model.candidates.length > 1 ? `<section><h2>Candidate comparison</h2><div class="scroll"><table><thead><tr><th>Candidate</th><th>Decision</th><th>CAI</th><th>GC%</th><th>Required failures</th><th>Warnings</th></tr></thead><tbody>${model.candidates.map(candidate => `<tr><th scope="row">${escapeHtml(candidate.label)}</th><td>${escapeHtml(candidate.automated_decision)}</td><td>${escapeHtml(candidate.cai == null ? 'Not recorded' : candidate.cai.toFixed(3))}</td><td>${escapeHtml(candidate.gc_percent == null ? 'Not recorded' : candidate.gc_percent.toFixed(1))}</td><td>${escapeHtml(reportValue(candidate.required_failure_count))}</td><td>${escapeHtml(reportValue(candidate.preferred_warning_count))}</td></tr>`).join('')}</tbody></table></div></section>` : '';
+    const provenanceRows = [
+        ['Product version', model.provenance.product_version], ['Engine', model.context.engine], ['Objective', model.context.objective],
+        ['Host / profile', `${model.context.host_profile} / ${model.context.profile}`], ['Codon reference', model.provenance.codon_reference_id],
+        ['Reference policy', model.provenance.reference_policy_version], ['GC reference band', model.provenance.gc_reference_band],
+        ['Seed', model.context.seed === null ? 'Not specified' : model.context.seed], ['Result created (UTC)', model.identity.result_created_at],
+        ['Input SHA-256', model.provenance.input_sequence_hash], ['Output SHA-256', model.provenance.output_cds_hash], ['Parameter SHA-256', model.provenance.parameter_hash],
+    ].map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(reportValue(value))}</dd>`).join('');
+    const sequence = model.artifacts.optimized_sequence.match(/.{1,60}/g)?.join('\n') || model.artifacts.optimized_sequence;
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FactorForge Design Review Report — ${escapeHtml(reportValue(model.identity.result_id))}</title><style>
+body{margin:0;background:#f1f5f9;color:#0f172a;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.page{max-width:920px;margin:auto;padding:42px 24px 72px}h1{font-size:28px;margin:4px 0}h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:#475569;margin:28px 0 10px}.eyebrow{color:#047857;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.muted,small{color:#64748b}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{background:#fff;border:1px solid #dbe2ea;border-left:4px solid;border-radius:12px;padding:14px}.card small,.card strong{display:block}.card strong{font-size:18px;margin-top:4px}.callout{padding:14px;border-radius:12px;background:#fff7ed;border:1px solid #fdba74}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;background:#fff}th,td{text-align:left;vertical-align:top;padding:9px;border-bottom:1px solid #e2e8f0}dl{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:6px 14px}dt{font-weight:700}dd{margin:0;font-family:monospace;overflow-wrap:anywhere}pre{background:#0f172a;color:#a7f3d0;padding:16px;border-radius:12px;overflow:auto;font:12px/1.6 monospace}ul{padding-left:20px}@media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr)}.page{padding:24px 14px}dl{grid-template-columns:1fr}dd{margin-bottom:7px}}@media print{body{background:#fff}.page{padding:0}.card,table{break-inside:avoid}.callout{border-color:#999}}
+</style></head><body><main class="page"><p class="eyebrow">FactorForge CDS Design Review</p><h1>Design Review Report</h1><p class="muted">Result ${escapeHtml(reportValue(model.identity.result_id))} · created ${escapeHtml(reportValue(model.identity.result_created_at))} · report generated ${escapeHtml(model.identity.report_generated_at)}</p><div class="callout"><b>Sequence-data notice:</b> This HTML contains the optimized DNA sequence. Handle and share it according to your sequence-data policy.</div><section><h2>Review summary</h2><div class="grid">${summaryCards}</div><p>${escapeHtml(reportValue(model.disposition.explanation))}</p></section><section><h2>Detailed checks</h2><div class="scroll"><table><thead><tr><th>Check</th><th>Observed</th><th>Policy</th><th>Status</th></tr></thead><tbody>${checks}</tbody></table></div></section>${candidates}<section><h2>Sequence and process</h2><p>Input type: <b>${escapeHtml(model.context.input_type)}</b> · output length: <b>${escapeHtml(reportValue(model.sequence_summary.output_length_nt, ' nt'))}</b> · nucleotide comparison: <b>${escapeHtml(model.sequence_summary.comparison_available ? reportValue(model.sequence_summary.nucleotide_changes) : 'Not recorded')}</b></p><p>Type IIS requested: ${escapeHtml(model.process.type_iis_requested.length ? model.process.type_iis_requested.join(', ') : 'None recorded')} · Domestication: ${escapeHtml(model.process.domestication_attempted ? 'Attempted' : 'Not attempted')} · MFE: ${escapeHtml(model.metrics.mfe_status === 'computed' ? 'Computed' : `Not computed (${model.metrics.mfe_status_reason})`)}</p></section><section><h2>Reproducibility and provenance</h2><dl>${provenanceRows}</dl></section><section><h2>Optimized sequence (DNA)</h2><pre>${escapeHtml(sequence)}</pre></section><section><h2>Interpretation</h2><p>${escapeHtml(model.interpretation.scope)}</p><h2>Recommended next steps</h2><ul>${model.interpretation.next_steps.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul><h2>Limitations</h2><ul>${model.interpretation.limitations.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section></main></body></html>`;
+}
+
+function downloadResultsReportHtml(model) {
+    trackEvent('report_download', { format: 'html' });
+    downloadTextArtifact(standaloneReportHtml(model), 'text/html;charset=utf-8', `factorforge_design_review_${reportFileStem(model)}.html`);
+    showToast('Design review report downloaded', 'success');
+}
+
+function downloadEvidenceRecordJson(model) {
+    trackEvent('report_download', { format: 'evidence_json' });
+    const content = `${JSON.stringify(evidenceRecordFromModel(model), null, 2)}\n`;
+    downloadTextArtifact(content, 'application/json;charset=utf-8', `factorforge_design_evidence_${reportFileStem(model)}.json`);
+    showToast('Sequence-free evidence record downloaded', 'success');
 }
 
 function renderCustomRestrictionResults(res) {
@@ -1611,21 +1768,63 @@ function renderGCGraph(seq, hostId = state.host) {
     });
 }
 
+function historyResultSnapshot(result, primary) {
+    const clone = value => value == null ? value : JSON.parse(JSON.stringify(value));
+    const candidates = Array.isArray(result.candidates) ? result.candidates.map(candidate => ({
+        id: candidate.id || null,
+        label: candidate.label || candidate.id || null,
+        cai: candidate.cai ?? null,
+        gc_percent: candidate.gc_percent ?? null,
+        automated_decision: candidate.automated_decision || null,
+        required_failure_count: candidate.required_failure_count ?? null,
+        preferred_warning_count: candidate.preferred_warning_count ?? null,
+    })) : [];
+    return {
+        optimized_sequence: primary.optimized_sequence,
+        original_length: result.original_length ?? result.input_summary?.length ?? null,
+        optimized_length: result.optimized_length ?? primary.optimized_sequence?.length ?? null,
+        metrics: clone(result.metrics || primary.metrics || {}),
+        validation: clone(result.validation || primary.validation || {}),
+        profile: result.profile || state.objective,
+        host_profile: getResultHostProfile(result),
+        input_type: result.input_type || result.validation?.input_type || result.provenance?.normalized_input_type || null,
+        input_summary: clone(result.input_summary || null),
+        acceptance_criteria_snapshot: clone(result.acceptance_criteria_snapshot || null),
+        automated_decision: result.automated_decision || null,
+        decision_summary: clone(result.decision_summary || null),
+        qc_decision_matrix: clone(result.qc_decision_matrix || null),
+        acceptance_evaluation: clone(result.acceptance_evaluation || null),
+        reviewer_disposition: clone(result.reviewer_disposition || null),
+        result_identifier: result.result_identifier || null,
+        construct_id: result.construct_id || null,
+        created_at: result.created_at || null,
+        product_version: result.product_version || null,
+        reference_policy_version: result.reference_policy_version || null,
+        codon_reference_id: result.codon_reference_id || null,
+        gc_reference_band: result.gc_reference_band || null,
+        metadata: clone(result.metadata || null),
+        provenance: clone(result.provenance || null),
+        cds_design: clone(result.cds_design || null),
+        constraint_report: clone(result.constraint_report || null),
+        custom_restriction_sites: clone(result.custom_restriction_sites || null),
+        report_candidates: candidates,
+    };
+}
+
 function addToHistory(input, result) {
     const primary = getPrimaryResult(result);
     const item = {
         id: Date.now(),
+        schemaVersion: HISTORY_SCHEMA_VERSION,
         timestamp: new Date().toLocaleString(),
         inputLen: input.length,
+        inputType: result.input_type || result.validation?.input_type || result.provenance?.normalized_input_type || null,
         profile: state.objective,
         host: getResultHostProfile(result),
         cai: primary.metrics.cai,
         gc: calculateGC(primary.optimized_sequence),
         sequence: primary.optimized_sequence,
-        inputSequence: input
-        ,acceptanceCriteria: result.acceptance_criteria_snapshot || null
-        ,automatedDecision: result.automated_decision || null
-        ,reviewerDisposition: result.reviewer_disposition || null
+        resultSnapshot: historyResultSnapshot(result, primary),
     };
 
     state.history.unshift(item);
@@ -1645,7 +1844,7 @@ function renderHistory() {
     elements.historyList.innerHTML = state.history.map(item => `
         <div class="p-2 border border-slate-100 rounded-lg hover:bg-slate-50 cursor-pointer transition-all mb-2 flex justify-between items-center group" onclick="loadHistoryItem(${item.id})">
             <div>
-                <p class="text-[10px] font-bold text-slate-700">${item.inputLen}bp → ${item.profile}</p>
+                <p class="text-[10px] font-bold text-slate-700">${item.inputLen}${item.inputType === 'protein' ? 'aa' : 'bp'} → ${item.profile}</p>
                 <p class="text-[9px] text-slate-400">${formatHostProfile(item.host || 'nbenthamiana')} · ${item.timestamp}</p>
             </div>
             <div class="text-right">
@@ -1660,19 +1859,29 @@ window.loadHistoryItem = (id) => {
     const item = state.history.find(h => h.id === id);
     if (!item) return;
 
-    elements.sequenceInput.value = item.inputSequence;
-    handleSequenceChange({ target: { value: item.inputSequence } });
-    state.results = {
-        optimized_sequence: item.sequence,
-        metrics: { cai: item.cai, gc_percent: item.gc, polya_signals: 0, length: item.sequence.length },
-        profile: item.profile,
-        host_profile: item.host || 'nbenthamiana',
-        acceptance_criteria_snapshot: item.acceptanceCriteria || null,
-        automated_decision: item.automatedDecision || null,
-        reviewer_disposition: item.reviewerDisposition || null
-    };
+    if (item.resultSnapshot) {
+        elements.sequenceInput.value = '';
+        state.sequence = '';
+        elements.previewContainer.classList.add('hidden');
+        elements.inputTypeBadge.classList.add('hidden');
+        updateInputStats('');
+        state.results = JSON.parse(JSON.stringify(item.resultSnapshot));
+    } else {
+        const legacyInput = item.inputSequence || '';
+        elements.sequenceInput.value = legacyInput;
+        handleSequenceChange({ target: { value: legacyInput } });
+        state.results = {
+            optimized_sequence: item.sequence,
+            metrics: { cai: item.cai, gc_percent: item.gc, polya_signals: 0, length: item.sequence.length },
+            profile: item.profile,
+            host_profile: item.host || 'nbenthamiana',
+            acceptance_criteria_snapshot: item.acceptanceCriteria || null,
+            automated_decision: item.automatedDecision || null,
+            reviewer_disposition: item.reviewerDisposition || null,
+        };
+    }
     renderResults();
-    showToast('History item loaded', 'success');
+    showToast(item.resultSnapshot ? 'History report loaded (input sequence not stored)' : 'Legacy history item loaded', 'success');
 };
 
 function clearHistory() {

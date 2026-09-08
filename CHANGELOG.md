@@ -39,6 +39,15 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   policy no longer occupy the primary design path. Optional sequence, assembly,
   and review requirements remain progressively disclosed without changing
   optimizer or API behavior.
+- Rebuilt the downloadable Design Review Report around the API's authoritative
+  decision and acceptance-policy snapshot, with detailed check states,
+  provenance, input-aware sequence summaries, print styling, and bounded
+  interpretation and limitations.
+- Added a machine-readable evidence-record JSON download that intentionally
+  excludes raw input and output sequences, while FASTA and GenBank remain
+  separate sequence-bearing downloads.
+- Updated browser history so new entries retain report provenance without
+  retaining the raw input sequence; legacy history entries remain readable.
 
 ### Fixed
 - Comparison metrics now distinguish explicit pass/fail results from missing or

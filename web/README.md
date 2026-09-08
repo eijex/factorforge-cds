@@ -70,7 +70,11 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 - ✅ Optional reproducibility seed and Type IIS enzyme presets
 - ✅ Progressive disclosure for alternative objectives and expert settings
 - ✅ Domestication, MFE availability, and GC target transparency
-- ✅ Structured Results Report with candidate comparison and HTML download
+- ✅ Researcher-oriented Design Review Report with authoritative acceptance states,
+  detailed checks, candidate comparison, reproducibility provenance, and a
+  standalone print-friendly HTML download
+- ✅ Sequence-free machine-readable evidence-record JSON export; sequence-bearing
+  FASTA, GenBank, and HTML artifacts remain explicitly separate
 - ✅ Download (FASTA, GenBank)
 - ✅ Responsive design
 - ✅ No login required
@@ -88,6 +92,15 @@ their existing API semantics through progressive disclosure. Unavailable
 execution modes, disabled objectives, and immutable reference policy are
 excluded from the primary path. After a successful run, the same review column
 shows computational checks, candidate evidence, sequence output, and downloads.
+
+The Design Review Report uses the API-provided `automated_decision`,
+`decision_summary`, and acceptance-criteria rows as its authority; the browser
+does not create a separate CAI or GC pass/fail rule. Missing and uncomputed values
+remain explicit rather than being displayed as zero. New local-history entries
+retain the report snapshot and provenance without retaining the raw input
+sequence. The evidence-record JSON omits raw input and output sequences by
+design; the standalone HTML includes the optimized sequence and displays a
+sequence-data handling notice.
 
 The experimental comparison panel displays missing or invalid metrics as
 `Not evaluated`. AA identity uses an explicit numeric `aa_identity` fraction;
