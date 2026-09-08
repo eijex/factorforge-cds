@@ -34,11 +34,11 @@ IMPORT_ERROR = None
 
 # Try to import FactorForge
 try:
-    from factorforge.engines import EngineRegistry, register_builtin_engines
-    try:
-        register_builtin_engines()
-    except Exception as re_err:
-        logger.warning(f"register_builtin_engines warning: {re_err}")
+    from factorforge.engines import EngineRegistry
+    from factorforge.engines.profile.optimizer import RuleBasedOptimizer
+    from factorforge.engines.dp_adapter import DPEngineAdapter
+    EngineRegistry.register("profile", RuleBasedOptimizer)
+    EngineRegistry.register("dp", DPEngineAdapter)
 
     from factorforge.engines.profile.rules.domesticator import Domesticator
     from factorforge.engines.profile.rules.rule_engine import RuleEngine
@@ -281,10 +281,8 @@ class handler(BaseHTTPRequestHandler):
                 self.send_error_response(500, f"Backend engine initialization failed: {IMPORT_ERROR}")
                 return
 
-            try:
-                register_builtin_engines()
-            except Exception as re_err:
-                logger.warning(f"register_builtin_engines warning: {re_err}")
+            EngineRegistry.register("profile", RuleBasedOptimizer)
+            EngineRegistry.register("dp", DPEngineAdapter)
 
             logger.info(
                 f"Received optimization request: sequence_length={len(data.get('sequence', ''))}"
