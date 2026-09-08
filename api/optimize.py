@@ -476,7 +476,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_error_response(400, str(e))
         except Exception as e:
             logger.error(f"Unexpected error: {e}", exc_info=True)
-            self.send_error_response(500, "Internal server error")
+            self.send_error_response(500, f"Internal server error: {type(e).__name__}: {str(e)}")
 
     def do_GET(self):
         """Handle GET requests (health check)"""
