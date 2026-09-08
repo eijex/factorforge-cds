@@ -20,8 +20,11 @@ test('loads the main web UI', async ({ page }) => {
   await openApp(page);
 
   await expect(page.locator('#sequenceInput')).toBeVisible();
-  await expect(page.getByRole('heading', { name: '⚙️ Optimization Settings' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '⚙️ Design Brief' })).toBeVisible();
   await expect(page.locator('#optimizeBtn')).toBeVisible();
+  await expect(page.locator('#resultsPanel')).toBeHidden();
+  await expect(page.locator('#engineSelector')).toBeHidden();
+  await expect(page.locator('#appliedPolicySummary')).toContainText('recommended feasibility design');
 });
 
 test('opens release notes and toggles dark mode', async ({ page }) => {
@@ -37,16 +40,12 @@ test('opens release notes and toggles dark mode', async ({ page }) => {
   await expect(page.locator('#changelogModal')).toBeHidden();
 });
 
-test('discloses codon reference policy as current default plus non-selector note', async ({ page }) => {
+test('keeps immutable codon-reference provenance out of the primary design form', async ({ page }) => {
   await openApp(page);
 
   const policy = page.locator('#codonReferencePolicy');
-  await expect(policy).toBeVisible();
-  await expect(policy).not.toHaveAttribute('open', '');
-  await expect(policy.getByText('Current default: NbeV1.1 HC CDS-derived')).toBeHidden();
-  await policy.locator('summary').click();
+  await expect(policy).toBeHidden();
   await expect(policy).toContainText('Current default: NbeV1.1 HC CDS-derived');
-  await expect(policy.getByText('Selected', { exact: true })).toBeVisible();
 
   const packagedAssets = page.locator('#packagedReferenceAssets');
   await expect(packagedAssets).toContainText('not shown as public product choices');
@@ -68,7 +67,7 @@ test('keeps non-default design objectives collapsed until requested', async ({ p
   const implemented = page.locator('#implementedObjectives');
   const experimental = page.locator('#experimentalObjectives');
   await expect(implemented).not.toHaveAttribute('open', '');
-  await expect(experimental).not.toHaveAttribute('open', '');
+  await expect(experimental).toBeHidden();
   await expect(implemented.getByText('High CAI')).toBeHidden();
   await expect(experimental.getByText("5' Ramp")).toBeHidden();
 
@@ -78,8 +77,6 @@ test('keeps non-default design objectives collapsed until requested', async ({ p
   await expect(implemented).toContainText('GC Target');
   await expect(implemented).toContainText('Assembly Friendly');
 
-  await experimental.locator('summary').click();
-  await expect(experimental).toHaveAttribute('open', '');
   await expect(experimental).toContainText("5' Ramp");
   await expect(experimental).toContainText('Viral Delivery');
   await expect(page.locator('input[name="objective"][value="ramp"]')).toBeDisabled();
@@ -118,6 +115,8 @@ test('offers host selection while marking BY-2 experimental', async ({ page }) =
   await expect(page.locator('#hostSelect option[value="by2"]')).toContainText('experimental');
   await expect(page).toHaveTitle('FactorForge | N. benthamiana CDS Design');
   await expect(page.locator('input[name="objective"][value="feasibility_best"]')).toBeEnabled();
+  await page.locator('#hostSelect').selectOption('by2');
+  await expect(page.locator('#appliedPolicySummary')).toContainText('Tobacco BY-2');
 });
 
 test('renders experimental dual comparison and paged codon alignment', async ({ page }) => {
@@ -212,6 +211,8 @@ test('optimization payload includes host and renders host_profile', async ({ pag
   await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
   await page.locator('#optimizeBtn').click();
 
+  await expect(page.locator('#resultsPanel')).toBeVisible();
+  await expect(page.locator('#resultsPanel').getByRole('heading', { name: /Design Review/ })).toBeVisible();
   await expect.poll(() => requestBody).toMatchObject({
     sequence: SAMPLE_PROTEIN,
     host: 'nbenthamiana',

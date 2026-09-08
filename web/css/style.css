@@ -30,6 +30,12 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* The brief stays close to the sequence while composing a design, then returns
+   to normal document flow once the full-width review workspace is available. */
+#designWorkspace.has-results #designBriefPanel {
+    position: static;
+}
+
 .dark body {
     background-color: var(--bg-slate);
     color: var(--text-main);

@@ -84,6 +84,9 @@ const elements = {
     btnText: document.getElementById('btnText'),
     loadingIndicator: document.getElementById('loadingIndicator'),
     validationStatus: document.getElementById('validationStatus'),
+    designWorkspace: document.getElementById('designWorkspace'),
+    designBriefPanel: document.getElementById('designBriefPanel'),
+    resultsPanel: document.getElementById('resultsPanel'),
     emptyState: document.getElementById('emptyState'),
     resultsContainer: document.getElementById('resultsContainer'),
     caiValue: document.getElementById('caiValue'),
@@ -109,9 +112,13 @@ const elements = {
     themeIcon: document.getElementById('themeIcon'),
     objectiveRadios: document.getElementsByName('objective'),
     engineModeRadios: document.getElementsByName('engineMode'),
+    engineSelector: document.getElementById('engineSelector'),
     hostSelect: document.getElementById('hostSelect'),
     saveDbToggle: document.getElementById('saveDbToggle'),
     saveDbStatus: document.getElementById('saveDbStatus'),
+    databaseCapability: document.getElementById('databaseCapability'),
+    appliedPolicySummary: document.getElementById('appliedPolicySummary'),
+    resultContextSummary: document.getElementById('resultContextSummary'),
     comparisonDashboard: document.getElementById('comparisonDashboard'),
     comparisonNotice: document.getElementById('comparisonNotice'),
     comparisonMatrixBody: document.getElementById('comparisonMatrixBody'),
@@ -217,6 +224,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     applyStaticLabelPatches();
     await loadApiMetadata();
     initEventListeners();
+    updateDesignBriefSummary();
     renderHistory();
     console.log('FactorForge v3.4.5 Engaged');
 });
@@ -244,8 +252,11 @@ async function loadApiMetadata() {
             elements.engineModeRadios.forEach(radio => {
                 if (radio.value !== 'profile') radio.disabled = !mlAvailable;
             });
+            elements.engineSelector?.classList.toggle('hidden', !mlAvailable);
             const dbAvailable = Boolean(apiCapabilities.db_save?.available);
             elements.saveDbToggle.disabled = !dbAvailable;
+            elements.databaseCapability?.classList.toggle('hidden', !dbAvailable);
+            elements.databaseCapability?.classList.toggle('flex', dbAvailable);
             elements.saveDbStatus.textContent = dbAvailable
                 ? 'Enabled for this deployment'
                 : 'Unavailable on this deployment';
@@ -266,6 +277,7 @@ function initEventListeners() {
     elements.objectiveRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             state.objective = e.target.value;
+            updateDesignBriefSummary();
         });
     });
     elements.engineModeRadios.forEach(radio => {
@@ -276,6 +288,7 @@ function initEventListeners() {
     });
     elements.hostSelect.addEventListener('change', (e) => {
         state.host = e.target.value;
+        updateDesignBriefSummary();
     });
     elements.saveDbToggle.addEventListener('change', (e) => {
         state.saveDb = e.target.checked;
@@ -285,13 +298,22 @@ function initEventListeners() {
 
     elements.useTemplateCheck.addEventListener('change', (e) => {
         state.useTemplate = e.target.checked;
+        updateDesignBriefSummary();
     });
 
-    elements.kozakToggle.addEventListener('change', (e) => state.kozak = e.target.checked);
-    elements.dinucToggle.addEventListener('change', (e) => state.dinuc = e.target.checked);
+    elements.kozakToggle.addEventListener('change', (e) => {
+        state.kozak = e.target.checked;
+        updateDesignBriefSummary();
+    });
+    elements.dinucToggle.addEventListener('change', (e) => {
+        state.dinuc = e.target.checked;
+        updateDesignBriefSummary();
+    });
     elements.customRestrictionSites.addEventListener('input', () => {
         state.customRestrictionSites = [];
+        updateDesignBriefSummary();
     });
+    elements.typeIisEnzymes.forEach(input => input.addEventListener('change', updateDesignBriefSummary));
     elements.saveReviewerDisposition.addEventListener('click', saveReviewerDisposition);
     elements.clearHistory.addEventListener('click', clearHistory);
 
@@ -339,6 +361,32 @@ function applyStaticLabelPatches() {
     if (!elements.submitValidationBtn) return;
     const label = elements.submitValidationBtn.children[1];
     if (label) label.textContent = 'Share Wet-lab Results (GitHub)';
+}
+
+function updateDesignBriefSummary() {
+    if (!elements.appliedPolicySummary) return;
+    const host = elements.hostSelect?.selectedOptions?.[0]?.textContent?.trim() || 'N. benthamiana';
+    const selectedObjective = Array.from(elements.objectiveRadios).find(radio => radio.checked)?.value || state.objective;
+    const methodLabels = {
+        feasibility_best: 'recommended feasibility design',
+        high_cai: 'CAI-focused comparison',
+        gc_target: 'GC-focused comparison',
+        assembly_friendly: 'assembly-oriented comparison'
+    };
+    const requirements = [];
+    if (elements.useTemplateCheck?.checked) requirements.push('MoClo');
+    const enzymes = Array.from(elements.typeIisEnzymes || [])
+        .filter(input => input.checked)
+        .map(input => input.value);
+    if (enzymes.length) requirements.push(`avoid ${enzymes.join('/')}`);
+    if (elements.customRestrictionSites?.value.trim()) requirements.push('custom restriction sites');
+    if (elements.kozakToggle?.checked) requirements.push('Kozak handling');
+    if (elements.dinucToggle?.checked) requirements.push('TpA reduction');
+    const requirementText = requirements.length ? ` · ${requirements.join(' · ')}` : '';
+    const method = state.host === 'by2' && selectedObjective === 'feasibility_best'
+        ? 'stable profile design'
+        : methodLabels[selectedObjective] || 'deterministic design';
+    elements.appliedPolicySummary.textContent = `${host} · ${method}${requirementText}`;
 }
 
 function isProteinInputResult(res) {
@@ -688,6 +736,13 @@ function renderResults() {
 
     elements.emptyState.classList.add('hidden');
     elements.resultsContainer.classList.remove('hidden');
+    elements.resultsPanel?.classList.remove('hidden');
+    elements.resultsPanel?.classList.add('flex');
+    elements.designWorkspace?.classList.add('has-results');
+    if (elements.resultContextSummary) {
+        const host = formatHostProfile(getResultHostProfile(res));
+        elements.resultContextSummary.textContent = `${host} · Review the computational checks before synthesis or experimental use.`;
+    }
 
     if (res.construct_id) {
         elements.constructIdDisplay.textContent = res.construct_id;
@@ -779,6 +834,36 @@ function renderResults() {
 
 const ALIGNMENT_PAGE_SIZE = 60;
 
+function comparisonNumber(value, minimum, maximum) {
+    return typeof value === 'number' && Number.isFinite(value)
+        && value >= minimum && value <= maximum ? value : null;
+}
+
+function comparisonIdentity(metrics) {
+    const identity = comparisonNumber(metrics.aa_identity, 0, 1);
+    if (identity === null) return { text: 'Not evaluated', status: 'unknown' };
+    const passed = identity === 1;
+    return { text: `${(identity * 100).toFixed(2)}% ${passed ? 'Passed' : 'Failed'}`, status: passed ? 'pass' : 'fail' };
+}
+
+function comparisonTypeIIS(metrics) {
+    const clean = metrics.type_iis_clean;
+    const count = metrics.type_iis_site_count;
+    const validCount = Number.isInteger(count) && count >= 0;
+    if (clean === false) {
+        return { text: validCount && count > 0 ? `${count} site(s) — Failed` : 'Failed', status: 'fail' };
+    }
+    if (clean === true && (count === undefined || (validCount && count === 0))) {
+        return { text: 'Clean', status: 'pass' };
+    }
+    return { text: 'Not evaluated', status: 'unknown' };
+}
+
+function comparisonStatus(rule, ml) {
+    if (rule.status === 'fail' || ml.status === 'fail') return 'Failed';
+    return rule.status === 'pass' && ml.status === 'pass' ? 'Passed' : 'Not evaluated';
+}
+
 function renderComparisonDashboard(res) {
     const comparison = res?.comparison;
     if (!comparison || res.mode !== 'dual_compare') {
@@ -787,15 +872,31 @@ function renderComparisonDashboard(res) {
     }
     elements.comparisonDashboard.classList.remove('hidden');
     elements.comparisonNotice.textContent = res.preview_notice || 'Experimental comparison preview.';
-    const rule = comparison.rule.metrics;
-    const ml = comparison.ml.metrics;
+    const rule = comparison.rule?.metrics || {};
+    const ml = comparison.ml?.metrics || {};
+    const ruleIdentity = comparisonIdentity(rule);
+    const mlIdentity = comparisonIdentity(ml);
+    const ruleTypeIIS = comparisonTypeIIS(rule);
+    const mlTypeIIS = comparisonTypeIIS(ml);
+    const numericRow = (label, key, max, digits, suffix, deltaSuffix) => {
+        const left = comparisonNumber(rule[key], 0, max);
+        const right = comparisonNumber(ml[key], 0, max);
+        return [label,
+            left === null ? 'Not evaluated' : `${left.toFixed(digits)}${suffix}`,
+            right === null ? 'Not evaluated' : `${right.toFixed(digits)}${suffix}`,
+            left === null || right === null ? 'Not evaluated' : `${(right - left).toFixed(digits)}${deltaSuffix}`];
+    };
+    const percentText = (value, suffix) => {
+        const number = comparisonNumber(value, 0, 100);
+        return number === null ? 'Not evaluated' : `${number.toFixed(1)}%${suffix}`;
+    };
     const metricRows = [
-        ['AA Translation Identity', '100% Passed', '100% Passed', 'Synonymous design'],
-        ['GC Content', `${Number(rule.gc_percent).toFixed(1)}%`, `${Number(ml.gc_percent).toFixed(1)}%`, `${(Number(ml.gc_percent) - Number(rule.gc_percent)).toFixed(1)} pp`],
-        ['CAI Index', Number(rule.cai || 0).toFixed(3), Number(ml.cai || 0).toFixed(3), `${(Number(ml.cai || 0) - Number(rule.cai || 0)).toFixed(3)}`],
-        ['Type IIS Clearance', rule.type_iis_clean === false ? `${rule.type_iis_site_count || 0} site(s)` : 'Clean', ml.type_iis_clean === false ? `${ml.type_iis_site_count || 0} site(s)` : 'Clean', rule.type_iis_clean && ml.type_iis_clean ? 'Passed' : 'Review'],
-        ['Codon Concordance', '—', '—', `${Number(comparison.codon_concordance_percent).toFixed(1)}% match`],
-        ['NT Identity', '—', '—', `${Number(comparison.nt_identity_percent).toFixed(1)}%`]
+        ['AA Translation Identity', ruleIdentity.text, mlIdentity.text, comparisonStatus(ruleIdentity, mlIdentity)],
+        numericRow('GC Content', 'gc_percent', 100, 1, '%', ' pp'),
+        numericRow('CAI Index', 'cai', 1, 3, '', ''),
+        ['Type IIS Clearance', ruleTypeIIS.text, mlTypeIIS.text, comparisonStatus(ruleTypeIIS, mlTypeIIS)],
+        ['Codon Concordance', '—', '—', percentText(comparison.codon_concordance_percent, ' match')],
+        ['NT Identity', '—', '—', percentText(comparison.nt_identity_percent, '')]
     ];
     elements.comparisonMatrixBody.innerHTML = metricRows.map(row => `<tr>${row.map((cell, index) => `<td class="p-3 ${index === 0 ? 'font-bold text-slate-700 dark:text-slate-200' : 'text-slate-600 dark:text-slate-300'}">${escapeHtml(String(cell))}</td>`).join('')}</tr>`).join('');
 
@@ -1598,6 +1699,9 @@ function clearAll() {
     elements.inputTypeBadge.classList.add('hidden');
     updateInputStats('');
     elements.resultsContainer.classList.add('hidden');
+    elements.resultsPanel?.classList.add('hidden');
+    elements.resultsPanel?.classList.remove('flex');
+    elements.designWorkspace?.classList.remove('has-results');
     elements.constructIdDisplay.textContent = '';
     elements.constructIdRow.classList.add('hidden');
     if (elements.candidateComparisonContainer) elements.candidateComparisonContainer.classList.add('hidden');
@@ -1605,6 +1709,7 @@ function clearAll() {
     if (elements.mfeWarningBanner) elements.mfeWarningBanner.classList.add('hidden');
     elements.emptyState.classList.remove('hidden');
     elements.validationStatus.classList.add('hidden');
+    updateDesignBriefSummary();
     showToast('Input cleared', 'info');
 }
 

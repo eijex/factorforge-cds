@@ -8,18 +8,7 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Release Policy
 
 | Bump | When to use |
-|---
-
-## [3.4.6] - 2026-09-05
-
-### Added
-- **AgentOS Hard Gate as Production**: The deterministic AgentOS evaluator is now officially exposed as a production-ready MCP tool (valuate_sequence). This ensures absolute biological compliance (e.g. BsaI Type IIS, Stop Codons) prior to synthesis.
-- **FactorForge SLLM as Research Preview**: The generative 4.0 SLLM model (optimize_protein_slm) is now available as a Research Preview. It is explicitly separated from the deterministic DP engine.
-
-### Changed
-- **Data Boundary**: Enforced strict provenance tracking so benchmark context stays attached to the software that produced it.
-- **Web UI**: Updated the \What\'s New in FactorForge\ modal and button to reflect v3.4.6 and the separation between the Hard Gate (production) and the SLLM (experimental).
----|-------------|
+|------|-------------|
 | **Major** (`X.0.0`) | Breaking API change, codon table replacement, engine architecture overhaul |
 | **Minor** (`3.X.0`) | New rule, scan feature, optimization mode, new profile, new CLI flag |
 | **Patch** (`3.1.X`) | Bug fix, metric correction, documentation update, dependency patch |
@@ -39,6 +28,32 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 > legacy-reference state; see both versions' entries below.
 
 ---
+
+## [Unreleased]
+
+### Changed
+- Reorganized the web app around a researcher-facing sequence and design-brief
+  workspace. Unavailable execution modes, disabled objectives, and immutable
+  codon-reference policy no longer occupy the primary design path.
+- Results now open as a full-width design-review workspace after generation,
+  while optional sequence, assembly, and review requirements remain available
+  without changing optimizer or API behavior.
+
+### Fixed
+- Comparison metrics now distinguish explicit pass/fail results from missing or
+  invalid evaluations, including AA identity and Type IIS clearance.
+- SQLite checkpoints no longer require the optional PostgreSQL driver.
+- Database integration tests skip before engine import when DATABASE_URL is absent.
+- Docker publication requires the same commit's CI and browser checks to succeed.
+
+### Candidate scope (v3.4.6, in preparation)
+- Capability-gated Rule/ML comparison UI with metrics and codon alignment.
+- Experimental preview and database availability indicators. These do not
+  establish trained-model readiness or biological performance.
+
+### Notes
+- Release-note UI changes preceded package/tag publication. The formal version
+  update and distribution checks remain pending.
 
 ## [3.4.5] — 2026-08-22
 

@@ -77,6 +77,24 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 
 ## 🔧 Tech Stack
 
+### Researcher design-review workflow
+
+The initial screen is a two-column workbench: sequence input on the left and a
+compact Design Brief on the right. The brief exposes the expression host,
+recommended deterministic method, and applied requirements. Optional sequence,
+assembly, and review-policy controls retain their existing API semantics.
+Unavailable execution modes, disabled objectives, and immutable reference
+policy are excluded from the primary path. After a successful run, the result
+appears as a full-width Design Review workspace with computational checks,
+candidate evidence, sequence output, and downloads.
+
+The experimental comparison panel displays missing or invalid metrics as
+`Not evaluated`. AA identity uses an explicit numeric `aa_identity` fraction;
+responses without it cannot display a pass. Type IIS clearance requires an
+explicit Boolean result, and conflicting site counts do not display as clean.
+ML preview and database controls remain gated by deployment capabilities.
+
+
 - **Frontend**: HTML5 + Tailwind CSS + Vanilla JS
 - **Backend**: Vercel Serverless Functions (Python)
 - **Hosting**: Vercel
