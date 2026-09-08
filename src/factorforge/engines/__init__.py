@@ -8,7 +8,6 @@ from .registry import EngineRegistry
 def register_builtin_engines() -> None:
     """Register bundled engines."""
     from .profile.optimizer import RuleBasedOptimizer
-    from .lm.inference import LMEngineAdapter
     from .dp_adapter import DPEngineAdapter
 
     EngineRegistry.register(
@@ -22,28 +21,6 @@ def register_builtin_engines() -> None:
         },
     )
     EngineRegistry.register(
-        "lm",
-        LMEngineAdapter,
-        metadata={
-            "version": "3.5.0",
-            "engine_type": "constrained_beam_search_lm",
-            "role": "experimental_lm_engine",
-            "stable": False,
-            "status": "work_in_progress",
-        },
-    )
-    EngineRegistry.register(
-        "slm",
-        LMEngineAdapter,
-        metadata={
-            "version": "3.5.0",
-            "engine_type": "constrained_beam_search_lm",
-            "role": "experimental_slm_engine",
-            "stable": False,
-            "status": "work_in_progress",
-        },
-    )
-    EngineRegistry.register(
         "dp",
         DPEngineAdapter,
         metadata={
@@ -53,6 +30,35 @@ def register_builtin_engines() -> None:
             "stable": True,
         },
     )
+
+    try:
+        from .lm.inference import LMEngineAdapter
+
+        EngineRegistry.register(
+            "lm",
+            LMEngineAdapter,
+            metadata={
+                "version": "3.5.0",
+                "engine_type": "constrained_beam_search_lm",
+                "role": "experimental_lm_engine",
+                "stable": False,
+                "status": "work_in_progress",
+            },
+        )
+        EngineRegistry.register(
+            "slm",
+            LMEngineAdapter,
+            metadata={
+                "version": "3.5.0",
+                "engine_type": "constrained_beam_search_lm",
+                "role": "experimental_slm_engine",
+                "stable": False,
+                "status": "work_in_progress",
+            },
+        )
+    except Exception:
+        # LM engines require PyTorch/heavy dependencies which may not be present in lightweight/serverless bundles
+        pass
 
 
 __all__ = ["EngineRegistry", "register_builtin_engines"]
