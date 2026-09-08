@@ -81,6 +81,13 @@ class EngineRegistry:
             cls.register(name, engine_class, metadata=cls._metadata.get(name))
 
         if name not in cls._engines:
+            try:
+                from . import register_builtin_engines
+                register_builtin_engines()
+            except Exception:
+                pass
+
+        if name not in cls._engines:
             available = ", ".join(cls._engines.keys())
             raise ValueError(f"❌ Engine '{name}' not found. Available: {available}")
 

@@ -281,6 +281,11 @@ class handler(BaseHTTPRequestHandler):
                 self.send_error_response(500, f"Backend engine initialization failed: {IMPORT_ERROR}")
                 return
 
+            try:
+                register_builtin_engines()
+            except Exception as re_err:
+                logger.warning(f"register_builtin_engines warning: {re_err}")
+
             logger.info(
                 f"Received optimization request: sequence_length={len(data.get('sequence', ''))}"
             )
