@@ -32,6 +32,10 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 ## [Unreleased]
 
 ### Changed
+- Reframed the Design Review Report as a decision-first Researcher Decision
+  Report: unresolved checks now lead to prioritized, bounded next actions;
+  requested and API-recorded settings are compared; full checks and provenance
+  remain available as detail and in the standalone HTML.
 - Reorganized the web app as a persistent three-column researcher workflow:
   sequence input, a compact design brief, and design review. The review position
   remains visible before and after generation instead of appearing below the form.

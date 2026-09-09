@@ -1182,6 +1182,17 @@ const REPORT_LIMITATIONS = Object.freeze([
     'Independent construct review and wet-lab validation are required before experimental reliance.',
 ]);
 
+const REPORT_CHECK_ACTIONS = Object.freeze({
+    cai: 'Compare an alternative implemented method or document why the observed CAI is acceptable for this study.',
+    overall_gc: 'Review the host reference band and compare an alternative implemented method before selecting a construct.',
+    local_gc: 'Inspect the out-of-range windows and confirm that the local composition is acceptable for the intended construct.',
+    type_iis: 'Inspect the listed Type IIS site locations and redesign or explicitly resolve every required site.',
+    repeats: 'Inspect repeated regions for synthesis or assembly concerns and document the disposition.',
+    homopolymers: 'Inspect the longest homopolymer and confirm it against synthesis requirements.',
+    forbidden_motifs: 'Review each detected motif and redesign or document an explicit exception.',
+    mfe: 'If RNA structure is decision-relevant, run a fit-for-purpose calculation in an environment with the required dependency.',
+});
+
 function finiteNumber(value) {
     const parsed = Number(value);
     return value !== null && value !== '' && Number.isFinite(parsed) ? parsed : null;
@@ -1248,6 +1259,42 @@ function normalizedReportChecks(res) {
     return checks.sort((a, b) => (priority[a.status] ?? 9) - (priority[b.status] ?? 9));
 }
 
+function buildResearcherReviewPlan(checks, decision, seed, settingMismatches) {
+    const priorities = checks
+        .filter(check => ['FAIL', 'WARNING', 'NOT_COMPUTED', 'NOT_AVAILABLE'].includes(check.status))
+        .map(check => ({
+            check_id: check.id,
+            label: check.label,
+            status: check.status,
+            finding: check.detail || `Observed ${reportValue(check.observed)} against ${reportValue(check.threshold)}.`,
+            action: REPORT_CHECK_ACTIONS[check.id] || 'Review this result and document the disposition before downstream use.',
+        }));
+    settingMismatches.forEach(mismatch => priorities.unshift({
+        check_id: 'settings_mismatch',
+        label: mismatch.label,
+        status: 'FAIL',
+        finding: `Requested ${mismatch.requested}; applied ${mismatch.applied}.`,
+        action: 'Do not compare or rely on this run until the requested and applied settings are reconciled.',
+    }));
+    if (seed === null) priorities.push({
+        check_id: 'seed',
+        label: 'Reproducibility seed',
+        status: 'NOT_AVAILABLE',
+        finding: 'No seed was recorded for this run.',
+        action: 'Set and record a seed before generating a comparison or final candidate.',
+    });
+    const headline = settingMismatches.length
+        ? 'Settings require reconciliation before this run can be interpreted.'
+        : decision === 'FAIL'
+            ? 'Required checks failed; redesign or document a justified resolution.'
+            : decision === 'CONDITIONAL_PASS'
+                ? 'No required check failed, but review the warnings before selection.'
+                : decision === 'PASS'
+                    ? 'Active computational checks passed; continue with independent construct review.'
+                    : 'A complete automated decision was not recorded; review the evidence before proceeding.';
+    return { headline, priorities };
+}
+
 function buildResultsReportModel(res, primary, gcTarget) {
     const checks = normalizedReportChecks(res);
     const summary = res.decision_summary || {};
@@ -1261,7 +1308,18 @@ function buildResultsReportModel(res, primary, gcTarget) {
     const requestedNames = Array.isArray(custom?.requested)
         ? custom.requested.map(site => site.name).filter(Boolean)
         : [];
-    const selected = requestedNames.length ? requestedNames : state.selectedTypeIisEnzymes;
+    const selected = requestedNames;
+    const effectiveTypeIis = res.acceptance_criteria_snapshot?.type_iis?.enzymes || [];
+    const normalizedRequested = [...new Set(selected)].sort();
+    const normalizedEffective = [...new Set(effectiveTypeIis)].sort();
+    const settingMismatches = normalizedRequested.length && normalizedEffective.length
+        && JSON.stringify(normalizedRequested) !== JSON.stringify(normalizedEffective)
+        ? [{
+            label: 'Type IIS settings mismatch',
+            requested: normalizedRequested.join(', '),
+            applied: normalizedEffective.join(', '),
+        }]
+        : [];
     const inputType = res.input_type || res.validation?.input_type || res.provenance?.normalized_input_type || 'not_recorded';
     const outputSequence = primary.optimized_sequence || '';
     const hasComparableInput = inputType === 'cds' && Boolean(state.sequence);
@@ -1284,6 +1342,7 @@ function buildResultsReportModel(res, primary, gcTarget) {
         ? summary.preferred_warning_count
         : (criteriaRows.length ? criteriaRows.filter(check => check.status === 'WARNING').length : null);
 
+    const reviewPlan = buildResearcherReviewPlan(checks, decision, res.seed ?? null, settingMismatches);
     return {
         report_schema_version: '1.0',
         identity: {
@@ -1336,6 +1395,8 @@ function buildResultsReportModel(res, primary, gcTarget) {
         },
         process: {
             type_iis_requested: selected,
+            type_iis_applied: effectiveTypeIis,
+            setting_mismatches: settingMismatches,
             domestication_attempted: Boolean(custom),
             restriction_sites_removed_count: Array.isArray(custom?.removed) ? custom.removed.length : null,
             restriction_sites_unresolved_count: Array.isArray(custom?.unresolved) ? custom.unresolved.length : null,
@@ -1352,25 +1413,13 @@ function buildResultsReportModel(res, primary, gcTarget) {
         },
         interpretation: {
             scope: 'Deterministic in-silico CDS design and pre-synthesis review.',
-            next_steps: ['Review the sequence and construct context.', 'Confirm synthesis requirements.', 'Perform fit-for-purpose wet-lab validation.'],
+            headline: reviewPlan.headline,
+            review_priorities: reviewPlan.priorities,
+            next_steps: ['Resolve and document the review priorities above.', 'Confirm the sequence in its complete construct and assembly context.', 'Perform fit-for-purpose wet-lab validation before experimental reliance.'],
             limitations: [...REPORT_LIMITATIONS],
         },
         artifacts: { optimized_sequence: outputSequence },
     };
-}
-
-function reportStatCard({ label, value, sub, status = 'NOT_AVAILABLE' }) {
-    const toneClasses = {
-        good: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
-        warn: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300',
-        bad: 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300',
-        neutral: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200',
-    }[reportStatusTone(status)];
-    return `<div class="min-w-0 rounded-xl p-2.5 ${toneClasses}">
-        <p class="text-[9px] font-extrabold uppercase tracking-widest opacity-70">${escapeHtml(label)}</p>
-        <p class="mt-1 text-xs font-black leading-tight break-words">${escapeHtml(reportValue(value))}</p>
-        ${sub ? `<p class="mt-0.5 text-[10px] font-medium opacity-80 break-words">${escapeHtml(sub)}</p>` : ''}
-    </div>`;
 }
 
 function reportCheckRowsHtml(checks) {
@@ -1413,18 +1462,35 @@ function candidateReportHtml(candidates) {
     </section>`;
 }
 
+function reportPriorityRowsHtml(priorities) {
+    if (!priorities.length) return '<p class="text-xs text-slate-500 dark:text-slate-400">No unresolved computational review priority was recorded.</p>';
+    return priorities.map((item, index) => `<article class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 p-3" data-review-priority="${escapeHtml(item.check_id)}">
+        <div class="flex items-start gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black">${index + 1}</span><div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2"><h5 class="font-bold text-slate-900 dark:text-white">${escapeHtml(item.label)}</h5><span class="text-[9px] font-extrabold" data-report-status="${escapeHtml(item.status)}">${escapeHtml(item.status.replaceAll('_', ' '))}</span></div>
+            <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">${escapeHtml(item.finding)}</p>
+            <p class="mt-2 text-[10px] font-semibold text-slate-700 dark:text-slate-200"><span class="uppercase tracking-wider text-slate-400">Next:</span> ${escapeHtml(item.action)}</p>
+        </div></div>
+    </article>`).join('');
+}
+
+function reportSettingsHtml(model) {
+    const requested = model.process.type_iis_requested.length ? model.process.type_iis_requested.join(', ') : 'None recorded';
+    const applied = model.process.type_iis_applied.length ? model.process.type_iis_applied.join(', ') : 'Not recorded';
+    const mismatch = model.process.setting_mismatches.length > 0;
+    const fields = [
+        ['Host', model.context.host_profile, model.context.host_profile, false],
+        ['Method / profile', model.context.objective, model.context.profile, false],
+        ['Type IIS enzymes', requested, applied, mismatch],
+        ['Seed', model.context.seed === null ? 'Not specified' : model.context.seed, model.context.seed === null ? 'Not recorded' : model.context.seed, false],
+        ['GC reference', model.provenance.gc_reference_band, model.provenance.gc_reference_band, false],
+    ];
+    return fields.map(([label, requestedValue, appliedValue, differs]) => `<tr class="border-b border-slate-200 dark:border-slate-700 ${differs ? 'bg-rose-50 dark:bg-rose-900/20' : ''}"><th scope="row" class="py-2 pr-2 text-left font-semibold">${escapeHtml(label)}</th><td class="py-2 pr-2">${escapeHtml(reportValue(requestedValue))}</td><td class="py-2">${escapeHtml(reportValue(appliedValue))}${differs ? ' <b class="text-rose-700 dark:text-rose-300">Mismatch</b>' : ''}</td></tr>`).join('');
+}
+
 function renderResultsReport(res, primary, gcTarget) {
     if (!elements.resultsReport || !elements.resultsReportBody) return;
     const model = buildResultsReportModel(res, primary, gcTarget);
     const disposition = model.disposition.automated_decision;
-    const cards = [
-        reportStatCard({ label: 'Automated decision', value: disposition.replaceAll('_', ' '), sub: model.disposition.explanation, status: disposition }),
-        reportStatCard({ label: 'Required failures', value: model.disposition.required_failure_count, sub: 'blocking criteria', status: model.disposition.required_failure_count == null ? 'NOT_AVAILABLE' : (model.disposition.required_failure_count ? 'FAIL' : 'PASS') }),
-        reportStatCard({ label: 'Preferred warnings', value: model.disposition.preferred_warning_count, sub: 'review recommended', status: model.disposition.preferred_warning_count == null ? 'NOT_AVAILABLE' : (model.disposition.preferred_warning_count ? 'WARNING' : 'PASS') }),
-        reportStatCard({ label: 'Not computed', value: model.disposition.unavailable_check_count, sub: 'not treated as zero', status: model.disposition.unavailable_check_count ? 'NOT_COMPUTED' : 'PASS' }),
-        reportStatCard({ label: 'CAI', value: model.metrics.cai == null ? null : model.metrics.cai.toFixed(3), sub: 'policy shown in checks', status: model.checks.find(check => check.id === 'cai')?.status }),
-        reportStatCard({ label: 'GC content', value: model.metrics.gc_percent == null ? null : `${model.metrics.gc_percent.toFixed(1)}%`, sub: `reference ${reportValue(model.provenance.gc_reference_band)}`, status: model.checks.find(check => check.id === 'overall_gc')?.status }),
-    ];
     const comparisonText = model.context.input_type === 'protein'
         ? `Protein input · amino-acid identity ${model.sequence_summary.amino_acid_identity == null ? 'Not recorded' : `${(model.sequence_summary.amino_acid_identity * 100).toFixed(2)}%`}`
         : `CDS input · nucleotide changes ${reportValue(model.sequence_summary.nucleotide_changes)}`;
@@ -1434,14 +1500,20 @@ function renderResultsReport(res, primary, gcTarget) {
 
     elements.resultsReportBody.innerHTML = `<article aria-labelledby="design-review-report-title" class="space-y-4">
         <header>
-            <h3 id="design-review-report-title" class="text-sm font-black text-slate-900 dark:text-white">FactorForge Design Review Report</h3>
+            <h3 id="design-review-report-title" class="text-sm font-black text-slate-900 dark:text-white">Researcher Decision Report</h3>
             <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">${escapeHtml(`${reportValue(model.identity.result_id)} · ${model.context.host_profile} · ${model.context.profile} · ${model.context.seed === null ? 'seed not specified' : `seed=${model.context.seed}`}`)}</p>
         </header>
-        <div class="grid grid-cols-2 gap-2">${cards.join('')}</div>
-        <section aria-labelledby="report-checks-title">
-            <h4 id="report-checks-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Detailed checks</h4>
-            <div class="grid gap-2">${reportCheckRowsHtml(model.checks)}</div>
+        <section aria-labelledby="report-outcome-title" class="rounded-2xl border p-4 ${disposition === 'FAIL' ? 'border-rose-300 bg-rose-50 dark:border-rose-800 dark:bg-rose-900/20' : disposition === 'CONDITIONAL_PASS' ? 'border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20' : 'border-emerald-300 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20'}">
+            <p class="text-[9px] font-extrabold uppercase tracking-widest opacity-70">Researcher decision brief</p>
+            <div class="mt-2 flex flex-wrap items-end justify-between gap-2"><h4 id="report-outcome-title" class="text-xl font-black">${escapeHtml(disposition.replaceAll('_', ' '))}</h4><p class="text-[10px] font-bold">${escapeHtml(`${reportValue(model.disposition.required_failure_count)} required fail · ${reportValue(model.disposition.preferred_warning_count)} warning · ${reportValue(model.disposition.unavailable_check_count)} unavailable`)}</p></div>
+            <p class="mt-2 text-xs font-semibold">${escapeHtml(model.interpretation.headline)}</p>
+            <p class="mt-1 text-[10px] opacity-80">${escapeHtml(reportValue(model.disposition.explanation))}</p>
         </section>
+        <section aria-labelledby="report-priorities-title">
+            <h4 id="report-priorities-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Review priorities and next actions</h4>
+            <div class="grid gap-2">${reportPriorityRowsHtml(model.interpretation.review_priorities)}</div>
+        </section>
+        <section aria-labelledby="report-settings-title"><h4 id="report-settings-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Requested vs applied settings</h4><div class="overflow-x-auto"><table class="w-full text-[10px]"><thead><tr class="text-left text-slate-500"><th class="pb-2">Setting</th><th class="pb-2">Requested</th><th class="pb-2">Applied / recorded</th></tr></thead><tbody>${reportSettingsHtml(model)}</tbody></table></div></section>
         <section aria-labelledby="report-sequence-title" class="rounded-xl border border-slate-200 dark:border-slate-700 p-3">
             <h4 id="report-sequence-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Sequence and process</h4>
             <p class="mt-2 font-semibold">${escapeHtml(comparisonText)}</p>
@@ -1451,10 +1523,11 @@ function renderResultsReport(res, primary, gcTarget) {
             <p class="mt-1">MFE: ${escapeHtml(model.metrics.mfe_status === 'computed' ? `Computed${model.metrics.mfe_kcal_mol == null ? '' : ` · ${model.metrics.mfe_kcal_mol} kcal/mol`}` : `Not computed · ${model.metrics.mfe_status_reason}`)}</p>
         </section>
         ${candidateReportHtml(model.candidates)}
-        <section aria-labelledby="report-provenance-title"><h4 id="report-provenance-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Reproducibility and provenance</h4><dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">${reportProvenanceHtml(model)}</dl></section>
+        <details class="rounded-xl border border-slate-200 dark:border-slate-700 p-3"><summary class="cursor-pointer text-[10px] font-extrabold uppercase tracking-widest">All computational checks (${model.checks.length})</summary><div class="mt-3 grid gap-2">${reportCheckRowsHtml(model.checks)}</div></details>
+        <details class="rounded-xl border border-slate-200 dark:border-slate-700 p-3"><summary class="cursor-pointer text-[10px] font-extrabold uppercase tracking-widest">Reproducibility and provenance</summary><dl class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">${reportProvenanceHtml(model)}</dl></details>
         <section aria-labelledby="report-interpretation-title" class="grid gap-2">
             <div class="rounded-xl bg-blue-50 dark:bg-blue-900/20 p-3"><h4 id="report-interpretation-title" class="font-extrabold">Interpretation</h4><p class="mt-1">${escapeHtml(model.interpretation.scope)}</p></div>
-            <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-3"><h4 class="font-extrabold">Recommended next steps</h4><ul class="mt-1 list-disc pl-4">${model.interpretation.next_steps.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>
+            <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-3"><h4 class="font-extrabold">Downstream handoff checklist</h4><ul class="mt-1 list-disc pl-4">${model.interpretation.next_steps.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>
             <div class="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-3"><h4 class="font-extrabold">Limitations</h4><ul class="mt-1 list-disc pl-4">${model.interpretation.limitations.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>
         </section>
         <p class="rounded-xl border border-amber-200 dark:border-amber-800 p-3 text-[10px] text-amber-800 dark:text-amber-200">The HTML report contains the optimized DNA sequence. Treat it according to your sequence-data policy. The evidence JSON intentionally excludes raw sequences.</p>
@@ -1490,14 +1563,18 @@ function evidenceRecordFromModel(model) {
 
 function standaloneReportHtml(model) {
     const statusColor = status => ({ good: '#059669', warn: '#d97706', bad: '#e11d48', neutral: '#475569' })[reportStatusTone(status)];
-    const summaryCards = [
-        ['Automated decision', model.disposition.automated_decision.replaceAll('_', ' '), model.disposition.automated_decision],
-        ['Required failures', model.disposition.required_failure_count, model.disposition.required_failure_count == null ? 'NOT_AVAILABLE' : (model.disposition.required_failure_count ? 'FAIL' : 'PASS')],
-        ['Preferred warnings', model.disposition.preferred_warning_count, model.disposition.preferred_warning_count == null ? 'NOT_AVAILABLE' : (model.disposition.preferred_warning_count ? 'WARNING' : 'PASS')],
-        ['Not computed', model.disposition.unavailable_check_count, model.disposition.unavailable_check_count ? 'NOT_COMPUTED' : 'PASS'],
-        ['CAI', model.metrics.cai == null ? 'Not recorded' : model.metrics.cai.toFixed(3), model.checks.find(check => check.id === 'cai')?.status],
-        ['GC content', model.metrics.gc_percent == null ? 'Not recorded' : `${model.metrics.gc_percent.toFixed(1)}%`, model.checks.find(check => check.id === 'overall_gc')?.status],
-    ].map(([label, value, status]) => `<div class="card" style="border-left-color:${statusColor(status)}"><small>${escapeHtml(label)}</small><strong style="color:${statusColor(status)}">${escapeHtml(reportValue(value))}</strong></div>`).join('');
+    const decisionColor = statusColor(model.disposition.automated_decision);
+    const priorities = model.interpretation.review_priorities.map((item, index) => `<article class="priority" style="border-left-color:${statusColor(item.status)}"><div class="priority-number">${index + 1}</div><div><h3>${escapeHtml(item.label)} <small style="color:${statusColor(item.status)}">${escapeHtml(item.status.replaceAll('_', ' '))}</small></h3><p>${escapeHtml(item.finding)}</p><p><b>Next:</b> ${escapeHtml(item.action)}</p></div></article>`).join('') || '<p>No unresolved computational review priority was recorded.</p>';
+    const requestedTypeIis = model.process.type_iis_requested.length ? model.process.type_iis_requested.join(', ') : 'None recorded';
+    const appliedTypeIis = model.process.type_iis_applied.length ? model.process.type_iis_applied.join(', ') : 'Not recorded';
+    const settingsMismatch = model.process.setting_mismatches.length > 0;
+    const settings = [
+        ['Host', model.context.host_profile, model.context.host_profile, false],
+        ['Method / profile', model.context.objective, model.context.profile, false],
+        ['Type IIS enzymes', requestedTypeIis, appliedTypeIis, settingsMismatch],
+        ['Seed', model.context.seed === null ? 'Not specified' : model.context.seed, model.context.seed === null ? 'Not recorded' : model.context.seed, false],
+        ['GC reference', model.provenance.gc_reference_band, model.provenance.gc_reference_band, false],
+    ].map(([label, requested, applied, mismatch]) => `<tr${mismatch ? ' class="mismatch"' : ''}><th scope="row">${escapeHtml(label)}</th><td>${escapeHtml(reportValue(requested))}</td><td>${escapeHtml(reportValue(applied))}${mismatch ? ' <b>Mismatch</b>' : ''}</td></tr>`).join('');
     const checks = model.checks.map(check => `<tr><th scope="row">${escapeHtml(check.label)}</th><td>${escapeHtml(reportValue(check.observed))}</td><td>${escapeHtml(`${check.mode} · ${reportValue(check.threshold)}`)}</td><td><b style="color:${statusColor(check.status)}">${escapeHtml(check.status.replaceAll('_', ' '))}</b>${check.detail ? `<br><small>${escapeHtml(check.detail)}</small>` : ''}</td></tr>`).join('');
     const candidates = model.candidates.length > 1 ? `<section><h2>Candidate comparison</h2><div class="scroll"><table><thead><tr><th>Candidate</th><th>Decision</th><th>CAI</th><th>GC%</th><th>Required failures</th><th>Warnings</th></tr></thead><tbody>${model.candidates.map(candidate => `<tr><th scope="row">${escapeHtml(candidate.label)}</th><td>${escapeHtml(candidate.automated_decision)}</td><td>${escapeHtml(candidate.cai == null ? 'Not recorded' : candidate.cai.toFixed(3))}</td><td>${escapeHtml(candidate.gc_percent == null ? 'Not recorded' : candidate.gc_percent.toFixed(1))}</td><td>${escapeHtml(reportValue(candidate.required_failure_count))}</td><td>${escapeHtml(reportValue(candidate.preferred_warning_count))}</td></tr>`).join('')}</tbody></table></div></section>` : '';
     const provenanceRows = [
@@ -1508,9 +1585,9 @@ function standaloneReportHtml(model) {
         ['Input SHA-256', model.provenance.input_sequence_hash], ['Output SHA-256', model.provenance.output_cds_hash], ['Parameter SHA-256', model.provenance.parameter_hash],
     ].map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(reportValue(value))}</dd>`).join('');
     const sequence = model.artifacts.optimized_sequence.match(/.{1,60}/g)?.join('\n') || model.artifacts.optimized_sequence;
-    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FactorForge Design Review Report — ${escapeHtml(reportValue(model.identity.result_id))}</title><style>
-body{margin:0;background:#f1f5f9;color:#0f172a;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.page{max-width:920px;margin:auto;padding:42px 24px 72px}h1{font-size:28px;margin:4px 0}h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:#475569;margin:28px 0 10px}.eyebrow{color:#047857;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.muted,small{color:#64748b}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{background:#fff;border:1px solid #dbe2ea;border-left:4px solid;border-radius:12px;padding:14px}.card small,.card strong{display:block}.card strong{font-size:18px;margin-top:4px}.callout{padding:14px;border-radius:12px;background:#fff7ed;border:1px solid #fdba74}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;background:#fff}th,td{text-align:left;vertical-align:top;padding:9px;border-bottom:1px solid #e2e8f0}dl{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:6px 14px}dt{font-weight:700}dd{margin:0;font-family:monospace;overflow-wrap:anywhere}pre{background:#0f172a;color:#a7f3d0;padding:16px;border-radius:12px;overflow:auto;font:12px/1.6 monospace}ul{padding-left:20px}@media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr)}.page{padding:24px 14px}dl{grid-template-columns:1fr}dd{margin-bottom:7px}}@media print{body{background:#fff}.page{padding:0}.card,table{break-inside:avoid}.callout{border-color:#999}}
-</style></head><body><main class="page"><p class="eyebrow">FactorForge CDS Design Review</p><h1>Design Review Report</h1><p class="muted">Result ${escapeHtml(reportValue(model.identity.result_id))} · created ${escapeHtml(reportValue(model.identity.result_created_at))} · report generated ${escapeHtml(model.identity.report_generated_at)}</p><div class="callout"><b>Sequence-data notice:</b> This HTML contains the optimized DNA sequence. Handle and share it according to your sequence-data policy.</div><section><h2>Review summary</h2><div class="grid">${summaryCards}</div><p>${escapeHtml(reportValue(model.disposition.explanation))}</p></section><section><h2>Detailed checks</h2><div class="scroll"><table><thead><tr><th>Check</th><th>Observed</th><th>Policy</th><th>Status</th></tr></thead><tbody>${checks}</tbody></table></div></section>${candidates}<section><h2>Sequence and process</h2><p>Input type: <b>${escapeHtml(model.context.input_type)}</b> · output length: <b>${escapeHtml(reportValue(model.sequence_summary.output_length_nt, ' nt'))}</b> · nucleotide comparison: <b>${escapeHtml(model.sequence_summary.comparison_available ? reportValue(model.sequence_summary.nucleotide_changes) : 'Not recorded')}</b></p><p>Type IIS requested: ${escapeHtml(model.process.type_iis_requested.length ? model.process.type_iis_requested.join(', ') : 'None recorded')} · Domestication: ${escapeHtml(model.process.domestication_attempted ? 'Attempted' : 'Not attempted')} · MFE: ${escapeHtml(model.metrics.mfe_status === 'computed' ? 'Computed' : `Not computed (${model.metrics.mfe_status_reason})`)}</p></section><section><h2>Reproducibility and provenance</h2><dl>${provenanceRows}</dl></section><section><h2>Optimized sequence (DNA)</h2><pre>${escapeHtml(sequence)}</pre></section><section><h2>Interpretation</h2><p>${escapeHtml(model.interpretation.scope)}</p><h2>Recommended next steps</h2><ul>${model.interpretation.next_steps.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul><h2>Limitations</h2><ul>${model.interpretation.limitations.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section></main></body></html>`;
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FactorForge Researcher Decision Report — ${escapeHtml(reportValue(model.identity.result_id))}</title><style>
+body{margin:0;background:#f1f5f9;color:#0f172a;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.page{max-width:920px;margin:auto;padding:42px 24px 72px}h1{font-size:30px;margin:4px 0}h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:#475569;margin:28px 0 10px}h3{margin:0}.eyebrow{color:#047857;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.muted,small{color:#64748b}.outcome{background:#fff;border:2px solid;border-radius:16px;padding:20px}.outcome strong{display:block;font-size:28px}.counts{font-weight:700}.callout{padding:14px;border-radius:12px;background:#fff7ed;border:1px solid #fdba74}.priority{display:grid;grid-template-columns:32px 1fr;gap:10px;background:#fff;border:1px solid #dbe2ea;border-left:4px solid;border-radius:12px;padding:14px;margin:8px 0}.priority-number{width:26px;height:26px;border-radius:50%;background:#e2e8f0;display:grid;place-items:center;font-weight:800}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;background:#fff}th,td{text-align:left;vertical-align:top;padding:9px;border-bottom:1px solid #e2e8f0}.mismatch{background:#fff1f2;color:#9f1239}dl{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:6px 14px}dt{font-weight:700}dd{margin:0;font-family:monospace;overflow-wrap:anywhere}pre{background:#0f172a;color:#a7f3d0;padding:16px;border-radius:12px;overflow:auto;font:12px/1.6 monospace}ul{padding-left:20px}@media(max-width:640px){.page{padding:24px 14px}dl{grid-template-columns:1fr}dd{margin-bottom:7px}}@media print{body{background:#fff}.page{padding:0}.outcome,.priority,table{break-inside:avoid}.callout{border-color:#999}}
+</style></head><body><main class="page"><p class="eyebrow">FactorForge CDS Design Review</p><h1>Researcher Decision Report</h1><p class="muted">Result ${escapeHtml(reportValue(model.identity.result_id))} · created ${escapeHtml(reportValue(model.identity.result_created_at))} · report generated ${escapeHtml(model.identity.report_generated_at)}</p><div class="callout"><b>Sequence-data notice:</b> This HTML contains the optimized DNA sequence. Handle and share it according to your sequence-data policy.</div><section><h2>Decision brief</h2><div class="outcome" style="border-color:${decisionColor}"><strong style="color:${decisionColor}">${escapeHtml(model.disposition.automated_decision.replaceAll('_', ' '))}</strong><p>${escapeHtml(model.interpretation.headline)}</p><p class="counts">${escapeHtml(`${reportValue(model.disposition.required_failure_count)} required fail · ${reportValue(model.disposition.preferred_warning_count)} warning · ${reportValue(model.disposition.unavailable_check_count)} unavailable`)}</p><small>${escapeHtml(reportValue(model.disposition.explanation))}</small></div></section><section><h2>Review priorities and next actions</h2>${priorities}</section><section><h2>Requested vs applied settings</h2><div class="scroll"><table><thead><tr><th>Setting</th><th>Requested</th><th>Applied / recorded</th></tr></thead><tbody>${settings}</tbody></table></div></section><section><h2>All computational checks</h2><div class="scroll"><table><thead><tr><th>Check</th><th>Observed</th><th>Policy</th><th>Status</th></tr></thead><tbody>${checks}</tbody></table></div></section>${candidates}<section><h2>Sequence and process</h2><p>Input type: <b>${escapeHtml(model.context.input_type)}</b> · output length: <b>${escapeHtml(reportValue(model.sequence_summary.output_length_nt, ' nt'))}</b> · nucleotide comparison: <b>${escapeHtml(model.sequence_summary.comparison_available ? reportValue(model.sequence_summary.nucleotide_changes) : 'Not recorded')}</b></p><p>Domestication: ${escapeHtml(model.process.domestication_attempted ? 'Attempted' : 'Not attempted')} · MFE: ${escapeHtml(model.metrics.mfe_status === 'computed' ? 'Computed' : `Not computed (${model.metrics.mfe_status_reason})`)}</p></section><section><h2>Downstream handoff checklist</h2><ul>${model.interpretation.next_steps.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section><section><h2>Reproducibility and provenance</h2><dl>${provenanceRows}</dl></section><section><h2>Optimized sequence (DNA)</h2><pre>${escapeHtml(sequence)}</pre></section><section><h2>Interpretation and limitations</h2><p>${escapeHtml(model.interpretation.scope)}</p><ul>${model.interpretation.limitations.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section></main></body></html>`;
 }
 
 function downloadResultsReportHtml(model) {

@@ -295,7 +295,12 @@ test('optional seed and Type IIS presets are merged into the optimization payloa
       contentType: 'application/json',
       body: JSON.stringify(reviewResponse({
         seed: 42,
-        custom_restriction_sites: { detected: [], removed: [], unresolved: [] },
+        custom_restriction_sites: {
+          requested: [{ name: 'SapI', sequence: 'GAAGAGC' }],
+          detected: [],
+          removed: [],
+          unresolved: [],
+        },
       }))
     });
   });
@@ -320,7 +325,7 @@ test('optional seed and Type IIS presets are merged into the optimization payloa
   await expect(page.locator('#resultsReportBody')).toContainText('PASS');
   await expect(page.locator('#resultsReportBody')).toContainText('SapI');
 
-  await page.locator('#resultsReport summary').click();
+  await page.locator('#resultsReport > summary').click();
   const [download] = await Promise.all([
     page.waitForEvent('download'),
     page.locator('#downloadResultsReportBtn').click(),
@@ -331,7 +336,8 @@ test('optional seed and Type IIS presets are merged into the optimization payloa
   for await (const chunk of downloadStream) chunks.push(chunk);
   const downloadedHtml = Buffer.concat(chunks).toString('utf-8');
   expect(downloadedHtml).toContain('<dt>Seed</dt><dd>42</dd>');
-  expect(downloadedHtml).toContain('Design Review Report');
+  expect(downloadedHtml).toContain('Researcher Decision Report');
+  expect(downloadedHtml).toContain('Review priorities and next actions');
   expect(downloadedHtml).toContain('sha256:params-272');
 });
 
@@ -392,7 +398,7 @@ test('report treats the API decision and policy snapshot as authoritative', asyn
   await page.locator('#optimizeBtn').click();
 
   const report = page.locator('#resultsReportBody');
-  await expect(report).toContainText('Automated decision');
+  await expect(report).toContainText('Researcher decision brief');
   await expect(report).toContainText('PASS');
   await expect(report).toContainText('0.75');
   await expect(report).toContainText('0.7');
@@ -416,8 +422,8 @@ test('report distinguishes preferred warnings and unavailable computation', asyn
 
   const report = page.locator('#resultsReportBody');
   await expect(report).toContainText('CONDITIONAL PASS');
-  await expect(report.locator('[data-report-status="WARNING"]')).toContainText('WARNING');
-  await expect(report.locator('[data-report-status="NOT_COMPUTED"]')).toContainText('NOT COMPUTED');
+  await expect(report.locator('[data-report-status="WARNING"]').first()).toContainText('WARNING');
+  await expect(report.locator('[data-report-status="NOT_COMPUTED"]').first()).toContainText('NOT COMPUTED');
   await expect(report).toContainText('missing_dependency');
 });
 
@@ -439,9 +445,34 @@ test('report preserves a required failure instead of softening it', async ({ pag
   await page.locator('#optimizeBtn').click();
 
   const report = page.locator('#resultsReportBody');
-  await expect(report).toContainText('Required failures');
-  await expect(report.locator('[data-report-status="FAIL"]')).toContainText('FAIL');
+  await expect(report).toContainText('1 required fail');
+  await expect(report.locator('[data-report-status="FAIL"]').first()).toContainText('FAIL');
   await expect(report).toContainText('BsaI at nt 13');
+  await expect(report).toContainText('redesign or explicitly resolve every required site');
+});
+
+test('report exposes requested and applied Type IIS settings when they differ', async ({ page }) => {
+  const response = reviewResponse({
+    custom_restriction_sites: {
+      requested: [{ name: 'BsaI', sequence: 'GGTCTC' }],
+      detected: [],
+      removed: [],
+      unresolved: [],
+    },
+    acceptance_criteria_snapshot: {
+      type_iis: { mode: 'required', enzymes: ['BsaI', 'BsmBI/Esp3I', 'SapI'] },
+    },
+  });
+  await mockOptimization(page, response);
+  await openApp(page);
+
+  await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  await page.locator('#optimizeBtn').click();
+
+  const report = page.locator('#resultsReportBody');
+  await expect(report).toContainText('Type IIS settings mismatch');
+  await expect(report).toContainText('Requested BsaI; applied BsaI, BsmBI/Esp3I, SapI.');
+  await expect(report).toContainText('Mismatch');
 });
 
 test('evidence JSON matches the report and excludes raw sequences', async ({ page }) => {
@@ -449,7 +480,7 @@ test('evidence JSON matches the report and excludes raw sequences', async ({ pag
   await openApp(page);
   await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
   await page.locator('#optimizeBtn').click();
-  await page.locator('#resultsReport summary').click();
+  await page.locator('#resultsReport > summary').click();
 
   const [download] = await Promise.all([
     page.waitForEvent('download'),
@@ -509,7 +540,7 @@ test('report remains usable in dark mode at a 390px viewport', async ({ page }) 
   await page.locator('#themeToggle').click();
   await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
   await page.locator('#optimizeBtn').click();
-  await page.locator('#resultsReport summary').click();
+  await page.locator('#resultsReport > summary').click();
 
   await expect(page.locator('html')).toHaveClass(/dark/);
   await expect(page.locator('#design-review-report-title')).toBeVisible();
