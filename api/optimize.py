@@ -20,7 +20,17 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+base_dir = os.path.dirname(__file__)
+for p in [
+    os.path.abspath(os.path.join(base_dir, "..", "src")),
+    os.path.abspath(os.path.join(base_dir, "src")),
+    os.path.abspath(os.path.join(base_dir, "..")),
+    base_dir,
+]:
+    if p not in sys.path:
+        sys.path.insert(0, p)
+
+IMPORT_ERROR = None
 
 # Try to import FactorForge
 try:
@@ -65,10 +75,11 @@ try:
 
     FACTORFORGE_AVAILABLE = True
     logger.info("FactorForge v3.x profile engine loaded successfully")
-except ImportError as e:
+except Exception as e:
     FACTORFORGE_AVAILABLE = False
+    IMPORT_ERROR = f"{type(e).__name__}: {str(e)}"
     DEFAULT_CAI_TARGET = 0.82
-    logger.warning(f"FactorForge not available: {e}")
+    logger.error(f"FactorForge import failed: {e}", exc_info=True)
 
 # Constants
 MIN_SEQUENCE_LENGTH = 3
@@ -261,6 +272,13 @@ class handler(BaseHTTPRequestHandler):
             if reference_override_error is not None:
                 self.send_error_response(400, reference_override_error)
                 return
+
+            if not FACTORFORGE_AVAILABLE:
+                self.send_error_response(500, f"Backend engine initialization failed: {IMPORT_ERROR}")
+                return
+
+            EngineRegistry.register("profile", RuleBasedOptimizer)
+            EngineRegistry.register("dp", DPEngineAdapter)
 
             logger.info(
                 f"Received optimization request: sequence_length={len(data.get('sequence', ''))}"
@@ -476,7 +494,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_error_response(400, str(e))
         except Exception as e:
             logger.error(f"Unexpected error: {e}", exc_info=True)
-            self.send_error_response(500, "Internal server error")
+            self.send_error_response(500, f"Internal server error: {type(e).__name__}: {str(e)}")
 
     def do_GET(self):
         """Handle GET requests (health check)"""
