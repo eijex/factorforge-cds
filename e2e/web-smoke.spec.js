@@ -545,6 +545,23 @@ test('report remains usable in dark mode at a 390px viewport', async ({ page }) 
   await expect(page.locator('html')).toHaveClass(/dark/);
   await expect(page.locator('#design-review-report-title')).toBeVisible();
   await expect(page.locator('#downloadEvidenceRecordBtn')).toBeVisible();
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#downloadResultsReportBtn').click();
+  const download = await downloadPromise;
+  const stream = await download.createReadStream();
+  let reportHtml = '';
+  for await (const chunk of stream) reportHtml += chunk.toString();
+  expect(reportHtml).toContain('<html lang="en" data-theme="dark">');
+  expect(reportHtml).toContain('[data-theme="dark"] body');
+});
+
+test('desktop design columns scroll with the page instead of sticking independently', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openApp(page);
+
+  await expect(page.locator('#designBriefPanel')).toHaveCSS('position', 'static');
+  await expect(page.locator('#resultsPanel')).toHaveCSS('position', 'static');
 });
 
 test('clear input resets preview and sequence badges', async ({ page }) => {

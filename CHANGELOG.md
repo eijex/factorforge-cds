@@ -32,6 +32,10 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 ## [Unreleased]
 
 ### Changed
+- Removed whole-column sticky positioning from the desktop Design Brief and
+  Design Review so all three workbench columns follow one predictable page scroll.
+- Standalone HTML reports now preserve the FactorForge light or dark theme selected
+  at download time; print styling remains light.
 - Reframed the Design Review Report as a decision-first Researcher Decision
   Report: unresolved checks now lead to prioritized, bounded next actions;
   requested and API-recorded settings are compared; full checks and provenance

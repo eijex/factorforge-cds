@@ -73,6 +73,7 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 - ✅ Researcher Decision Report with authoritative acceptance states, prioritized
   next actions, requested-vs-applied settings, detailed checks, candidate
   comparison, reproducibility provenance, and standalone print-friendly HTML
+  that preserves the light or dark theme selected at download time
 - ✅ Sequence-free machine-readable evidence-record JSON export; sequence-bearing
   FASTA, GenBank, and HTML artifacts remain explicitly separate
 - ✅ Download (FASTA, GenBank)
@@ -83,9 +84,9 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 
 ### Researcher design-review workflow
 
-The desktop screen is a persistent three-column workbench: sequence input,
-a compact Design Brief, and Design Review. The review column keeps the research
-workflow and result destination visible before and after generation. The brief
+The desktop screen is a three-column workbench: sequence input, a compact Design
+Brief, and Design Review. All three columns follow the same document scroll so a
+shorter column does not appear frozen while a longer result is reviewed. The brief
 exposes the expression host, recommended deterministic method, and applied
 requirements. Optional sequence, assembly, and review-policy controls retain
 their existing API semantics through progressive disclosure. Unavailable
@@ -103,6 +104,8 @@ local-history entries retain the report snapshot and provenance without retainin
 the raw input sequence. The evidence-record JSON omits raw input and output
 sequences by design; the standalone HTML includes the optimized sequence and
 displays a sequence-data handling notice.
+The standalone report preserves the app theme selected when the file is
+downloaded, while print output remains light for legibility.
 
 The experimental comparison panel displays missing or invalid metrics as
 `Not evaluated`. AA identity uses an explicit numeric `aa_identity` fraction;
