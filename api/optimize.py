@@ -277,9 +277,6 @@ class handler(BaseHTTPRequestHandler):
                 self.send_error_response(500, f"Backend engine initialization failed: {IMPORT_ERROR}")
                 return
 
-            EngineRegistry.register("profile", RuleBasedOptimizer)
-            EngineRegistry.register("dp", DPEngineAdapter)
-
             logger.info(
                 f"Received optimization request: sequence_length={len(data.get('sequence', ''))}"
             )
