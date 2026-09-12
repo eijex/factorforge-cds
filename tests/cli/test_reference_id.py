@@ -183,7 +183,7 @@ def test_cli_reference_id_omitted_keeps_default_path(
     result = runner.invoke(cli_main.cli, ["optimize", str(input_file)])
 
     assert result.exit_code == 0, result.output
-    assert "Optimizing with DP feasibility engine" in result.output
+    assert "Optimizing with DP v2 exact constraint engine" in result.output
 
 
 def test_cli_accepts_production_reference_id_for_dp(tmp_path: Path) -> None:
@@ -201,7 +201,7 @@ def test_cli_accepts_production_reference_id_for_dp(tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 0, result.output
-    assert "Optimizing with DP feasibility engine" in result.output
+    assert "Optimizing with DP v2 exact constraint engine" in result.output
     assert "Warning: reference_id=" not in result.output
 
 
@@ -222,7 +222,7 @@ def test_cli_non_production_reference_id_warns_and_runs(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     assert "Warning: reference_id=nbenthamiana_qld183_v103" in result.output
     assert "Research comparator only" in result.output
-    assert "Optimizing with DP feasibility engine" in result.output
+    assert "Optimizing with DP v2 exact constraint engine" in result.output
 
 
 def test_cli_reference_id_with_template_is_rejected(tmp_path: Path) -> None:

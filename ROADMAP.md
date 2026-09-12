@@ -2,19 +2,22 @@
 
 FactorForge development direction and planned work.
 
-> Current release: **v3.4.5** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Published release: **v3.4.5** · source release candidate: **v3.5.0** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
 
-## Current Release Status (v3.4.5)
+## Current Release Status
 
 FactorForge v3.4.5 was released on 2026-08-22. It is the current public
 release and completes the interface-reliability patch line: browser
 interactions were restored, release checks were strengthened, and product,
 API, engine, registry, documentation, and fixture version surfaces were
 synchronized. The supported public boundary remains deterministic in-silico
-CDS design and pre-synthesis sequence review.
+CDS design and pre-synthesis sequence review. The v3.5.0 source line is a
+release candidate with independently versioned Rule Gen 1, DP v2 Gen 2, and
+feature-gated sLLM Gen 3 Preview engines; it is not yet a published package or
+production deployment.
 
 Current maintenance and evidence priorities are:
 
@@ -84,14 +87,18 @@ Current maintenance and evidence priorities are:
 
 ---
 
-## v3.5 — Validation-Driven
+## v3.5 — Multi-Engine Version Governance *(release candidate)*
 
 | Feature | Description |
 |---------|-------------|
-| **5' Ramp activation** | Enable only if reviewed wet-lab feedback supports N-terminal ramp benefit |
-| **Viral Delivery activation** | Enable only if reviewed wet-lab feedback supports scoring validity |
-| **Tissue-specific design profiles** | Leaf vs seed vs root codon-source review and profile gating |
-| **Documentation audit** | Comprehensive docs and capability review |
+| **Gen 1 — Rule** | Stable profile engine, independently versioned as 1.x |
+| **Gen 2 — DP v2** | Exact GC-state and configured-motif automaton constraints, independently versioned as 2.x |
+| **Gen 3 — sLLM Hybrid** | Feature-gated 0.x research preview; no trained production-model claim |
+| **Version manifest** | One machine-readable product/engine source of truth exposed by the API |
+
+## Future — Validation-Driven Activation (version TBD)
+
+- Activate 5' ramp, viral-delivery, or tissue-specific profiles only after reviewed evidence supports each capability.
 
 ---
 
@@ -122,7 +129,7 @@ Current maintenance and evidence priorities are:
 
 ---
 
-## v4.0 — ML Engine *(data-conditional)*
+## Future — Trained ML Engine *(version TBD; data-conditional)*
 
 No public ML engine is scheduled until sufficient, non-confidential validation data and benchmark evidence are available.
 

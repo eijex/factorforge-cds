@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "factorforge-cds"
-version = "3.4.5"
+version = "3.5.0"
 description = "FactorForge - open-source CDS design and pre-synthesis sequence review by Eijex."
 readme = "README.md"
 license = "AGPL-3.0-only"
@@ -57,7 +57,7 @@ factorforge-validate = "factorforge.validation.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-"factorforge" = ["data/*.json", "data/templates/*.json", "data/profiles/*.json", "data/reference/*.json", "schemas/*.json"]
+"factorforge" = ["data/*.json", "data/templates/*.json", "data/profiles/*.json", "data/reference/*.json", "schemas/*.json", "registry/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

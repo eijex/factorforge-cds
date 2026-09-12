@@ -38,7 +38,21 @@ def test_cross_engine_evaluation_contract():
     }
 
     # Both should have metric schema
-    metric_fields = {"cai", "gc_percent", "mfe", "mfe_status", "mfe_reason", "mfe_warning"}
+    metric_fields = {
+        "cai",
+        "gc_percent",
+        "mfe",
+        "mfe_status",
+        "mfe_reason",
+        "mfe_warning",
+        "mfe_5p_window",
+        "mfe_5p_status",
+        "cai_5p_ramp",
+        "cai_body",
+        "gc_5p_ramp_percent",
+        "gc_body_percent",
+        "context_digest",
+    }
     for result, report in ((prof_res, prof_eval), (lm_res, lm_eval)):
         assert set(report["metrics"]) == metric_fields
         evaluated = EvaluationResult.model_validate(report)

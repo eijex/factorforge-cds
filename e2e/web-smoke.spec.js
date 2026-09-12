@@ -38,7 +38,7 @@ function reviewResponse(overrides = {}) {
     construct_id: 'CF-TEST-272',
     result_identifier: 'ff-result-272',
     created_at: '2026-09-09T00:00:00Z',
-    product_version: '3.4.6',
+    product_version: '3.5.0',
     codon_reference_id: 'NbeV1.1-HC',
     reference_policy_version: '1.0',
     gc_reference_band: '40-47%',
@@ -47,7 +47,7 @@ function reviewResponse(overrides = {}) {
       output_cds_hash: 'sha256:output-272',
       parameter_hash: 'sha256:params-272',
     },
-    cds_design: { engine: 'factorforge_cds', objective: 'feasibility_best', product_version: '3.4.6' },
+    cds_design: { engine: 'factorforge_cds', objective: 'feasibility_best', product_version: '3.5.0' },
     ...overrides,
   };
 }
@@ -95,7 +95,7 @@ test('opens release notes and toggles dark mode', async ({ page }) => {
 
   await page.locator('#changelogBtn').click();
   await expect(page.locator('#changelogModal')).toBeVisible();
-  await expect(page.locator('#changelogModal')).toContainText('v3.4.5');
+  await expect(page.locator('#changelogModal')).toContainText('v3.5.0 RC');
   await page.locator('#closeModal').click();
   await expect(page.locator('#changelogModal')).toBeHidden();
 });

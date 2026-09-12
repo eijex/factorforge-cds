@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initEventListeners();
     updateDesignBriefSummary();
     renderHistory();
-    console.log('FactorForge v3.4.5 Engaged');
+    console.log('FactorForge v3.5.0 RC Engaged');
 });
 
 // Loads server-owned GC ranges and validation labels. Supported hosts remain
@@ -2130,7 +2130,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.4.5';
+        const version = state.results.engine_versions?.product || '3.5.0';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }

@@ -1,0 +1,38 @@
+schema_version: '0.1'
+sequence_id: PUBLIC-EGFP-PX927310
+protein:
+  gene_name: eGFP
+  source_organism: Aequorea victoria (synthetic construct)
+  protein_id: null
+  protein_sequence: null
+sequence:
+  cds_sequence: ATGGTGAGCAAGGGCGAGGAGCTGTTCACCGGGGTGGTGCCCATCCTGGTCGAGCTGGACGGCGACGTAAACGGCCACAAGTTCAGCGTGTCCGGCGAGGGCGAGGGCGATGCCACCTACGGCAAGCTGACCCTGAAGTTCATCTGCACCACCGGCAAGCTGCCCGTGCCCTGGCCCACCCTCGTGACCACCCTGACCTACGGCGTGCAGTGCTTCAGCCGCTACCCCGACCACATGAAGCAGCACGACTTCTTCAAGTCCGCCATGCCCGAAGGCTACGTCCAGGAGCGCACCATCTTCTTCAAGGACGACGGCAACTACAAGACCCGCGCCGAGGTGAAGTTCGAGGGCGACACCCTGGTGAACCGCATCGAGCTGAAGGGCATCGACTTCAAGGAGGACGGCAACATCCTGGGGCACAAGCTGGAGTACAACTACAACAGCCACAACGTCTATATCATGGCCGACAAGCAGAAGAACGGCATCAAGGTGAACTTCAAGATCCGCCACAACATCGAGGACGGCAGCGTGCAGCTCGCCGACCACTACCAGCAGAACACCCCCATCGGCGACGGCCCCGTGCTGCTGCCCGACAACCACTACCTGAGCACCCAGTCCGCCCTGAGCAAAGACCCCAACGAGAAGCGCGATCACATGGTCCTGCTGGAGTTCGTGACCGCCGCCGGGATCACTCTCGGCATGGACGAGCTGTACAAGTAA
+  cds_sha256: e8d734949c2b74ac68d9ecd5aa1016aa75d496d292b124db7d4993f2e5409449
+  canonical_locator:
+    database: NCBI GenBank
+    accession: PX927310
+  resolution_status: SEQUENCE_ARCHIVED_AND_HASHED
+  exact_sequence_available_publicly: true
+  exact_sequence_embedded: true
+source_construct:
+  genbank_accession: PX927310
+  cds_feature_start: 1500
+  cds_feature_end: 2219
+  strand: +
+  promoter: PCM2
+  terminator: At_Ubq3
+provenance:
+  source_type: PUBLIC_EXPERIMENTAL
+  publication:
+    title: Causes and consequences of experimental variation in Nicotiana benthamiana
+    doi: 10.1038/s41467-026-xxxxx-x
+    host_organism: Nicotiana benthamiana
+  sequence_linkage: Extracted exact CDS feature from PX927310 GenBank record.
+  confidentiality: PUBLIC
+experimental_evidence:
+  cloned: true
+  expressed_in_target_host: true
+  host_organism: Nicotiana benthamiana
+  delivery: Agrobacterium-mediated transient expression
+  readout: Fluorescence
+  evidence_scope: HISTORICAL_PUBLIC_EXPERIMENTAL

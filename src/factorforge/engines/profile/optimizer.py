@@ -7,6 +7,7 @@ from typing import Any
 
 from factorforge.core.interfaces import OptimizationResult, OptimizerEngine
 from factorforge.analysis.metrics import translate_dna
+from factorforge.registry.versioning import engine_version
 
 from .exporter import SequenceExporter
 from .rules.reverse_translator import OptimizationProfile, ReverseTranslator
@@ -21,7 +22,7 @@ class RuleBasedOptimizer(OptimizerEngine):
     """Profile-based rule optimization engine."""
 
     name = "Profile-based"
-    version = "3.4.5"
+    version = engine_version("profile")
 
     def __init__(
         self,

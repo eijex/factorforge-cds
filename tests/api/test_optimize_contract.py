@@ -8,6 +8,8 @@ import json
 import api.optimize as optimize_api
 import pytest
 from api.optimize import DEFAULT_CAI_TARGET, DEFAULT_GC_MAX, DEFAULT_GC_MIN, handler
+from factorforge import __version__
+from factorforge.registry.versioning import engine_version
 
 
 def _handler() -> handler:
@@ -112,7 +114,7 @@ def test_get_optimize_exposes_public_reference_policy_metadata() -> None:
 def test_get_optimize_exposes_experimental_ml_capabilities_without_overclaiming() -> None:
     data = _get_optimize()
 
-    assert data["version"] == "3.4.5"
+    assert data["version"] == __version__
     assert data["capabilities"]["execution_modes"] == ["profile"]
     assert data["capabilities"]["ml_preview"] == {
         "available": False,
@@ -283,7 +285,7 @@ def test_feasibility_best_response_includes_candidate_contract() -> None:
         "sequence_length": 35,
         "host_profile": "nbenthamiana",
     }
-    assert result["engine_versions"]["product"] == "3.4.5"
+    assert result["engine_versions"]["product"] == __version__
     assert result["recommended_candidate"]["validator_status"] == "pass"
     assert result["dp_target_observation"]["requested_cai_target"] == DEFAULT_CAI_TARGET
 
