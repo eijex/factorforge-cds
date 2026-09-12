@@ -166,28 +166,36 @@ def _build_dp_result(
         raise ValueError("--gc-min must be <= --gc-max.")
 
     from factorforge.analysis.metrics import load_codon_usage_table
-    from factorforge.analysis.feasibility import analyze_feasibility
+    from factorforge.engines.dp_v2 import DPV2Optimizer
 
     table = load_codon_usage_table(path=codon_table_path)
-    result = analyze_feasibility(
-        sequence,
-        table.codon_weights,
-        target_cai=cai_target,
-        target_gc_low=gc_min,
-        target_gc_high=gc_max,
-        codon_reference_id=codon_reference_id,
+    dp_result = DPV2Optimizer().optimize(
+        protein_sequence=sequence,
+        codon_weights=table.codon_weights,
+        target_gc_min=gc_min,
+        target_gc_max=gc_max,
     )
-    best = result["target"]["best_candidate"]
-    feasible = best is not None
-    if best is None:
-        best = result["best_candidate_without_gc"]
-    if best is None:
-        raise ValueError("No DP candidate generated.")
+    best = {
+        "dna_sequence": dp_result["sequence"],
+        "cai": dp_result["cai"],
+        "gc": dp_result["gc_percent"],
+    }
+    feasible = bool(dp_result["gc_feasible"])
+    result = {
+        "target": {
+            "gc_low": gc_min,
+            "gc_high": gc_max,
+            "cai": cai_target,
+            "best_candidate": best if feasible else None,
+        },
+        "engine": "dp_v2",
+        "codon_reference_id": codon_reference_id,
+    }
 
     reason = (
         f"Maximum CAI under GC {gc_min:g}-{gc_max:g}%"
         if feasible
-        else "Maximum CAI without GC constraint; requested GC range was infeasible"
+        else "Closest reachable GC band candidate; requested GC range was infeasible"
     )
     return best, result, reason
 
@@ -523,7 +531,7 @@ def optimize(
                 requested_cai_target=requested_cai_target,
             )
 
-            click.echo("Optimizing with DP feasibility engine...")
+            click.echo("Optimizing with DP v2 exact constraint engine...")
             if output:
                 with open(output, "w", encoding="utf-8") as f:
                     f.write(fasta)

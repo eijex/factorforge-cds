@@ -9,10 +9,18 @@
 [![codecov](https://codecov.io/gh/eijex/factorforge-cds/branch/main/graph/badge.svg)](https://codecov.io/gh/eijex/factorforge-cds)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20407330.svg)](https://doi.org/10.5281/zenodo.20407330)
 [![Web App](https://img.shields.io/badge/web-factorforge.eijex.com-brightgreen.svg)](https://factorforge.eijex.com)
-[![Sponsor](https://img.shields.io/badge/Sponsor-EA4AAA?style=flat&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/eijex)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-yellow?style=flat&logo=buy-me-a-coffee)](https://www.buymeacoffee.com/eijex)
 
 
-FactorForge performs profile-guided CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. It is positioned as a pre-synthesis review harness: it helps teams generate reproducible CDS candidates, inspect assembly-relevant sequence constraints, and package design metadata before downstream synthesis, cloning, or experimental review. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
+FactorForge performs deterministic CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. It is positioned as a pre-synthesis review harness: it helps teams generate reproducible CDS candidates, inspect assembly-relevant sequence constraints, and package design metadata before downstream synthesis, cloning, or experimental review. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
+
+The v3.5.0 release-candidate line uses independently versioned engines:
+
+| Generation | Engine | Version | Availability |
+|---|---|---:|---|
+| Gen 1 | Rule/profile | 1.0.0 | Stable, public |
+| Gen 2 | DP v2 | 2.0.0 | Release candidate, public |
+| Gen 3 | sLLM Hybrid | 0.1.0-preview.1 | Feature-gated research preview; no trained model is claimed |
 
 **→ [Full Documentation](https://eijex.github.io/factorforge-cds/)** · **[Roadmap](https://eijex.github.io/factorforge-cds/roadmap/)**
 
@@ -42,10 +50,11 @@ Or use the **[web app](https://factorforge.eijex.com)** — no installation requ
 
 ## Repository Structure
 
-The supported production engine is the deterministic profile engine under:
+The supported deterministic engines are the profile engine and DP v2 under:
 
 ```text
 src/factorforge/engines/profile/
+src/factorforge/engines/dp_v2.py
 ```
 
 Historical implementation tracks are preserved under `archive/` for provenance

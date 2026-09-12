@@ -4,9 +4,11 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
-## v3.4.6 — in preparation
+## v3.5.0 — release candidate
 
-- Experimental Rule/ML comparison UI is gated by deployment capabilities; its presence does not establish a trained-model release.
+- Product and engine versions are now distinct: Rule 1.0.0, DP v2 2.0.0, and sLLM Hybrid 0.1.0-preview.1.
+- DP v2 is the deterministic public DP path behind the compatible `feasibility_best` objective.
+- sLLM Hybrid remains feature-gated; its presence does not establish a trained-model release.
 - Missing comparison evaluations display as Not evaluated; explicit failures remain visible.
 - PostgreSQL dependencies are optional for SQLite checkpoints, and unconfigured database integration tests skip before importing the database engine.
 - Docker publication now requires the same checkout's CI and browser workflows to succeed.

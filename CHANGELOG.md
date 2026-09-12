@@ -64,14 +64,18 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 - Database integration tests skip before engine import when DATABASE_URL is absent.
 - Docker publication requires the same commit's CI and browser checks to succeed.
 
-### Candidate scope (v3.4.6, in preparation)
-- Capability-gated Rule/ML comparison UI with metrics and codon alignment.
-- Experimental preview and database availability indicators. These do not
-  establish trained-model readiness or biological performance.
+### Candidate scope (v3.5.0, in preparation)
+- Introduced a machine-readable product/engine version manifest. Product releases
+  and engine generations now advance independently.
+- Promoted the automaton-constrained DP v2 implementation to the public DP path,
+  preserving the existing `feasibility_best` identifier and response shape.
+- Labeled Rule as Gen 1 (`1.0.0`), DP v2 as Gen 2 (`2.0.0`), and sLLM Hybrid as
+  Gen 3 (`0.1.0-preview.1`). sLLM remains feature-gated and does not claim a
+  trained production model or biological performance.
 
 ### Notes
-- Release-note UI changes preceded package/tag publication. The formal version
-  update and distribution checks remain pending.
+- This source line is a release candidate. Tagging, package publication, and
+  production deployment remain separate release-gate actions.
 
 ## [3.4.5] — 2026-08-22
 

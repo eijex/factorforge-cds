@@ -27,7 +27,6 @@ HERE = Path(__file__).parent
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-import factorforge as _ff  # noqa: E402
 from factorforge.engines.profile.optimizer import RuleBasedOptimizer  # noqa: E402
 from factorforge.engines.profile.rules.domesticator import Domesticator  # noqa: E402
 from factorforge.engines.profile.rules.rule_engine import RuleEngine  # noqa: E402
@@ -117,7 +116,9 @@ def build_design_package(result, aa_seq: str) -> dict:
         },
         "evidence": {
             "sequence_hash": seq_hash,
-            "registry_version": getattr(_ff, "__version__", "3.2.0"),
+            # This example is a frozen v3.4.5 artifact; do not inherit the
+            # currently installed product version.
+            "registry_version": "3.4.5",
             "registry_hash": registry_hash,
         },
         "claim_boundary": {

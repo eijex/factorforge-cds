@@ -4,7 +4,9 @@ FactorForge - Codon Optimization Platform
 profile: constraint-aware rule/profile engine
 """
 
-__version__ = "3.4.5"
+from factorforge.registry.versioning import product_version
+
+__version__ = product_version()
 __author__ = "Eijex"
 
 # Auto-register engines (safe when running from source tree)

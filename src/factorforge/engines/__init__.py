@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .registry import EngineRegistry
+from factorforge.registry.versioning import engine_metadata
 
 
 def register_builtin_engines() -> None:
@@ -14,7 +15,7 @@ def register_builtin_engines() -> None:
         "profile",
         RuleBasedOptimizer,
         metadata={
-            "version": "3.4.5",
+            **engine_metadata("profile"),
             "engine_type": "profile_rule_based",
             "role": "stable_profile_engine",
             "stable": True,
@@ -24,7 +25,7 @@ def register_builtin_engines() -> None:
         "dp",
         DPEngineAdapter,
         metadata={
-            "version": "1.2.0",
+            **engine_metadata("dp"),
             "engine_type": "deterministic_constrained_optimizer",
             "role": "stable_dp_engine",
             "stable": True,
@@ -38,22 +39,20 @@ def register_builtin_engines() -> None:
             "lm",
             LMEngineAdapter,
             metadata={
-                "version": "3.5.0",
+                **engine_metadata("slm"),
                 "engine_type": "constrained_beam_search_lm",
                 "role": "experimental_lm_engine",
                 "stable": False,
-                "status": "work_in_progress",
             },
         )
         EngineRegistry.register(
             "slm",
             LMEngineAdapter,
             metadata={
-                "version": "3.5.0",
+                **engine_metadata("slm"),
                 "engine_type": "constrained_beam_search_lm",
                 "role": "experimental_slm_engine",
                 "stable": False,
-                "status": "work_in_progress",
             },
         )
     except Exception:

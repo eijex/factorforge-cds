@@ -1,8 +1,6 @@
-from typing import Any, Optional
+from typing import Any
 from factorforge.core.interfaces import OptimizationResult, OptimizerEngine
-from factorforge.evaluation.evaluator import SharedEvaluator
-from factorforge.analysis.metrics import load_codon_usage_table
-from factorforge.analysis.feasibility import analyze_feasibility
+from factorforge.registry.versioning import engine_version
 
 class DPEngineAdapter(OptimizerEngine):
     """Deterministic Constrained Optimizer (DP) wrapped for Benchmark."""
@@ -16,7 +14,7 @@ class DPEngineAdapter(OptimizerEngine):
 
     @property
     def version(self) -> str:
-        return "1.2.0"
+        return engine_version("dp")
 
     def optimize(
         self,
@@ -30,58 +28,51 @@ class DPEngineAdapter(OptimizerEngine):
         target_gc_min = kwargs.get("target_gc_min", 0.40)
         target_gc_max = kwargs.get("target_gc_max", 0.47)
         
-        # DP engine internally uses percentages (0-100), not fractions (0-1)
-        gc_low = target_gc_min * 100 if target_gc_min <= 1.0 else target_gc_min
-        gc_high = target_gc_max * 100 if target_gc_max <= 1.0 else target_gc_max
-
         # Load host table (e.g. from built-in standard table)
         from factorforge.engines.profile.utils import load_golden_set
         from factorforge.engines.profile.rules.reverse_translator import ReverseTranslator
+        from factorforge.engines.dp_v2 import DPV2Optimizer
         
         golden_table = load_golden_set()
         codon_weights = ReverseTranslator._build_ref_weights(golden_table)
         
-        res = analyze_feasibility(
+        forbidden_motifs = kwargs.get("forbidden_motifs", ["GGTCTC", "CGTCTC", "GAAGAC"])
+        left_flank = kwargs.get("left_flank", "")
+        right_flank = kwargs.get("right_flank", "")
+
+        optimizer_v2 = DPV2Optimizer(forbidden_motifs=forbidden_motifs)
+        dp_result = optimizer_v2.optimize(
             protein_sequence=protein,
             codon_weights=codon_weights,
-            target_gc_low=gc_low,
-            target_gc_high=gc_high,
-            codon_reference_id=f"host_{host}"
+            target_gc_min=target_gc_min,
+            target_gc_max=target_gc_max,
+            left_flank=left_flank,
+            right_flank=right_flank,
         )
         
-        target_info = res["target"]
-        best_cand = target_info.get("best_candidate")
-        target_intersection_exists = best_cand is not None
-        
-        # Fallback if unfeasible under target GC: use best without GC constraints
-        if best_cand is None:
-            best_cand = res.get("best_candidate_without_gc")
-            
-        if best_cand is None:
-            cds = "ATG" * len(protein) # Ultimate fallback, shouldn't happen for valid proteins
-        else:
-            cds = best_cand["dna_sequence"]
+        cds = dp_result["sequence"]
         
         terminal_stop_policy = kwargs.get("terminal_stop_policy", "preserve")
         if terminal_stop_policy == "append" or (terminal_stop_policy == "preserve" and sequence.endswith("*")):
             cds += "TAA"
 
         metrics = {
-            "score": 0.0,
+            "score": dp_result["score"],
+            "cai": dp_result["cai"],
+            "gc_percent": dp_result["gc_percent"],
         }
 
         return OptimizationResult(
             sequence=cds,
             metrics=metrics,
             metadata={
-                "engine": "dp",
+                "engine": "dp_v2",
                 "version": self.version,
                 "host": host,
-                "inference_mode": "deterministic_solver",
-                "min_achievable_gc": res.get("minimum_possible_gc"),
-                "max_achievable_gc": res.get("maximum_possible_gc"),
-                "target_intersection_exists": target_intersection_exists,
-                "feasible": target_info.get("feasible", False),
+                "inference_mode": "exact_3d_automaton_dp",
+                "gc_feasible": dp_result["gc_feasible"],
+                "target_intersection_exists": dp_result["gc_feasible"],
+                "feasible": True,
             },
         )
 

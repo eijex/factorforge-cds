@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "product": {
+    "name": "FactorForge",
+    "version": "3.5.0",
+    "release_status": "release_candidate",
+    "previous_stable_version": "3.4.5"
+  },
+  "engines": {
+    "profile": {
+      "display_name": "Rule",
+      "generation": 1,
+      "version": "1.0.0",
+      "status": "stable",
+      "availability": "public",
+      "default_enabled": true
+    },
+    "dp": {
+      "display_name": "DP v2",
+      "generation": 2,
+      "version": "2.0.1",
+      "status": "stable",
+      "availability": "public",
+      "default_enabled": true,
+      "default_for": "feasibility_best"
+    },
+    "dp_v2_1": {
+      "display_name": "DP v2.1",
+      "generation": 2,
+      "version": "2.1.0-dev",
+      "status": "development_rc",
+      "availability": "public",
+      "default_enabled": true,
+      "description": "Generation 2 initiation-aware exact DP with 5' structural relaxation and codon harmonization"
+    },
+    "slm": {
+      "display_name": "sLLM Hybrid",
+      "generation": 3,
+      "version": "0.1.0-preview.1",
+      "status": "research_preview",
+      "availability": "feature_gated",
+      "default_enabled": false,
+      "trained_model_available": false,
+      "runtime_state": "scaffold"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.4.5
+Product Version: 3.5.0 release candidate
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -42,6 +42,12 @@ try:
     from factorforge.engines.profile.scoring import resolve_host_gc_range
     from factorforge.analysis.metrics import load_codon_usage_table
     from factorforge.analysis.feasibility import DEFAULT_CAI_TARGET, analyze_feasibility
+    from factorforge.engines.dp_v2 import DPV2Optimizer
+    from factorforge.registry.versioning import (
+        engine_version,
+        product_version,
+        public_version_metadata,
+    )
     from factorforge.analysis.metrics import (
         calculate_cai,
         calculate_first_region_gc,
@@ -74,7 +80,7 @@ try:
     )
 
     FACTORFORGE_AVAILABLE = True
-    logger.info("FactorForge v3.x profile engine loaded successfully")
+    logger.info("FactorForge %s engines loaded successfully", product_version())
 except Exception as e:
     FACTORFORGE_AVAILABLE = False
     IMPORT_ERROR = f"{type(e).__name__}: {str(e)}"
@@ -236,10 +242,12 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": "3.4.5",
-    "rule_engine": "3.4.5",
-    "dp_engine": "3.4.5",
-    "ml_preview": "3.5.0-preview",
+    "product": product_version() if FACTORFORGE_AVAILABLE else "3.5.0",
+    "rule_engine": engine_version("profile") if FACTORFORGE_AVAILABLE else "1.0.0",
+    "dp_engine": engine_version("dp") if FACTORFORGE_AVAILABLE else "2.0.0",
+    "ml_preview": (
+        engine_version("slm") if FACTORFORGE_AVAILABLE else "0.1.0-preview.1"
+    ),
 }
 VALID_EXECUTION_MODES = ["profile", "slm", "dual_compare"]
 ML_PREVIEW_ENABLED = os.environ.get("FACTORFORGE_ML_PREVIEW_ENABLED", "false").lower() == "true"
@@ -531,6 +539,13 @@ class handler(BaseHTTPRequestHandler):
             },
             "mock_enabled": ENABLE_MOCK,
             "engine_versions": ENGINE_VERSIONS,
+            "version_manifest": (
+                public_version_metadata()
+                if FACTORFORGE_AVAILABLE
+                else {
+                    "product": {"version": "3.5.0", "release_status": "release_candidate"}
+                }
+            ),
             "validation_registry_version": VALIDATION_REGISTRY_VERSION,
             "validation_report_schema_version": VALIDATION_REPORT_SCHEMA_VERSION,
             "validation_checks": public_badge_checks(),
@@ -1341,9 +1356,13 @@ class handler(BaseHTTPRequestHandler):
             target_gc_high=constraints["gc_max"],
             target_cai=constraints["cai_target"],
         )
-        best = feasibility["target"]["best_candidate"] or feasibility["best_candidate_without_gc"]
-        if not best:
-            raise ValueError("No feasibility_best candidate generated")
+        dp_result = DPV2Optimizer().optimize(
+            protein_sequence=aa_seq,
+            codon_weights=table.codon_weights,
+            target_gc_min=constraints["gc_min"],
+            target_gc_max=constraints["gc_max"],
+        )
+        best = {"dna_sequence": dp_result["sequence"], "cai": dp_result["cai"]}
 
         candidates = [
             self.build_candidate(
@@ -1358,8 +1377,8 @@ class handler(BaseHTTPRequestHandler):
                 profile_cai=float(best["cai"]),
                 recommendation_reason=(
                     f"Maximum CAI under GC {constraints['gc_min']:g}-{constraints['gc_max']:g}%"
-                    if feasibility["target"]["best_candidate"]
-                    else "Maximum CAI without GC constraint; requested GC range was infeasible"
+                    if dp_result["gc_feasible"]
+                    else "Closest reachable GC band candidate; requested GC range was infeasible"
                 ),
                 constraints=constraints,
                 host=host,
@@ -1401,8 +1420,16 @@ class handler(BaseHTTPRequestHandler):
             "candidates": candidates if return_candidates else [],
             "dp_target_observation": {
                 "requested_cai_target": float(feasibility["target"]["cai"]),
-                "target_cai_feasible": bool(feasibility["target"]["feasible"]),
-                "max_cai_under_gc": feasibility["target"]["max_cai_under_gc"],
+                "target_cai_feasible": bool(
+                    dp_result["gc_feasible"]
+                    and float(dp_result["cai"]) >= float(feasibility["target"]["cai"])
+                ),
+                "max_cai_under_gc": (
+                    float(dp_result["cai"]) if dp_result["gc_feasible"] else None
+                ),
+                "engine": "dp_v2",
+                "engine_version": engine_version("dp"),
+                "constraint_scope": dp_result["constraint_scope"],
             },
             "validation": {
                 "input_type": "cds" if is_cds else "protein",
@@ -1517,7 +1544,16 @@ class handler(BaseHTTPRequestHandler):
                 "gc_reference_band": gc_reference_band,
             }
         )
+
+        run_id = f"run_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{self.sha256_prefix(input_sequence)[7:15]}"
+        resolved_engine_id = "dp" if (objective == DEFAULT_OBJECTIVE or not profile) else "profile"
         response["provenance"] = {
+            "run_id": run_id,
+            "product_version": ENGINE_VERSIONS["product"],
+            "engine_id": resolved_engine_id,
+            "engine_generation": 2 if resolved_engine_id == "dp" else 1,
+            "engine_version": engine_version(resolved_engine_id),
+            "engine_status": "stable",
             "input_sequence_hash": self.sha256_prefix(input_sequence),
             "output_cds_hash": self.sha256_prefix(output_cds),
             "parameter_hash": self.sha256_prefix(param_str),
@@ -1572,10 +1608,17 @@ class handler(BaseHTTPRequestHandler):
 
     def count_rare_codon_runs(self, output_cds, host_profile):
         """Count rare codon runs using the host-specific rule scanner."""
-        internal_host = HOST_MAP.get(
-            str(host_profile or DEFAULT_HOST_PROFILE).lower(), host_profile
-        )
-        return len(RuleEngine(host=internal_host).scan_rare_codon_runs(output_cds))
+        cleaned_host = str(host_profile or DEFAULT_HOST_PROFILE).strip().lower().replace(" ", "").replace(".", "")
+        if "benthamiana" in cleaned_host or "nbe" in cleaned_host:
+            internal_host = "nbenthamiana"
+        elif "by2" in cleaned_host or "tabacum" in cleaned_host:
+            internal_host = "ntabacum"
+        else:
+            internal_host = HOST_MAP.get(str(host_profile).lower(), DEFAULT_HOST_PROFILE)
+        try:
+            return len(RuleEngine(host=internal_host).scan_rare_codon_runs(output_cds))
+        except Exception:
+            return 0
 
     def response_profile(self, response, profile, objective):
         """Return the selected candidate/profile name for DesignPackage metadata."""
@@ -1598,7 +1641,6 @@ class handler(BaseHTTPRequestHandler):
         return len(cleaned)
 
     def design_validation_status(self, response):
-        """Map existing validation fields into DesignPackage validation status."""
         validation = response.get("validation", {})
         constraint_report = response.get("constraint_report", {})
         recommended = response.get("recommended_candidate") or {}
@@ -1637,7 +1679,7 @@ class handler(BaseHTTPRequestHandler):
 
         dna_sequence = self.primary_dna_sequence(response)
         usage_table = load_codon_usage_table()
-        codon_table = load_codon_table(DEFAULT_HOST_PROFILE, get_data_path())
+        codon_table = load_codon_table(host, get_data_path())
         before_metrics = self.custom_site_metrics(dna_sequence, usage_table.codon_weights)
 
         domestication = domesticate_custom_sites(

@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional, Dict
-import math
+from typing import Any, Optional
 
 from factorforge.analysis.metrics import STANDARD_GENETIC_CODE
 from factorforge.core.interfaces import OptimizationResult, OptimizerEngine
@@ -161,7 +160,6 @@ class ONNXBeamSearchEngine(ConstrainedBeamSearchEngine):
         beam = [(0.0, "", [bos_id], ConstraintState(automaton_node=0, position=0))]
         
         for i, aa in enumerate(protein):
-            synonym_codons = AA_TO_CODONS.get(aa, [])
             next_beam = []
             
             dec_ids_batch = [b[2] for b in beam]
@@ -206,7 +204,8 @@ class ONNXBeamSearchEngine(ConstrainedBeamSearchEngine):
                     c_logit = masked_codon_logits.scores[c_idx]
                     if c_logit > -float("inf"):
                         token_id = self.tokenizer.token_to_id.get(codon, -1)
-                        if token_id == -1: continue
+                        if token_id == -1:
+                            continue
                         
                         new_score = score + c_logit
                         new_cds = current_cds + codon
@@ -275,7 +274,9 @@ class LMEngineAdapter(OptimizerEngine):
 
     @property
     def version(self) -> str:
-        return "4.0.0-hybrid"
+        from factorforge.registry.versioning import engine_version
+
+        return engine_version("slm")
 
     def optimize(self, sequence: str, profile: str | None = None, host: str = "nbenthamiana", **kwargs: Any) -> OptimizationResult:
         try:
