@@ -69,6 +69,8 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 - ✅ Custom restriction site input and removal report
 - ✅ Optional reproducibility seed and Type IIS enzyme presets
 - ✅ Progressive disclosure for alternative objectives and expert settings
+- ✅ Capability-gated DP v2.1 2.1.0-dev three-axis development candidate;
+  stable DP v2 2.0.1 remains the default feasibility path
 - ✅ Domestication, MFE availability, and GC target transparency
 - ✅ Researcher Decision Report with authoritative acceptance states, prioritized
   next actions, requested-vs-applied settings, detailed checks, candidate

@@ -32,6 +32,13 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 ## [Unreleased]
 
 ### Changed
+- Added an explicit `objective=dp_v2_1` REST/web capability for the 2.1.0-dev
+  development candidate. It reports a three-axis design contract (assembly
+  feasibility, codon adaptation, and 5′ initiation-aware scoring) and preserves
+  stable DP v2 2.0.1 as the default `feasibility_best` path.
+- Replaced the disabled legacy “5′ Ramp” UI placeholder with a capability-gated
+  DP v2.1 selector. RNA folding remains independently evaluated and is reported
+  as not computed by candidate generation.
 - Removed whole-column sticky positioning from the desktop Design Brief and
   Design Review so all three workbench columns follow one predictable page scroll.
 - Standalone HTML reports now preserve the FactorForge light or dark theme selected
@@ -69,7 +76,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   and engine generations now advance independently.
 - Promoted the automaton-constrained DP v2 implementation to the public DP path,
   preserving the existing `feasibility_best` identifier and response shape.
-- Labeled Rule as Gen 1 (`1.0.0`), DP v2 as Gen 2 (`2.0.0`), and sLLM Hybrid as
+- Labeled Rule as Gen 1 (`1.0.0`), DP v2 as Gen 2 (`2.0.1`), and sLLM Hybrid as
   Gen 3 (`0.1.0-preview.1`). sLLM remains feature-gated and does not claim a
   trained production model or biological performance.
 

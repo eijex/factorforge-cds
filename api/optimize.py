@@ -43,6 +43,7 @@ try:
     from factorforge.analysis.metrics import load_codon_usage_table
     from factorforge.analysis.feasibility import DEFAULT_CAI_TARGET, analyze_feasibility
     from factorforge.engines.dp_v2 import DPV2Optimizer
+    from factorforge.engines.dp_v2_1 import DPV21Optimizer
     from factorforge.registry.versioning import (
         engine_version,
         product_version,
@@ -107,7 +108,7 @@ DEFAULT_COMPARE_PROFILES = [
 ]
 MAX_COMPARE_PROFILES = 6
 MAX_BATCH_SEQUENCES = 20
-VALID_OBJECTIVES = ["feasibility_best"]
+VALID_OBJECTIVES = ["feasibility_best", "dp_v2_1"]
 DEFAULT_OBJECTIVE = "feasibility_best"
 DEFAULT_HOST_PROFILE = "nbenthamiana"
 VALID_HOSTS = ["nbenthamiana", "by2"]
@@ -244,7 +245,10 @@ ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "tru
 ENGINE_VERSIONS = {
     "product": product_version() if FACTORFORGE_AVAILABLE else "3.5.0",
     "rule_engine": engine_version("profile") if FACTORFORGE_AVAILABLE else "1.0.0",
-    "dp_engine": engine_version("dp") if FACTORFORGE_AVAILABLE else "2.0.0",
+    "dp_engine": engine_version("dp") if FACTORFORGE_AVAILABLE else "2.0.1",
+    "dp_v2_1_engine": (
+        engine_version("dp_v2_1") if FACTORFORGE_AVAILABLE else "2.1.0-dev"
+    ),
     "ml_preview": (
         engine_version("slm") if FACTORFORGE_AVAILABLE else "0.1.0-preview.1"
     ),
@@ -348,17 +352,18 @@ class handler(BaseHTTPRequestHandler):
             # table) and high_cai (nbenthamiana-only golden-set reference)
             # are both N. benthamiana-only by current design.
             if internal_host != DEFAULT_HOST_PROFILE:
-                if data.get("objective") == "feasibility_best":
+                if data.get("objective") in {"feasibility_best", "dp_v2_1"}:
+                    requested_strategy = data.get("objective")
                     self.send_error_response(
                         400,
                         {
                             "error": (
-                                "objective=feasibility_best is only supported "
+                                f"objective={requested_strategy} is only supported "
                                 "with host=nbenthamiana"
                             ),
                             "error_code": "UNSUPPORTED_STRATEGY_HOST_COMBINATION",
                             "requested_host": internal_host,
-                            "requested_strategy": "feasibility_best",
+                            "requested_strategy": requested_strategy,
                         },
                     )
                     return
@@ -1176,6 +1181,19 @@ class handler(BaseHTTPRequestHandler):
                     custom_restriction_sites=custom_restriction_sites,
                     seed=seed,
                 )
+            if objective == "dp_v2_1":
+                return self.optimize_dp_v2_1(
+                    sequence=sequence,
+                    profile=profile,
+                    host_profile=host_profile,
+                    host=host,
+                    constraints=constraints,
+                    kozak=kozak,
+                    dinuc=dinuc,
+                    return_candidates=return_candidates,
+                    custom_restriction_sites=custom_restriction_sites,
+                    seed=seed,
+                )
 
             # Get profile-based optimizer
             optimizer = EngineRegistry.get("profile")
@@ -1486,6 +1504,123 @@ class handler(BaseHTTPRequestHandler):
             seed=seed,
         )
 
+    def optimize_dp_v2_1(
+        self,
+        sequence,
+        profile,
+        host_profile,
+        constraints,
+        kozak,
+        dinuc,
+        host=DEFAULT_HOST_PROFILE,
+        return_candidates=True,
+        custom_restriction_sites=None,
+        seed=None,
+    ):
+        """Run the explicit DP v2.1 initiation-aware development candidate."""
+        constraints = self.parse_constraints(constraints, host=host)
+        table = load_codon_usage_table()
+        input_context = parse_sequence_input(sequence)
+        if not input_context["generation_allowed"]:
+            raise ValueError("; ".join(input_context["errors"]))
+        is_cds = input_context["input_type"] == "cds"
+        aa_seq = input_context["optimization_sequence"]
+        dp_result = DPV21Optimizer().optimize(
+            protein_sequence=aa_seq,
+            codon_weights=table.codon_weights,
+            target_gc_min=constraints["gc_min"],
+            target_gc_max=constraints["gc_max"],
+        )
+        primary_dna = (
+            restore_cds_stop_policy(dp_result["sequence"], input_context)
+            if is_cds
+            else dp_result["sequence"]
+        )
+        candidate = self.build_candidate(
+            candidate_id="dp_v2_1",
+            label="DP v2.1",
+            dna_sequence=primary_dna,
+            codon_weights=table.codon_weights,
+            profile_cai=float(dp_result["cai"]),
+            recommendation_reason=(
+                "Development candidate satisfying the requested GC band with "
+                "position-dependent 5-prime initiation scoring"
+            ),
+            constraints=constraints,
+            host=host,
+        )
+        response = {
+            "success": True,
+            "optimized_sequence": primary_dna,
+            "original_length": len(sequence),
+            "optimized_length": len(primary_dna),
+            "recommended_candidate": candidate,
+            "candidates": [candidate] if return_candidates else [],
+            "validation": {
+                "input_type": "cds" if is_cds else "protein",
+                "sequence_length": len(sequence) if is_cds else len(aa_seq),
+                "host_profile": host_profile,
+            },
+            "engine_versions": ENGINE_VERSIONS,
+            "seed": seed,
+            "metrics": {
+                "cai": float(dp_result["cai"]),
+                "cai_5p_ramp": float(dp_result["cai_5p_ramp"]),
+                "cai_body": float(dp_result["cai_body"]),
+                "gc_percent": float(dp_result["gc_percent"]),
+                "gc_5p_ramp_percent": float(dp_result["gc_5p_ramp_percent"]),
+                "gc_body_percent": float(dp_result["gc_body_percent"]),
+                "gc_target_reached": bool(dp_result["gc_feasible"]),
+                "ramp_length_codons": int(dp_result["ramp_length_codons"]),
+                "mfe_kcal_mol": None,
+                "mfe_status": "not_computed",
+                "mfe_status_reason": "dp_v2_1_uses_an_open_topology_proxy_not_rna_folding",
+                "mfe_used": False,
+            },
+            "design_contract": {
+                "schema_version": "1.0",
+                "engine_id": "dp_v2_1",
+                "engine_version": engine_version("dp_v2_1"),
+                "engine_status": "development_rc",
+                "scientific_axes": [
+                    {"id": "assembly_feasibility", "evidence_class": "HARD"},
+                    {"id": "codon_adaptation", "evidence_class": "OPTIMIZED"},
+                    {"id": "five_prime_initiation", "evidence_class": "OPTIMIZED"},
+                ],
+                "independent_evaluation": {
+                    "evidence_class": "INDEPENDENTLY_EVALUATED",
+                    "status": "not_included_in_generation",
+                    "rna_folding": "not_computed",
+                },
+                "claim_boundary": "in_silico_design_candidate",
+            },
+        }
+        if is_cds:
+            assert_pathway_invariants(sequence, primary_dna, input_context)
+        response["validation_report"] = build_validation_report(
+            primary_dna,
+            gc_percent=float(dp_result["gc_percent"]),
+            constraints=constraints,
+            rule_engine=RuleEngine(host=host),
+        )
+        response.setdefault("metadata", {})["validation_registry_version"] = (
+            VALIDATION_REGISTRY_VERSION
+        )
+        response = self.apply_custom_restriction_sites(
+            response, custom_restriction_sites, constraints=constraints, host=host
+        )
+        return self.add_design_package_fields(
+            response=response,
+            input_sequence=sequence,
+            profile=profile,
+            objective="dp_v2_1",
+            host_profile=host_profile,
+            kozak=kozak,
+            dinuc=dinuc,
+            constraints=constraints,
+            seed=seed,
+        )
+
     def add_design_package_fields(
         self,
         response,
@@ -1546,14 +1681,20 @@ class handler(BaseHTTPRequestHandler):
         )
 
         run_id = f"run_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{self.sha256_prefix(input_sequence)[7:15]}"
-        resolved_engine_id = "dp" if (objective == DEFAULT_OBJECTIVE or not profile) else "profile"
+        if objective == "dp_v2_1":
+            resolved_engine_id = "dp_v2_1"
+        elif objective == DEFAULT_OBJECTIVE or not profile:
+            resolved_engine_id = "dp"
+        else:
+            resolved_engine_id = "profile"
+        resolved_engine_status = "development_rc" if resolved_engine_id == "dp_v2_1" else "stable"
         response["provenance"] = {
             "run_id": run_id,
             "product_version": ENGINE_VERSIONS["product"],
             "engine_id": resolved_engine_id,
-            "engine_generation": 2 if resolved_engine_id == "dp" else 1,
+            "engine_generation": 2 if resolved_engine_id in {"dp", "dp_v2_1"} else 1,
             "engine_version": engine_version(resolved_engine_id),
-            "engine_status": "stable",
+            "engine_status": resolved_engine_status,
             "input_sequence_hash": self.sha256_prefix(input_sequence),
             "output_cds_hash": self.sha256_prefix(output_cds),
             "parameter_hash": self.sha256_prefix(param_str),
@@ -1622,7 +1763,7 @@ class handler(BaseHTTPRequestHandler):
 
     def response_profile(self, response, profile, objective):
         """Return the selected candidate/profile name for DesignPackage metadata."""
-        if objective == DEFAULT_OBJECTIVE:
+        if objective in {DEFAULT_OBJECTIVE, "dp_v2_1"}:
             recommended = response.get("recommended_candidate")
             if isinstance(recommended, dict) and recommended.get("id"):
                 return recommended["id"]
