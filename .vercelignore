@@ -13,6 +13,8 @@ benchmarks/**
 build/**
 dist/**
 docs/**
+data/checkpoints/**
+data/training/**
 e2e/**
 examples/**
 models/**
