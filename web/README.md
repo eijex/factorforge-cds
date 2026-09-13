@@ -76,6 +76,8 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
   next actions, requested-vs-applied settings, detailed checks, candidate
   comparison, reproducibility provenance, and standalone print-friendly HTML
   that preserves the light or dark theme selected at download time
+- ✅ Design Comparison section with reference/candidate metric context, DP v2.1
+  three-axis evidence classes, and explicit independent-evaluation boundaries
 - ✅ Sequence-free machine-readable evidence-record JSON export; sequence-bearing
   FASTA, GenBank, and HTML artifacts remain explicitly separate
 - ✅ Download (FASTA, GenBank)
@@ -108,6 +110,12 @@ sequences by design; the standalone HTML includes the optimized sequence and
 displays a sequence-data handling notice.
 The standalone report preserves the app theme selected when the file is
 downloaded, while print output remains light for legibility.
+For DP v2.1 results, both the in-app report and standalone HTML show the three
+declared scientific axes and keep RNA folding in a separate independent-
+evaluation block. CDS inputs receive a reference-versus-candidate table for GC,
+first-30-nt GC, amino-acid identity, and nucleotide changes. Protein-only inputs
+receive an explicitly labeled candidate-only view. These metric differences do
+not establish expression, yield, or biological superiority.
 
 The experimental comparison panel displays missing or invalid metrics as
 `Not evaluated`. AA identity uses an explicit numeric `aa_identity` fraction;
