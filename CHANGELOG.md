@@ -32,6 +32,9 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 ## [Unreleased]
 
 ### Changed
+- Limited Vercel deployment bundles to runtime assets so archived recipes,
+  benchmarks, local environments, and test artifacts are not packaged into the
+  Python function.
 - Added an explicit `objective=dp_v2_1` REST/web capability for the 2.1.0-dev
   development candidate. It reports a three-axis design contract (assembly
   feasibility, codon adaptation, and 5′ initiation-aware scoring) and preserves
