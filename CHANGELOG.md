@@ -32,6 +32,10 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 ## [Unreleased]
 
 ### Changed
+- Expanded the downloadable and in-app design review into a Design Comparison
+  & Decision Report. It now presents reference/candidate metrics when a CDS
+  reference is available, DP v2.1 evidence classes, and a separate RNA-folding
+  evaluation boundary without implying biological superiority.
 - Limited Vercel deployment bundles to runtime assets so archived recipes,
   benchmarks, local environments, and test artifacts are not packaged into the
   Python function.

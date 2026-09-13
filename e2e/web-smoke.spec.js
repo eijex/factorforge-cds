@@ -174,6 +174,11 @@ test('renders the DP v2.1 evidence classes from the API result', async ({ page }
         { id: 'codon_adaptation', evidence_class: 'OPTIMIZED' },
         { id: 'five_prime_initiation', evidence_class: 'OPTIMIZED' },
       ],
+      independent_evaluation: {
+        evidence_class: 'INDEPENDENTLY_EVALUATED',
+        status: 'not_included_in_generation',
+        rna_folding: 'not_computed',
+      },
     },
   }));
   await openApp(page);
@@ -186,6 +191,24 @@ test('renders the DP v2.1 evidence classes from the API result', async ({ page }
   await expect(contract).toContainText('assembly_feasibility · HARD');
   await expect(contract).toContainText('five_prime_initiation · OPTIMIZED');
   await expect(contract).toContainText('RNA folding: not computed');
+
+  await page.locator('#resultsReport > summary').click();
+  const report = page.locator('#resultsReportBody');
+  await expect(report).toContainText('Design Comparison');
+  await expect(report).toContainText('Assembly feasibility');
+  await expect(report).toContainText('INDEPENDENTLY_EVALUATED');
+  await expect(report).toContainText('No reference CDS · candidate-only view');
+  await expect(report).toContainText('do not establish expression, yield, or biological superiority');
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#downloadResultsReportBtn').click();
+  const download = await downloadPromise;
+  const stream = await download.createReadStream();
+  let reportHtml = '';
+  for await (const chunk of stream) reportHtml += chunk.toString();
+  expect(reportHtml).toContain('Design Comparison &amp; Decision Report');
+  expect(reportHtml).toContain('Declared computational scope');
+  expect(reportHtml).toContain('INDEPENDENTLY_EVALUATED');
 });
 
 test('updates sequence metadata for protein input', async ({ page }) => {
@@ -537,7 +560,7 @@ test('evidence JSON matches the report and excludes raw sequences', async ({ pag
   for await (const chunk of stream) chunks.push(chunk);
   const text = Buffer.concat(chunks).toString('utf-8');
   const evidence = JSON.parse(text);
-  expect(evidence.report_schema_version).toBe('1.0');
+  expect(evidence.report_schema_version).toBe('1.1');
   expect(evidence.disposition.automated_decision).toBe('PASS');
   expect(evidence.provenance.parameter_hash).toBe('sha256:params-272');
   expect(evidence.artifacts).toBeUndefined();
