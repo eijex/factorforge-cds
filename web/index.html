@@ -287,6 +287,23 @@
                                 Compare with another implemented method
                             </summary>
                             <div class="px-3 pb-3 space-y-3" aria-label="Alternative implemented objectives">
+                                <label id="dpV21Option" class="block relative group">
+                                    <input id="dpV21Radio" type="radio" name="objective" value="dp_v2_1" class="peer sr-only" disabled>
+                                    <div class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-teal-500 peer-checked:bg-teal-50 dark:peer-checked:bg-teal-900/20 transition-all hover:border-teal-400 hover:shadow-md">
+                                        <span class="flex items-center text-sm font-bold text-slate-800">
+                                            DP v2.1 · Three-axis candidate
+                                            <span class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap bg-teal-100 text-teal-700 border border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-800/50">Development candidate</span>
+                                            <span class="tooltip-container">
+                                                <span class="info-icon">i</span>
+                                                <span class="tooltip-text">Explicit DP v2.1 path. Adds position-dependent 5′ initiation scoring while retaining hard GC and configured Type IIS constraints. This is not a biological-performance claim.</span>
+                                            </span>
+                                        </span>
+                                        <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Assembly feasibility + codon adaptation + 5′ initiation-aware scoring. Select explicitly; DP v2 remains the default.</span>
+                                        <span id="dpV21Capability" class="block text-[10px] text-teal-700 dark:text-teal-300 mt-1">Checking API capability…</span>
+                                        <div class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-teal-500 text-xl">✓</div>
+                                    </div>
+                                </label>
+
                                 <label id="highCaiOption" class="block relative group">
                                     <input type="radio" name="objective" value="high_cai" class="peer sr-only">
                                     <div
@@ -349,24 +366,6 @@
                                 Show experimental objectives not enabled
                             </summary>
                             <div class="px-3 pb-3 space-y-3" aria-label="Experimental objectives not enabled">
-                                <label class="block relative group cursor-not-allowed">
-                                    <input type="radio" name="objective" value="ramp" class="peer sr-only" disabled>
-                                    <div
-                                        class="p-4 profile-card rounded-xl cursor-not-allowed opacity-60 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-                                        <span class="flex items-center text-sm font-bold text-slate-800">
-                                            5' Ramp
-                                            <span
-                                                class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">Experimental</span>
-                                            <span class="tooltip-container">
-                                                <span class="info-icon">i</span>
-                                                <span class="tooltip-text">Experimental N-terminal codon-ramp heuristic for design review. Disabled until reviewed evidence supports public use.</span>
-                                            </span>
-                                        </span>
-                                        <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">Experimental N-terminal ramp heuristic.</span>
-                                        <span class="block text-[10px] text-amber-600 dark:text-amber-400 mt-1">Pending activation gate before enabling.</span>
-                                    </div>
-                                </label>
-
                                 <label class="block relative group cursor-not-allowed">
                                     <input type="radio" name="objective" value="viral_delivery" class="peer sr-only" disabled>
                                     <div
@@ -624,6 +623,8 @@
                         <div id="mfeWarningBanner" role="alert"
                             class="hidden mb-6 p-4 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200 text-xs font-semibold">
                         </div>
+
+                        <div id="designContractSummary" class="hidden mb-6 rounded-2xl border border-teal-200 bg-teal-50/70 p-4 text-xs dark:border-teal-800 dark:bg-teal-950/30" aria-live="polite"></div>
 
                         <div id="automatedDecisionCard" class="mb-6 p-4 rounded-2xl border border-slate-200 bg-slate-50 dark:bg-slate-900 dark:border-slate-800" aria-live="polite">
                             <p class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Automated Decision</p>
@@ -966,12 +967,13 @@
                         <span
                             class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">In preparation</span>
                         <h3 class="font-bold text-slate-800 dark:text-white">v3.5.0 RC &mdash; Rule Gen 1, DP v2 Gen 2 &amp; sLLM Gen 3 Preview</h3>
-                        <span class="text-slate-400 text-[10px]">2026-09-11</span>
+                        <span class="text-slate-400 text-[10px]">2026-09-13</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
                         <li><b>Researcher decision report:</b> decision-first summary, prioritized next actions, requested-vs-applied settings, detailed checks, reproducibility provenance, print-friendly HTML, and sequence-free evidence JSON.</li>
-                        <li><b>Engine generations:</b> Rule 1.0.0 is Gen 1, DP v2 2.0.0 is Gen 2, and sLLM Hybrid 0.1 is Gen 3 Preview.</li>
-                        <li><b>DP v2:</b> the public DP path tracks GC count and configured forbidden-motif automaton state while preserving the <code>feasibility_best</code> contract.</li>
+                        <li><b>Engine generations:</b> Rule 1.0.0 is Gen 1, stable DP v2 2.0.1 and development-candidate DP v2.1 2.1.0-dev are Gen 2, and sLLM Hybrid 0.1 is Gen 3 Preview.</li>
+                        <li><b>DP v2:</b> the default public DP path tracks GC count and configured forbidden-motif automaton state while preserving the <code>feasibility_best</code> contract.</li>
+                        <li><b>DP v2.1:</b> explicit opt-in adds position-dependent 5′ initiation-aware scoring and reports a three-axis evidence contract; RNA folding is not computed during generation.</li>
                         <li><b>sLLM boundary:</b> the preview is feature-gated and does not claim a trained production model.</li>
                         <li><b>Evaluation status:</b> Missing evaluations display as Not evaluated. Sequence checks do not establish biological performance.</li>
                         <li><b>Availability:</b> sLLM preview and database saving remain disabled unless the deployment reports support.</li>

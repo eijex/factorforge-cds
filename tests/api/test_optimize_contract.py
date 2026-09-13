@@ -125,6 +125,65 @@ def test_get_optimize_exposes_experimental_ml_capabilities_without_overclaiming(
     assert data["capabilities"]["db_save"]["available"] is False
 
 
+def test_get_optimize_advertises_explicit_dp_v2_1_capability() -> None:
+    data = _get_optimize()
+
+    assert data["supported_objectives"] == ["feasibility_best", "dp_v2_1"]
+    assert data["engine_versions"]["dp_engine"] == engine_version("dp")
+    assert data["engine_versions"]["dp_v2_1_engine"] == engine_version("dp_v2_1")
+
+
+def test_dp_v2_1_is_explicit_and_returns_three_axis_contract() -> None:
+    status_code, result = _post_optimize(
+        {
+            "sequence": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+            "objective": "dp_v2_1",
+            "constraints": {"gc_min": 40.0, "gc_max": 47.0},
+        }
+    )
+
+    assert status_code == 200
+    assert result["profile"] == "dp_v2_1"
+    assert result["provenance"]["engine_id"] == "dp_v2_1"
+    assert result["provenance"]["engine_version"] == engine_version("dp_v2_1")
+    assert result["provenance"]["engine_status"] == "development_rc"
+    assert result["metrics"]["gc_target_reached"] is True
+    assert result["metrics"]["mfe_status"] == "not_computed"
+    assert result["design_contract"]["scientific_axes"] == [
+        {"id": "assembly_feasibility", "evidence_class": "HARD"},
+        {"id": "codon_adaptation", "evidence_class": "OPTIMIZED"},
+        {"id": "five_prime_initiation", "evidence_class": "OPTIMIZED"},
+    ]
+    assert result["design_contract"]["independent_evaluation"] == {
+        "evidence_class": "INDEPENDENTLY_EVALUATED",
+        "status": "not_included_in_generation",
+        "rna_folding": "not_computed",
+    }
+
+
+def test_default_objective_remains_dp_v2() -> None:
+    status_code, result = _post_optimize(
+        {"sequence": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG"}
+    )
+
+    assert status_code == 200
+    assert result["provenance"]["engine_id"] == "dp"
+
+
+def test_dp_v2_1_rejects_unsupported_host() -> None:
+    status_code, result = _post_optimize(
+        {
+            "sequence": "MSKGEELFTGVVPILVELD",
+            "objective": "dp_v2_1",
+            "host": "by2",
+        }
+    )
+
+    assert status_code == 400
+    assert result["error_code"] == "UNSUPPORTED_STRATEGY_HOST_COMBINATION"
+    assert result["requested_strategy"] == "dp_v2_1"
+
+
 def test_dual_compare_returns_windowable_alignment_and_unverified_provenance(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

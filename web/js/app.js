@@ -124,6 +124,7 @@ const elements = {
     databaseCapability: document.getElementById('databaseCapability'),
     appliedPolicySummary: document.getElementById('appliedPolicySummary'),
     resultContextSummary: document.getElementById('resultContextSummary'),
+    designContractSummary: document.getElementById('designContractSummary'),
     comparisonDashboard: document.getElementById('comparisonDashboard'),
     comparisonNotice: document.getElementById('comparisonNotice'),
     comparisonMatrixBody: document.getElementById('comparisonMatrixBody'),
@@ -253,6 +254,16 @@ async function loadApiMetadata() {
                 validationRegistry = data.validation_checks;
             }
             apiCapabilities = data.capabilities || {};
+            const dpV21Available = Array.isArray(data.supported_objectives)
+                && data.supported_objectives.includes('dp_v2_1');
+            const dpV21Radio = document.getElementById('dpV21Radio');
+            const dpV21Capability = document.getElementById('dpV21Capability');
+            if (dpV21Radio) dpV21Radio.disabled = !dpV21Available;
+            if (dpV21Capability) {
+                dpV21Capability.textContent = dpV21Available
+                    ? 'Available · engine 2.1.0-dev · explicit opt-in'
+                    : 'Unavailable on this deployment';
+            }
             const mlAvailable = Boolean(apiCapabilities.ml_preview?.available);
             elements.engineModeRadios.forEach(radio => {
                 if (radio.value !== 'profile') radio.disabled = !mlAvailable;
@@ -374,6 +385,7 @@ function updateDesignBriefSummary() {
     const selectedObjective = Array.from(elements.objectiveRadios).find(radio => radio.checked)?.value || state.objective;
     const methodLabels = {
         feasibility_best: 'recommended feasibility design',
+        dp_v2_1: 'three-axis DP v2.1 development candidate',
         high_cai: 'CAI-focused comparison',
         gc_target: 'GC-focused comparison',
         assembly_friendly: 'assembly-oriented comparison'
@@ -579,15 +591,15 @@ async function runOptimization() {
         };
         if (state.engineMode !== 'profile') {
             payload.profile = 'balanced';
-        } else if (state.objective === 'feasibility_best' && state.host === 'nbenthamiana') {
-            payload.objective = 'feasibility_best';
+        } else if (['feasibility_best', 'dp_v2_1'].includes(state.objective) && state.host === 'nbenthamiana') {
+            payload.objective = state.objective;
             payload.host_profile = state.host;
             // Host-aware default (v3.3.0) — previously hardcoded to
             // the legacy 55-65 band, which silently overrode the server's
             // resolve_host_gc_range() default for every feasibility_best run.
             payload.constraints = getGcRange(state.host);
         } else {
-            payload.profile = state.objective === 'feasibility_best' ? 'balanced' : state.objective;
+            payload.profile = ['feasibility_best', 'dp_v2_1'].includes(state.objective) ? 'balanced' : state.objective;
         }
         const seedValue = elements.optimizationSeed.value.trim();
         if (seedValue !== '') {
@@ -748,6 +760,19 @@ function renderResults() {
     if (elements.resultContextSummary) {
         const host = formatHostProfile(getResultHostProfile(res));
         elements.resultContextSummary.textContent = `${host} · Review the computational checks before synthesis or experimental use.`;
+    }
+    if (elements.designContractSummary) {
+        const contract = res.design_contract;
+        if (contract?.engine_id === 'dp_v2_1') {
+            const axes = (contract.scientific_axes || [])
+                .map(axis => `<span class="rounded-lg border border-teal-200 bg-white px-2 py-1 font-bold text-teal-800 dark:border-teal-800 dark:bg-slate-900 dark:text-teal-200">${escapeHtml(axis.id)} · ${escapeHtml(axis.evidence_class)}</span>`)
+                .join('');
+            elements.designContractSummary.innerHTML = `<div class="font-extrabold text-teal-900 dark:text-teal-100">DP v2.1 ${escapeHtml(contract.engine_version)} · development candidate</div><div class="mt-3 flex flex-wrap gap-2">${axes}</div><p class="mt-3 text-slate-600 dark:text-slate-300">RNA folding: not computed during generation · independently evaluated evidence remains separate.</p>`;
+            elements.designContractSummary.classList.remove('hidden');
+        } else {
+            elements.designContractSummary.innerHTML = '';
+            elements.designContractSummary.classList.add('hidden');
+        }
     }
 
     if (res.construct_id) {

@@ -19,7 +19,8 @@ The v3.5.0 release-candidate line uses independently versioned engines:
 | Generation | Engine | Version | Availability |
 |---|---|---:|---|
 | Gen 1 | Rule/profile | 1.0.0 | Stable, public |
-| Gen 2 | DP v2 | 2.0.0 | Release candidate, public |
+| Gen 2 | DP v2 | 2.0.1 | Stable, public default feasibility path |
+| Gen 2 | DP v2.1 | 2.1.0-dev | Explicit API/web development candidate |
 | Gen 3 | sLLM Hybrid | 0.1.0-preview.1 | Feature-gated research preview; no trained model is claimed |
 
 **→ [Full Documentation](https://eijex.github.io/factorforge-cds/)** · **[Roadmap](https://eijex.github.io/factorforge-cds/roadmap/)**
@@ -50,12 +51,18 @@ Or use the **[web app](https://factorforge.eijex.com)** — no installation requ
 
 ## Repository Structure
 
-The supported deterministic engines are the profile engine and DP v2 under:
+The supported deterministic engines are the profile engine, stable DP v2, and
+the explicit DP v2.1 development candidate under:
 
 ```text
 src/factorforge/engines/profile/
 src/factorforge/engines/dp_v2.py
+src/factorforge/engines/dp_v2_1.py
 ```
+
+DP v2.1 adds position-dependent 5′ initiation-aware scoring to the hard GC and
+configured Type IIS constraint search. It is not the default, does not compute
+RNA folding, and carries no comparative biological-performance claim.
 
 Historical implementation tracks are preserved under `archive/` for provenance
 and are not imported by the installed package or exposed as supported engines.

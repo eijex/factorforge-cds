@@ -54,6 +54,12 @@ The web API (`https://factorforge.eijex.com`) exposes the following endpoints:
 | `POST /api/optimize/compare` | Compare multiple profiles side-by-side |
 | `POST /api/optimize/batch` | Optimize up to 20 sequences in one request |
 
+`POST /api/optimize` accepts the explicit development-candidate objective
+`dp_v2_1`. Stable `feasibility_best` remains the default DP v2 path. DP v2.1
+returns `design_contract` metadata separating hard assembly constraints,
+optimized codon/initiation axes, and independently evaluated measurements that
+were not computed during generation.
+
 For AI agent access, use [Eijex MCP](https://mcp.eijex.com) which wraps these endpoints as MCP tools.
 
 ### `factorforge list-engines`
