@@ -109,7 +109,7 @@ Otherwise, backtrack from $(N, h^*, q^*)$ using deterministic $\text{Parent}$ po
 
 ## 6. Empirical Benchmark & Verification Record
 
-* **Execution Environment:** AMD64 / Python 3.11 / FactorForge v3.5.0 (Commit: `HEAD`)
+* **Execution Environment:** AMD64 / Python 3.11 / FactorForge v3.4.6 (Commit: `HEAD`)
 * **Test Suite:** `tests/test_math_v2_dp_optimality.py` (6/6 tests passed in 0.30s)
 * **Empirical Latency Profile ($n=100$ iterations):**
   * Target-mAb-A Light Chain ($N = 235\text{ AA}$): Median = $18.4\text{ ms}$, p95 = $22.1\text{ ms}$

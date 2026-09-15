@@ -55,10 +55,12 @@ The web API (`https://factorforge.eijex.com`) exposes the following endpoints:
 | `POST /api/optimize/batch` | Optimize up to 20 sequences in one request |
 
 `POST /api/optimize` accepts the explicit development-candidate objective
-`dp_v2_1`. Stable `feasibility_best` remains the default DP v2 path. DP v2.1
-returns `design_contract` metadata separating hard assembly constraints,
-optimized codon/initiation axes, and independently evaluated measurements that
-were not computed during generation.
+`dp_v2_1_1` (current) and `dp_v2_1` (comparison compatibility). Stable
+`feasibility_best` remains the default DP v2 path. DP v2.1.1 returns
+`design_contract` metadata for the active initiation-GC layer and 5-nt
+homopolymer ceiling, plus local-composition metrics and a separately evaluated
+5′ MFE status. Calibration is complete on Target-mAb-A; the 36-protein holdout
+remains pending.
 
 For AI agent access, use [Eijex MCP](https://mcp.eijex.com) which wraps these endpoints as MCP tools.
 

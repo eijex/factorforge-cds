@@ -1,10 +1,13 @@
 # DP v2.1 development-candidate card
 
+> Superseded for current opt-in use by [DP v2.1.1](dp_v2_1_1.md). This card is
+> retained for reproducible comparison of the unconstrained initiation proxy.
+
 | Field | Value |
 |---|---|
 | Engine ID | `dp_v2_1` |
 | Engine version | `2.1.0-dev` |
-| Product line | FactorForge `3.5.0` release candidate |
+| Product line | FactorForge `3.4.6` |
 | Status | Development candidate; explicit opt-in |
 | Current host | *Nicotiana benthamiana* |
 | Default replacement | No; `feasibility_best` continues to use DP v2 `2.0.1` |

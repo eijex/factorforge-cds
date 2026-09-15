@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initEventListeners();
     updateDesignBriefSummary();
     renderHistory();
-    console.log('FactorForge v3.5.0 RC Engaged');
+    console.log('FactorForge v3.4.6 Engaged');
 });
 
 // Loads server-owned GC ranges and validation labels. Supported hosts remain
@@ -255,13 +255,13 @@ async function loadApiMetadata() {
             }
             apiCapabilities = data.capabilities || {};
             const dpV21Available = Array.isArray(data.supported_objectives)
-                && data.supported_objectives.includes('dp_v2_1');
+                && data.supported_objectives.includes('dp_v2_1_1');
             const dpV21Radio = document.getElementById('dpV21Radio');
             const dpV21Capability = document.getElementById('dpV21Capability');
             if (dpV21Radio) dpV21Radio.disabled = !dpV21Available;
             if (dpV21Capability) {
                 dpV21Capability.textContent = dpV21Available
-                    ? 'Available · engine 2.1.0-dev · explicit opt-in'
+                    ? 'Available · engine 2.1.1-dev · calibration complete / holdout pending'
                     : 'Unavailable on this deployment';
             }
             const mlAvailable = Boolean(apiCapabilities.ml_preview?.available);
@@ -385,7 +385,7 @@ function updateDesignBriefSummary() {
     const selectedObjective = Array.from(elements.objectiveRadios).find(radio => radio.checked)?.value || state.objective;
     const methodLabels = {
         feasibility_best: 'recommended feasibility design',
-        dp_v2_1: 'three-axis DP v2.1 development candidate',
+        dp_v2_1_1: 'local-guard DP v2.1.1 development candidate',
         high_cai: 'CAI-focused comparison',
         gc_target: 'GC-focused comparison',
         assembly_friendly: 'assembly-oriented comparison'
@@ -591,7 +591,7 @@ async function runOptimization() {
         };
         if (state.engineMode !== 'profile') {
             payload.profile = 'balanced';
-        } else if (['feasibility_best', 'dp_v2_1'].includes(state.objective) && state.host === 'nbenthamiana') {
+        } else if (['feasibility_best', 'dp_v2_1_1'].includes(state.objective) && state.host === 'nbenthamiana') {
             payload.objective = state.objective;
             payload.host_profile = state.host;
             // Host-aware default (v3.3.0) — previously hardcoded to
@@ -599,7 +599,7 @@ async function runOptimization() {
             // resolve_host_gc_range() default for every feasibility_best run.
             payload.constraints = getGcRange(state.host);
         } else {
-            payload.profile = ['feasibility_best', 'dp_v2_1'].includes(state.objective) ? 'balanced' : state.objective;
+            payload.profile = ['feasibility_best', 'dp_v2_1_1'].includes(state.objective) ? 'balanced' : state.objective;
         }
         const seedValue = elements.optimizationSeed.value.trim();
         if (seedValue !== '') {
@@ -763,11 +763,15 @@ function renderResults() {
     }
     if (elements.designContractSummary) {
         const contract = res.design_contract;
-        if (contract?.engine_id === 'dp_v2_1') {
+        if (contract?.engine_id === 'dp_v2_1_1') {
             const axes = (contract.scientific_axes || [])
                 .map(axis => `<span class="rounded-lg border border-teal-200 bg-white px-2 py-1 font-bold text-teal-800 dark:border-teal-800 dark:bg-slate-900 dark:text-teal-200">${escapeHtml(axis.id)} · ${escapeHtml(axis.evidence_class)}</span>`)
                 .join('');
-            elements.designContractSummary.innerHTML = `<div class="font-extrabold text-teal-900 dark:text-teal-100">DP v2.1 ${escapeHtml(contract.engine_version)} · development candidate</div><div class="mt-3 flex flex-wrap gap-2">${axes}</div><p class="mt-3 text-slate-600 dark:text-slate-300">RNA folding: not computed during generation · independently evaluated evidence remains separate.</p>`;
+            const localGuard = contract.local_composition_guard || {};
+            const activeBand = Array.isArray(localGuard.initiation_gc_active_count_band)
+                ? localGuard.initiation_gc_active_count_band.join('–')
+                : 'not reported';
+            elements.designContractSummary.innerHTML = `<div class="font-extrabold text-teal-900 dark:text-teal-100">DP v2.1.1 ${escapeHtml(contract.engine_version)} · development candidate</div><div class="mt-3 flex flex-wrap gap-2">${axes}</div><p class="mt-3 text-slate-600 dark:text-slate-300">Local guard: active 5′ GC count layer ${escapeHtml(activeBand)} · homopolymer ceiling ${escapeHtml(localGuard.homopolymer_max_run ?? 'not reported')} nt. RNA folding remains an independently evaluated metric.</p>`;
             elements.designContractSummary.classList.remove('hidden');
         } else {
             elements.designContractSummary.innerHTML = '';
@@ -1420,7 +1424,7 @@ function buildResultsReportModel(res, primary, gcTarget) {
         comparison: {
             reference_available: hasComparableInput,
             reference_label: hasComparableInput ? 'Input CDS (reference)' : 'Reference CDS not provided',
-            candidate_label: contract?.engine_id === 'dp_v2_1' ? 'DP v2.1 candidate' : 'FactorForge candidate',
+            candidate_label: contract?.engine_id === 'dp_v2_1_1' ? 'DP v2.1.1 candidate' : 'FactorForge candidate',
             reference_gc_percent: sequenceGcPercent(referenceSequence),
             candidate_gc_percent: gc ?? sequenceGcPercent(outputSequence),
             reference_first_30nt_gc_percent: sequenceGcPercent(firstWindow(referenceSequence)),
@@ -2222,7 +2226,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.5.0';
+        const version = state.results.engine_versions?.product || '3.4.6';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }
