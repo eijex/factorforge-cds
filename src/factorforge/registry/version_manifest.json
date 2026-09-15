@@ -2,8 +2,8 @@
   "schema_version": "1.0",
   "product": {
     "name": "FactorForge",
-    "version": "3.5.0",
-    "release_status": "release_candidate",
+    "version": "3.4.6",
+    "release_status": "released",
     "previous_stable_version": "3.4.5"
   },
   "engines": {
@@ -32,6 +32,15 @@
       "availability": "public",
       "default_enabled": true,
       "description": "Generation 2 initiation-aware exact DP with 5' structural relaxation and codon harmonization"
+    },
+    "dp_v2_1_1": {
+      "display_name": "DP v2.1.1",
+      "generation": 2,
+      "version": "2.1.1-dev",
+      "status": "development_rc",
+      "availability": "public",
+      "default_enabled": true,
+      "description": "Generation 2 initiation-aware exact DP with local composition guard (5' GC band and homopolymer pruning)"
     },
     "slm": {
       "display_name": "sLLM Hybrid",

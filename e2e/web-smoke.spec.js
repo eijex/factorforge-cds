@@ -129,22 +129,22 @@ test('keeps non-default design objectives collapsed until requested', async ({ p
   await expect(implemented).not.toHaveAttribute('open', '');
   await expect(experimental).toBeHidden();
   await expect(implemented.getByText('High CAI')).toBeHidden();
-  await expect(implemented.getByText('DP v2.1 · Three-axis candidate')).toBeHidden();
+  await expect(implemented.getByText('DP v2.1.1 · Local-guard candidate')).toBeHidden();
 
   await implemented.locator('summary').click();
   await expect(implemented).toHaveAttribute('open', '');
   await expect(implemented).toContainText('High CAI');
   await expect(implemented).toContainText('GC Target');
   await expect(implemented).toContainText('Assembly Friendly');
-  await expect(implemented).toContainText('DP v2.1 · Three-axis candidate');
+  await expect(implemented).toContainText('DP v2.1.1 · Local-guard candidate');
 
   await expect(experimental).not.toContainText("5' Ramp");
   await expect(experimental).toContainText('Viral Delivery');
-  await expect(page.locator('input[name="objective"][value="dp_v2_1"]')).toBeDisabled();
+  await expect(page.locator('input[name="objective"][value="dp_v2_1_1"]')).toBeDisabled();
   await expect(page.locator('input[name="objective"][value="viral_delivery"]')).toBeDisabled();
 });
 
-test('enables DP v2.1 only when the API advertises the capability', async ({ page }) => {
+test('enables DP v2.1.1 only when the API advertises the capability', async ({ page }) => {
   await page.route('**/api/optimize', async route => {
     await route.fulfill({
       status: 200,
@@ -152,7 +152,7 @@ test('enables DP v2.1 only when the API advertises the capability', async ({ pag
       body: JSON.stringify({
         capabilities: {},
         validation_checks: [],
-        supported_objectives: ['feasibility_best', 'dp_v2_1'],
+        supported_objectives: ['feasibility_best', 'dp_v2_1_1'],
       }),
     });
   });
@@ -160,15 +160,15 @@ test('enables DP v2.1 only when the API advertises the capability', async ({ pag
 
   await page.locator('#implementedObjectives summary').click();
   await expect(page.locator('#dpV21Radio')).toBeEnabled();
-  await expect(page.locator('#dpV21Capability')).toContainText('2.1.0-dev');
+  await expect(page.locator('#dpV21Capability')).toContainText('2.1.1-dev');
 });
 
-test('renders the DP v2.1 evidence classes from the API result', async ({ page }) => {
+test('renders the DP v2.1.1 evidence classes from the API result', async ({ page }) => {
   await mockOptimization(page, reviewResponse({
-    profile: 'dp_v2_1',
+    profile: 'dp_v2_1_1',
     design_contract: {
-      engine_id: 'dp_v2_1',
-      engine_version: '2.1.0-dev',
+      engine_id: 'dp_v2_1_1',
+      engine_version: '2.1.1-dev',
       scientific_axes: [
         { id: 'assembly_feasibility', evidence_class: 'HARD' },
         { id: 'codon_adaptation', evidence_class: 'OPTIMIZED' },
@@ -187,10 +187,10 @@ test('renders the DP v2.1 evidence classes from the API result', async ({ page }
 
   const contract = page.locator('#designContractSummary');
   await expect(contract).toBeVisible();
-  await expect(contract).toContainText('DP v2.1 2.1.0-dev');
+  await expect(contract).toContainText('DP v2.1.1 2.1.1-dev');
   await expect(contract).toContainText('assembly_feasibility · HARD');
   await expect(contract).toContainText('five_prime_initiation · OPTIMIZED');
-  await expect(contract).toContainText('RNA folding: not computed');
+  await expect(contract).toContainText('RNA folding remains an independently evaluated metric');
 
   await page.locator('#resultsReport > summary').click();
   const report = page.locator('#resultsReportBody');

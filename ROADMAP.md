@@ -2,22 +2,27 @@
 
 FactorForge development direction and planned work.
 
-> Published release: **v3.4.5** · source release candidate: **v3.5.0** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current product line: **v3.4.6** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
 
 ## Current Release Status
 
-FactorForge v3.4.5 was released on 2026-08-22. It is the current public
-release and completes the interface-reliability patch line: browser
+FactorForge v3.4.6 extends the public product line with an explicit DP v2.1.1
+path while retaining stable DP v2 as the default. The preceding v3.4.5 release
+completed the interface-reliability patch line: browser
 interactions were restored, release checks were strengthened, and product,
 API, engine, registry, documentation, and fixture version surfaces were
 synchronized. The supported public boundary remains deterministic in-silico
-CDS design and pre-synthesis sequence review. The v3.5.0 source line is a
-release candidate with independently versioned Rule Gen 1, DP v2 Gen 2, and
-feature-gated sLLM Gen 3 Preview engines; it is not yet a published package or
-production deployment.
+CDS design and pre-synthesis sequence review. sLLM Gen 3 remains a separate,
+feature-gated research preview and is not part of the v3.4.6 readiness claim.
+
+DP v2.1.1 (`2.1.1-dev`) is the current explicit Gen 2 development candidate.
+It adds a 45-nt initiation-GC active layer and >=6-nt homopolymer automaton
+guard without adding a DP state dimension. Target-mAb-A calibration is complete;
+the frozen 36-protein holdout gate remains pending, so stable DP v2 `2.0.1`
+continues as the default feasibility path.
 
 Current maintenance and evidence priorities are:
 
@@ -93,6 +98,7 @@ Current maintenance and evidence priorities are:
 |---------|-------------|
 | **Gen 1 — Rule** | Stable profile engine, independently versioned as 1.x |
 | **Gen 2 — DP v2** | Exact GC-state and configured-motif automaton constraints, independently versioned as 2.x |
+| **Gen 2 — DP v2.1.1** | Explicit local-composition development candidate; calibration complete, 36-protein holdout pending |
 | **Gen 3 — sLLM Hybrid** | Feature-gated 0.x research preview; no trained production-model claim |
 | **Version manifest** | One machine-readable product/engine source of truth exposed by the API |
 

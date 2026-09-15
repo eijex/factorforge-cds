@@ -1,0 +1,33 @@
+name: AgentOS Continuous Scientific Learning Loop
+
+on:
+  schedule:
+    # Runs every day at 00:00 UTC (09:00 KST)
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  scout-and-learn:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Run AgentOS Scout & Continuous Learning Cycle
+        run: |
+          export PYTHONPATH="factorforge/src:."
+          python agentos/learning/cron_runner.py
+
+      - name: Upload Scientific Learning Logs Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scientific-learning-reports
+          path: data/scientific_memory/logs/

@@ -4,10 +4,15 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
-## v3.5.0 — release candidate
+## v3.4.6 — DP v2.1.1 product update
 
-- Product and engine versions are now distinct: Rule 1.0.0, DP v2 2.0.0, and sLLM Hybrid 0.1.0-preview.1.
+- Product and engine versions are now distinct: Rule 1.0.0, DP v2 2.0.1,
+  DP v2.1.1 2.1.1-dev, and sLLM Hybrid 0.1.0-preview.1.
 - DP v2 is the deterministic public DP path behind the compatible `feasibility_best` objective.
+- DP v2.1.1 is an explicit development candidate with an active 5′ GC layer,
+  >=6-nt homopolymer rejection, local-composition metrics, and separately
+  evaluated MFE status. Target-mAb-A calibration is complete; holdout validation
+  remains pending.
 - sLLM Hybrid remains feature-gated; its presence does not establish a trained-model release.
 - Missing comparison evaluations display as Not evaluated; explicit failures remain visible.
 - PostgreSQL dependencies are optional for SQLite checkpoints, and unconfigured database integration tests skip before importing the database engine.
@@ -37,6 +42,17 @@ FactorForge v3.0+ is the current public release line.
   decision, acceptance-criteria snapshot, and reviewer disposition, which made
   reloaded results show "Automated Decision: Unavailable" instead of the
   original PASS/FAIL.
+
+## v3.4.2 — 2026-07-24
+
+- Fixed dark mode text contrast in Reviewer Disposition controls and resolved
+  minor dark mode styling gaps across UI controls (Clear/Copy buttons, dropzone border, checkbox borders).
+- Refreshed benchmark parameter registry manifest hash.
+
+## v3.4.1 — 2026-07-24
+
+- Fixed dark mode text contrast for labels, select boxes, and section dividers in the Acceptance Criteria section.
+- Added candidate-strategy informative tooltips to the Candidate Comparison table explaining Feasibility Best, GC Target, and High CAI strategies.
 
 ## v3.4.0 — 2026-07-23
 

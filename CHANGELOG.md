@@ -32,6 +32,15 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 ## [Unreleased]
 
 ### Changed
+- Added the explicit `objective=dp_v2_1_1` API/web path for engine `2.1.1-dev`.
+  It retains the `(position, cumulative GC, automaton state)` DP state, prunes
+  the active 45-nt initiation GC layer, rejects homopolymers of 6 nt or longer
+  through the motif automaton, and reports local-GC, boundary, homopolymer, and
+  independently evaluated 5′ MFE status fields. The earlier `dp_v2_1` objective
+  remains available for reproducible comparison.
+- DP v2.1.1 is calibrated on one two-chain Target-mAb-A case; the preregistered
+  36-protein holdout remains pending. No expression, yield, ribosome-scanning,
+  synthesis, or wet-lab claim is made.
 - Expanded the downloadable and in-app design review into a Design Comparison
   & Decision Report. It now presents reference/candidate metrics when a CDS
   reference is available, DP v2.1 evidence classes, and a separate RNA-folding
@@ -78,7 +87,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 - Database integration tests skip before engine import when DATABASE_URL is absent.
 - Docker publication requires the same commit's CI and browser checks to succeed.
 
-### Candidate scope (v3.5.0, in preparation)
+### v3.4.6 scope
 - Introduced a machine-readable product/engine version manifest. Product releases
   and engine generations now advance independently.
 - Promoted the automaton-constrained DP v2 implementation to the public DP path,
@@ -88,8 +97,8 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   trained production model or biological performance.
 
 ### Notes
-- This source line is a release candidate. Tagging, package publication, and
-  production deployment remain separate release-gate actions.
+- DP v2.1.1 is explicit and non-default. Its calibration does not establish
+  holdout generalization or biological performance.
 
 ## [3.4.5] — 2026-08-22
 
@@ -147,6 +156,24 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   `automated_decision`/`acceptance_criteria_snapshot`/`reviewer_disposition`
   fields that `addToHistory()` already saves, instead of dropping them on
   reload.
+
+## [3.4.2] — 2026-07-24
+
+### Fixed
+- Fixed dark mode text contrast in Reviewer Disposition select and input controls.
+- Fixed dark mode styling gaps across web UI elements including dropzone borders,
+  Clear/Copy hover states, and checkbox borders.
+- Refreshed benchmark parameter registry manifest checksum hash.
+
+## [3.4.1] — 2026-07-24
+
+### Fixed
+- Fixed dark mode text contrast in the Acceptance Criteria section (labels, select
+  boxes, and divider).
+
+### Added
+- Added candidate-strategy tooltips to the Candidate Comparison table explaining
+  Feasibility Best, GC Target, and High CAI strategies.
 
 ## [3.4.0] — 2026-07-23
 
@@ -706,6 +733,8 @@ First official release of FactorForge.
 [3.4.5]: https://github.com/eijex/factorforge-cds/compare/v3.4.4...v3.4.5
 [3.4.4]: https://github.com/eijex/factorforge-cds/compare/v3.4.3...v3.4.4
 [3.4.3]: https://github.com/eijex/factorforge-cds/compare/v3.4.2...v3.4.3
+[3.4.2]: https://github.com/eijex/factorforge-cds/compare/v3.4.1...v3.4.2
+[3.4.1]: https://github.com/eijex/factorforge-cds/compare/v3.4.0...v3.4.1
 [3.4.0]: https://github.com/eijex/factorforge-cds/compare/v3.3.2...v3.4.0
 [3.3.2]: https://github.com/eijex/factorforge-cds/compare/v3.3.1...v3.3.2
 [3.3.1]: https://github.com/eijex/factorforge-cds/compare/v3.3.0...v3.3.1

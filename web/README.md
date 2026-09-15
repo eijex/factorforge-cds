@@ -69,14 +69,14 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 - ✅ Custom restriction site input and removal report
 - ✅ Optional reproducibility seed and Type IIS enzyme presets
 - ✅ Progressive disclosure for alternative objectives and expert settings
-- ✅ Capability-gated DP v2.1 2.1.0-dev three-axis development candidate;
+- ✅ Capability-gated DP v2.1.1 2.1.1-dev local-guard development candidate;
   stable DP v2 2.0.1 remains the default feasibility path
 - ✅ Domestication, MFE availability, and GC target transparency
 - ✅ Researcher Decision Report with authoritative acceptance states, prioritized
   next actions, requested-vs-applied settings, detailed checks, candidate
   comparison, reproducibility provenance, and standalone print-friendly HTML
   that preserves the light or dark theme selected at download time
-- ✅ Design Comparison section with reference/candidate metric context, DP v2.1
+- ✅ Design Comparison section with reference/candidate metric context, DP v2.1.1
   three-axis evidence classes, and explicit independent-evaluation boundaries
 - ✅ Sequence-free machine-readable evidence-record JSON export; sequence-bearing
   FASTA, GenBank, and HTML artifacts remain explicitly separate
@@ -110,9 +110,11 @@ sequences by design; the standalone HTML includes the optimized sequence and
 displays a sequence-data handling notice.
 The standalone report preserves the app theme selected when the file is
 downloaded, while print output remains light for legibility.
-For DP v2.1 results, both the in-app report and standalone HTML show the three
+For DP v2.1.1 results, both the in-app report and standalone HTML show the three
 declared scientific axes and keep RNA folding in a separate independent-
-evaluation block. CDS inputs receive a reference-versus-candidate table for GC,
+evaluation block. The local guard reports its active 5′ GC layer and 5-nt
+homopolymer ceiling; calibration and holdout status remain distinct. CDS inputs
+receive a reference-versus-candidate table for GC,
 first-30-nt GC, amino-acid identity, and nucleotide changes. Protein-only inputs
 receive an explicitly labeled candidate-only view. These metric differences do
 not establish expression, yield, or biological superiority.

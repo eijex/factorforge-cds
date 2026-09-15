@@ -125,12 +125,17 @@ def test_get_optimize_exposes_experimental_ml_capabilities_without_overclaiming(
     assert data["capabilities"]["db_save"]["available"] is False
 
 
-def test_get_optimize_advertises_explicit_dp_v2_1_capability() -> None:
+def test_get_optimize_advertises_explicit_dp_v2_1_capabilities() -> None:
     data = _get_optimize()
 
-    assert data["supported_objectives"] == ["feasibility_best", "dp_v2_1"]
+    assert data["supported_objectives"] == [
+        "feasibility_best",
+        "dp_v2_1",
+        "dp_v2_1_1",
+    ]
     assert data["engine_versions"]["dp_engine"] == engine_version("dp")
     assert data["engine_versions"]["dp_v2_1_engine"] == engine_version("dp_v2_1")
+    assert data["engine_versions"]["dp_v2_1_1_engine"] == engine_version("dp_v2_1_1")
 
 
 def test_dp_v2_1_is_explicit_and_returns_three_axis_contract() -> None:
@@ -161,10 +166,30 @@ def test_dp_v2_1_is_explicit_and_returns_three_axis_contract() -> None:
     }
 
 
-def test_default_objective_remains_dp_v2() -> None:
+def test_dp_v2_1_1_exposes_local_guard_metrics() -> None:
     status_code, result = _post_optimize(
-        {"sequence": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG"}
+        {
+            "sequence": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+            "objective": "dp_v2_1_1",
+            "constraints": {"gc_min": 40.0, "gc_max": 47.0},
+        }
     )
+
+    assert status_code == 200
+    assert result["profile"] == "dp_v2_1_1"
+    assert result["provenance"]["engine_id"] == "dp_v2_1_1"
+    assert result["provenance"]["engine_version"] == engine_version("dp_v2_1_1")
+    assert 20.0 <= result["metrics"]["gc_5p_45nt_percent"] <= 28.89
+    assert result["metrics"]["max_homopolymer_run"] <= 5
+    assert result["design_contract"]["local_composition_guard"] == {
+        "initiation_gc_active_count_band": [13, 13],
+        "initiation_gc_status": "SYNONYMOUS_ENVELOPE_CLAMPED",
+        "homopolymer_max_run": 5,
+    }
+
+
+def test_default_objective_remains_dp_v2() -> None:
+    status_code, result = _post_optimize({"sequence": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG"})
 
     assert status_code == 200
     assert result["provenance"]["engine_id"] == "dp"

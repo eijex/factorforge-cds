@@ -15,7 +15,7 @@ from factorforge.analysis.metrics import load_codon_usage_table
 
 def test_version_manifest_governance():
     """Verify product and multi-generation engine SemVer decoupling."""
-    assert product_version() == "3.5.0"
+    assert product_version() == "3.4.6"
     
     # Gen 1 (Rule)
     assert engine_generation("profile") == 1
@@ -72,7 +72,7 @@ def test_api_provenance_envelope():
     assert response["success"] is True
     assert "provenance" in response
     prov = response["provenance"]
-    assert prov["product_version"] == "3.5.0"
+    assert prov["product_version"] == "3.4.6"
     assert prov["engine_id"] == "dp"
     assert prov["engine_generation"] == 2
     assert prov["engine_version"] == "2.0.1"
