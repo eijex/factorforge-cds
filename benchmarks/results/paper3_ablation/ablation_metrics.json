@@ -1,0 +1,47 @@
+{
+  "benchmark_suite": "Paper 3 4-Arm Multi-Seed Ablation Suite",
+  "total_trials": 36,
+  "num_targets": 9,
+  "num_seeds": 4,
+  "seeds": [
+    42,
+    100,
+    2026,
+    777
+  ],
+  "stage1_arm1_unconstrained_sllm": {
+    "pass_rate_pct": 25.0,
+    "mean_dnt": 0.2122,
+    "mean_runtime_ms": 1334.96
+  },
+  "stage2_arm2_veto_only": {
+    "pass_rate_pct": 33.33,
+    "deadend_rate_pct": 41.67,
+    "mean_runtime_ms": 954.9
+  },
+  "stage3a_arm3a_global_dp_rescue_control": {
+    "pass_rate_pct": 100.0,
+    "global_fallback_rate_pct": 66.67,
+    "mean_prefix_preservation_rate_pct": 33.33,
+    "mean_dnt": 0.0754,
+    "mean_runtime_ms": 1752.55
+  },
+  "stage3b_arm3b_adaptive_partial_dp_rescue": {
+    "pass_rate_pct": 100.0,
+    "pure_sllm_success_count": 16,
+    "pure_sllm_success_pct": 44.44,
+    "partial_dp_rescue_count": 5,
+    "partial_dp_rescue_pct": 13.89,
+    "global_dp_fallback_count": 15,
+    "global_dp_fallback_pct": 41.67,
+    "global_fallback_reduction_rate_pct": 37.5,
+    "mean_prefix_preservation_rate_pct": 48.29,
+    "mean_dnt": 0.089,
+    "mean_runtime_ms": 4689.47
+  },
+  "scientific_invariants_verified": {
+    "zero_defect_guarantee": true,
+    "diversity_retention": true,
+    "prefix_preservation_elevation": true
+  }
+}

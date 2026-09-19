@@ -14,7 +14,7 @@ TYPE_IIS_MOTIFS: Dict[str, List[str]] = {
 
 def get_canonical_forbidden_motifs(forbidden_enzymes: Optional[Set[str]] = None) -> List[str]:
     """Extract canonical forbidden motif sequences from the registry."""
-    enzymes = forbidden_enzymes if forbidden_enzymes is not None else {"BsaI", "BsmBI", "BbsI", "BpiI"}
+    enzymes = forbidden_enzymes if forbidden_enzymes is not None else {"BsaI", "BsmBI", "BbsI", "BpiI", "SapI"}
     motifs: Set[str] = set()
     for enz in enzymes:
         if enz in TYPE_IIS_MOTIFS:

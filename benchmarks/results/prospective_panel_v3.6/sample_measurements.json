@@ -1,0 +1,26 @@
+{
+  "experiment_id": "EXP-20260917-PILOT-01",
+  "measurements": [
+    {
+      "measurement_id": "MSR-001",
+      "sample_id": "SMP-001",
+      "assay_type": "GFP_FLUORESCENCE",
+      "raw_yield_ug_g_fw": 135.2,
+      "qc_status": "PASS"
+    },
+    {
+      "measurement_id": "MSR-002",
+      "sample_id": "SMP-002",
+      "assay_type": "GFP_FLUORESCENCE",
+      "raw_yield_ug_g_fw": 142.1,
+      "qc_status": "PASS"
+    },
+    {
+      "measurement_id": "MSR-003",
+      "sample_id": "SMP-003",
+      "assay_type": "QUANTITATIVE_ELISA",
+      "raw_yield_ug_g_fw": 54.8,
+      "qc_status": "PASS"
+    }
+  ]
+}

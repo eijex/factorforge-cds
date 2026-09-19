@@ -1,0 +1,38 @@
+{
+  "schema_version": "eijex.secure_reproducibility_archive.v0.1",
+  "package_id": "PKG-DBTL-EXP-20260917-PILOT-01",
+  "created_at": "2026-09-18T02:12:28.249252+00:00",
+  "archive_integrity": "SHA-256 tamper-evident",
+  "files": [
+    {
+      "file_name": "panel_sequences.fasta",
+      "sha256": "feb8016448d79493da84e7123bddd6dee55dff25d3f0c5f2d0e4cc76f9e6444d",
+      "contains_sequence": true
+    },
+    {
+      "file_name": "synthesis_manifest.csv",
+      "sha256": "18f0c33098912610c07f58ae7cd03b3132a91b286f8a50d0ffb375406911fe0b",
+      "contains_sequence": true
+    },
+    {
+      "file_name": "blinded_plate_layout.json",
+      "sha256": "4fbd32ad3f68df05785694388eb5bebc5e317db5b67b29683182748ec0aa454f",
+      "contains_sequence": false
+    },
+    {
+      "file_name": "unblinded_mapping.json",
+      "sha256": "506985e6e5ea874299eabd47b6affd020a7f509f1765fb8ef21fed7a2e9f965e",
+      "contains_sequence": false
+    },
+    {
+      "file_name": "scientific_memory_panel.json",
+      "sha256": "6b7b5277eafc68fffcddd87f62d0802e3a7027e76ea535130f8b8d8735868502",
+      "contains_sequence": false
+    },
+    {
+      "file_name": "prospective_dbtl_dataset.json",
+      "sha256": "e7ed7fc544223be9537f8867808fbe450f9425c52611a26230690fe07a2031ea",
+      "contains_sequence": true
+    }
+  ]
+}

@@ -120,7 +120,7 @@ def test_dp_v2_1_1_metrics_emission(codon_weights):
     assert result["mfe_5p_reason"] == "insufficient_upstream_context"
     assert result["mfe_5p_upstream_context_nt"] == 10
     assert "max_homopolymer_run" in result
-    assert result["engine_version"] == "2.1.1-dev"
+    assert result["engine_version"] == "2.1.1"
 
 
 def test_dp_v2_1_1_short_protein_uses_short_active_ramp(codon_weights):

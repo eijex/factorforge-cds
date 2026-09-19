@@ -6,7 +6,7 @@ from factorforge.registry.versioning import engine_version, public_version_metad
 def test_product_and_engine_versions_are_independently_declared() -> None:
     metadata = public_version_metadata()
 
-    assert __version__ == "3.4.6"
+    assert __version__ == "3.6.0"
     assert metadata["product"]["release_status"] == "released"
     assert metadata["engines"]["profile"]["generation"] == 1
     assert metadata["engines"]["dp"]["version"] == engine_version("dp")

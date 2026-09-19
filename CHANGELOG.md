@@ -31,6 +31,30 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
+## [3.6.0] — 2026-09-19
+
+### Added
+
+- Added a versioned Top-K discovery-slate API and CLI with deterministic hard-constraint
+  filtering, trait extraction, Pareto ranking, and sequence-free evidence records.
+- Added feature-gated constrained sLLM generation with synonymous masking, automaton vetoes,
+  corpus/tokenizer tooling, ONNX adapters, and explicit model provenance.
+- Added adaptive partial-DP rescue `1.0.0`, which preserves a verified prefix when possible
+  and solves the remaining suffix exactly under the carried constraint state.
+- Added reproducible discovery and four-arm, multi-seed ablation benchmark runners and tests.
+
+### Changed
+
+- Product version is `3.6.0`; stable DP v2 remains the default production path.
+- DP v2.1.1 is versioned as `2.1.1`; sLLM Hybrid is `0.2.0-preview.1` and remains disabled
+  by default. A prefix-conditioned suffix optimum is reported separately from a global optimum.
+
+### Evidence boundary
+
+- The recorded benchmark artifacts establish only computational feasibility, lineage, and
+  diversity observations. They do not establish expression, yield, synthesis success, folding,
+  clinical performance, or wet-lab validation.
+
 ### Changed
 - Added the explicit `objective=dp_v2_1_1` API/web path for engine `2.1.1-dev`.
   It retains the `(position, cumulative GC, automaton state)` DP state, prunes
