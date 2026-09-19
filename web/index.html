@@ -70,7 +70,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.5.0 Release Candidate Notes
+                            v3.6.0 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -958,23 +958,24 @@
                     class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
             </div>
             <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
-                <!-- Version 3.5.0 release candidate -->
-                <div class="relative pl-8 border-l-2 border-emerald-500">
+                <!-- Version 3.6.0 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-700">
                     <div
-                        class="absolute -left-[9px] top-0 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-300 dark:bg-slate-600 rounded-full border-4 border-white dark:border-slate-900">
                     </div>
                     <div class="flex items-center space-x-2 mb-2">
                         <span
-                            class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">In preparation</span>
-                        <h3 class="font-bold text-slate-800 dark:text-white">v3.5.0 RC &mdash; Rule Gen 1, DP v2 Gen 2 &amp; sLLM Gen 3 Preview</h3>
-                        <span class="text-slate-400 text-[10px]">2026-09-13</span>
+                            class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.0 &mdash; Discovery Slates, Constrained sLLM &amp; Partial-DP Rescue</h3>
+                        <span class="text-slate-400 text-[10px]">2026-09-19</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
                         <li><b>Researcher decision report:</b> decision-first summary, prioritized next actions, requested-vs-applied settings, detailed checks, reproducibility provenance, print-friendly HTML, and sequence-free evidence JSON.</li>
-                        <li><b>Engine generations:</b> Rule 1.0.0 is Gen 1, stable DP v2 2.0.1 and development-candidate DP v2.1 2.1.0-dev are Gen 2, and sLLM Hybrid 0.1 is Gen 3 Preview.</li>
+                        <li><b>Engine generations:</b> Rule 1.0.0 is Gen 1, stable DP v2 2.0.1 and explicit DP v2.1.1 2.1.1 are Gen 2, and sLLM Hybrid 0.2.0-preview.1 is Gen 3 Preview.</li>
                         <li><b>DP v2:</b> the default public DP path tracks GC count and configured forbidden-motif automaton state while preserving the <code>feasibility_best</code> contract.</li>
-                        <li><b>DP v2.1:</b> explicit opt-in adds position-dependent 5′ initiation-aware scoring and reports a three-axis evidence contract; RNA folding is not computed during generation.</li>
-                        <li><b>sLLM boundary:</b> the preview is feature-gated and does not claim a trained production model.</li>
+                        <li><b>Discovery slates:</b> the research API can produce several versioned, constraint-checked hypotheses with explicit generator lineage.</li>
+                        <li><b>Partial-DP rescue:</b> a blocked learned path can preserve a verified prefix and solve the suffix exactly under the carried state; this is not a global optimum claim.</li>
+                        <li><b>sLLM boundary:</b> the preview is feature-gated and does not claim biological performance.</li>
                         <li><b>Evaluation status:</b> Missing evaluations display as Not evaluated. Sequence checks do not establish biological performance.</li>
                         <li><b>Availability:</b> sLLM preview and database saving remain disabled unless the deployment reports support.</li>
                     </ul>

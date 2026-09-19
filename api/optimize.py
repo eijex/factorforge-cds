@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.4.6
+Product Version: 3.6.0
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -245,7 +245,7 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": product_version() if FACTORFORGE_AVAILABLE else "3.4.6",
+    "product": product_version() if FACTORFORGE_AVAILABLE else "3.6.0",
     "rule_engine": engine_version("profile") if FACTORFORGE_AVAILABLE else "1.0.0",
     "dp_engine": engine_version("dp") if FACTORFORGE_AVAILABLE else "2.0.1",
     "dp_v2_1_engine": (engine_version("dp_v2_1") if FACTORFORGE_AVAILABLE else "2.1.0-dev"),
@@ -301,6 +301,10 @@ class handler(BaseHTTPRequestHandler):
                 return
             if request_path == "/api/optimize/batch":
                 status_code, result = self.handle_batch_request(data)
+                self.send_json_response(status_code, result)
+                return
+            if request_path in {"/api/slate", "/api/optimize/slate"}:
+                status_code, result = self.handle_slate_request(data)
                 self.send_json_response(status_code, result)
                 return
 
@@ -529,6 +533,7 @@ class handler(BaseHTTPRequestHandler):
                 "POST /api/optimize": "Run codon optimization",
                 "POST /api/optimize/compare": "Compare profile optimization results",
                 "POST /api/optimize/batch": "Run batch profile optimization",
+                "POST /api/slate": "Run multi-contract discovery and generate diverse Top-K candidate slate",
                 "GET /api/optimize": "Health check",
             },
             "supported_profiles": VALID_PROFILES,
@@ -550,7 +555,7 @@ class handler(BaseHTTPRequestHandler):
             "version_manifest": (
                 public_version_metadata()
                 if FACTORFORGE_AVAILABLE
-                else {"product": {"version": "3.4.6", "release_status": "released"}}
+                else {"product": {"version": "3.6.0", "release_status": "released"}}
             ),
             "validation_registry_version": VALIDATION_REGISTRY_VERSION,
             "validation_report_schema_version": VALIDATION_REPORT_SCHEMA_VERSION,
@@ -1067,6 +1072,56 @@ class handler(BaseHTTPRequestHandler):
             )
 
         return {"results": results, "count": len(results), "profile": profile}
+
+    def handle_slate_request(self, data: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        """Handle POST /api/slate requests to generate diverse Top-K discovery slates."""
+        try:
+            raw_sequence = str(data.get("sequence", "")).strip()
+            if not raw_sequence:
+                return 400, {"success": False, "error": "sequence is required and must be non-empty"}
+
+            target_name = str(data.get("target_name", "Target-Protein")).strip() or "Target-Protein"
+            mature_length = data.get("mature_protein_aa_length")
+            if mature_length is not None:
+                mature_length = int(mature_length)
+            construct_length = data.get("construct_aa_length")
+            if construct_length is not None:
+                construct_length = int(construct_length)
+            signal_peptide_included = bool(data.get("signal_peptide_included", False))
+            novelty_class = str(data.get("novelty_class", "Class_A_InDistribution")).strip()
+            top_k = int(data.get("top_k", 3))
+            if top_k < 1 or top_k > 10:
+                raise ValueError("top_k must be between 1 and 10")
+
+            host = self.validate_host(data.get("host", DEFAULT_HOST_PROFILE))
+            internal_host = HOST_MAP[host]
+
+            if not FACTORFORGE_AVAILABLE:
+                logger.error("FactorForge engine unavailable for discovery slate")
+                return 503, {"success": False, "error": "Engine unavailable. Contact support."}
+
+            from factorforge.discovery.slate import DiscoverySlateEngine
+
+            engine = DiscoverySlateEngine(host=internal_host)
+            slate = engine.generate_slate(
+                target_aa=raw_sequence,
+                target_name=target_name,
+                mature_protein_aa_length=mature_length,
+                construct_aa_length=construct_length,
+                signal_peptide_included=signal_peptide_included,
+                novelty_class=novelty_class,
+                top_k=top_k,
+            )
+
+            result = {"success": True, "data": slate.to_dict()}
+            return 200, result
+
+        except ValueError as e:
+            logger.warning(f"Slate validation error: {e}")
+            return 400, {"success": False, "error": str(e)}
+        except Exception as e:
+            logger.error(f"Unexpected slate error: {e}", exc_info=True)
+            return 500, {"success": False, "error": f"Internal server error: {type(e).__name__}: {str(e)}"}
 
     def attach_design_review(
         self,

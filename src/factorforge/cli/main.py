@@ -742,7 +742,167 @@ def evaluate_model(model_id, train_snapshot, eval_snapshot, input_sequence):
     except Exception as db_e:
         click.echo("Evaluation completed, but DB persistence failed.", err=True)
         click.echo(f"DB Error Details: {db_e}", err=True)
-        raise click.Abort()
+
+@cli.command()
+@click.argument("input_file", type=click.Path(exists=True), required=False)
+@click.option("--sequence", "-s", help="Raw protein amino acid sequence string")
+@click.option("--target-name", default="Target-Protein", help="Human-readable target construct name")
+@click.option("--top-k", "-k", default=3, type=int, help="Number of Top-K candidate designs to return (1-10)")
+@click.option("--host", default="nbenthamiana", type=click.Choice(["nbenthamiana", "by2"]), help="Host organism")
+@click.option("--novelty-class", default="Class_A_InDistribution", help="Novelty stratification class")
+@click.option("--output", "-o", type=click.Path(), help="Output path for JSON Candidate Slate")
+@click.option("--json-output", is_flag=True, help="Print raw JSON to stdout")
+def slate(
+    input_file,
+    sequence,
+    target_name,
+    top_k,
+    host,
+    novelty_class,
+    output,
+    json_output,
+):
+    """
+    Run multi-contract discovery to produce a diverse, Pareto-filtered Top-K candidate slate.
+    """
+    _configure_stdio()
+    if input_file:
+        fasta_records = parse_fasta_records(input_file)
+        if not fasta_records:
+            raise click.UsageError(f"No FASTA records found in {input_file}")
+        target_name = fasta_records[0].header or target_name
+        target_aa = fasta_records[0].sequence
+    elif sequence:
+        target_aa = sequence
+    else:
+        raise click.UsageError("Either INPUT_FILE or --sequence must be provided.")
+
+    from factorforge.discovery.slate import DiscoverySlateEngine
+
+    engine = DiscoverySlateEngine(host=HOST_MAP.get(host, "nbenthamiana"))
+    candidate_slate = engine.generate_slate(
+        target_aa=target_aa,
+        target_name=target_name,
+        novelty_class=novelty_class,
+        top_k=top_k,
+    )
+
+    data = candidate_slate.to_dict()
+    if output:
+        with open(output, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        click.echo(f"Candidate slate saved to: {output}")
+    elif json_output:
+        click.echo(json.dumps(data, indent=2))
+    else:
+        click.echo(f"\n=======================================================")
+        click.echo(f"FactorForge Discovery Slate: {candidate_slate.target_metadata.target_name}")
+        click.echo(f"Run ID: {candidate_slate.run_id}")
+        click.echo(f"Top-K Candidates: {candidate_slate.slate_summary.top_k_count} / Feasible: {candidate_slate.slate_summary.feasible_pool_size}")
+        click.echo(f"Diversity Index: {candidate_slate.slate_summary.diversity_index:.4f}")
+        click.echo(f"=======================================================\n")
+        for cand in candidate_slate.candidates:
+            click.echo(f"[{cand.rank}] {cand.strategy_cluster} (Utility: {cand.utility_score:.3f})")
+            click.echo(f"    Contract: {cand.generation_contract}")
+            click.echo(f"    CAI: {cand.trait_vector.cai_golden_set:.3f} | GC: {cand.trait_vector.global_gc_percent:.1f}% | 5' MFE: {cand.trait_vector.initiation_mfe_kcal_mol} kcal/mol")
+            click.echo(f"    Digest: {cand.sequence_digest}")
+            click.echo(f"    Rationale: {cand.rationale}\n")
+
+
+@cli.command("acquisition-panel")
+@click.option("--output-dir", "-o", default="benchmarks/results/prospective_panel_v3.6", help="Output directory for prospective panel package")
+@click.option("--replicates", "-r", default=3, type=int, help="Biological replicates per construct")
+@click.option("--seed", "-s", default=42, type=int, help="Randomization seed for blinded plate assignment")
+@click.option("--experiment-id", default="EXP-20260917-PILOT-01", help="Experimental run identifier")
+@click.option("--host", default="nbenthamiana", type=click.Choice(["nbenthamiana", "by2"]), help="Host organism")
+def acquisition_panel(output_dir, replicates, seed, experiment_id, host):
+    """
+    Generate prospective 9-construct experimental panel + controls with randomized plate layout (Job 283C).
+    """
+    _configure_stdio()
+    from factorforge.discovery.acquisition_logger import AcquisitionLogger
+    from factorforge.discovery.panel_builder import ProspectivePanelBuilder
+
+    builder = ProspectivePanelBuilder(host=HOST_MAP.get(host, "nbenthamiana"))
+    dataset, aux_data = builder.build_panel(
+        replicates_per_construct=replicates,
+        seed=seed,
+        experiment_id=experiment_id,
+    )
+
+    out_p = Path(output_dir)
+    logger = AcquisitionLogger(base_output_dir=out_p.parent)
+    saved_dir = logger.export_prospective_panel(
+        dataset=dataset,
+        aux_data=aux_data,
+        subfolder=out_p.name,
+    )
+
+    click.echo(f"\n=======================================================")
+    click.echo(f"FactorForge Prospective DBTL Panel Built (Job 283C)")
+    click.echo(f"Experiment ID: {experiment_id}")
+    click.echo(f"Constructs: {len(dataset.constructs)} (9 experimental + 2 controls)")
+    click.echo(f"Total Samples (Wells): {len(dataset.samples)} (N={replicates} replicates)")
+    click.echo(f"Package Directory: {saved_dir}")
+    click.echo(f"Dataset SHA-256: {dataset.archive_sha256}")
+    click.echo(f"=======================================================\n")
+    for tname, rep in aux_data["orthogonality_report"].items():
+        click.echo(f"Target [{tname}] Orthogonality Gate: {'PASSED' if rep['orthogonality_passed'] else 'FAILED'}")
+        for pair, d in rep["pairwise_distances"].items():
+            click.echo(f"  - {pair}: distance = {d:.4f}")
+    click.echo("\nArtifacts Generated:")
+    click.echo("  1. panel_sequences.fasta (Synthesis FASTA)")
+    click.echo("  2. synthesis_manifest.csv (Order Manifest)")
+    click.echo("  3. blinded_plate_layout.json (Operator Infiltration Sheet)")
+    click.echo("  4. unblinded_mapping.json (Cryptographic Mapping)")
+    click.echo("  5. scientific_memory_panel.json (Sequence-Free Feature Store)")
+    click.echo("  6. prospective_dbtl_dataset.json (Paired DBTL Dataset Container)")
+    click.echo("  7. secure_archive_manifest.json (SHA-256 Tamper-Evident Index)\n")
+
+
+@cli.command("ingest-outcome")
+@click.argument("dataset_file", type=click.Path(exists=True))
+@click.argument("measurements_file", type=click.Path(exists=True))
+@click.option("--output", "-o", type=click.Path(), help="Output path for updated dataset JSON")
+def ingest_outcome(dataset_file, measurements_file, output):
+    """
+    Ingest empirical wet-lab measurements into a PairedDBTLDataset container.
+    """
+    _configure_stdio()
+    from factorforge.discovery.acquisition import PairedDBTLDataset
+    from factorforge.discovery.acquisition_logger import AcquisitionLogger
+
+    with open(dataset_file, "r", encoding="utf-8") as f:
+        ds_dict = json.load(f)
+    dataset = PairedDBTLDataset.from_dict(ds_dict)
+
+    with open(measurements_file, "r", encoding="utf-8") as f:
+        msr_data = json.load(f)
+
+    if isinstance(msr_data, dict) and "measurements" in msr_data:
+        raw_list = msr_data["measurements"]
+    elif isinstance(msr_data, list):
+        raw_list = msr_data
+    else:
+        raise click.UsageError("Measurements file must be a JSON array or object with 'measurements' key.")
+
+    updated_ds = AcquisitionLogger.ingest_wet_lab_measurements(
+        dataset=dataset,
+        raw_measurements=raw_list,
+    )
+
+    out_path = output or dataset_file
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(updated_ds.to_dict(include_sequence=True), f, indent=2)
+
+    click.echo(f"\n=======================================================")
+    click.echo(f"Successfully Ingested {len(raw_list)} Wet-Lab Measurements")
+    click.echo(f"Derived Outcomes Generated: {len(updated_ds.derived_outcomes)}")
+    click.echo(f"Updated Dataset Saved: {out_path}")
+    click.echo(f"Updated Archive SHA-256: {updated_ds.archive_sha256}")
+    click.echo(f"=======================================================\n")
+
 
 if __name__ == "__main__":
     cli()
+

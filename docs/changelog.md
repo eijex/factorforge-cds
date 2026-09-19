@@ -4,6 +4,15 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.6.0 — Discovery slate and neuro-symbolic research update
+
+- Added Top-K discovery slates with versioned generator lineage, shared hard checks,
+  trait extraction, Pareto ranking, and sequence-free research records.
+- Added constrained sLLM Hybrid 0.2.0-preview.1 and adaptive partial-DP rescue 1.0.0.
+- DP v2.1.1 is versioned as 2.1.1; stable DP v2 2.0.1 remains the default.
+- All current evidence is computational. No expression, yield, synthesis, folding,
+  clinical, or wet-lab performance claim is made.
+
 ## v3.4.6 — DP v2.1.1 product update
 
 - Product and engine versions are now distinct: Rule 1.0.0, DP v2 2.0.1,

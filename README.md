@@ -14,14 +14,15 @@
 
 FactorForge performs deterministic CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. It is positioned as a pre-synthesis review harness: it helps teams generate reproducible CDS candidates, inspect assembly-relevant sequence constraints, and package design metadata before downstream synthesis, cloning, or experimental review. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
 
-FactorForge v3.4.6 uses independently versioned engines:
+FactorForge v3.6.0 uses independently versioned engines:
 
 | Generation | Engine | Version | Availability |
 |---|---|---:|---|
 | Gen 1 | Rule/profile | 1.0.0 | Stable, public |
 | Gen 2 | DP v2 | 2.0.1 | Stable, public default feasibility path |
-| Gen 2 | DP v2.1.1 | 2.1.1-dev | Explicit API/web development candidate; calibration complete, holdout pending |
-| Gen 3 | sLLM Hybrid | 0.1.0-preview.1 | Feature-gated research preview; no trained model is claimed |
+| Gen 2 | DP v2.1.1 | 2.1.1 | Explicit local-guard path; computational evidence only |
+| Gen 3 | sLLM Hybrid | 0.2.0-preview.1 | Feature-gated constrained-generation research preview |
+| Rescue | Adaptive partial DP | 1.0.0 | Exact suffix rescue conditioned on a verified prefix |
 
 **→ [Full Documentation](https://eijex.github.io/factorforge-cds/)** · **[Roadmap](https://eijex.github.io/factorforge-cds/roadmap/)**
 
@@ -58,6 +59,8 @@ the explicit DP v2.1.1 development candidate under:
 src/factorforge/engines/profile/
 src/factorforge/engines/dp_v2.py
 src/factorforge/engines/dp_v2_1_1.py
+src/factorforge/engines/sllm/
+src/factorforge/discovery/
 ```
 
 DP v2.1.1 adds an exact active-layer 5′ GC guard and Aho-Corasick rejection of
@@ -66,6 +69,12 @@ local-composition metrics and, when ViennaRNA and sufficient transcript context
 are available, a separately evaluated 5′ MFE value. It is not the default; its
 single-target calibration does not establish holdout generalization or biological
 performance.
+
+The v3.6.0 discovery-slate surface generates versioned Top-K research candidates,
+applies a shared deterministic hard-constraint filter, and records generator and
+fallback lineage. The sLLM path is disabled by default. A partial-DP rescue solves
+an exact suffix conditioned on the retained prefix; it is not a claim of global
+optimality and does not establish biological performance.
 
 Historical implementation tracks are preserved under `archive/` for provenance
 and are not imported by the installed package or exposed as supported engines.
@@ -81,7 +90,7 @@ FactorForge outputs are **in-silico only** and have not been experimentally vali
 ## Citing
 
 ```
-FactorForge v3.4.5 (2026). Open-source constraint-based CDS design and sequence review.
+FactorForge v3.6.0 (2026). Open-source constraint-based CDS design and sequence review.
 Eijex. https://github.com/eijex/factorforge-cds
 ```
 
