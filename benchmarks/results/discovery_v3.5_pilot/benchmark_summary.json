@@ -1,5 +1,5 @@
 {
-  "benchmark_id": "FF-DISCOVERY-PILOT-v3.6",
+  "benchmark_id": "FF-DISCOVERY-PILOT-v3.5",
   "reference_corpus_id": "NB-EXPRESSION-REF-v1",
   "timestamp_utc": "2026-09-18T02:11:27.598297+00:00",
   "host": "nbenthamiana",

@@ -524,7 +524,7 @@ wheels = [
 
 [[package]]
 name = "factorforge-cds"
-version = "3.6.0"
+version = "3.5.0"
 source = { editable = "." }
 dependencies = [
     { name = "biopython" },

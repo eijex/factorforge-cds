@@ -4,7 +4,7 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
-## v3.6.0 — Discovery slate and neuro-symbolic research update
+## v3.5.0 — Discovery slate and neuro-symbolic research update
 
 - Added Top-K discovery slates with versioned generator lineage, shared hard checks,
   trait extraction, Pareto ranking, and sequence-free research records.

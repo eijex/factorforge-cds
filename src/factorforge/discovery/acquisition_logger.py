@@ -30,7 +30,7 @@ class AcquisitionLogger:
         self,
         dataset: PairedDBTLDataset,
         aux_data: Dict[str, Any],
-        subfolder: str = "prospective_panel_v3.6",
+        subfolder: str = "prospective_panel_v3.5",
     ) -> Path:
         """Exports synthesis order manifests, FASTA, blinded plate layout,
 

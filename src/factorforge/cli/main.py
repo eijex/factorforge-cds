@@ -795,12 +795,12 @@ def slate(
     elif json_output:
         click.echo(json.dumps(data, indent=2))
     else:
-        click.echo(f"\n=======================================================")
+        click.echo("\n=======================================================")
         click.echo(f"FactorForge Discovery Slate: {candidate_slate.target_metadata.target_name}")
         click.echo(f"Run ID: {candidate_slate.run_id}")
         click.echo(f"Top-K Candidates: {candidate_slate.slate_summary.top_k_count} / Feasible: {candidate_slate.slate_summary.feasible_pool_size}")
         click.echo(f"Diversity Index: {candidate_slate.slate_summary.diversity_index:.4f}")
-        click.echo(f"=======================================================\n")
+        click.echo("=======================================================\n")
         for cand in candidate_slate.candidates:
             click.echo(f"[{cand.rank}] {cand.strategy_cluster} (Utility: {cand.utility_score:.3f})")
             click.echo(f"    Contract: {cand.generation_contract}")
@@ -810,7 +810,7 @@ def slate(
 
 
 @cli.command("acquisition-panel")
-@click.option("--output-dir", "-o", default="benchmarks/results/prospective_panel_v3.6", help="Output directory for prospective panel package")
+@click.option("--output-dir", "-o", default="benchmarks/results/prospective_panel_v3.5", help="Output directory for prospective panel package")
 @click.option("--replicates", "-r", default=3, type=int, help="Biological replicates per construct")
 @click.option("--seed", "-s", default=42, type=int, help="Randomization seed for blinded plate assignment")
 @click.option("--experiment-id", default="EXP-20260917-PILOT-01", help="Experimental run identifier")
@@ -838,14 +838,14 @@ def acquisition_panel(output_dir, replicates, seed, experiment_id, host):
         subfolder=out_p.name,
     )
 
-    click.echo(f"\n=======================================================")
-    click.echo(f"FactorForge Prospective DBTL Panel Built (Job 283C)")
+    click.echo("\n=======================================================")
+    click.echo("FactorForge Prospective DBTL Panel Built (Job 283C)")
     click.echo(f"Experiment ID: {experiment_id}")
     click.echo(f"Constructs: {len(dataset.constructs)} (9 experimental + 2 controls)")
     click.echo(f"Total Samples (Wells): {len(dataset.samples)} (N={replicates} replicates)")
     click.echo(f"Package Directory: {saved_dir}")
     click.echo(f"Dataset SHA-256: {dataset.archive_sha256}")
-    click.echo(f"=======================================================\n")
+    click.echo("=======================================================\n")
     for tname, rep in aux_data["orthogonality_report"].items():
         click.echo(f"Target [{tname}] Orthogonality Gate: {'PASSED' if rep['orthogonality_passed'] else 'FAILED'}")
         for pair, d in rep["pairwise_distances"].items():
@@ -895,12 +895,12 @@ def ingest_outcome(dataset_file, measurements_file, output):
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(updated_ds.to_dict(include_sequence=True), f, indent=2)
 
-    click.echo(f"\n=======================================================")
+    click.echo("\n=======================================================")
     click.echo(f"Successfully Ingested {len(raw_list)} Wet-Lab Measurements")
     click.echo(f"Derived Outcomes Generated: {len(updated_ds.derived_outcomes)}")
     click.echo(f"Updated Dataset Saved: {out_path}")
     click.echo(f"Updated Archive SHA-256: {updated_ds.archive_sha256}")
-    click.echo(f"=======================================================\n")
+    click.echo("=======================================================\n")
 
 
 if __name__ == "__main__":
