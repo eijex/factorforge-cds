@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.6.0
+Product Version: 3.5.0
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -245,7 +245,7 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": product_version() if FACTORFORGE_AVAILABLE else "3.6.0",
+    "product": product_version() if FACTORFORGE_AVAILABLE else "3.5.0",
     "rule_engine": engine_version("profile") if FACTORFORGE_AVAILABLE else "1.0.0",
     "dp_engine": engine_version("dp") if FACTORFORGE_AVAILABLE else "2.0.1",
     "dp_v2_1_engine": (engine_version("dp_v2_1") if FACTORFORGE_AVAILABLE else "2.1.0-dev"),
@@ -555,7 +555,12 @@ class handler(BaseHTTPRequestHandler):
             "version_manifest": (
                 public_version_metadata()
                 if FACTORFORGE_AVAILABLE
-                else {"product": {"version": "3.6.0", "release_status": "released"}}
+                else {
+                    "product": {
+                        "version": "3.5.0",
+                        "release_status": "web_api_deployed_tag_pending",
+                    }
+                }
             ),
             "validation_registry_version": VALIDATION_REGISTRY_VERSION,
             "validation_report_schema_version": VALIDATION_REPORT_SCHEMA_VERSION,
@@ -1078,7 +1083,10 @@ class handler(BaseHTTPRequestHandler):
         try:
             raw_sequence = str(data.get("sequence", "")).strip()
             if not raw_sequence:
-                return 400, {"success": False, "error": "sequence is required and must be non-empty"}
+                return 400, {
+                    "success": False,
+                    "error": "sequence is required and must be non-empty",
+                }
 
             target_name = str(data.get("target_name", "Target-Protein")).strip() or "Target-Protein"
             mature_length = data.get("mature_protein_aa_length")
@@ -1121,7 +1129,10 @@ class handler(BaseHTTPRequestHandler):
             return 400, {"success": False, "error": str(e)}
         except Exception as e:
             logger.error(f"Unexpected slate error: {e}", exc_info=True)
-            return 500, {"success": False, "error": f"Internal server error: {type(e).__name__}: {str(e)}"}
+            return 500, {
+                "success": False,
+                "error": f"Internal server error: {type(e).__name__}: {str(e)}",
+            }
 
     def attach_design_review(
         self,

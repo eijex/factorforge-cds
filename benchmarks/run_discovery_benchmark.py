@@ -381,7 +381,7 @@ def run_benchmark(
     }
 
     summary = {
-        "benchmark_id": "FF-DISCOVERY-PILOT-v3.6",
+        "benchmark_id": "FF-DISCOVERY-PILOT-v3.5",
         "reference_corpus_id": panel_data.get("reference_corpus_id", "NB-EXPRESSION-REF-v1"),
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
         "host": host,
@@ -527,7 +527,7 @@ def main():
     parser.add_argument(
         "--out-dir",
         type=str,
-        default="benchmarks/results/discovery_v3.6_pilot",
+        default="benchmarks/results/discovery_v3.5_pilot",
         help="Output directory for results.",
     )
     parser.add_argument("--host", type=str, default="nbenthamiana", help="Host expression system.")

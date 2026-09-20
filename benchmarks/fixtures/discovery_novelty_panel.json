@@ -1,6 +1,6 @@
 {
   "manifest_version": "1.1.0",
-  "benchmark_suite_id": "FF-DISCOVERY-PILOT-v3.6",
+  "benchmark_suite_id": "FF-DISCOVERY-PILOT-v3.5",
   "reference_corpus_id": "NB-EXPRESSION-REF-v1",
   "created_date": "2026-09-17",
   "last_updated": "2026-09-18",

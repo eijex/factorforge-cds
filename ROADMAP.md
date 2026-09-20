@@ -2,23 +2,25 @@
 
 FactorForge development direction and planned work.
 
-> Current product line: **v3.6.0** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current product line: **v3.5.0** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
 
 ## Current Release Status
 
-FactorForge v3.4.6 extends the public product line with an explicit DP v2.1.1
-path while retaining stable DP v2 as the default. The preceding v3.4.5 release
+FactorForge v3.5.0 extends the web/API product line with Top-K discovery slates,
+an explicit DP v2.1.1 path, constrained-sLLM research integration, and adaptive
+partial-DP rescue while retaining stable DP v2 as the default. The preceding v3.4.5 release
 completed the interface-reliability patch line: browser
 interactions were restored, release checks were strengthened, and product,
 API, engine, registry, documentation, and fixture version surfaces were
 synchronized. The supported public boundary remains deterministic in-silico
 CDS design and pre-synthesis sequence review. sLLM Gen 3 remains a separate,
-feature-gated research preview and is not part of the v3.4.6 readiness claim.
+feature-gated research preview and does not imply a trained production model or
+biological validation. The v3.5.0 Git tag and package publication remain pending.
 
-DP v2.1.1 (`2.1.1-dev`) is the current explicit Gen 2 development candidate.
+DP v2.1.1 (`2.1.1`) is the current explicit Gen 2 research candidate.
 It adds a 45-nt initiation-GC active layer and >=6-nt homopolymer automaton
 guard without adding a DP state dimension. Target-mAb-A calibration is complete;
 the frozen 36-protein holdout gate remains pending, so stable DP v2 `2.0.1`

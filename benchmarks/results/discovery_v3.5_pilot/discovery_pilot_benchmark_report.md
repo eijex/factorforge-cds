@@ -1,6 +1,6 @@
 # FactorForge Discovery Top-K Slate Pilot Benchmark Report (Phase 283B)
 
-**Benchmark Suite ID**: `FF-DISCOVERY-PILOT-v3.6`  
+**Benchmark Suite ID**: `FF-DISCOVERY-PILOT-v3.5`  
 **Host Expression System**: `nbenthamiana`  
 **Reference Corpus**: `NB-EXPRESSION-REF-v1`  
 **Evaluation Seed**: `42`  

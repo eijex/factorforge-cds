@@ -31,7 +31,9 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
-## [3.6.0] — 2026-09-19
+## [3.5.0] — 2026-09-19
+
+Web/API deployed; Git tag and package publication pending.
 
 ### Added
 
@@ -45,7 +47,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Changed
 
-- Product version is `3.6.0`; stable DP v2 remains the default production path.
+- Product version is `3.5.0`; stable DP v2 remains the default production path.
 - DP v2.1.1 is versioned as `2.1.1`; sLLM Hybrid is `0.2.0-preview.1` and remains disabled
   by default. A prefix-conditioned suffix optimum is reported separately from a global optimum.
 
