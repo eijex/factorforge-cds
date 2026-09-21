@@ -33,7 +33,16 @@ const TYPE_IIS_PRESETS = Object.freeze({
     SapI: 'GAAGAGC'
 });
 let hostGcRanges = {};
+let hostMetadata = {};
 let apiCapabilities = {};
+
+const CODON_TABLE = Object.freeze({
+    TTT:'F',TTC:'F',TTA:'L',TTG:'L',TCT:'S',TCC:'S',TCA:'S',TCG:'S',TAT:'Y',TAC:'Y',TAA:'*',TAG:'*',TGT:'C',TGC:'C',TGA:'*',TGG:'W',
+    CTT:'L',CTC:'L',CTA:'L',CTG:'L',CCT:'P',CCC:'P',CCA:'P',CCG:'P',CAT:'H',CAC:'H',CAA:'Q',CAG:'Q',CGT:'R',CGC:'R',CGA:'R',CGG:'R',
+    ATT:'I',ATC:'I',ATA:'I',ATG:'M',ACT:'T',ACC:'T',ACA:'T',ACG:'T',AAT:'N',AAC:'N',AAA:'K',AAG:'K',AGT:'S',AGC:'S',AGA:'R',AGG:'R',
+    GTT:'V',GTC:'V',GTA:'V',GTG:'V',GCT:'A',GCC:'A',GCA:'A',GCG:'A',GAT:'D',GAC:'D',GAA:'E',GAG:'E',GGT:'G',GGC:'G',GGA:'G',GGG:'G'
+});
+const AA_NAMES = Object.freeze({A:'Ala',R:'Arg',N:'Asn',D:'Asp',C:'Cys',Q:'Gln',E:'Glu',G:'Gly',H:'His',I:'Ile',L:'Leu',K:'Lys',M:'Met',F:'Phe',P:'Pro',S:'Ser',T:'Thr',W:'Trp',Y:'Tyr',V:'Val','*':'Stop'});
 
 function getGcRange(hostId) {
     return hostGcRanges[hostId] || OFFLINE_GC_RANGES[hostId] || OFFLINE_GC_RANGES.nbenthamiana;
@@ -73,6 +82,7 @@ const state = {
     selectedTypeIisEnzymes: [],
     reviewerDisposition: null,
     results: null,
+    reportData: null,
     isOptimizing: false,
     history: loadVersionedHistory()
 };
@@ -101,6 +111,7 @@ const elements = {
     optimizedSequence: document.getElementById('optimizedSequence'),
     jsonDetails: document.getElementById('jsonDetails'),
     downloadFasta: document.getElementById('downloadFasta'),
+    exportInteractiveReport: document.getElementById('exportInteractiveReport'),
     downloadGenbank: document.getElementById('downloadGenbank'),
     copyBtn: document.getElementById('copyBtn'),
     constructIdRow: document.getElementById('constructIdRow'),
@@ -110,6 +121,20 @@ const elements = {
     alphafoldLink: document.getElementById('alphafoldLink'),
     esmatlasFoldLink: document.getElementById('esmatlasFoldLink'),
     copyJsonBtn: document.getElementById('copyJsonBtn'),
+    statTotalCodons: document.getElementById('statTotalCodons'),
+    statShifts: document.getElementById('statShifts'),
+    statUnchanged: document.getElementById('statUnchanged'),
+    statSubstitutions: document.getElementById('statSubstitutions'),
+    statShiftBreakdown: document.getElementById('statShiftBreakdown'),
+    statAaIdentity: document.getElementById('statAaIdentity'),
+    interactiveTrackContainer: document.getElementById('interactiveTrackContainer'),
+    canvasOriginalTrack: document.getElementById('canvasOriginalTrack'),
+    canvasOptimizedTrack: document.getElementById('canvasOptimizedTrack'),
+    trackAvailability: document.getElementById('trackAvailability'),
+    inspectorPosition: document.getElementById('inspectorPosition'),
+    inspectorCodons: document.getElementById('inspectorCodons'),
+    inspectorRationale: document.getElementById('inspectorRationale'),
+    inspectorConstraints: document.getElementById('inspectorConstraints'),
     toggleDetails: document.getElementById('toggleDetails'),
     detailsContent: document.getElementById('detailsContent'),
     toggleArrow: document.getElementById('toggleArrow'),
@@ -244,6 +269,7 @@ async function loadApiMetadata() {
         if (response.ok) {
             const data = await response.json();
             if (data.host_metadata && typeof data.host_metadata === 'object') {
+                hostMetadata = data.host_metadata;
                 Object.entries(data.host_metadata).forEach(([id, meta]) => {
                     if (meta && meta.gc_range) {
                         hostGcRanges[id] = meta.gc_range;
@@ -338,6 +364,10 @@ function initEventListeners() {
 
     // Results Actions
     elements.downloadFasta.addEventListener('click', () => downloadFile('fasta'));
+    elements.exportInteractiveReport?.addEventListener('click', () => {
+        if (!state.reportData) return showToast('Run an optimization before exporting a report.', 'info');
+        downloadInteractiveReport(state.reportData);
+    });
     elements.downloadGenbank.addEventListener('click', () => downloadFile('genbank'));
     elements.copyBtn.addEventListener('click', copyToClipboard);
     elements.copyConstructId.addEventListener('click', copyConstructId);
@@ -750,6 +780,178 @@ function formatHostProfile(hostProfile) {
     return `${hostProfile} (${label})`;
 }
 
+function normalizedDna(value) {
+    return String(value || '').toUpperCase().replace(/[^ACGT]/g, '');
+}
+
+function codonsWithoutTerminalStop(sequence) {
+    const dna = normalizedDna(sequence);
+    if (!dna || dna.length % 3 !== 0) return { valid: false, codons: [], hasStopCodon: false };
+    const codons = dna.match(/.{3}/g) || [];
+    const hasStopCodon = CODON_TABLE[codons.at(-1)] === '*';
+    return { valid: true, codons: hasStopCodon ? codons.slice(0, -1) : codons, hasStopCodon };
+}
+
+function responseCodonFrequencies(res, hostId) {
+    const candidates = [
+        res?.host_codon_frequencies,
+        res?.codon_frequencies,
+        res?.host_metadata?.[hostId]?.codon_frequencies,
+        hostMetadata?.[hostId]?.codon_frequencies,
+    ];
+    const source = candidates.find(value => value && typeof value === 'object');
+    if (!source) return {};
+    return Object.fromEntries(Object.entries(source).map(([codon, raw]) => {
+        const value = Number(typeof raw === 'object' ? raw.frequency : raw);
+        return [codon.toUpperCase(), Number.isFinite(value) ? (value > 1 ? value / 100 : value) : null];
+    }));
+}
+
+function localGcAtCodon(sequence, codonIndex, windowSize = 50) {
+    const dna = normalizedDna(sequence);
+    if (!dna) return null;
+    const center = codonIndex * 3 + 1;
+    const start = Math.max(0, Math.min(dna.length - windowSize, center - Math.floor(windowSize / 2)));
+    const window = dna.slice(start, start + windowSize);
+    return window ? ((window.match(/[GC]/g) || []).length / window.length) * 100 : null;
+}
+
+function buildCodonAccounting(originalCds, optimizedCds, res, gcTarget) {
+    const original = codonsWithoutTerminalStop(originalCds);
+    const optimized = codonsWithoutTerminalStop(optimizedCds);
+    const comparable = original.valid && optimized.valid && original.codons.length > 0;
+    if (!comparable) return { available: false, reason: originalCds ? 'Valid CDS reference required' : 'CDS reference required', codons: [] };
+    const frequencies = responseCodonFrequencies(res, getResultHostProfile(res));
+    const length = Math.max(original.codons.length, optimized.codons.length);
+    const codons = [];
+    let synonymousChanges = 0, unchanged = 0, substitutions = 0, insertions = 0, deletions = 0;
+    let higherPref = 0, lowerPref = 0, neutralPref = 0, unknownPref = 0;
+    for (let index = 0; index < length; index += 1) {
+        const origCodon = original.codons[index] || null;
+        const optCodon = optimized.codons[index] || null;
+        const origAa = origCodon ? CODON_TABLE[origCodon] : null;
+        const optAa = optCodon ? CODON_TABLE[optCodon] : null;
+        if (!origCodon) insertions += 1;
+        else if (!optCodon) deletions += 1;
+        else if (origAa !== optAa) substitutions += 1;
+        else if (origCodon === optCodon) unchanged += 1;
+        else synonymousChanges += 1;
+        const origFreq = origCodon && Object.hasOwn(frequencies, origCodon) ? frequencies[origCodon] : null;
+        const optFreq = optCodon && Object.hasOwn(frequencies, optCodon) ? frequencies[optCodon] : null;
+        if (origCodon && optCodon && origCodon !== optCodon && origAa === optAa) {
+            if (origFreq == null || optFreq == null) unknownPref += 1;
+            else if (optFreq > origFreq) higherPref += 1;
+            else if (optFreq < origFreq) lowerPref += 1;
+            else neutralPref += 1;
+        }
+        codons.push({
+            index, aa: optAa || origAa || '?', origAa, optAa, origCodon, optCodon,
+            isChanged: origCodon !== optCodon, origFreq, optFreq,
+            localGc: localGcAtCodon(optimizedCds, index),
+        });
+    }
+    const totalCodons = original.codons.length;
+    const comparedResidues = Math.min(original.codons.length, optimized.codons.length);
+    const aaIdentity = totalCodons ? (Math.max(0, comparedResidues - substitutions) / Math.max(original.codons.length, optimized.codons.length)) * 100 : 0;
+    return {
+        available: true, totalCodons, synonymousChanges, unchanged, substitutions, insertions, deletions, aaIdentity,
+        higherPref, lowerPref, neutralPref, unknownPref, hasStopCodon: original.hasStopCodon,
+        aaPreserved: substitutions === 0 && insertions === 0 && deletions === 0,
+        gcTarget, codons,
+    };
+}
+
+function percentOf(value, total) {
+    return total ? `${((value / total) * 100).toFixed(1)}%` : '0.0%';
+}
+
+function renderCodonAccounting(accounting) {
+    if (!accounting.available) {
+        elements.statTotalCodons.textContent = 'N/A'; elements.statShifts.textContent = 'N/A';
+        elements.statUnchanged.textContent = 'N/A'; elements.statSubstitutions.textContent = 'N/A';
+        elements.statShiftBreakdown.textContent = accounting.reason;
+        elements.statAaIdentity.textContent = 'Translation comparison unavailable';
+        elements.trackAvailability.textContent = accounting.reason;
+        return;
+    }
+    elements.statTotalCodons.textContent = String(accounting.totalCodons);
+    elements.statShifts.textContent = `${accounting.synonymousChanges} / ${percentOf(accounting.synonymousChanges, accounting.totalCodons)}`;
+    elements.statUnchanged.textContent = `${accounting.unchanged} / ${percentOf(accounting.unchanged, accounting.totalCodons)}`;
+    elements.statSubstitutions.textContent = `${accounting.substitutions} substitutions`;
+    const known = `Higher ${accounting.higherPref} · Lower ${accounting.lowerPref} · Neutral ${accounting.neutralPref}`;
+    elements.statShiftBreakdown.textContent = accounting.unknownPref ? `${known} · Frequency N/A ${accounting.unknownPref}` : known;
+    elements.statAaIdentity.textContent = `${accounting.aaIdentity.toFixed(1)}% identity · ${accounting.insertions} insertions · ${accounting.deletions} deletions`;
+    elements.trackAvailability.textContent = `${accounting.totalCodons} sense codons · terminal stop ${accounting.hasStopCodon ? 'excluded' : 'not present'}`;
+}
+
+function frequencyColor(frequency) {
+    if (frequency == null) return '#334155';
+    const percent = frequency * 100;
+    if (percent < 20) return '#ef4444'; if (percent < 35) return '#f59e0b';
+    if (percent < 50) return '#64748b'; if (percent <= 70) return '#22c55e'; return '#10b981';
+}
+
+function drawCodonTrack(canvas, codons, frequencyKey, hoverIndex = null) {
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const width = Math.max(1, rect.width); const height = 56;
+    canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
+    const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = '#020617'; ctx.fillRect(0, 0, width, height);
+    if (!codons.length) { ctx.fillStyle = '#64748b'; ctx.font = '11px sans-serif'; ctx.fillText('No comparable CDS track', 12, 32); return; }
+    const segmentWidth = width / codons.length;
+    codons.forEach((codon, index) => {
+        ctx.fillStyle = frequencyColor(codon[frequencyKey]);
+        ctx.fillRect(index * segmentWidth, 13, Math.max(1, segmentWidth + .25), 30);
+    });
+    if (hoverIndex != null) {
+        const x = Math.min(width - .5, (hoverIndex + .5) * segmentWidth);
+        ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, 2); ctx.lineTo(x, 54); ctx.stroke();
+    }
+}
+
+function formatFrequency(value) { return value == null ? 'N/A' : `${(value * 100).toFixed(1)}%`; }
+
+function updateCodonInspector(accounting, index) {
+    const item = accounting.codons[index]; if (!item) return;
+    const name = AA_NAMES[item.aa] || item.aa;
+    elements.inspectorPosition.textContent = `Codon ${index + 1} / ${name} (${item.aa}) · nt ${index * 3 + 1}–${index * 3 + 3}`;
+    elements.inspectorCodons.textContent = `${item.origCodon || '—'} (${formatFrequency(item.origFreq)}) → ${item.optCodon || '—'} (${formatFrequency(item.optFreq)})`;
+    const effects = [];
+    if (!item.isChanged) effects.push('Codon unchanged');
+    else if (item.origAa === item.optAa) effects.push('Synonymous codon shift observed');
+    else effects.push(`Translated residue changed: ${item.origAa || '—'} → ${item.optAa || '—'}`);
+    if (item.origFreq != null && item.optFreq != null) effects.push(`Host preference ${formatFrequency(item.origFreq)} → ${formatFrequency(item.optFreq)}`);
+    else effects.push('Host codon frequency: N/A (not supplied by API)');
+    const target = accounting.gcTarget;
+    effects.push(`Local GC (50 nt): ${item.localGc == null ? 'N/A' : `${item.localGc.toFixed(1)}%${target ? `; target ${target.min.toFixed(1)}–${target.max.toFixed(1)}%` : ''}`}`);
+    if (index < 10) effects.push('Position lies within the annotated 5′ ramp region; no causal attribution inferred');
+    elements.inspectorRationale.textContent = effects.join(' · ');
+    elements.inspectorConstraints.textContent = accounting.aaPreserved ? 'PASS · amino-acid sequence preserved' : 'FAIL · amino-acid sequence differs';
+}
+
+function renderCodonTracks(accounting) {
+    const codons = accounting.available ? accounting.codons : [];
+    const draw = index => { drawCodonTrack(elements.canvasOriginalTrack, codons, 'origFreq', index); drawCodonTrack(elements.canvasOptimizedTrack, codons, 'optFreq', index); };
+    draw(null);
+    if (!elements.interactiveTrackContainer.dataset.bound) {
+        elements.interactiveTrackContainer.addEventListener('mousemove', event => {
+            const current = state.reportData?.accounting;
+            if (!current?.available || !current.codons.length) return;
+            const rect = elements.canvasOptimizedTrack.getBoundingClientRect();
+            const index = Math.max(0, Math.min(current.codons.length - 1, Math.floor(((event.clientX - rect.left) / rect.width) * current.codons.length)));
+            drawCodonTrack(elements.canvasOriginalTrack, current.codons, 'origFreq', index);
+            drawCodonTrack(elements.canvasOptimizedTrack, current.codons, 'optFreq', index);
+            updateCodonInspector(current, index);
+        });
+        elements.interactiveTrackContainer.addEventListener('mouseleave', () => renderCodonTracks(state.reportData?.accounting || { available:false, codons:[] }));
+        window.addEventListener('resize', () => renderCodonTracks(state.reportData?.accounting || { available:false, codons:[] }));
+        elements.interactiveTrackContainer.dataset.bound = 'true';
+    }
+    if (accounting.available) updateCodonInspector(accounting, 0);
+}
+
 function renderResults() {
     const res = state.results;
     if (!res) return;
@@ -811,6 +1013,11 @@ function renderResults() {
     elements.optGCComp.textContent = `${calculatedGC.toFixed(1)}%`;
     elements.gcValue.textContent = `${calculatedGC.toFixed(1)}%`;
     const gcTarget = getResultGcTarget(res, primary);
+    const baseReportData = buildResultsReportModel(res, primary, gcTarget);
+    const accounting = buildCodonAccounting(isProteinInput ? '' : origSeq, optSeq, res, gcTarget);
+    state.reportData = { ...baseReportData, accounting, codons: accounting.codons };
+    renderCodonAccounting(accounting);
+    renderCodonTracks(accounting);
     elements.gcTargetRange.textContent = `Target: ${gcTarget.min.toFixed(1)}–${gcTarget.max.toFixed(1)}%`;
     const originalEvaluation = res.acceptance_evaluation?.original;
     const originalCai = originalEvaluation?.criteria?.find(row => row.criterion === 'cai')?.observed;
@@ -847,7 +1054,7 @@ function renderResults() {
     renderCandidateComparison(res);
     renderCustomRestrictionResults(res);
     renderMfeWarning(res);
-        renderResultsReport(res, primary, gcTarget);
+    renderResultsReport(res, primary, gcTarget, state.reportData);
     renderComparisonDashboard(res);
 
     // PolyA color coding
@@ -1569,9 +1776,9 @@ function reportSettingsHtml(model) {
     return fields.map(([label, requestedValue, appliedValue, differs]) => `<tr class="border-b border-slate-200 dark:border-slate-700 ${differs ? 'bg-rose-50 dark:bg-rose-900/20' : ''}"><th scope="row" class="py-2 pr-2 text-left font-semibold">${escapeHtml(label)}</th><td class="py-2 pr-2">${escapeHtml(reportValue(requestedValue))}</td><td class="py-2">${escapeHtml(reportValue(appliedValue))}${differs ? ' <b class="text-rose-700 dark:text-rose-300">Mismatch</b>' : ''}</td></tr>`).join('');
 }
 
-function renderResultsReport(res, primary, gcTarget) {
+function renderResultsReport(res, primary, gcTarget, reportData = null) {
     if (!elements.resultsReport || !elements.resultsReportBody) return;
-    const model = buildResultsReportModel(res, primary, gcTarget);
+    const model = reportData || buildResultsReportModel(res, primary, gcTarget);
     const disposition = model.disposition.automated_decision;
     const comparisonText = model.context.input_type === 'protein'
         ? `Protein input · amino-acid identity ${model.sequence_summary.amino_acid_identity == null ? 'Not recorded' : `${(model.sequence_summary.amino_acid_identity * 100).toFixed(2)}%`}`
@@ -1691,6 +1898,27 @@ function downloadResultsReportHtml(model) {
     trackEvent('report_download', { format: 'html' });
     downloadTextArtifact(standaloneReportHtml(model), 'text/html;charset=utf-8', `factorforge_design_review_${reportFileStem(model)}.html`);
     showToast('Design review report downloaded', 'success');
+}
+
+function standaloneInteractiveReportHtml(model) {
+    const accounting = model.accounting || { available: false, codons: [] };
+    const safeData = JSON.stringify({ accounting }).replace(/</g, '\\u003c');
+    const summary = accounting.available
+        ? `<div class="accounting"><article><small>Total sense codons</small><b>${accounting.totalCodons}</b></article><article><small>Synonymous shifts</small><b>${accounting.synonymousChanges} · ${percentOf(accounting.synonymousChanges, accounting.totalCodons)}</b></article><article><small>Unchanged</small><b>${accounting.unchanged} · ${percentOf(accounting.unchanged, accounting.totalCodons)}</b></article><article><small>AA preservation</small><b>${accounting.aaIdentity.toFixed(1)}% · ${accounting.substitutions} substitutions</b></article></div>`
+        : '<p class="callout">Codon-by-codon accounting is unavailable because the run did not include a comparable input CDS.</p>';
+    const interactive = `<section><p class="eyebrow">Same Protein. Better-Designed DNA.</p><h2>Codon shift accounting and interactive map</h2><p>FactorForge redesigns synonymous codons and sequence-level features while verifying the encoded amino-acid sequence. Values below are calculated from the embedded input and output CDS; unavailable host frequencies remain N/A.</p>${summary}<div class="standalone-track"><div><span>Original</span><canvas id="reportOriginal" height="56"></canvas></div><div><span>Optimized</span><canvas id="reportOptimized" height="56"></canvas></div><div id="reportInspector" class="report-inspector">${accounting.available ? 'Move across either track to inspect a codon.' : 'No comparable CDS track.'}</div></div></section>`;
+    const script = `<script>const reportData=${safeData};(()=>{const a=reportData.accounting,cs=a.codons||[],o=document.getElementById('reportOriginal'),p=document.getElementById('reportOptimized'),i=document.getElementById('reportInspector');const color=f=>f==null?'#334155':f*100<20?'#ef4444':f*100<35?'#f59e0b':f*100<50?'#64748b':f*100<=70?'#22c55e':'#10b981';const fmt=f=>f==null?'N/A':(f*100).toFixed(1)+'%';function draw(c,key,h){const r=c.getBoundingClientRect(),d=devicePixelRatio||1,w=Math.max(1,r.width);c.width=w*d;c.height=56*d;const x=c.getContext('2d');x.scale(d,d);x.fillStyle='#020617';x.fillRect(0,0,w,56);if(!cs.length)return;const sw=w/cs.length;cs.forEach((v,n)=>{x.fillStyle=color(v[key]);x.fillRect(n*sw,13,Math.max(1,sw+.25),30)});if(h!=null){x.strokeStyle='#fff';x.beginPath();x.moveTo((h+.5)*sw,2);x.lineTo((h+.5)*sw,54);x.stroke()}}function render(h){draw(o,'origFreq',h);draw(p,'optFreq',h)}function move(e){if(!cs.length)return;const r=p.getBoundingClientRect(),n=Math.max(0,Math.min(cs.length-1,Math.floor((e.clientX-r.left)/r.width*cs.length))),v=cs[n];render(n);i.textContent='Codon '+(n+1)+' · nt '+(n*3+1)+'–'+(n*3+3)+' · '+v.origCodon+' ('+fmt(v.origFreq)+') → '+v.optCodon+' ('+fmt(v.optFreq)+') · AA '+v.aa+' · local GC '+(v.localGc==null?'N/A':v.localGc.toFixed(1)+'%')+' · '+(v.isChanged?'change observed':'unchanged')}[o,p].forEach(c=>c.addEventListener('mousemove',move));addEventListener('resize',()=>render(null));render(null)})();<\/script>`;
+    return standaloneReportHtml(model)
+        .replace('</style>', '.accounting{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.accounting article{background:#fff;border:1px solid #dbe2ea;border-radius:12px;padding:12px}.accounting b,.accounting small{display:block}.standalone-track{background:#0f172a;border-radius:14px;padding:16px}.standalone-track>div{display:grid;grid-template-columns:70px 1fr;align-items:center;gap:8px;margin:8px 0;color:#cbd5e1;font-size:12px;font-weight:700}.standalone-track canvas{width:100%;height:56px;border-radius:8px;cursor:crosshair}.report-inspector{grid-template-columns:1fr!important;background:#1e293b;padding:12px;border-radius:8px}@media(max-width:640px){.accounting{grid-template-columns:1fr 1fr}}</style>')
+        .replace('</main></body>', `${interactive}</main>${script}</body>`);
+}
+
+function downloadInteractiveReport(model) {
+    trackEvent('report_download', { format: 'interactive_html' });
+    const constructId = model.identity.construct_id || model.identity.result_id || 'Construct';
+    const safeId = String(constructId).replace(/[^A-Za-z0-9._-]+/g, '_');
+    downloadTextArtifact(standaloneInteractiveReportHtml(model), 'text/html;charset=utf-8', `FactorForge_Optimization_Report_${safeId}.html`);
+    showToast('Interactive report downloaded', 'success');
 }
 
 function downloadEvidenceRecordJson(model) {

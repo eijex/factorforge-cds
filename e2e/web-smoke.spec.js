@@ -95,7 +95,7 @@ test('opens release notes and toggles dark mode', async ({ page }) => {
 
   await page.locator('#changelogBtn').click();
   await expect(page.locator('#changelogModal')).toBeVisible();
-  await expect(page.locator('#changelogModal')).toContainText('v3.5.0 RC');
+  await expect(page.locator('#changelogModal')).toContainText('v3.5.0 — Discovery Slates');
   await page.locator('#closeModal').click();
   await expect(page.locator('#changelogModal')).toBeHidden();
 });
@@ -136,12 +136,72 @@ test('keeps non-default design objectives collapsed until requested', async ({ p
   await expect(implemented).toContainText('High CAI');
   await expect(implemented).toContainText('GC Target');
   await expect(implemented).toContainText('Assembly Friendly');
-  await expect(implemented).toContainText('DP v2.1.1 · Local-guard candidate');
+  await expect(implemented).toContainText('DP v2.1 · Three-axis candidate');
 
   await expect(experimental).not.toContainText("5' Ramp");
   await expect(experimental).toContainText('Viral Delivery');
-  await expect(page.locator('input[name="objective"][value="dp_v2_1_1"]')).toBeDisabled();
+  await expect(page.locator('input[name="objective"][value="dp_v2_1"]')).toBeDisabled();
   await expect(page.locator('input[name="objective"][value="viral_delivery"]')).toBeDisabled();
+});
+
+test('accounts for synonymous CDS shifts and exports the same interactive report data', async ({ page }) => {
+  const originalDna = MOCK_DNA.replace('TCC', 'TCT');
+  await page.route('**/api/optimize', async route => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          capabilities: {}, validation_checks: [],
+          host_metadata: { nbenthamiana: { gc_range: { gc_min: 40, gc_max: 47 }, codon_frequencies: { TCT: 0.18, TCC: 0.42 } } },
+        }),
+      });
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(reviewResponse({
+        input_type: 'cds', original_length: originalDna.length,
+        validation: { input_type: 'cds', polya: 'PASS', moclo: 'PASS', gc: 'PASS' },
+      })),
+    });
+  });
+  await openApp(page);
+  await page.locator('#sequenceInput').fill(originalDna);
+  await page.locator('#optimizeBtn').click();
+
+  await expect(page.locator('#sameProteinBanner')).toContainText('Same Protein. Better-Designed DNA.');
+  await expect(page.locator('#statTotalCodons')).toHaveText('19');
+  await expect(page.locator('#statShifts')).toHaveText('1 / 5.3%');
+  await expect(page.locator('#statUnchanged')).toHaveText('18 / 94.7%');
+  await expect(page.locator('#statSubstitutions')).toHaveText('0 substitutions');
+  await expect(page.locator('#statShiftBreakdown')).toContainText('Higher 1');
+  expect(await page.locator('#canvasOriginalTrack').evaluate(canvas => canvas.width)).toBeGreaterThan(0);
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#exportInteractiveReport').click(),
+  ]);
+  expect(download.suggestedFilename()).toBe('FactorForge_Optimization_Report_CF-TEST-272.html');
+  const stream = await download.createReadStream();
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  const html = Buffer.concat(chunks).toString('utf-8');
+  expect(html).toContain('Same Protein. Better-Designed DNA.');
+  expect(html).toContain('Synonymous shifts</small><b>1 · 5.3%');
+  expect(html).toContain('const reportData=');
+  expect(html).toContain('sha256:input-272');
+});
+
+test('does not fabricate codon accounting for protein-only input', async ({ page }) => {
+  await mockOptimization(page, reviewResponse());
+  await openApp(page);
+  await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  await page.locator('#optimizeBtn').click();
+  await expect(page.locator('#statTotalCodons')).toHaveText('N/A');
+  await expect(page.locator('#statShiftBreakdown')).toHaveText('CDS reference required');
+  await expect(page.locator('#trackAvailability')).toHaveText('CDS reference required');
 });
 
 test('enables DP v2.1.1 only when the API advertises the capability', async ({ page }) => {
