@@ -31,6 +31,19 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
+### Added
+
+- Added exact CDS-to-CDS sense-codon accounting, translation-derived amino-acid
+  preservation checks, high-DPI dual codon tracks, and a measured-effects hover
+  inspector to the web dashboard.
+- Added a self-contained interactive HTML optimization report generated from the
+  same canonical browser report model as the dashboard.
+
+### Changed
+
+- Missing host codon frequencies now remain explicitly `N/A` in codon tracks and
+  reports; the browser does not infer optimizer causality from sequence differences.
+
 ## [3.5.0] — 2026-09-19
 
 Web/API deployed; Git tag and package publication pending.

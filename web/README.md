@@ -66,6 +66,8 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 - ✅ Windowed codon alignment viewer for long CDS sequences
 - ✅ Capability-gated canonical DB save control (disabled by default)
 - ✅ Real-time results
+- ✅ Exact CDS-to-CDS codon shift accounting with explicit terminal-stop handling
+- ✅ High-DPI interactive 1D codon tracks and measured-effects inspector; missing host frequencies remain `N/A`
 - ✅ Custom restriction site input and removal report
 - ✅ Optional reproducibility seed and Type IIS enzyme presets
 - ✅ Progressive disclosure for alternative objectives and expert settings
@@ -81,6 +83,7 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 - ✅ Sequence-free machine-readable evidence-record JSON export; sequence-bearing
   FASTA, GenBank, and HTML artifacts remain explicitly separate
 - ✅ Download (FASTA, GenBank)
+- ✅ Self-contained interactive HTML optimization report generated from the same canonical browser report data
 - ✅ Responsive design
 - ✅ No login required
 
@@ -110,6 +113,16 @@ sequences by design; the standalone HTML includes the optimized sequence and
 displays a sequence-data handling notice.
 The standalone report preserves the app theme selected when the file is
 downloaded, while print output remains light for legibility.
+For CDS inputs, the result header also shows exact sense-codon totals,
+synonymous shifts, unchanged codons, and translation-derived substitutions.
+The terminal stop codon is reported separately and excluded from sense-codon
+accounting. The dual canvas map uses the same host-frequency scale on both
+tracks. If the API does not supply a codon frequency, the track and inspector
+show `N/A`; the browser never substitutes a hard-coded frequency or invents an
+optimizer rationale. The primary interactive HTML export consumes the same
+in-memory report model as the dashboard and embeds its sequences, audit
+provenance, metric summary, and responsive canvas inspector without external
+runtime dependencies.
 For DP v2.1.1 results, both the in-app report and standalone HTML show the three
 declared scientific axes and keep RNA folding in a separate independent-
 evaluation block. The local guard reports its active 5′ GC layer and 5-nt

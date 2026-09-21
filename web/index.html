@@ -609,6 +609,21 @@
                     <!-- Success State -->
                     <div id="resultsContainer"
                         class="hidden flex-grow flex flex-col animate-in fade-in zoom-in-95 duration-500">
+                        <section id="sameProteinBanner" class="same-protein-banner mb-5" aria-labelledby="sameProteinTitle">
+                            <p class="result-eyebrow">FactorForge design principle</p>
+                            <h2 id="sameProteinTitle">Same Protein. Better-Designed DNA.</h2>
+                            <p>FactorForge redesigns synonymous codons and sequence-level features for the target plant host while strictly preserving the encoded amino-acid sequence.</p>
+                            <div class="design-flow" aria-label="Original DNA to synonymous optimization to exact translated protein">
+                                <span>Original DNA</span><b>→</b><span>Synonymous optimization</span><b>→</b><span>Exact translated protein</span>
+                            </div>
+                        </section>
+
+                        <section id="codonAccounting" class="codon-accounting-grid mb-6" aria-label="Codon shift accounting">
+                            <article><p>Total codons</p><strong id="statTotalCodons">N/A</strong><small>Evaluated sense codons</small></article>
+                            <article><p>Synonymous shifts</p><strong id="statShifts">N/A</strong><small id="statShiftBreakdown">CDS reference required</small></article>
+                            <article><p>Unchanged</p><strong id="statUnchanged">N/A</strong><small>Exact codon matches</small></article>
+                            <article><p>AA substitutions</p><strong id="statSubstitutions">N/A</strong><small id="statAaIdentity">Translation comparison unavailable</small></article>
+                        </section>
                         <div
                             class="mb-6 flex items-center p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800/50 rounded-2xl">
                             <span class="text-2xl mr-4 flex-shrink-0">🚀</span>
@@ -702,6 +717,23 @@
                                 <canvas id="gcChart"></canvas>
                             </div>
                         </div>
+
+                        <section id="interactiveTrackContainer" class="codon-track-card mb-8" aria-labelledby="codonMapTitle">
+                            <div class="track-heading">
+                                <div><p class="result-eyebrow">Calculated sequence comparison</p><h3 id="codonMapTitle">1D Codon Optimization Map</h3></div>
+                                <span id="trackAvailability">CDS reference required</span>
+                            </div>
+                            <div class="ramp-bracket" aria-label="5 prime initiation ramp, nucleotides 1 through 30">5′ initiation ramp · nt 1–30</div>
+                            <div class="track-row"><span>Original</span><canvas id="canvasOriginalTrack" height="56"></canvas></div>
+                            <div class="track-row"><span>Optimized</span><canvas id="canvasOptimizedTrack" height="56"></canvas></div>
+                            <div class="track-legend"><span class="rare">Rare &lt;20%</span><span class="low">Low 20–35%</span><span class="moderate">Moderate 35–50%</span><span class="high">High 50–70%</span><span class="very-high">Very high &gt;70%</span><span class="unknown">N/A</span></div>
+                            <div id="codonInspector" class="codon-inspector" aria-live="polite">
+                                <div><small>Codon position &amp; amino acid</small><strong id="inspectorPosition">Hover over a track</strong></div>
+                                <div><small>Original → optimized</small><strong id="inspectorCodons">—</strong></div>
+                                <div><small>Observed effects</small><p id="inspectorRationale">Only measured effects are reported; optimizer causality is not inferred.</p></div>
+                                <div><small>Hard constraint checks</small><strong id="inspectorConstraints">—</strong></div>
+                            </div>
+                        </section>
 
                         <div id="candidateComparisonContainer" class="mb-8 hidden">
                             <h3 class="text-lg font-semibold mb-3">Candidate Comparison</h3>
@@ -832,6 +864,10 @@
 
                         <!-- Downloads -->
                         <div class="grid grid-cols-1 gap-3">
+                            <button id="exportInteractiveReport"
+                                class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95">
+                                <span>📄</span><span>Export Interactive HTML Report (.html)</span>
+                            </button>
                             <button id="downloadFasta"
                                 class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95">
                                 <span>💾</span>
@@ -869,9 +905,9 @@
                             <p id="reviewerDispositionStatus" class="text-xs text-amber-800 dark:text-amber-200 mt-2"></p>
                         </div>
 
-                        <!-- Structure Prediction Links -->
-                        <div class="mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                            <p class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">View Predicted Structure</p>
+                        <!-- Optional external structure tools -->
+                        <div class="mt-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                            <p class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Optional external structure tools</p>
                             <div class="flex gap-2">
                                 <a id="alphafoldLink" href="#" target="_blank" rel="noopener noreferrer"
                                     class="flex-1 py-2 px-3 bg-white dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-xl flex items-center justify-center gap-2 transition-all text-xs">
