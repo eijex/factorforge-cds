@@ -4,6 +4,16 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## v3.5.1 — SOP profile workflow
+
+- Added a versioned SOP profile format that keeps sequence findings separate from
+  laboratory review policy.
+- The web app can download, edit, upload, reset, and locally retain an SOP profile.
+- The bundled conservative plant-expression template is a starting point, not a
+  complete or approved SOP for any named laboratory.
+- SOP provenance is included in API output when a profile is supplied. These
+  settings remain computational and do not establish wet-lab performance.
+
 ## v3.5.0 — Discovery slate and neuro-symbolic research update
 
 - Added Top-K discovery slates with versioned generator lineage, shared hard checks,

@@ -31,6 +31,29 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
+## [3.5.1] — 2026-09-23
+
+### Added
+
+- Added a validated, versioned SOP profile format that separates deterministic
+  sequence findings from laboratory review policy.
+- Added a conservative plant-expression review template and web controls to
+  download, edit, upload, reset, and retain the active SOP in the local browser.
+- Added SOP provenance and resolved rule-policy evaluation to optimization API
+  responses when a profile is supplied.
+
+### Changed
+
+- Grouped comparison methods, sequence/assembly requirements, and review policy
+  under the active SOP workflow while keeping stable DP v2 as the default path.
+- The bundled template is explicitly a conservative starting point, not a complete
+  or approved SOP for any named laboratory.
+
+### Evidence boundary
+
+- SOP settings configure computational design and review behavior only. They do
+  not establish synthesis acceptance, expression, yield, or wet-lab performance.
+
 ### Added
 
 - Added exact CDS-to-CDS sense-codon accounting, translation-derived amino-acid

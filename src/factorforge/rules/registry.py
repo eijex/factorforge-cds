@@ -8,9 +8,8 @@ synthesis risks, and regulatory recommendations.
 from __future__ import annotations
 
 import hashlib
-import json
 import re
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 from factorforge.rules.models import (
     AuthorityType,
@@ -151,8 +150,9 @@ def _check_initiation_mfe_policy(sequence: str, context: Dict[str, Any]) -> Dict
 class RuleRegistry:
     """Registry managing collection of versioned, scoped, and attributed rules."""
 
-    def __init__(self, ruleset_id: str = "default-assembly-2026.09"):
+    def __init__(self, ruleset_id: str = "default-assembly-2026.09", sop_profile=None):
         self.ruleset_id = ruleset_id
+        self.sop_profile = sop_profile
         self._rules: Dict[str, RuleDefinition] = {}
         self._register_default_rules()
 
@@ -328,6 +328,11 @@ class RuleRegistry:
         """Register or update a rule definition."""
         self._rules[rule.rule_id] = rule
 
+    def resolved_enforcement(self, rule: RuleDefinition) -> EnforcementLevel:
+        if self.sop_profile is not None:
+            return self.sop_profile.get_enforcement(rule.rule_id)
+        return rule.enforcement
+
     def get_rule(self, rule_id: str) -> Optional[RuleDefinition]:
         """Retrieve rule by ID."""
         return self._rules.get(rule_id)
@@ -343,7 +348,7 @@ class RuleRegistry:
         for rule in self._rules.values():
             if not rule.scope.matches(assembly_method=assembly_method, host=host):
                 continue
-            if enforcement and rule.enforcement != enforcement:
+            if enforcement and self.resolved_enforcement(rule) != enforcement:
                 continue
             results.append(rule)
         return results
@@ -367,19 +372,20 @@ class RuleRegistry:
         for rule in active_rules:
             res = rule.evaluate(sequence, ctx)
             passed = res.get("passed", True)
+            resolved_enforcement = self.resolved_enforcement(rule)
             entry = {
                 "rule_id": rule.rule_id,
                 "name": rule.name,
-                "enforcement": rule.enforcement.value,
+                "enforcement": resolved_enforcement.value,
                 "authority": rule.authority.authority_type.value,
                 "result": res,
             }
 
             if not passed:
-                if rule.enforcement == EnforcementLevel.HARD_FAIL:
+                if resolved_enforcement == EnforcementLevel.HARD_FAIL:
                     hard_fails.append(entry)
                     all_passed = False
-                elif rule.enforcement == EnforcementLevel.WARNING:
+                elif resolved_enforcement == EnforcementLevel.WARNING:
                     warnings.append(entry)
                 else:
                     info_items.append(entry)
@@ -398,7 +404,7 @@ class RuleRegistry:
     def compute_digest(self) -> str:
         """Compute cryptographic SHA-256 fingerprint of the current rule registry."""
         rule_summaries = sorted([
-            f"{r.rule_id}:{r.version}:{r.enforcement.value}:{r.authority.authority_type.value}"
+            f"{r.rule_id}:{r.version}:{self.resolved_enforcement(r).value}:{r.authority.authority_type.value}"
             for r in self._rules.values()
         ])
         raw_text = ";".join(rule_summaries).encode("utf-8")

@@ -1,0 +1,16 @@
+{
+  "$schema": "factorforge-sop-v1",
+  "profile_id": "default_relaxed",
+  "sop_name": "Default Relaxed Assembly Policy",
+  "version": "1.0.0",
+  "author": "Eijex",
+  "status": "STANDARD",
+  "derived_from": "FactorForge minimal public assembly defaults",
+  "default_enforcement": "IGNORE",
+  "unknown_rule_policy": "ERROR",
+  "rules": {
+    "assembly.type_iis.bsai.v1": "HARD_FAIL",
+    "assembly.type_iis.bsmbi.v1": "HARD_FAIL",
+    "biological.reading_frame.v1": "HARD_FAIL"
+  }
+}

@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.5.0
+Product Version: 3.5.1
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -72,6 +72,8 @@ try:
         VALIDATION_REPORT_SCHEMA_VERSION,
         build_validation_report,
     )
+    from factorforge.rules.registry import RuleRegistry
+    from factorforge.sops.config import SopProfile
     from factorforge.design_review import (
         apply_reviewer_disposition,
         assert_pathway_invariants,
@@ -245,7 +247,7 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": product_version() if FACTORFORGE_AVAILABLE else "3.5.0",
+    "product": product_version() if FACTORFORGE_AVAILABLE else "3.5.1",
     "rule_engine": engine_version("profile") if FACTORFORGE_AVAILABLE else "1.0.0",
     "dp_engine": engine_version("dp") if FACTORFORGE_AVAILABLE else "2.0.1",
     "dp_v2_1_engine": (engine_version("dp_v2_1") if FACTORFORGE_AVAILABLE else "2.1.0-dev"),
@@ -413,6 +415,16 @@ class handler(BaseHTTPRequestHandler):
             return_candidates = bool(data.get("return_candidates", True))
             constraints = self.parse_constraints(data.get("constraints", {}), host=internal_host)
             seed = self.parse_seed(data.get("seed"))
+            sop_profile = None
+            if data.get("sop_profile") is not None:
+                if not isinstance(data["sop_profile"], dict):
+                    raise ValueError("sop_profile must be a JSON object")
+                if len(json.dumps(data["sop_profile"])) > 131072:
+                    raise ValueError("sop_profile exceeds the 128 KB limit")
+                known_rule_ids = [rule.rule_id for rule in RuleRegistry().list_rules()]
+                sop_profile = SopProfile.from_dict(
+                    data["sop_profile"], known_rule_ids=known_rule_ids
+                )
             input_context = parse_sequence_input(sequence)
             if not input_context["generation_allowed"]:
                 raise ValueError("; ".join(input_context["errors"]))
@@ -498,6 +510,14 @@ class handler(BaseHTTPRequestHandler):
                     acceptance_criteria=acceptance_criteria,
                     reviewer_disposition=data.get("reviewer_disposition"),
                 )
+                if sop_profile is not None:
+                    sop_registry = RuleRegistry(sop_profile=sop_profile)
+                    sop_evaluation = sop_registry.evaluate_sequence(
+                        self.primary_dna_sequence(result),
+                        host=HOST_METADATA[host]["display_name"],
+                    )
+                    result["sop_profile"] = sop_profile.provenance()
+                    result["sop_evaluation"] = sop_evaluation
 
             if implicit_strategy_disclosure and isinstance(result, dict):
                 result.update(implicit_strategy_disclosure)
@@ -549,6 +569,12 @@ class handler(BaseHTTPRequestHandler):
                     "label": "ML update in progress",
                 },
                 "db_save": {"available": WEB_DB_SAVE_ENABLED},
+                "sop_profiles": {
+                    "schema": "factorforge-sop-v1",
+                    "upload": True,
+                    "browser_persistence": True,
+                    "server_storage": False,
+                },
             },
             "mock_enabled": ENABLE_MOCK,
             "engine_versions": ENGINE_VERSIONS,
@@ -1081,6 +1107,40 @@ class handler(BaseHTTPRequestHandler):
     def handle_slate_request(self, data: dict[str, Any]) -> tuple[int, dict[str, Any]]:
         """Handle POST /api/slate requests to generate diverse Top-K discovery slates."""
         try:
+            # Slate v2 (Job 293) Handler branch
+            if "protein_sequence" in data or "slate_size" in data or data.get("version") == "v2":
+                protein_seq = str(data.get("protein_sequence") or data.get("sequence", "")).strip()
+                if not protein_seq:
+                    return 400, {
+                        "status": "error",
+                        "error": "protein_sequence is required and must be non-empty",
+                    }
+                host = self.validate_host(data.get("host", DEFAULT_HOST_PROFILE))
+                internal_host = HOST_MAP.get(host, host)
+
+                if not FACTORFORGE_AVAILABLE:
+                    logger.error("FactorForge engine unavailable for slate v2")
+                    return 503, {"status": "error", "error": "Engine unavailable. Contact support."}
+
+                from factorforge.core.slate_engine import SlateV2Engine
+
+                slate_engine = SlateV2Engine(
+                    host=internal_host,
+                    target_gc=float(data.get("target_gc", 0.45)),
+                )
+                response_payload = slate_engine.generate_slate(
+                    protein_sequence=protein_seq,
+                    source_cds=data.get("source_cds"),
+                    slate_size=int(data.get("slate_size", 25)),
+                    stop_policy=str(data.get("stop_policy", "append_preferred")),
+                    generation_mode=str(data.get("generation_mode", "deterministic_beam")),
+                    weights=data.get("weights"),
+                    forbidden_sites=data.get("forbidden_sites"),
+                    seed=int(data.get("seed", 42)),
+                )
+                return 200, response_payload
+
+            # Legacy Job 283A Discovery Slate branch
             raw_sequence = str(data.get("sequence", "")).strip()
             if not raw_sequence:
                 return 400, {
@@ -1124,12 +1184,13 @@ class handler(BaseHTTPRequestHandler):
             result = {"success": True, "data": slate.to_dict()}
             return 200, result
 
-        except ValueError as e:
+        except (ValueError, FileNotFoundError) as e:
             logger.warning(f"Slate validation error: {e}")
-            return 400, {"success": False, "error": str(e)}
+            return 400, {"status": "error", "error": str(e), "success": False}
         except Exception as e:
             logger.error(f"Unexpected slate error: {e}", exc_info=True)
             return 500, {
+                "status": "error",
                 "success": False,
                 "error": f"Internal server error: {type(e).__name__}: {str(e)}",
             }

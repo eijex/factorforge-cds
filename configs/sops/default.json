@@ -1,0 +1,26 @@
+{
+  "$schema": "factorforge-sop-v1",
+  "profile_id": "core_safe",
+  "sop_name": "Core Safe Default",
+  "version": "1.0.0",
+  "author": "Eijex",
+  "status": "GLOBAL_DEFAULT",
+  "derived_from": "FactorForge core biological invariance",
+  "scope_note": "Ensures fundamental structural validity. Applied universally unless explicitly overridden.",
+  "default_enforcement": "IGNORE",
+  "unknown_rule_policy": "ERROR",
+  "workflow": {
+    "design_method": "feasibility_best",
+    "sequence_requirements": {
+      "reproducibility_seed": null
+    },
+    "review_policy": {
+      "cai": "ADVISORY",
+      "overall_gc": "ADVISORY",
+      "local_gc": "ADVISORY"
+    }
+  },
+  "rules": {
+    "biological.reading_frame.v1": "HARD_FAIL"
+  }
+}

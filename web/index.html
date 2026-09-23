@@ -70,7 +70,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.5.0 Release Notes
+                            v3.5.1 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -421,10 +421,30 @@
                         </div>
                     </details>
 
+                    <!-- Laboratory SOP -->
+                    <section id="sopProfileCard" class="mb-8 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-800/60 dark:bg-emerald-900/15" aria-labelledby="sopProfileHeading">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p id="sopProfileHeading" class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">Laboratory SOP</p>
+                                <p id="sopProfileName" class="mt-1 text-sm font-black text-slate-900 dark:text-slate-100">Conservative Plant Expression Review Template</p>
+                                <p id="sopProfileMeta" class="mt-1 text-[10px] text-slate-600 dark:text-slate-400">Default template · v1.1.0 · stored only in this browser</p>
+                            </div>
+                            <span id="sopProfileBadge" class="shrink-0 rounded-md border border-emerald-200 bg-white px-2 py-1 text-[9px] font-extrabold uppercase tracking-wider text-emerald-700 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-300">Active</span>
+                        </div>
+                        <p class="mt-3 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">The SOP sets the design method, sequence and assembly requirements, and review policy together. It is an editable in-silico template, not a complete or approved SOP from any named laboratory.</p>
+                        <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                            <button id="downloadSopTemplate" type="button" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 hover:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Download JSON</button>
+                            <button id="uploadSopButton" type="button" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 hover:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Upload JSON</button>
+                            <button id="resetSopProfile" type="button" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 hover:border-amber-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Restore default</button>
+                        </div>
+                        <input id="sopFileUpload" type="file" accept=".json,application/json" class="hidden" aria-label="Upload FactorForge SOP JSON">
+                        <p id="sopStorageNotice" class="mt-2 text-[10px] text-slate-500 dark:text-slate-500">Uploaded SOPs persist in local browser storage on this device. They are sent with an optimization request for validation and provenance, but are not uploaded as reusable server files.</p>
+                    </section>
+
                     <!-- Advanced Settings -->
                     <details id="advancedSettings" class="disclosure-card mb-8 rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900 dark:border-slate-800">
                         <summary class="cursor-pointer select-none px-4 py-3 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-widest">
-                             Add sequence &amp; assembly requirements
+                             Sequence &amp; assembly requirements <span class="normal-case font-medium">(from active SOP)</span>
                         </summary>
                         <div class="px-4 pb-4 space-y-4">
                             <div>
@@ -502,7 +522,7 @@
 
                     <!-- Acceptance Criteria -->
                     <details id="acceptanceCriteria" class="disclosure-card mb-8 rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900 dark:border-slate-800">
-                        <summary class="cursor-pointer select-none px-4 py-3 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-widest">Review policy</summary>
+                        <summary class="cursor-pointer select-none px-4 py-3 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-widest">Review policy <span class="normal-case font-medium">(from active SOP)</span></summary>
                         <div class="px-4 pb-4">
                             <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Required failures produce FAIL; preferred warnings produce CONDITIONAL PASS.</p>
                             <div class="space-y-2 text-xs">
@@ -994,14 +1014,30 @@
                     class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
             </div>
             <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
+                <!-- Version 3.5.1 -->
+                <div class="relative pl-8 border-l-2 border-emerald-500">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.5.1 &mdash; SOP Profile Workflow</h3>
+                        <span class="text-slate-400 text-[10px]">2026-09-23</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Laboratory SOP profiles:</b> download an editable JSON template, upload a customized profile, reset it, and retain the active profile in this browser.</li>
+                        <li><b>Clear separation:</b> deterministic sequence findings remain separate from the policy that classifies them as required, preferred, informational, or ignored.</li>
+                        <li><b>Reproducibility:</b> supplied SOP profiles contribute version and hash provenance to the optimization response.</li>
+                        <li><b>Boundary:</b> the bundled conservative profile is a starting template, not a complete or approved SOP for any named laboratory, and it makes no wet-lab performance claim.</li>
+                    </ul>
+                </div>
                 <!-- Version 3.5.0 -->
                 <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-700">
                     <div
                         class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-300 dark:bg-slate-600 rounded-full border-4 border-white dark:border-slate-900">
                     </div>
                     <div class="flex items-center space-x-2 mb-2">
-                        <span
-                            class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>
                         <h3 class="font-bold text-slate-800 dark:text-white">v3.5.0 &mdash; Discovery Slates, Constrained sLLM &amp; Partial-DP Rescue</h3>
                         <span class="text-slate-400 text-[10px]">2026-09-19</span>
                     </div>
