@@ -284,11 +284,13 @@ test('updates sequence metadata for protein input', async ({ page }) => {
 test('shows CDS design review controls and rejects multi-FASTA input', async ({ page }) => {
   await openApp(page);
 
+  const manualOverrides = page.locator('#manualSopOverrides');
+  await expect(manualOverrides).not.toHaveAttribute('open', '');
   const acceptanceCriteria = page.locator('#acceptanceCriteria');
-  await expect(acceptanceCriteria).toBeVisible();
-  await expect(acceptanceCriteria).not.toHaveAttribute('open', '');
+  await expect(acceptanceCriteria).toBeHidden();
   await expect(page.locator('#criterionCaiMode')).toBeHidden();
-  await acceptanceCriteria.locator('summary').click();
+  await manualOverrides.locator('summary').click();
+  await expect(acceptanceCriteria).toBeVisible();
   await expect(page.locator('#criterionCaiMode')).toBeVisible();
   await page.locator('#sequenceInput').fill('>one\nATGTCCAAG\n>two\nATGTCCAAG');
 
@@ -435,9 +437,9 @@ test('optional seed and Type IIS presets are merged into the optimization payloa
   await openApp(page);
 
   await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
-  const advancedSettings = page.locator('#advancedSettings');
-  await expect(advancedSettings).not.toHaveAttribute('open', '');
-  await advancedSettings.locator('summary').click();
+  const manualOverrides = page.locator('#manualSopOverrides');
+  await expect(manualOverrides).not.toHaveAttribute('open', '');
+  await manualOverrides.locator('summary').click();
   await page.locator('#optimizationSeed').fill('42');
   await page.locator('#customRestrictionSites').fill('SapI:GAAGAGC');
   await page.locator('input[name="typeIisEnzyme"][value="SapI"]').check();

@@ -38,7 +38,8 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 - Added a validated, versioned SOP profile format that separates deterministic
   sequence findings from laboratory review policy.
 - Added a conservative plant-expression review template and web controls to
-  download, edit, upload, reset, and retain the active SOP in the local browser.
+  download human-readable YAML, upload YAML or JSON, reset, and retain the
+  active SOP in the local browser.
 - Added SOP provenance and resolved rule-policy evaluation to optimization API
   responses when a profile is supplied.
 
@@ -46,6 +47,8 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 - Grouped comparison methods, sequence/assembly requirements, and review policy
   under the active SOP workflow while keeping stable DP v2 as the default path.
+- Replaced the long always-prominent SOP controls with an upload-first card,
+  concise default-profile summary, and one collapsed manual-overrides panel.
 - The bundled template is explicitly a conservative starting point, not a complete
   or approved SOP for any named laboratory.
 
