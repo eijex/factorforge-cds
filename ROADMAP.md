@@ -104,7 +104,7 @@ Current maintenance and evidence priorities are:
 | **Gen 2 — DP v2.1.1** | Explicit local-composition development candidate; calibration complete, 36-protein holdout pending |
 | **Gen 3 — sLLM Hybrid** | Feature-gated 0.x research preview; no trained production-model claim |
 | **Version manifest** | One machine-readable product/engine source of truth exposed by the API |
-| **SOP profiles** | Versioned review-policy templates with browser-local upload, persistence, reset, and provenance; no named laboratory approval claim |
+| **SOP profiles** | Upload-first versioned review-policy templates with YAML export, YAML/JSON browser-local upload, persistence, reset, provenance, and collapsed manual overrides; no named laboratory approval claim |
 
 ## Future — Validation-Driven Activation (version TBD)
 

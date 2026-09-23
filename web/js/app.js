@@ -98,6 +98,83 @@ function cloneJson(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
+function parseYamlScalar(raw) {
+    const value = raw.trim();
+    if (!value || value === 'null' || value === '~') return null;
+    if (/^(true|yes)$/i.test(value)) return true;
+    if (/^(false|no)$/i.test(value)) return false;
+    if (/^-?(?:\d+\.?\d*|\.\d+)$/.test(value)) return Number(value);
+    if (value.startsWith('[') && value.endsWith(']')) {
+        const inner = value.slice(1, -1).trim();
+        return inner ? inner.split(',').map(item => parseYamlScalar(item)) : [];
+    }
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        return value.startsWith('"') ? JSON.parse(value) : value.slice(1, -1).replace(/''/g, "'");
+    }
+    return value;
+}
+
+function stripYamlComment(line) {
+    let quote = null;
+    for (let index = 0; index < line.length; index += 1) {
+        const char = line[index];
+        if ((char === '"' || char === "'") && line[index - 1] !== '\\') quote = quote === char ? null : (quote || char);
+        if (char === '#' && !quote && (index === 0 || /\s/.test(line[index - 1]))) return line.slice(0, index);
+    }
+    return line;
+}
+
+function parseSopYaml(text) {
+    if (/\t/.test(text)) throw new Error('YAML indentation must use spaces, not tabs.');
+    if (/(^|\s)[&*!][^\s]*/m.test(text) || /^\s*[>|]/m.test(text)) throw new Error('YAML anchors, tags, aliases, and multiline blocks are not supported.');
+    const root = {};
+    const stack = [{ indent: -1, value: root }];
+    text.split(/\r?\n/).forEach((source, lineIndex) => {
+        const uncommented = stripYamlComment(source).replace(/\s+$/, '');
+        if (!uncommented.trim() || uncommented.trim() === '---') return;
+        const indent = uncommented.length - uncommented.trimStart().length;
+        const content = uncommented.trimStart();
+        const separator = content.indexOf(':');
+        if (separator < 1) throw new Error(`Invalid YAML on line ${lineIndex + 1}.`);
+        const key = content.slice(0, separator).trim().replace(/^['"]|['"]$/g, '');
+        const rawValue = content.slice(separator + 1).trim();
+        while (stack.length > 1 && indent <= stack[stack.length - 1].indent) stack.pop();
+        const parent = stack[stack.length - 1].value;
+        if (!parent || typeof parent !== 'object' || Array.isArray(parent)) throw new Error(`Invalid YAML nesting on line ${lineIndex + 1}.`);
+        if (Object.prototype.hasOwnProperty.call(parent, key)) throw new Error(`Duplicate YAML key: ${key}`);
+        if (rawValue === '') {
+            parent[key] = {};
+            stack.push({ indent, value: parent[key] });
+        } else {
+            parent[key] = parseYamlScalar(rawValue);
+        }
+    });
+    return root;
+}
+
+function parseSopDocument(text, filename = '') {
+    const trimmed = text.trim();
+    if (!trimmed) throw new Error('SOP file is empty.');
+    if (/\.json$/i.test(filename) || trimmed.startsWith('{')) return JSON.parse(trimmed);
+    return parseSopYaml(trimmed);
+}
+
+function yamlScalar(value) {
+    if (value === null || value === undefined) return 'null';
+    if (typeof value === 'boolean' || typeof value === 'number') return String(value);
+    if (typeof value === 'string' && /^[A-Za-z0-9_$.-]+$/.test(value)) return value;
+    return JSON.stringify(String(value));
+}
+
+function serializeSopYaml(value, indent = 0) {
+    return Object.entries(value).map(([key, item]) => {
+        const prefix = `${' '.repeat(indent)}${key}:`;
+        if (Array.isArray(item)) return `${prefix} [${item.map(yamlScalar).join(', ')}]`;
+        if (item && typeof item === 'object') return `${prefix}\n${serializeSopYaml(item, indent + 2)}`;
+        return `${prefix} ${yamlScalar(item)}`;
+    }).join('\n');
+}
+
 function validateSopProfile(profile) {
     if (!profile || typeof profile !== 'object' || Array.isArray(profile)) throw new Error('SOP must be a JSON object.');
     if (profile.$schema !== SOP_SCHEMA) throw new Error(`SOP schema must be ${SOP_SCHEMA}.`);
@@ -300,6 +377,7 @@ const elements = {
     sopProfileName: document.getElementById('sopProfileName'),
     sopProfileMeta: document.getElementById('sopProfileMeta'),
     sopProfileBadge: document.getElementById('sopProfileBadge'),
+    sopUploadZone: document.getElementById('sopUploadZone'),
     downloadSopTemplate: document.getElementById('downloadSopTemplate'),
     uploadSopButton: document.getElementById('uploadSopButton'),
     resetSopProfile: document.getElementById('resetSopProfile'),
@@ -468,30 +546,33 @@ function captureSopFromUi() {
 function downloadActiveSop() {
     captureSopFromUi();
     const safeId = state.activeSop.profile_id.replace(/[^a-z0-9_-]+/gi, '_');
-    downloadTextArtifact(`${JSON.stringify(state.activeSop, null, 2)}\n`, 'application/json', `FactorForge_SOP_${safeId}_v${state.activeSop.version}.json`);
+    downloadTextArtifact(`${serializeSopYaml(state.activeSop)}\n`, 'application/yaml', `FactorForge_SOP_${safeId}_v${state.activeSop.version}.yaml`);
 }
 
-function handleSopUpload(event) {
-    const file = event.target.files?.[0];
+function applySopFile(file, input = null) {
     if (!file) return;
     if (file.size > 128 * 1024) {
         showToast('SOP file must be 128 KB or smaller.', 'error');
-        event.target.value = '';
+        if (input) input.value = '';
         return;
     }
     const reader = new FileReader();
     reader.onload = () => {
         try {
-            applySopToUi(JSON.parse(String(reader.result)));
+            applySopToUi(parseSopDocument(String(reader.result), file.name));
             showToast('SOP validated, applied, and saved in this browser.', 'success');
         } catch (error) {
             showToast(`SOP rejected: ${error.message}`, 'error');
         } finally {
-            event.target.value = '';
+            if (input) input.value = '';
         }
     };
     reader.onerror = () => showToast('Unable to read SOP file.', 'error');
     reader.readAsText(file);
+}
+
+function handleSopUpload(event) {
+    applySopFile(event.target.files?.[0], event.target);
 }
 
 function restoreDefaultSop() {
@@ -507,6 +588,16 @@ function initEventListeners() {
     elements.clearBtn.addEventListener('click', clearAll);
     elements.downloadSopTemplate.addEventListener('click', downloadActiveSop);
     elements.uploadSopButton.addEventListener('click', () => elements.sopFileUpload.click());
+    elements.sopUploadZone.addEventListener('click', () => elements.sopFileUpload.click());
+    ['dragenter', 'dragover'].forEach(type => elements.sopUploadZone.addEventListener(type, event => {
+        event.preventDefault();
+        elements.sopUploadZone.classList.add('ring-2', 'ring-emerald-500');
+    }));
+    ['dragleave', 'drop'].forEach(type => elements.sopUploadZone.addEventListener(type, event => {
+        event.preventDefault();
+        elements.sopUploadZone.classList.remove('ring-2', 'ring-emerald-500');
+    }));
+    elements.sopUploadZone.addEventListener('drop', event => applySopFile(event.dataTransfer?.files?.[0]));
     elements.sopFileUpload.addEventListener('change', handleSopUpload);
     elements.resetSopProfile.addEventListener('click', restoreDefaultSop);
 

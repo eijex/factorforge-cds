@@ -431,22 +431,33 @@
                             </div>
                             <span id="sopProfileBadge" class="shrink-0 rounded-md border border-emerald-200 bg-white px-2 py-1 text-[9px] font-extrabold uppercase tracking-wider text-emerald-700 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-300">Active</span>
                         </div>
-                        <p class="mt-3 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">The SOP sets the design method, sequence and assembly requirements, and review policy together. It is an editable in-silico template, not a complete or approved SOP from any named laboratory.</p>
+                        <p class="mt-3 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">Use one versioned SOP file for the design method, sequence requirements, and review policy. The bundled profile is an editable in-silico starting template, not an approved laboratory SOP.</p>
+                        <button id="sopUploadZone" type="button" class="mt-3 flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-emerald-300 bg-white/70 px-4 py-5 text-center transition hover:border-emerald-500 hover:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-950/40 dark:hover:border-emerald-500" aria-describedby="sopStorageNotice">
+                            <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100">Drop a .yaml, .yml, or .json SOP here</span>
+                            <span class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">or click to choose a file</span>
+                        </button>
                         <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                            <button id="downloadSopTemplate" type="button" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 hover:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Download JSON</button>
-                            <button id="uploadSopButton" type="button" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 hover:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Upload JSON</button>
+                            <button id="downloadSopTemplate" type="button" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 hover:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Download YAML</button>
+                            <button id="uploadSopButton" type="button" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 hover:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Choose SOP file</button>
                             <button id="resetSopProfile" type="button" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 hover:border-amber-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Restore default</button>
                         </div>
-                        <input id="sopFileUpload" type="file" accept=".json,application/json" class="hidden" aria-label="Upload FactorForge SOP JSON">
+                        <details id="defaultSopSummary" class="mt-3 rounded-lg border border-emerald-200/80 bg-white/60 dark:border-emerald-900 dark:bg-slate-950/30">
+                            <summary class="cursor-pointer select-none px-3 py-2 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">What does the default SOP include?</summary>
+                            <div class="border-t border-emerald-100 px-3 py-2 text-[10px] leading-relaxed text-slate-600 dark:border-emerald-900 dark:text-slate-400">
+                                Stable DP v2 design; BsaI, BpiI, and BsmBI avoidance; required Type IIS review; and preferred CAI, GC, repeat, homopolymer, and motif checks. Kozak, TpA suppression, and MoClo assembly are off until explicitly requested.
+                            </div>
+                        </details>
+                        <input id="sopFileUpload" type="file" accept=".yaml,.yml,.json,application/json,application/yaml,text/yaml,text/x-yaml" class="hidden" aria-label="Upload FactorForge SOP YAML or JSON">
                         <p id="sopStorageNotice" class="mt-2 text-[10px] text-slate-500 dark:text-slate-500">Uploaded SOPs persist in local browser storage on this device. They are sent with an optimization request for validation and provenance, but are not uploaded as reusable server files.</p>
                     </section>
 
-                    <!-- Advanced Settings -->
-                    <details id="advancedSettings" class="disclosure-card mb-8 rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900 dark:border-slate-800">
-                        <summary class="cursor-pointer select-none px-4 py-3 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-widest">
-                             Sequence &amp; assembly requirements <span class="normal-case font-medium">(from active SOP)</span>
-                        </summary>
-                        <div class="px-4 pb-4 space-y-4">
+                    <!-- Manual overrides stay out of the primary upload-first workflow. -->
+                    <details id="manualSopOverrides" class="disclosure-card mb-8 rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900 dark:border-slate-800">
+                        <summary class="cursor-pointer select-none px-4 py-3 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-widest">Manual overrides <span class="normal-case font-medium">(advanced)</span></summary>
+                        <div class="space-y-6 border-t border-slate-200 px-4 pb-4 pt-4 dark:border-slate-800">
+                        <section id="advancedSettings" aria-labelledby="sequenceRequirementsHeading">
+                            <h3 id="sequenceRequirementsHeading" class="mb-4 text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Sequence &amp; assembly requirements</h3>
+                            <div class="space-y-4">
                             <div>
                                 <label for="optimizationSeed"
                                     class="block text-[13px] font-bold text-slate-900 dark:text-slate-100 mb-2">
@@ -517,13 +528,11 @@
                                     Sites will be removed from CDS by synonymous substitution where possible.
                                 </p>
                             </div>
-                        </div>
-                    </details>
+                            </div>
+                        </section>
 
-                    <!-- Acceptance Criteria -->
-                    <details id="acceptanceCriteria" class="disclosure-card mb-8 rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900 dark:border-slate-800">
-                        <summary class="cursor-pointer select-none px-4 py-3 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-widest">Review policy <span class="normal-case font-medium">(from active SOP)</span></summary>
-                        <div class="px-4 pb-4">
+                        <section id="acceptanceCriteria" class="border-t border-slate-200 pt-4 dark:border-slate-800" aria-labelledby="reviewPolicyHeading">
+                            <h3 id="reviewPolicyHeading" class="mb-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Review policy</h3>
                             <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Required failures produce FAIL; preferred warnings produce CONDITIONAL PASS.</p>
                             <div class="space-y-2 text-xs">
                                 <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionCaiMode" class="text-slate-700 dark:text-slate-300">CAI minimum 0.800</label><select id="criterionCaiMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
@@ -534,6 +543,7 @@
                                 <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionHomopolymerMode" class="text-slate-700 dark:text-slate-300">Homopolymers ≤8 bp</label><select id="criterionHomopolymerMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
                                 <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionMotifsMode" class="text-slate-700 dark:text-slate-300">Forbidden motifs</label><select id="criterionMotifsMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
                             </div>
+                        </section>
                         </div>
                     </details>
 
@@ -1026,7 +1036,7 @@
                         <span class="text-slate-400 text-[10px]">2026-09-23</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
-                        <li><b>Laboratory SOP profiles:</b> download an editable JSON template, upload a customized profile, reset it, and retain the active profile in this browser.</li>
+                        <li><b>Laboratory SOP profiles:</b> download readable YAML, upload YAML or JSON, reset it, and retain the active profile in this browser.</li>
                         <li><b>Clear separation:</b> deterministic sequence findings remain separate from the policy that classifies them as required, preferred, informational, or ignored.</li>
                         <li><b>Reproducibility:</b> supplied SOP profiles contribute version and hash provenance to the optimization response.</li>
                         <li><b>Boundary:</b> the bundled conservative profile is a starting template, not a complete or approved SOP for any named laboratory, and it makes no wet-lab performance claim.</li>

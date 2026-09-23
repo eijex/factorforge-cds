@@ -71,9 +71,9 @@ const API_ENDPOINT = 'https://factorforge.eijex.com/api/optimize';
 - ✅ Custom restriction site input and removal report
 - ✅ Optional reproducibility seed and Type IIS enzyme presets
 - ✅ Progressive disclosure for alternative objectives and expert settings
-- ✅ Versioned laboratory SOP profiles: download an editable JSON template,
-  upload a customized profile, reset to the bundled conservative template, and
-  retain the active profile locally in the browser
+- ✅ Upload-first laboratory SOP profiles: download a human-readable YAML
+  template, drag and drop YAML or JSON, reset to the bundled conservative
+  template, and retain the active profile locally in the browser
 - ✅ Capability-gated DP v2.1.1 2.1.1-dev local-guard development candidate;
   stable DP v2 2.0.1 remains the default feasibility path
 - ✅ Domestication, MFE availability, and GC target transparency
@@ -98,9 +98,9 @@ The desktop screen is a three-column workbench: sequence input, a compact Design
 Brief, and Design Review. All three columns follow the same document scroll so a
 shorter column does not appear frozen while a longer result is reviewed. The brief
 exposes the expression host, recommended deterministic method, and applied
-requirements. Optional sequence, assembly, and review-policy controls retain
-their existing API semantics through progressive disclosure and are grouped
-under the active SOP profile. The bundled profile is a conservative starting
+requirements. The primary workflow is a single versioned YAML/JSON SOP file;
+optional sequence, assembly, and review-policy controls retain their existing
+API semantics inside one collapsed manual-overrides panel. The bundled profile is a conservative starting
 template rather than a complete or approved SOP for a named laboratory. Uploaded
 profiles are validated and stored only in the local browser; the server does not
 retain them. Unavailable

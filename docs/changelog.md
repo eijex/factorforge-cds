@@ -8,7 +8,10 @@ FactorForge v3.0+ is the current public release line.
 
 - Added a versioned SOP profile format that keeps sequence findings separate from
   laboratory review policy.
-- The web app can download, edit, upload, reset, and locally retain an SOP profile.
+- The web app downloads human-readable YAML, accepts YAML or JSON by file upload
+  or drag and drop, and locally retains the validated active profile.
+- The default-profile summary stays visible while detailed settings are grouped
+  under one collapsed manual-overrides panel.
 - The bundled conservative plant-expression template is a starting point, not a
   complete or approved SOP for any named laboratory.
 - SOP provenance is included in API output when a profile is supplied. These
