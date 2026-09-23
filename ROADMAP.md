@@ -9,7 +9,8 @@ FactorForge development direction and planned work.
 
 ## Current Release Status
 
-FactorForge v3.5.0 extends the web/API product line with Top-K discovery slates,
+FactorForge v3.5.1 extends the web/API product line with versioned SOP profiles,
+an editable browser-local SOP workflow, Top-K discovery slates,
 an explicit DP v2.1.1 path, constrained-sLLM research integration, and adaptive
 partial-DP rescue while retaining stable DP v2 as the default. The preceding v3.4.5 release
 completed the interface-reliability patch line: browser
@@ -18,7 +19,7 @@ API, engine, registry, documentation, and fixture version surfaces were
 synchronized. The supported public boundary remains deterministic in-silico
 CDS design and pre-synthesis sequence review. sLLM Gen 3 remains a separate,
 feature-gated research preview and does not imply a trained production model or
-biological validation. The v3.5.0 Git tag and package publication remain pending.
+biological validation. The v3.5.1 Git tag and package publication remain pending.
 
 DP v2.1.1 (`2.1.1`) is the current explicit Gen 2 research candidate.
 It adds a 45-nt initiation-GC active layer and >=6-nt homopolymer automaton
@@ -94,7 +95,7 @@ Current maintenance and evidence priorities are:
 
 ---
 
-## v3.5 — Multi-Engine Version Governance *(release candidate)*
+## v3.5 — Multi-Engine Version Governance and SOP Profiles *(web/API deployed)*
 
 | Feature | Description |
 |---------|-------------|
@@ -103,6 +104,7 @@ Current maintenance and evidence priorities are:
 | **Gen 2 — DP v2.1.1** | Explicit local-composition development candidate; calibration complete, 36-protein holdout pending |
 | **Gen 3 — sLLM Hybrid** | Feature-gated 0.x research preview; no trained production-model claim |
 | **Version manifest** | One machine-readable product/engine source of truth exposed by the API |
+| **SOP profiles** | Versioned review-policy templates with browser-local upload, persistence, reset, and provenance; no named laboratory approval claim |
 
 ## Future — Validation-Driven Activation (version TBD)
 
