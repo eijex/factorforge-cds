@@ -77,3 +77,60 @@ def test_api_optimize_endpoint_backward_compatibility():
     assert "metrics" in res
     assert "cai" in res["metrics"]
     assert "gc_percent" in res["metrics"]
+
+
+def test_api_slate_v2_endpoint_success():
+    """Verify POST /api/slate Slate v2 (Job 293) request returns exact K=25 slate with validation summary."""
+    payload = {
+        "protein_sequence": "MKWVTFISLLLLFSSAYSRGVFRRDTHKSEIAHRFKDLGEEHFKGLVLIAFSQYLQQCPFDEHVKLVNELTEFAK",
+        "host": "nbenthamiana",
+        "target_gc": 0.45,
+        "slate_size": 25,
+        "stop_policy": "append_preferred",
+        "generation_mode": "deterministic_beam",
+        "weights": {
+            "cai": 0.40,
+            "gc_fidelity": 0.25,
+            "mfe_initiation": 0.20,
+            "rare_codon_guard": 0.15,
+        },
+        "forbidden_sites": {
+            "type_iis": ["BsaI", "BsmBI"],
+            "additional": ["NotI", "XhoI"],
+        },
+    }
+    status, res = call_api("/api/slate", payload)
+    assert status == 200
+    assert res["status"] == "success"
+    assert "job_id" in res
+    assert res["metadata"]["slate_size"] == 25
+    assert len(res["slate"]) == 25
+    assert res["validation_summary"]["aa_conservation_by_construction"] is True
+    assert res["validation_summary"]["aa_conservation_verified"] is True
+    assert res["validation_summary"]["aa_identity_pct"] == 100.0
+    assert res["validation_summary"]["forbidden_sites_clean"] is True
+    assert res["validation_summary"]["primary_host_status"] == "PASS"
+
+    first_cand = res["slate"][0]
+    assert first_cand["rank"] == 1
+    assert "cross_host_sensitivity" in first_cand
+    assert first_cand["cross_host_sensitivity"]["primary_host"]["cai_reference"] == 1.00
+
+
+def test_api_slate_v2_fail_closed_validation():
+    """Verify POST /api/slate returns HTTP 400 for invalid parameter contracts."""
+    # 1. Invalid slate_size
+    status, res = call_api("/api/slate", {
+        "protein_sequence": "MKWVTFISLLLLFSSAYSRG",
+        "slate_size": 999,
+    })
+    assert status == 400
+    assert res["status"] == "error"
+
+    # 2. Invalid stop_policy
+    status, res = call_api("/api/slate", {
+        "protein_sequence": "MKWVTFISLLLLFSSAYSRG",
+        "stop_policy": "invalid_policy_123",
+    })
+    assert status == 400
+    assert res["status"] == "error"

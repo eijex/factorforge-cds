@@ -50,6 +50,91 @@ function getGcRange(hostId) {
 
 let validationRegistry = [];
 const HISTORY_SCHEMA_VERSION = 3;
+const SOP_STORAGE_KEY = 'factorforge_active_sop_v1';
+const SOP_SCHEMA = 'factorforge-sop-v1';
+const SOP_MODES = Object.freeze(['required', 'preferred', 'ignored']);
+const DEFAULT_SOP_PROFILE = Object.freeze({
+    $schema: SOP_SCHEMA,
+    profile_id: 'default_conservative_plant_expression',
+    sop_name: 'Conservative Plant Expression Review Template',
+    version: '1.1.0',
+    author: 'Eijex',
+    status: 'STANDARD_TEMPLATE',
+    derived_from: "FactorForge public defaults plus collaborator-informed precautionary workflow assumptions; not any laboratory's complete or approved SOP",
+    scope_note: 'Editable in-silico design and pre-synthesis review policy. Laboratory approval and wet-lab testing remain separate.',
+    default_enforcement: 'IGNORE',
+    unknown_rule_policy: 'ERROR',
+    rules: {
+        'assembly.type_iis.bsai.v1': 'HARD_FAIL',
+        'assembly.type_iis.bsmbi.v1': 'HARD_FAIL',
+        'biological.reading_frame.v1': 'HARD_FAIL',
+        'rna.cryptic_splice.v1': 'WARNING',
+        'rna.polya_motifs.v1': 'WARNING',
+        'rna.au_rich_elements.v1': 'WARNING',
+        'synthesis.gc_extremes.v1': 'WARNING',
+        'policy.synthesis.homopolymer.v1': 'WARNING',
+        'policy.initiation_mfe.v1': 'WARNING'
+    },
+    workflow: {
+        design_method: 'feasibility_best',
+        comparison_methods: ['high_cai', 'gc_target', 'assembly_friendly'],
+        sequence_requirements: {
+            reproducibility_seed: null,
+            kozak_optimization: false,
+            suppress_tpa: false,
+            type_iis_enzymes: ['BsaI', 'BpiI', 'BsmBI'],
+            custom_restriction_sites: [],
+            moclo_template: false
+        },
+        review_policy: {
+            cai: 'PREFERRED', overall_gc: 'PREFERRED', local_gc: 'PREFERRED',
+            type_iis: 'REQUIRED', repeats: 'PREFERRED', homopolymers: 'PREFERRED',
+            forbidden_motifs: 'PREFERRED'
+        }
+    }
+});
+
+function cloneJson(value) {
+    return JSON.parse(JSON.stringify(value));
+}
+
+function validateSopProfile(profile) {
+    if (!profile || typeof profile !== 'object' || Array.isArray(profile)) throw new Error('SOP must be a JSON object.');
+    if (profile.$schema !== SOP_SCHEMA) throw new Error(`SOP schema must be ${SOP_SCHEMA}.`);
+    ['profile_id', 'sop_name', 'version', 'status'].forEach(key => {
+        if (typeof profile[key] !== 'string' || !profile[key].trim()) throw new Error(`SOP field ${key} is required.`);
+    });
+    if (String(profile.unknown_rule_policy).toUpperCase() !== 'ERROR') throw new Error('unknown_rule_policy must be ERROR.');
+    if (!profile.rules || typeof profile.rules !== 'object' || Array.isArray(profile.rules)) throw new Error('SOP rules must be an object.');
+    const allowedEnforcement = new Set(['HARD_FAIL', 'WARNING', 'IGNORE', 'INFORMATIONAL']);
+    Object.entries(profile.rules).forEach(([ruleId, level]) => {
+        if (!ruleId || !allowedEnforcement.has(String(level).toUpperCase())) throw new Error(`Invalid SOP rule policy: ${ruleId}`);
+    });
+    const workflow = profile.workflow;
+    if (!workflow || typeof workflow !== 'object') throw new Error('SOP workflow is required.');
+    const validMethods = new Set(['feasibility_best', 'dp_v2_1_1', 'high_cai', 'gc_target', 'assembly_friendly']);
+    if (!validMethods.has(workflow.design_method)) throw new Error('Unsupported SOP design_method.');
+    const requirements = workflow.sequence_requirements;
+    if (!requirements || typeof requirements !== 'object') throw new Error('SOP sequence_requirements are required.');
+    if (!Array.isArray(requirements.type_iis_enzymes) || requirements.type_iis_enzymes.some(name => !TYPE_IIS_PRESETS[name])) throw new Error('SOP contains an unsupported Type IIS enzyme.');
+    if (!Array.isArray(requirements.custom_restriction_sites)) throw new Error('SOP custom_restriction_sites must be an array.');
+    const policy = workflow.review_policy;
+    if (!policy || typeof policy !== 'object') throw new Error('SOP review_policy is required.');
+    ['cai', 'overall_gc', 'local_gc', 'type_iis', 'repeats', 'homopolymers', 'forbidden_motifs'].forEach(key => {
+        if (!SOP_MODES.includes(String(policy[key]).toLowerCase())) throw new Error(`Invalid review policy mode: ${key}`);
+    });
+    return cloneJson(profile);
+}
+
+function loadSopProfile() {
+    try {
+        const saved = localStorage.getItem(SOP_STORAGE_KEY);
+        return saved ? validateSopProfile(JSON.parse(saved)) : cloneJson(DEFAULT_SOP_PROFILE);
+    } catch (_) {
+        localStorage.removeItem(SOP_STORAGE_KEY);
+        return cloneJson(DEFAULT_SOP_PROFILE);
+    }
+}
 
 function loadVersionedHistory() {
     try {
@@ -86,6 +171,7 @@ const state = {
     isOptimizing: false,
     history: loadVersionedHistory()
 };
+state.activeSop = loadSopProfile();
 
 // DOM Elements
 const elements = {
@@ -211,6 +297,13 @@ const elements = {
     criterionRepeatsMode: document.getElementById('criterionRepeatsMode'),
     criterionHomopolymerMode: document.getElementById('criterionHomopolymerMode'),
     criterionMotifsMode: document.getElementById('criterionMotifsMode'),
+    sopProfileName: document.getElementById('sopProfileName'),
+    sopProfileMeta: document.getElementById('sopProfileMeta'),
+    sopProfileBadge: document.getElementById('sopProfileBadge'),
+    downloadSopTemplate: document.getElementById('downloadSopTemplate'),
+    uploadSopButton: document.getElementById('uploadSopButton'),
+    resetSopProfile: document.getElementById('resetSopProfile'),
+    sopFileUpload: document.getElementById('sopFileUpload'),
     automatedDecisionValue: document.getElementById('automatedDecisionValue'),
     automatedDecisionSummary: document.getElementById('automatedDecisionSummary'),
     qcDecisionMatrix: document.getElementById('qcDecisionMatrix'),
@@ -254,10 +347,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     applyStaticLabelPatches();
     await loadApiMetadata();
+    applySopToUi(state.activeSop, { persist: false });
     initEventListeners();
     updateDesignBriefSummary();
     renderHistory();
-    console.log('FactorForge v3.5.0 Engaged');
+    console.log('FactorForge v3.5.1 Engaged');
 });
 
 // Loads server-owned GC ranges and validation labels. Supported hosts remain
@@ -309,16 +403,118 @@ async function loadApiMetadata() {
     }
 }
 
+function formatCustomSitesForEditor(sites) {
+    return (sites || []).map(site => `${site.name}:${site.sequence}`).join('\n');
+}
+
+function applySopToUi(profile, { persist = true } = {}) {
+    const validated = validateSopProfile(profile);
+    const workflow = validated.workflow;
+    const requirements = workflow.sequence_requirements;
+    const policy = workflow.review_policy;
+    const objective = Array.from(elements.objectiveRadios).find(radio => radio.value === workflow.design_method && !radio.disabled);
+    if (!objective) throw new Error(`Design method ${workflow.design_method} is unavailable on this deployment.`);
+    objective.checked = true;
+    state.objective = objective.value;
+    elements.optimizationSeed.value = requirements.reproducibility_seed ?? '';
+    elements.kozakToggle.checked = Boolean(requirements.kozak_optimization);
+    elements.dinucToggle.checked = Boolean(requirements.suppress_tpa);
+    elements.useTemplateCheck.checked = Boolean(requirements.moclo_template);
+    state.kozak = elements.kozakToggle.checked;
+    state.dinuc = elements.dinucToggle.checked;
+    state.useTemplate = elements.useTemplateCheck.checked;
+    const selectedEnzymes = new Set(requirements.type_iis_enzymes);
+    elements.typeIisEnzymes.forEach(input => { input.checked = selectedEnzymes.has(input.value); });
+    elements.customRestrictionSites.value = formatCustomSitesForEditor(requirements.custom_restriction_sites);
+    const modeMap = {
+        cai: elements.criterionCaiMode, overall_gc: elements.criterionGcMode,
+        local_gc: elements.criterionLocalGcMode, type_iis: elements.criterionTypeIisMode,
+        repeats: elements.criterionRepeatsMode, homopolymers: elements.criterionHomopolymerMode,
+        forbidden_motifs: elements.criterionMotifsMode
+    };
+    Object.entries(modeMap).forEach(([key, select]) => { select.value = String(policy[key]).toLowerCase(); });
+    state.activeSop = validated;
+    if (persist) localStorage.setItem(SOP_STORAGE_KEY, JSON.stringify(validated));
+    elements.sopProfileName.textContent = validated.sop_name;
+    elements.sopProfileMeta.textContent = `${validated.status === 'STANDARD_TEMPLATE' ? 'Default template' : 'Custom SOP'} · v${validated.version} · stored only in this browser`;
+    elements.sopProfileBadge.textContent = validated.status === 'STANDARD_TEMPLATE' ? 'Active' : 'Custom';
+    updateDesignBriefSummary();
+}
+
+function captureSopFromUi() {
+    const profile = cloneJson(state.activeSop || DEFAULT_SOP_PROFILE);
+    profile.status = profile.profile_id === DEFAULT_SOP_PROFILE.profile_id ? 'CUSTOMIZED_LOCAL' : profile.status;
+    profile.workflow.design_method = state.objective;
+    profile.workflow.sequence_requirements = {
+        reproducibility_seed: elements.optimizationSeed.value.trim() === '' ? null : Number(elements.optimizationSeed.value),
+        kozak_optimization: elements.kozakToggle.checked,
+        suppress_tpa: elements.dinucToggle.checked,
+        type_iis_enzymes: Array.from(elements.typeIisEnzymes).filter(input => input.checked).map(input => input.value),
+        custom_restriction_sites: parseCustomRestrictionSites(elements.customRestrictionSites.value),
+        moclo_template: elements.useTemplateCheck.checked
+    };
+    profile.workflow.review_policy = {
+        cai: elements.criterionCaiMode.value.toUpperCase(), overall_gc: elements.criterionGcMode.value.toUpperCase(),
+        local_gc: elements.criterionLocalGcMode.value.toUpperCase(), type_iis: elements.criterionTypeIisMode.value.toUpperCase(),
+        repeats: elements.criterionRepeatsMode.value.toUpperCase(), homopolymers: elements.criterionHomopolymerMode.value.toUpperCase(),
+        forbidden_motifs: elements.criterionMotifsMode.value.toUpperCase()
+    };
+    state.activeSop = validateSopProfile(profile);
+    localStorage.setItem(SOP_STORAGE_KEY, JSON.stringify(state.activeSop));
+    elements.sopProfileMeta.textContent = `Custom local settings · v${state.activeSop.version} · stored only in this browser`;
+    elements.sopProfileBadge.textContent = 'Custom';
+}
+
+function downloadActiveSop() {
+    captureSopFromUi();
+    const safeId = state.activeSop.profile_id.replace(/[^a-z0-9_-]+/gi, '_');
+    downloadTextArtifact(`${JSON.stringify(state.activeSop, null, 2)}\n`, 'application/json', `FactorForge_SOP_${safeId}_v${state.activeSop.version}.json`);
+}
+
+function handleSopUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (file.size > 128 * 1024) {
+        showToast('SOP file must be 128 KB or smaller.', 'error');
+        event.target.value = '';
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            applySopToUi(JSON.parse(String(reader.result)));
+            showToast('SOP validated, applied, and saved in this browser.', 'success');
+        } catch (error) {
+            showToast(`SOP rejected: ${error.message}`, 'error');
+        } finally {
+            event.target.value = '';
+        }
+    };
+    reader.onerror = () => showToast('Unable to read SOP file.', 'error');
+    reader.readAsText(file);
+}
+
+function restoreDefaultSop() {
+    localStorage.removeItem(SOP_STORAGE_KEY);
+    applySopToUi(cloneJson(DEFAULT_SOP_PROFILE), { persist: false });
+    showToast('Default conservative SOP restored.', 'success');
+}
+
 function initEventListeners() {
     // Input Handling
     elements.fileUpload.addEventListener('change', handleFileUpload);
     elements.sequenceInput.addEventListener('input', debounce(handleSequenceChange, 300));
     elements.clearBtn.addEventListener('click', clearAll);
+    elements.downloadSopTemplate.addEventListener('click', downloadActiveSop);
+    elements.uploadSopButton.addEventListener('click', () => elements.sopFileUpload.click());
+    elements.sopFileUpload.addEventListener('change', handleSopUpload);
+    elements.resetSopProfile.addEventListener('click', restoreDefaultSop);
 
     // Objective Change
     elements.objectiveRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             state.objective = e.target.value;
+            captureSopFromUi();
             updateDesignBriefSummary();
         });
     });
@@ -340,22 +536,28 @@ function initEventListeners() {
 
     elements.useTemplateCheck.addEventListener('change', (e) => {
         state.useTemplate = e.target.checked;
+        captureSopFromUi();
         updateDesignBriefSummary();
     });
 
     elements.kozakToggle.addEventListener('change', (e) => {
         state.kozak = e.target.checked;
+        captureSopFromUi();
         updateDesignBriefSummary();
     });
     elements.dinucToggle.addEventListener('change', (e) => {
         state.dinuc = e.target.checked;
+        captureSopFromUi();
         updateDesignBriefSummary();
     });
     elements.customRestrictionSites.addEventListener('input', () => {
         state.customRestrictionSites = [];
         updateDesignBriefSummary();
     });
-    elements.typeIisEnzymes.forEach(input => input.addEventListener('change', updateDesignBriefSummary));
+    elements.customRestrictionSites.addEventListener('change', captureSopFromUi);
+    elements.typeIisEnzymes.forEach(input => input.addEventListener('change', () => { captureSopFromUi(); updateDesignBriefSummary(); }));
+    document.querySelectorAll('.criterion-mode').forEach(select => select.addEventListener('change', captureSopFromUi));
+    elements.optimizationSeed.addEventListener('change', captureSopFromUi);
     elements.saveReviewerDisposition.addEventListener('click', saveReviewerDisposition);
     elements.clearHistory.addEventListener('click', clearHistory);
 
@@ -608,6 +810,7 @@ async function runOptimization() {
     });
 
     try {
+        captureSopFromUi();
         // Prepare Request
         const payload = {
             sequence: state.sequence,
@@ -617,7 +820,8 @@ async function runOptimization() {
             use_template: state.useTemplate,
             kozak: state.kozak,
             dinuc: state.dinuc,
-            return_candidates: true
+            return_candidates: true,
+            sop_profile: state.activeSop
         };
         if (state.engineMode !== 'profile') {
             payload.profile = 'balanced';
@@ -2454,7 +2658,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.5.0';
+        const version = state.results.engine_versions?.product || '3.5.1';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }

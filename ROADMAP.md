@@ -2,7 +2,7 @@
 
 FactorForge development direction and planned work.
 
-> Current product line: **v3.5.0** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current product line: **v3.5.1** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---

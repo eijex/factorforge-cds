@@ -1,8 +1,6 @@
-# factorforge/src/factorforge/rules/models.py
 """Data models for declarative rules, enforcement levels, scope, and authority attribution."""
 
 from __future__ import annotations
-
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set
@@ -10,67 +8,80 @@ from typing import Any, Callable, Dict, List, Optional, Set
 
 class EnforcementLevel(str, Enum):
     """Rule enforcement tiers in FactorForge & Eijex bio-compiler."""
-    HARD_FAIL = "hard_fail"       # Invariant that must never be violated (e.g. Type IIS restriction site)
-    WARNING = "warning"           # High-risk motif (e.g. cryptic splice site, strong hairpin)
-    INFORMATIONAL = "informational" # Policy recommendation or heuristic indicator
-
+    HARD_FAIL = "hard_fail"
+    WARNING = "warning"
+    IGNORE = "ignore"
+    ERROR = "error"
+    INFORMATIONAL = "informational"
 
 class RuleCategory(str, Enum):
-    """Categorical classification of sequence constraints."""
-    ASSEMBLY = "assembly"                 # Physical cloning and assembly constraints
-    RNA_RISK = "rna_risk"                 # Structural/translational stability risks
-    INTERNAL_POLICY = "internal_policy"   # Eijex engineering policies
-    REGULATORY = "regulatory_policy"      # External regulatory agency references
-
+    ASSEMBLY = "assembly"
+    RNA_RISK = "rna_risk"
+    INTERNAL_POLICY = "internal_policy"
+    REGULATORY = "regulatory_policy"
 
 class AuthorityType(str, Enum):
-    """Origin and authority attribution of the rule."""
     EIJEX_INTERNAL_POLICY = "EIJEX_INTERNAL_POLICY"
     EXTERNAL_REGULATORY_SOURCE = "EXTERNAL_REGULATORY_SOURCE"
     COMMUNITY_STANDARD = "COMMUNITY_STANDARD"
 
+class EvaluationStage(str, Enum):
+    INCREMENTAL = "incremental"
+    FINAL_SEQUENCE = "final_sequence"
+
+class EvidenceClass(str, Enum):
+    SEQUENCE_SCAN = "sequence_scan"
+    MODEL_PREDICTION = "model_prediction"
+    GLOBAL_PROPERTY = "global_property"
 
 @dataclass(frozen=True)
 class RuleAuthority:
-    """Explicit attribution of rule authority."""
     authority_type: AuthorityType
     source_name: str
     agency: Optional[str] = None
     document_id: Optional[str] = None
     section: Optional[str] = None
 
-
 @dataclass(frozen=True)
 class RuleScope:
-    """Scope of applicability for the rule."""
     assembly_methods: Set[str] = field(default_factory=lambda: {"*"})
     target_hosts: Set[str] = field(default_factory=lambda: {"*"})
     molecule_types: Set[str] = field(default_factory=lambda: {"dna", "mrna"})
 
     def matches(self, assembly_method: Optional[str] = None, host: Optional[str] = None) -> bool:
-        """Check if scope matches a given execution context."""
         if assembly_method and "*" not in self.assembly_methods and assembly_method not in self.assembly_methods:
             return False
         if host and "*" not in self.target_hosts and host not in self.target_hosts:
             return False
         return True
 
+@dataclass
+class RuleFinding:
+    rule_id: str
+    start: int
+    end: int
+    matched_sequence: str
+    category: str
+    detector_version: str
+    evidence_class: str
+    message: Optional[str] = None
 
 @dataclass
 class RuleDefinition:
-    """Declarative definition of a sequence validation and optimization rule."""
     rule_id: str
     name: str
     description: str
     category: RuleCategory
-    enforcement: EnforcementLevel
     authority: RuleAuthority
     scope: RuleScope
+    # Compatibility fallback for callers that do not provide an SOP profile.
+    # Runtime policy may override this value; detectors remain policy-neutral.
+    enforcement: EnforcementLevel = EnforcementLevel.IGNORE
     version: str = "1.0.0"
-    evaluator_fn: Optional[Callable[[str, Dict[str, Any]], Dict[str, Any]]] = None
+    evaluation_stage: EvaluationStage = EvaluationStage.INCREMENTAL
+    evaluator_fn: Optional[Callable[[str, Dict[str, Any]], List[RuleFinding]]] = None
 
-    def evaluate(self, sequence: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Evaluate rule on candidate sequence."""
+    def evaluate(self, sequence: str, context: Optional[Dict[str, Any]] = None) -> List[RuleFinding]:
         if self.evaluator_fn is None:
-            return {"rule_id": self.rule_id, "passed": True, "details": "No evaluator attached"}
+            return []
         return self.evaluator_fn(sequence, context or {})

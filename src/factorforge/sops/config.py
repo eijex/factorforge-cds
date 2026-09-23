@@ -1,0 +1,90 @@
+import hashlib
+import json
+from pathlib import Path
+from typing import Any, Dict, Iterable, Mapping
+
+from factorforge.rules.models import EnforcementLevel
+
+
+class SopProfile:
+    """Validated, hash-stable laboratory review policy.
+
+    A profile controls how detector findings are handled and may also carry
+    web-workflow defaults. It never changes the biological meaning of a rule.
+    """
+
+    SCHEMA = "factorforge-sop-v1"
+    MAX_RULES = 256
+
+    def __init__(self, source: str | Path | Mapping[str, Any], known_rule_ids: Iterable[str] | None = None):
+        if isinstance(source, Mapping):
+            data = dict(source)
+        else:
+            with Path(source).open("r", encoding="utf-8") as stream:
+                data = json.load(stream)
+        self._validate(data, set(known_rule_ids) if known_rule_ids is not None else None)
+        self.data = data
+        self.profile_id = data["profile_id"]
+        self.sop_name = data["sop_name"]
+        self.version = data["version"]
+        self.status = data["status"]
+        self.default_enforcement = EnforcementLevel(data["default_enforcement"].lower())
+        self.unknown_rule_policy = data["unknown_rule_policy"].upper()
+        self.rules: Dict[str, EnforcementLevel] = {}
+        for rule_id, level in data["rules"].items():
+            self.rules[rule_id] = EnforcementLevel(level.lower())
+
+        canonical = json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+        self.digest = "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any], known_rule_ids: Iterable[str] | None = None):
+        return cls(data, known_rule_ids=known_rule_ids)
+
+    @classmethod
+    def _validate(cls, data: Mapping[str, Any], known_rule_ids: set[str] | None) -> None:
+        required = {
+            "$schema", "profile_id", "sop_name", "version", "status",
+            "default_enforcement", "unknown_rule_policy", "rules",
+        }
+        missing = sorted(required - set(data))
+        if missing:
+            raise ValueError(f"SOP profile missing required fields: {', '.join(missing)}")
+        if data["$schema"] != cls.SCHEMA:
+            raise ValueError(f"Unsupported SOP schema: {data['$schema']}")
+        for field in ("profile_id", "sop_name", "version", "status"):
+            if not isinstance(data[field], str) or not data[field].strip():
+                raise ValueError(f"SOP field {field} must be a non-empty string")
+        if data["unknown_rule_policy"].upper() != "ERROR":
+            raise ValueError("SOP unknown_rule_policy must be ERROR")
+        try:
+            EnforcementLevel(str(data["default_enforcement"]).lower())
+        except ValueError as exc:
+            raise ValueError("Invalid SOP default_enforcement") from exc
+        rules = data["rules"]
+        if not isinstance(rules, dict) or len(rules) > cls.MAX_RULES:
+            raise ValueError("SOP rules must be an object with at most 256 entries")
+        unknown = sorted(set(rules) - known_rule_ids) if known_rule_ids is not None else []
+        if unknown:
+            raise ValueError(f"Unknown SOP rule IDs: {', '.join(unknown)}")
+        for rule_id, level in rules.items():
+            if not isinstance(rule_id, str) or not rule_id.strip():
+                raise ValueError("SOP rule IDs must be non-empty strings")
+            try:
+                EnforcementLevel(str(level).lower())
+            except ValueError as exc:
+                raise ValueError(f"Invalid enforcement for {rule_id}: {level}") from exc
+
+    def get_enforcement(self, rule_id: str) -> EnforcementLevel:
+        return self.rules.get(rule_id, self.default_enforcement)
+
+    def provenance(self) -> dict[str, Any]:
+        return {
+            "profile_id": self.profile_id,
+            "profile_name": self.sop_name,
+            "profile_version": self.version,
+            "profile_status": self.status,
+            "profile_hash": self.digest,
+            "resolved_rule_policy": {key: value.value for key, value in sorted(self.rules.items())},
+        }
+

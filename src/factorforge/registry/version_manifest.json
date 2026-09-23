@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "product": {
     "name": "FactorForge",
-    "version": "3.5.0",
+    "version": "3.5.1",
     "release_status": "web_api_deployed_tag_pending",
     "previous_stable_version": "3.4.5"
   },
