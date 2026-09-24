@@ -1,56 +1,70 @@
 # FactorForge Advisory Baseline Sequence Policy
 #
-# $schema: factorforge-sop-v1
+# $schema: factorforge-policy-v1
 # This is the "Unopinionated Baseline" policy for FactorForge.
-# It enforces strict physical/synthesis constraints but treats all
+# It enforces strict invariants and contextual constraints but treats all
 # probabilistic biological predictions (like cryptic splices) as WARNINGs.
 #
-# Use this as a starting point to build your laboratory's approved SOP.
+# Use this as a starting point to build your laboratory's approved policy.
 # For example, if your laboratory empirically determines that Cryptic Splice
-# sites reduce yield, you may elevate `rna.cryptic_splice.v1` to REGENERATE.
+# sites reduce yield, you may elevate `rna.cryptic_splice.v1`'s authorized_action
+# to REGENERATE.
 
-$schema: factorforge-sop-v1
-profile_id: factorforge_advisory_baseline_v1
-sop_name: "FactorForge Advisory Baseline Policy"
+$schema: factorforge-policy-v1
+policy_id: factorforge_advisory_baseline_v1
+policy_name: "FactorForge Advisory Baseline Policy"
 version: 1.0.0
 author: Eijex FactorForge System
-status: SYSTEM_DEFAULT
-derived_from: "First principles synthesis constraints; no biological assumptions"
-scope_note: "Strict on synthesis/assembly failures (BLOCK/REGENERATE). Unopinionated on predictive heuristics (WARNING only)."
+status: BUILTIN_BASELINE
+derived_from: "First principles constraints and unopinionated baseline"
+scope_note: "Strict on active contextual conflicts (BLOCK). Unopinionated on predictive heuristics (WARNING + REPORT_ONLY)."
 default_enforcement: IGNORE
 unknown_rule_policy: ERROR
 
 rules:
-  # TIER 1: Physical / Synthesis Constraints (100% empirical certainty)
-  # These are hard blockers for synthesis and assembly.
-  assembly.type_iis.bsai.v1: HARD_FAIL
-  assembly.type_iis.bpii.v1: HARD_FAIL
-  assembly.type_iis.bsmbi.v1: HARD_FAIL
-  synthesis.gc_extremes.v1: HARD_FAIL
+  # ───────────────────────────────────────────────────────────
+  # Contextual Hard Constraints
+  # These block synthesis or assembly ONLY when the relevant 
+  # context (e.g., Run Configuration) requires it.
+  # ───────────────────────────────────────────────────────────
+  assembly.type_iis.bsai.v1:
+    enforcement: HARD_FAIL
+    authorized_action: BLOCK
+  assembly.type_iis.bpii.v1:
+    enforcement: HARD_FAIL
+    authorized_action: BLOCK
+  assembly.type_iis.bsmbi.v1:
+    enforcement: HARD_FAIL
+    authorized_action: BLOCK
+  synthesis.gc_extremes.v1:
+    enforcement: HARD_FAIL
+    authorized_action: BLOCK
   
-  # TIER 2: Probabilistic Predictive Proxies (Biological heuristics)
-  # These are warnings to inform the user, but do not force sequence regeneration.
-  rna.cryptic_splice.v1: WARNING
-  rna.polya_motifs.v1: WARNING
-  rna.au_rich_elements.v1: WARNING
-  policy.synthesis.homopolymer.v1: WARNING
-  policy.initiation_mfe.v1: WARNING
+  # ───────────────────────────────────────────────────────────
+  # Biological Predictions (Predictive Proxies & Heuristics)
+  # These are warnings to inform the user, but do not force 
+  # sequence regeneration by default.
+  # ───────────────────────────────────────────────────────────
+  rna.cryptic_splice.v1:
+    enforcement: WARNING
+    authorized_action: REPORT_ONLY
+  rna.polya_motifs.v1:
+    enforcement: WARNING
+    authorized_action: REPORT_ONLY
+  rna.au_rich_elements.v1:
+    enforcement: WARNING
+    authorized_action: REPORT_ONLY
+  policy.synthesis.homopolymer.v1:
+    enforcement: WARNING
+    authorized_action: REPORT_ONLY
+  policy.initiation_mfe.v1:
+    enforcement: WARNING
+    authorized_action: REPORT_ONLY
 
-workflow:
-  design_method: feasibility_best
-  comparison_methods: [high_cai, gc_target, assembly_friendly]
-  sequence_requirements:
-    reproducibility_seed: null
-    kozak_optimization: false
-    suppress_tpa: false
-    type_iis_enzymes: [BsaI, BpiI, BsmBI]
-    custom_restriction_sites: []
-    moclo_template: false
-  review_policy:
-    cai: PREFERRED
-    overall_gc: PREFERRED
-    local_gc: PREFERRED
-    type_iis: REQUIRED
-    repeats: PREFERRED
-    homopolymers: PREFERRED
-    forbidden_motifs: PREFERRED
+  # ───────────────────────────────────────────────────────────
+  # Coding Sequence Distribution (Doug's Feedback)
+  # Flags extreme collapse of synonymous codon usage.
+  # ───────────────────────────────────────────────────────────
+  coding.synonymous_codon_concentration.v1:
+    enforcement: WARNING
+    authorized_action: REPORT_ONLY
