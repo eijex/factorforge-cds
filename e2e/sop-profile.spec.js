@@ -103,7 +103,7 @@ test('bundled example SOP is directly downloadable and sharing stays explicit', 
   await expect(example).toHaveAttribute('title', /commented FactorForge conservative example/);
   await expect(page.locator('#downloadSopTemplate')).toHaveAttribute('title', /currently active/);
   await expect(page.locator('#uploadSopButton')).toHaveAttribute('title', /YAML or JSON/);
-  await expect(page.getByRole('link', { name: /Share a public-safe SOP suggestion/ })).toHaveAttribute('href', /template=sop_template\.yml/);
+  await expect(page.getByRole('link', { name: /Share a public-safe SOP suggestion/ })).toHaveAttribute('href', /template=feature_request\.yml.*SOP%20template/);
 
   const response = await page.request.get('/examples/factorforge-conservative-sop.yaml');
   expect(response.ok()).toBeTruthy();

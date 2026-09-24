@@ -9,7 +9,7 @@ to validation evidence or a bundled SOP.
 | Channel | Use |
 | --- | --- |
 | [Share Wet-lab Results (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) | Public-safe coarse summaries only |
-| [Suggest a public-safe SOP template (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=sop_template.yml) | Sanitized, sequence-free SOP policy suggestions only |
+| [Suggest a public-safe SOP template (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=feature_request.yml&title=%5BSOP%20template%5D%3A%20) | Sanitized, sequence-free SOP policy suggestions only; dedicated SOP form activates when the release branch lands on the default branch |
 | Email: eijex.lab@gmail.com | Private or sensitive summaries |
 
 Public GitHub Issues must not contain private or sensitive wet-lab data.
