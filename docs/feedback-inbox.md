@@ -1,12 +1,15 @@
 # Feedback Inbox
 
-This document describes a planned feedback path. It is documentation only; no external form automation is implemented here.
+This document describes the public GitHub intake forms and the separate private
+contact path. Submissions are manually reviewed; there is no automatic promotion
+to validation evidence or a bundled SOP.
 
 ## Submission Channels
 
 | Channel | Use |
 | --- | --- |
 | [Share Wet-lab Results (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) | Public-safe coarse summaries only |
+| [Suggest a public-safe SOP template (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=sop_template.yml) | Sanitized, sequence-free SOP policy suggestions only |
 | Email: eijex.lab@gmail.com | Private or sensitive summaries |
 
 Public GitHub Issues must not contain private or sensitive wet-lab data.
@@ -18,6 +21,7 @@ Public GitHub Issues must not contain private or sensitive wet-lab data.
 - `feature-request`: requested capability
 - `docs-feedback`: documentation issue or suggestion
 - `wet-lab`: public-safe experimental feedback requiring careful review
+- `sop-template`: public-safe, sequence-free SOP policy suggestion
 - `needs-triage`: maintainer triage needed
 
 ## Public-Safe Wet-Lab Summary Fields

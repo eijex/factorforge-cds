@@ -1,0 +1,50 @@
+# FactorForge conservative plant-expression SOP example
+#
+# How to use:
+# 1. Save a copy of this file and edit the values below in a text editor.
+# 2. Keep $schema and unknown_rule_policy unchanged so unsupported rules fail closed.
+# 3. Upload the edited .yaml file in the FactorForge Laboratory SOP panel.
+#
+# This is an in-silico starting template, not an approved laboratory SOP.
+# Do not add raw sequences, construct IDs, patient data, or confidential details.
+
+$schema: factorforge-sop-v1
+profile_id: default_conservative_plant_expression
+sop_name: "FactorForge Conservative Plant Expression Review Template"
+version: 1.1.0
+author: Eijex
+status: STANDARD_TEMPLATE
+derived_from: "FactorForge public defaults and precautionary workflow assumptions"
+scope_note: "Editable in-silico design and pre-synthesis review policy. Laboratory approval and wet-lab testing remain separate."
+default_enforcement: IGNORE
+unknown_rule_policy: ERROR
+
+rules:
+  assembly.type_iis.bsai.v1: HARD_FAIL
+  assembly.type_iis.bsmbi.v1: HARD_FAIL
+  biological.reading_frame.v1: HARD_FAIL
+  rna.cryptic_splice.v1: WARNING
+  rna.polya_motifs.v1: WARNING
+  rna.au_rich_elements.v1: WARNING
+  synthesis.gc_extremes.v1: WARNING
+  policy.synthesis.homopolymer.v1: WARNING
+  policy.initiation_mfe.v1: WARNING
+
+workflow:
+  design_method: feasibility_best
+  comparison_methods: [high_cai, gc_target, assembly_friendly]
+  sequence_requirements:
+    reproducibility_seed: null
+    kozak_optimization: false
+    suppress_tpa: false
+    type_iis_enzymes: [BsaI, BpiI, BsmBI]
+    custom_restriction_sites: []
+    moclo_template: false
+  review_policy:
+    cai: PREFERRED
+    overall_gc: PREFERRED
+    local_gc: PREFERRED
+    type_iis: REQUIRED
+    repeats: PREFERRED
+    homopolymers: PREFERRED
+    forbidden_motifs: PREFERRED
