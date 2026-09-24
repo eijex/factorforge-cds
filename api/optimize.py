@@ -512,12 +512,65 @@ class handler(BaseHTTPRequestHandler):
                 )
                 if sop_profile is not None:
                     sop_registry = RuleRegistry(sop_profile=sop_profile)
+                    
+                    # First validation pass
                     sop_evaluation = sop_registry.evaluate_sequence(
                         self.primary_dna_sequence(result),
                         host=HOST_METADATA[host]["display_name"],
                     )
+                    
+                    # Job 305: Implement REGENERATE loop if required by policy
+                    regenerate_triggered = False
+                    original_candidate = None
+                    if "regenerate_rules" in data and any(hf["rule_id"] in data["regenerate_rules"] for hf in sop_evaluation.get("hard_fails", [])):
+                        regenerate_triggered = True
+                        original_candidate = dict(result) # preserve original
+                        
+                        # Trigger new generation (e.g. changing seed)
+                        new_seed = (seed or 0) + 1
+                        result = self.optimize_sequence(
+                            sequence, profile, use_template, kozak, dinuc,
+                            objective=objective, host_profile=host_profile, host=internal_host,
+                            return_candidates=return_candidates, constraints=constraints,
+                            custom_restriction_sites=custom_restriction_sites, seed=new_seed
+                        )
+                        result = self.attach_design_review(
+                            result, input_sequence=sequence, acceptance_criteria=acceptance_criteria,
+                            reviewer_disposition=data.get("reviewer_disposition")
+                        )
+                        
+                        # Complete re-validation
+                        sop_evaluation = sop_registry.evaluate_sequence(
+                            self.primary_dna_sequence(result),
+                            host=HOST_METADATA[host]["display_name"],
+                        )
+                        result["regenerated_from"] = original_candidate.get("construct_id")
+                        result["regenerate_action"] = True
+
                     result["sop_profile"] = sop_profile.provenance()
                     result["sop_evaluation"] = sop_evaluation
+                    
+                    # Job 305: Snapshot retention
+                    import tempfile
+                    import os
+                    import json
+                    snapshot_dir = os.path.join(tempfile.gettempdir(), "factorforge_snapshots")
+                    os.makedirs(snapshot_dir, exist_ok=True)
+                    if "provenance" in result and "run_id" in result["provenance"]:
+                        run_id = result["provenance"]["run_id"]
+                        with open(os.path.join(snapshot_dir, f"{run_id}_policy_snapshot.json"), "w") as sf:
+                            json.dump(sop_profile.data, sf)
+                        # We also save the run_config snapshot
+                        run_config_data = {
+                            "target_host": host,
+                            "number_of_candidates": 1,
+                            "random_seed": seed,
+                            "optimizer_mode": objective,
+                            "assembly_methods": [] if not use_template else ["golden_gate"]
+                        }
+                        with open(os.path.join(snapshot_dir, f"{run_id}_run_config_snapshot.json"), "w") as sf:
+                            json.dump(run_config_data, sf)
+
 
             if implicit_strategy_disclosure and isinstance(result, dict):
                 result.update(implicit_strategy_disclosure)
@@ -1460,6 +1513,7 @@ class handler(BaseHTTPRequestHandler):
                 dinuc=dinuc,
                 constraints=constraints,
                 seed=seed,
+                sop_profile=sop_profile,
             )
             return response
 
@@ -1802,6 +1856,7 @@ class handler(BaseHTTPRequestHandler):
         dinuc,
         constraints,
         seed=None,
+        sop_profile=None,
     ):
         """Add DesignPackage-compatible metadata while preserving existing response keys."""
         output_cds = self.primary_dna_sequence(response)
@@ -1860,16 +1915,24 @@ class handler(BaseHTTPRequestHandler):
         resolved_engine_status = (
             "development_rc" if resolved_engine_id in {"dp_v2_1", "dp_v2_1_1"} else "stable"
         )
+        run_config_hash = "sha256:" + hashlib.sha256(json.dumps(param_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+        effective_policy_hash = sop_profile.digest if sop_profile else None
+        policy_schema = getattr(sop_profile, 'SCHEMA', None) if sop_profile else None
+
         response["provenance"] = {
             "run_id": run_id,
+            "input_sha256": self.sha256_prefix(input_sequence),
+            "effective_policy_sha256": effective_policy_hash,
+            "run_config_sha256": run_config_hash,
+            "policy_schema_version": policy_schema,
+            "run_config_schema_version": "http://json-schema.org/draft-07/schema#",
             "product_version": ENGINE_VERSIONS["product"],
             "engine_id": resolved_engine_id,
             "engine_generation": (2 if resolved_engine_id in {"dp", "dp_v2_1", "dp_v2_1_1"} else 1),
             "engine_version": engine_version(resolved_engine_id),
             "engine_status": resolved_engine_status,
-            "input_sequence_hash": self.sha256_prefix(input_sequence),
+            "code_commit": "b344a66",
             "output_cds_hash": self.sha256_prefix(output_cds),
-            "parameter_hash": self.sha256_prefix(param_str),
         }
         response["wet_lab_feedback"] = {"status": "pending", "submissions": []}
         response.setdefault("target", None)
