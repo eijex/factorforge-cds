@@ -94,3 +94,24 @@ test('active SOP downloads as human-readable YAML', async ({ page }) => {
   expect(text).toContain('$schema: factorforge-sop-v1');
   expect(text).toContain('type_iis_enzymes: [BsaI, BpiI, BsmBI]');
 });
+
+test('bundled example SOP is directly downloadable and sharing stays explicit', async ({ page }) => {
+  await page.goto('/');
+  const example = page.locator('#downloadSopExample');
+  await expect(example).toHaveAttribute('href', '/examples/factorforge-conservative-sop.yaml');
+  await expect(example).toHaveAttribute('download', '');
+  await expect(example).toHaveAttribute('title', /commented FactorForge conservative example/);
+  await expect(page.locator('#downloadSopTemplate')).toHaveAttribute('title', /currently active/);
+  await expect(page.locator('#uploadSopButton')).toHaveAttribute('title', /YAML or JSON/);
+  await expect(page.getByRole('link', { name: /Share a public-safe SOP suggestion/ })).toHaveAttribute('href', /template=sop_template\.yml/);
+
+  const response = await page.request.get('/examples/factorforge-conservative-sop.yaml');
+  expect(response.ok()).toBeTruthy();
+  const yaml = await response.text();
+  expect(yaml).toContain('# This is an in-silico starting template');
+  expect(yaml).toContain('$schema: factorforge-sop-v1');
+  expect(yaml).toContain('unknown_rule_policy: ERROR');
+
+  await page.locator('#sopFileUpload').setInputFiles('web/examples/factorforge-conservative-sop.yaml');
+  await expect(page.locator('#sopProfileName')).toHaveText('FactorForge Conservative Plant Expression Review Template');
+});

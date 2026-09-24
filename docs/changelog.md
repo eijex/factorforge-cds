@@ -12,6 +12,9 @@ FactorForge v3.0+ is the current public release line.
   or drag and drop, and locally retains the validated active profile.
 - The default-profile summary stays visible while detailed settings are grouped
   under one collapsed manual-overrides panel.
+- A commented conservative example can be downloaded separately from the active
+  profile export. Public SOP suggestions use a privacy-gated GitHub issue form;
+  sensitive profiles remain on the private contact path.
 - The bundled conservative plant-expression template is a starting point, not a
   complete or approved SOP for any named laboratory.
 - SOP provenance is included in API output when a profile is supplied. These

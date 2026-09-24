@@ -49,6 +49,8 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   under the active SOP workflow while keeping stable DP v2 as the default path.
 - Replaced the long always-prominent SOP controls with an upload-first card,
   concise default-profile summary, and one collapsed manual-overrides panel.
+- Added a commented conservative example SOP download, separate active-profile
+  export, and a public-safe GitHub intake for sequence-free SOP suggestions.
 - The bundled template is explicitly a conservative starting point, not a complete
   or approved SOP for any named laboratory.
 
