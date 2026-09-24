@@ -97,7 +97,7 @@ Wet-lab validation data contributions are welcome only as non-confidential publi
 
 Preferred submission paths:
 1. [**Share Wet-lab Results (GitHub)**](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) — public-safe coarse summaries only
-2. [**Suggest a public-safe SOP template (GitHub)**](https://github.com/eijex/factorforge-cds/issues/new?template=sop_template.yml) — sanitized, sequence-free policy profiles only
+2. [**Suggest a public-safe SOP template (GitHub)**](https://github.com/eijex/factorforge-cds/issues/new?template=feature_request.yml&title=%5BSOP%20template%5D%3A%20) — sanitized, sequence-free policy profiles only
 3. **Email**: use `eijex.lab@gmail.com` for private or sensitive summaries
 4. See [VALIDATION.md](VALIDATION.md) for the full submission format
 
