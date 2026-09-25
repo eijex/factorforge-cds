@@ -12,6 +12,7 @@ import re
 from typing import Any, Dict, List, Optional
 
 from factorforge.rules.models import (
+    AuthorizedAction,
     AuthorityType,
     EnforcementLevel,
     RuleAuthority,
@@ -177,13 +178,15 @@ def _check_codon_concentration(sequence: str, context: Dict[str, Any]) -> Dict[s
     for i in range(0, len(seq), 3):
         c = seq[i:i+3]
         aa = STANDARD_CODE.get(c, '*')
-        if aa == '*': continue
+        if aa == '*':
+            continue
         aa_counts[aa] = aa_counts.get(aa, 0) + 1
         c_counts[c] = c_counts.get(c, 0) + 1
         
     concentrated_aas = []
     for aa, total in aa_counts.items():
-        if total < 5: continue # Ignore rare AAs
+        if total < 5:
+            continue  # Ignore rare AAs
         max_share = 0
         for c, a in STANDARD_CODE.items():
             if a == aa:

@@ -12,6 +12,7 @@ import sys
 import os
 import re
 import logging
+import tempfile
 from datetime import datetime, timezone
 from typing import Any
 
@@ -520,10 +521,8 @@ class handler(BaseHTTPRequestHandler):
                     )
                     
                     # Job 305: Implement REGENERATE loop if required by policy
-                    regenerate_triggered = False
                     original_candidate = None
                     if any(hf.get("authorized_action") == "regenerate" for hf in sop_evaluation.get("hard_fails", []) + sop_evaluation.get("warnings", [])):
-                        regenerate_triggered = True
                         original_candidate = dict(result) # preserve original
                         
                         # Trigger new generation (e.g. changing seed)
@@ -556,7 +555,10 @@ class handler(BaseHTTPRequestHandler):
                     result["sop_evaluation"] = sop_evaluation
                     
                     # Job 305: Snapshot retention
-                    snapshot_dir = os.path.join(tempfile.gettempdir(), "factorforge_snapshots")
+                    snapshot_dir = os.environ.get(
+                        "FACTORFORGE_RUN_RECORD_DIR",
+                        os.path.join(tempfile.gettempdir(), "factorforge_snapshots"),
+                    )
                     os.makedirs(snapshot_dir, exist_ok=True)
                     if "provenance" in result and "run_id" in result["provenance"]:
                         run_id = result["provenance"]["run_id"]
@@ -1893,8 +1895,6 @@ class handler(BaseHTTPRequestHandler):
         }
         if seed is not None:
             param_payload["seed"] = seed
-        param_str = json.dumps(param_payload, sort_keys=True, separators=(",", ":"))
-
         response["construct_id"] = _generate_construct_id()
         response["design_package_version"] = "1.0"
         response["created_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -1930,12 +1930,21 @@ class handler(BaseHTTPRequestHandler):
         run_config_hash = "sha256:" + hashlib.sha256(json.dumps(param_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
         effective_policy_hash = sop_profile.digest if sop_profile else None
         policy_schema = getattr(sop_profile, 'SCHEMA', None) if sop_profile else None
+        input_hash = self.sha256_prefix(input_sequence)
+        code_commit = (
+            os.environ.get("VERCEL_GIT_COMMIT_SHA")
+            or os.environ.get("GITHUB_SHA")
+            or os.environ.get("FACTORFORGE_CODE_COMMIT")
+            or "unknown"
+        )
 
         response["provenance"] = {
             "run_id": run_id,
-            "input_sha256": self.sha256_prefix(input_sequence),
+            "input_sha256": input_hash,
+            "input_sequence_hash": input_hash,
             "effective_policy_sha256": effective_policy_hash,
             "run_config_sha256": run_config_hash,
+            "parameter_hash": run_config_hash,
             "policy_schema_version": policy_schema,
             "run_config_schema_version": "http://json-schema.org/draft-07/schema#",
             "product_version": ENGINE_VERSIONS["product"],
@@ -1943,7 +1952,7 @@ class handler(BaseHTTPRequestHandler):
             "engine_generation": (2 if resolved_engine_id in {"dp", "dp_v2_1", "dp_v2_1_1"} else 1),
             "engine_version": engine_version(resolved_engine_id),
             "engine_status": resolved_engine_status,
-            "code_commit": "b344a66",
+            "code_commit": code_commit,
             "output_cds_hash": self.sha256_prefix(output_cds),
         }
         response["wet_lab_feedback"] = {"status": "pending", "submissions": []}
