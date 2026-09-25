@@ -9,8 +9,9 @@ FactorForge development direction and planned work.
 
 ## Current Release Status
 
-FactorForge v3.5.1 extends the web/API product line with versioned SOP profiles,
-an editable browser-local SOP workflow, Top-K discovery slates,
+FactorForge v3.5.1 extends the web/API product line with versioned Sequence
+Policy Profiles (internally retained as `SopProfile` for compatibility), an
+editable browser-local policy workflow, Top-K discovery slates,
 an explicit DP v2.1.1 path, constrained-sLLM research integration, and adaptive
 partial-DP rescue while retaining stable DP v2 as the default. The preceding v3.4.5 release
 completed the interface-reliability patch line: browser
@@ -95,7 +96,7 @@ Current maintenance and evidence priorities are:
 
 ---
 
-## v3.5 — Multi-Engine Version Governance and SOP Profiles *(web/API deployed)*
+## v3.5 — Multi-Engine Version Governance and Sequence Policy Profiles *(web/API deployed)*
 
 | Feature | Description |
 |---------|-------------|
@@ -104,7 +105,7 @@ Current maintenance and evidence priorities are:
 | **Gen 2 — DP v2.1.1** | Explicit local-composition development candidate; calibration complete, 36-protein holdout pending |
 | **Gen 3 — sLLM Hybrid** | Feature-gated 0.x research preview; no trained production-model claim |
 | **Version manifest** | One machine-readable product/engine source of truth exposed by the API |
-| **SOP profiles** | Upload-first versioned review-policy templates with YAML export, YAML/JSON browser-local upload, persistence, reset, provenance, and collapsed manual overrides; no named laboratory approval claim |
+| **Sequence Policy Profiles** | Upload-first versioned review-policy examples with YAML export, YAML/JSON browser-local upload, persistence, reset, provenance, and collapsed manual overrides. FactorForge applies user-defined policy; it does not define, approve, or validate a laboratory SOP. |
 
 ## Future — Validation-Driven Activation (version TBD)
 

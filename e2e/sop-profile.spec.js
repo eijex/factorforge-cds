@@ -108,10 +108,13 @@ test('bundled example SOP is directly downloadable and sharing stays explicit', 
   const response = await page.request.get('/examples/factorforge-conservative-sop.yaml');
   expect(response.ok()).toBeTruthy();
   const yaml = await response.text();
-  expect(yaml).toContain('# This is an in-silico starting template');
+  expect(yaml).toContain('# This is an illustrative in-silico template');
   expect(yaml).toContain('$schema: factorforge-sop-v1');
+  expect(yaml).toContain('status: EXAMPLE_TEMPLATE');
+  expect(yaml).toContain('assembly.type_iis.bpii.v1: HARD_FAIL');
+  expect(yaml).not.toContain('biological.reading_frame.v1');
   expect(yaml).toContain('unknown_rule_policy: ERROR');
 
   await page.locator('#sopFileUpload').setInputFiles('web/examples/factorforge-conservative-sop.yaml');
-  await expect(page.locator('#sopProfileName')).toHaveText('FactorForge Conservative Plant Expression Review Template');
+  await expect(page.locator('#sopProfileName')).toHaveText('FactorForge Conservative Sequence Policy Example');
 });

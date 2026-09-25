@@ -21,6 +21,10 @@ factorforge optimize my_protein.fasta -o output.fasta
 
 Or use the **[web app](https://factorforge.eijex.com)** — no installation required.
 
+FactorForge can apply a versioned [Sequence Policy Profile](sequence-policy.md),
+but it does not define or approve a laboratory SOP. The bundled policy is an
+illustrative example that users must adapt to their own reviewed workflow.
+
 ---
 
 ## Access Options

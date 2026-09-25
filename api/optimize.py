@@ -522,7 +522,7 @@ class handler(BaseHTTPRequestHandler):
                     # Job 305: Implement REGENERATE loop if required by policy
                     regenerate_triggered = False
                     original_candidate = None
-                    if "regenerate_rules" in data and any(hf["rule_id"] in data["regenerate_rules"] for hf in sop_evaluation.get("hard_fails", [])):
+                    if any(hf.get("authorized_action") == "regenerate" for hf in sop_evaluation.get("hard_fails", []) + sop_evaluation.get("warnings", [])):
                         regenerate_triggered = True
                         original_candidate = dict(result) # preserve original
                         
@@ -546,14 +546,16 @@ class handler(BaseHTTPRequestHandler):
                         )
                         result["regenerated_from"] = original_candidate.get("construct_id")
                         result["regenerate_action"] = True
+                    
+                    # Ensure blocking policy
+                    is_blocked = any(hf.get("authorized_action") == "block" for hf in result.get("sop_evaluation", sop_evaluation).get("hard_fails", []))
+                    result["policy_decision"] = "BLOCK" if is_blocked else "PASS"
+
 
                     result["sop_profile"] = sop_profile.provenance()
                     result["sop_evaluation"] = sop_evaluation
                     
                     # Job 305: Snapshot retention
-                    import tempfile
-                    import os
-                    import json
                     snapshot_dir = os.path.join(tempfile.gettempdir(), "factorforge_snapshots")
                     os.makedirs(snapshot_dir, exist_ok=True)
                     if "provenance" in result and "run_id" in result["provenance"]:
@@ -1327,21 +1329,7 @@ class handler(BaseHTTPRequestHandler):
         # Convert to uppercase
         return cleaned.upper()
 
-    def optimize_sequence(
-        self,
-        sequence,
-        profile,
-        use_template,
-        kozak,
-        dinuc,
-        objective=None,
-        host_profile=DEFAULT_HOST_PROFILE,
-        host=DEFAULT_HOST_PROFILE,
-        return_candidates=False,
-        constraints=None,
-        custom_restriction_sites=None,
-        seed=None,
-    ):
+    def optimize_sequence(self, sequence, profile, use_template, kozak, dinuc, objective=None, host_profile=DEFAULT_HOST_PROFILE, host=DEFAULT_HOST_PROFILE, return_candidates=False, constraints=None, custom_restriction_sites=None, seed=None, sop_profile=None):
         """Run actual FactorForge v3.x profile optimization."""
         try:
             constraints = self.parse_constraints(constraints, host=host)
@@ -2422,3 +2410,4 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
+
