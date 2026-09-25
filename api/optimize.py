@@ -1358,6 +1358,20 @@ class handler(BaseHTTPRequestHandler):
                     custom_restriction_sites=custom_restriction_sites,
                     seed=seed,
                 )
+            elif objective == "balanced_cai":
+                return self.optimize_feasibility_best(
+                    sequence=sequence,
+                    profile=profile,
+                    host_profile=host_profile,
+                    host=host,
+                    constraints=constraints,
+                    kozak=kozak,
+                    dinuc=dinuc,
+                    return_candidates=return_candidates,
+                    custom_restriction_sites=custom_restriction_sites,
+                    seed=seed,
+                    use_balanced_engine=True
+                )
             if objective in {"dp_v2_1", "dp_v2_1_1"}:
                 return self.optimize_dp_v2_1(
                     sequence=sequence,
@@ -1533,6 +1547,7 @@ class handler(BaseHTTPRequestHandler):
         return_candidates=True,
         custom_restriction_sites=None,
         seed=None,
+        use_balanced_engine=False,
     ):
         """Run feasibility_best contract and add profile comparison candidates."""
         constraints = self.parse_constraints(constraints, host=host)
@@ -1553,12 +1568,21 @@ class handler(BaseHTTPRequestHandler):
             target_gc_high=constraints["gc_max"],
             target_cai=constraints["cai_target"],
         )
-        dp_result = DPV2Optimizer().optimize(
-            protein_sequence=aa_seq,
-            codon_weights=table.codon_weights,
-            target_gc_min=constraints["gc_min"],
-            target_gc_max=constraints["gc_max"],
-        )
+        if use_balanced_engine:
+            from factorforge.engines.balanced_optimizer import BalancedOptimizer
+            dp_result = BalancedOptimizer().optimize(
+                protein_sequence=aa_seq,
+                codon_weights=table.codon_weights,
+                target_gc_min=constraints["gc_min"],
+                target_gc_max=constraints["gc_max"],
+            )
+        else:
+            dp_result = DPV2Optimizer().optimize(
+                protein_sequence=aa_seq,
+                codon_weights=table.codon_weights,
+                target_gc_min=constraints["gc_min"],
+                target_gc_max=constraints["gc_max"],
+            )
         best = {"dna_sequence": dp_result["sequence"], "cai": dp_result["cai"]}
 
         candidates = [
