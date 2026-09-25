@@ -386,6 +386,11 @@ class RuleRegistry:
             return self.sop_profile.get_enforcement(rule.rule_id)
         return rule.enforcement
 
+    def resolved_authorized_action(self, rule: RuleDefinition) -> AuthorizedAction:
+        if self.sop_profile is not None:
+            return self.sop_profile.get_authorized_action(rule.rule_id)
+        return AuthorizedAction.BLOCK if self.resolved_enforcement(rule) == EnforcementLevel.HARD_FAIL else AuthorizedAction.REPORT_ONLY
+
     def get_rule(self, rule_id: str) -> Optional[RuleDefinition]:
         """Retrieve rule by ID."""
         return self._rules.get(rule_id)
@@ -426,10 +431,12 @@ class RuleRegistry:
             res = rule.evaluate(sequence, ctx)
             passed = res.get("passed", True)
             resolved_enforcement = self.resolved_enforcement(rule)
+            resolved_action = self.resolved_authorized_action(rule)
             entry = {
                 "rule_id": rule.rule_id,
                 "name": rule.name,
                 "enforcement": resolved_enforcement.value,
+                "authorized_action": resolved_action.value,
                 "authority": rule.authority.authority_type.value,
                 "result": res,
             }
@@ -457,7 +464,7 @@ class RuleRegistry:
     def compute_digest(self) -> str:
         """Compute cryptographic SHA-256 fingerprint of the current rule registry."""
         rule_summaries = sorted([
-            f"{r.rule_id}:{r.version}:{self.resolved_enforcement(r).value}:{r.authority.authority_type.value}"
+            f"{r.rule_id}:{r.version}:{self.resolved_enforcement(r).value}:{self.resolved_authorized_action(r).value}:{r.authority.authority_type.value}"
             for r in self._rules.values()
         ])
         raw_text = ";".join(rule_summaries).encode("utf-8")

@@ -2,14 +2,14 @@
 
 This document describes the public GitHub intake forms and the separate private
 contact path. Submissions are manually reviewed; there is no automatic promotion
-to validation evidence or a bundled SOP.
+to validation evidence, a product default, or a laboratory SOP.
 
 ## Submission Channels
 
 | Channel | Use |
 | --- | --- |
 | [Share Wet-lab Results (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) | Public-safe coarse summaries only |
-| [Suggest a public-safe SOP template (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=feature_request.yml&title=%5BSOP%20template%5D%3A%20) | Sanitized, sequence-free SOP policy suggestions only; dedicated SOP form activates when the release branch lands on the default branch |
+| [Suggest a public-safe policy example (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=feature_request.yml&title=%5BPolicy%20example%5D%3A%20) | Sanitized, sequence-free Sequence Policy suggestions only; submissions are review inputs, not approved SOPs or automatic defaults |
 | Email: eijex.lab@gmail.com | Private or sensitive summaries |
 
 Public GitHub Issues must not contain private or sensitive wet-lab data.
@@ -21,7 +21,7 @@ Public GitHub Issues must not contain private or sensitive wet-lab data.
 - `feature-request`: requested capability
 - `docs-feedback`: documentation issue or suggestion
 - `wet-lab`: public-safe experimental feedback requiring careful review
-- `sop-template`: public-safe, sequence-free SOP policy suggestion
+- `sop-template`: legacy label for a public-safe, sequence-free Sequence Policy suggestion
 - `needs-triage`: maintainer triage needed
 
 ## Public-Safe Wet-Lab Summary Fields

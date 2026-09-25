@@ -119,10 +119,12 @@ GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).
 - **Sponsor** — Support our research via [GitHub Sponsors](https://github.com/sponsors/eijex) or [PayPal](https://paypal.me/munkyukim)
 - **Docs** — [eijex.github.io/factorforge-cds](https://eijex.github.io/factorforge-cds/)
 - **Wet-lab Feedback** — Public-safe feedback summaries are welcome via [Share Wet-lab Feedback (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml). Do not submit raw sequences, confidential construct details, internal batch IDs, patient data, private contact information, exact process parameters, or confidential partner/customer data. Email `eijex.lab@gmail.com` for private or sensitive summaries. See [VALIDATION.md](VALIDATION.md) before submitting.
-- **SOP Suggestions** — The web app provides a commented conservative YAML
-  example and active-profile export. Sequence-free, non-confidential policy
-  suggestions can be submitted through the public SOP issue form; use
-  `eijex.lab@gmail.com` for private or laboratory-specific profiles.
+- **Sequence Policy Profiles** — FactorForge applies the sequence-review policy
+  chosen by the user; it does not define or approve a laboratory SOP. The web
+  app provides an illustrative YAML example and active-profile export.
+  Sequence-free, non-confidential suggestions can be submitted through the
+  public policy-template form; use `eijex.lab@gmail.com` for private or
+  laboratory-specific profiles. See the [sequence policy boundary](docs/sequence-policy.md).
 - **GitHub Issues** — bugs, features: [github.com/eijex/factorforge-cds/issues](https://github.com/eijex/factorforge-cds/issues)
 - **Email** — eijex.lab@gmail.com
 - **FactorForge** — [factorforge.eijex.com](https://factorforge.eijex.com)

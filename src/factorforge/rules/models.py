@@ -14,6 +14,11 @@ class EnforcementLevel(str, Enum):
     ERROR = "error"
     INFORMATIONAL = "informational"
 
+class AuthorizedAction(str, Enum):
+    BLOCK = "block"
+    REGENERATE = "regenerate"
+    REPORT_ONLY = "report_only"
+
 class RuleCategory(str, Enum):
     ASSEMBLY = "assembly"
     RNA_RISK = "rna_risk"
@@ -85,3 +90,4 @@ class RuleDefinition:
         if self.evaluator_fn is None:
             return []
         return self.evaluator_fn(sequence, context or {})
+
