@@ -10,6 +10,12 @@ class SopProfile:
 
     SCHEMA = "factorforge-sop-v1"
     MAX_RULES = 256
+    LEGAL_COMBINATIONS = {
+        EnforcementLevel.HARD_FAIL: {AuthorizedAction.BLOCK, AuthorizedAction.REGENERATE},
+        EnforcementLevel.WARNING: {AuthorizedAction.REPORT_ONLY, AuthorizedAction.REGENERATE},
+        EnforcementLevel.IGNORE: {AuthorizedAction.REPORT_ONLY},
+        EnforcementLevel.INFORMATIONAL: {AuthorizedAction.REPORT_ONLY},
+    }
 
     def __init__(self, source: str | Path | Mapping[str, Any], known_rule_ids: Iterable[str] | None = None):
         if isinstance(source, Mapping):
@@ -84,13 +90,18 @@ class SopProfile:
                 if not isinstance(rule_data, dict) or "enforcement" not in rule_data or "authorized_action" not in rule_data:
                     raise ValueError(f"Invalid rule object for {rule_id}: must contain 'enforcement' and 'authorized_action'")
                 try:
-                    EnforcementLevel(rule_data["enforcement"].lower())
+                    enforcement = EnforcementLevel(rule_data["enforcement"].lower())
                 except ValueError as exc:
                     raise ValueError(f"Invalid enforcement for {rule_id}: {rule_data['enforcement']}") from exc
                 try:
-                    AuthorizedAction(rule_data["authorized_action"].lower())
+                    action = AuthorizedAction(rule_data["authorized_action"].lower())
                 except ValueError as exc:
                     raise ValueError(f"Invalid authorized_action for {rule_id}: {rule_data['authorized_action']}") from exc
+                if action not in cls.LEGAL_COMBINATIONS.get(enforcement, set()):
+                    raise ValueError(
+                        f"Illegal policy combination for {rule_id}: "
+                        f"{enforcement.value} + {action.value}"
+                    )
 
     def get_enforcement(self, rule_id: str) -> EnforcementLevel:
         if rule_id in self.rules:
