@@ -1,4 +1,5 @@
 import math
+import hashlib
 from typing import Dict, Any, Optional, Set, List
 from collections import defaultdict
 from factorforge.engines.sllm.automaton import AutomatonCompiler, CompiledAutomaton
@@ -28,26 +29,17 @@ for codon, aa in STANDARD_GENETIC_CODE.items():
         AA_TO_CODONS.setdefault(aa, []).append(codon)
 
 def get_canonical_forbidden_motifs(forbidden_enzymes=None):
-    # Fallback mock for canonical motifs
     return ["GGTCTC", "GAGACC", "CGTCTC", "GAGACG"]
 
 class BalancedOptimizer:
-    """Deterministic Distribution-Aware Optimizer (Greedy with GC and Automaton Support)."""
-
     def __init__(
         self,
         forbidden_motifs: Optional[List[str]] = None,
         forbidden_enzymes: Optional[Set[str]] = None,
         include_reverse_complement: bool = True,
     ) -> None:
-        if forbidden_motifs is not None:
-            motifs = forbidden_motifs
-        else:
-            motifs = get_canonical_forbidden_motifs(forbidden_enzymes)
-
-        self.automaton: CompiledAutomaton = AutomatonCompiler.compile(
-            motifs, include_rc=include_reverse_complement
-        )
+        motifs = forbidden_motifs if forbidden_motifs is not None else get_canonical_forbidden_motifs(forbidden_enzymes)
+        self.automaton: CompiledAutomaton = AutomatonCompiler.compile(motifs, include_rc=include_reverse_complement)
 
     def optimize(
         self,
@@ -57,8 +49,9 @@ class BalancedOptimizer:
         target_gc_max: float = 0.47,
         left_flank: str = "",
         right_flank: str = "",
+        seed: str = "default_seed_307",
+        lambda_cai: float = 0.70
     ) -> Dict[str, Any]:
-        """Runs a deterministic greedy search optimizing distribution divergence and GC constraints."""
         protein = "".join(protein_sequence.upper().split()).rstrip("*")
         if not protein:
             raise ValueError("protein_sequence must not be empty")
@@ -67,7 +60,6 @@ class BalancedOptimizer:
             if aa not in AA_TO_CODONS:
                 raise ValueError(f"Unsupported amino acid residue: {aa}")
 
-        # Basic setup
         s0 = 0
         for char in left_flank.upper():
             s0 = self.automaton.step_nucleotide(s0, char)
@@ -77,10 +69,18 @@ class BalancedOptimizer:
         n_codons = len(protein)
         total_nt = n_codons * 3
 
-        # State initialization
+        true_probs = {}
+        for aa, codons in AA_TO_CODONS.items():
+            total_w = sum(codon_weights.get(c, 0.0) for c in codons)
+            if total_w > 0:
+                for c in codons:
+                    true_probs[c] = codon_weights.get(c, 0.0) / total_w
+            else:
+                for c in codons:
+                    true_probs[c] = 1.0 / len(codons)
+
         current_counts = defaultdict(int)
         aa_totals = defaultdict(int)
-        
         target_mid_gc_count = (target_gc_min + target_gc_max) / 2.0 * total_nt
         
         seq_codons = []
@@ -95,36 +95,35 @@ class BalancedOptimizer:
             best_next_s = None
             
             for codon in synonymous_codons:
-                # 1. Automaton check
                 next_s, is_forbidden = self.automaton.step_codon(curr_s, codon)
                 if is_forbidden:
                     continue
                 
-                # 2. Distribution score (Minimize divergence)
-                # Score = TargetFreq - CurrentFreq
-                target_freq = codon_weights.get(codon, 1e-4)
+                target_prob = true_probs.get(codon, 1e-4)
+                w = codon_weights.get(codon, 1e-4)
+                cai_score = math.log(max(w, 1e-6))
+                
                 new_aa_total = aa_totals[aa] + 1
-                curr_freq = current_counts[codon] / new_aa_total
-                dist_score = target_freq - curr_freq
+                curr_freq = (current_counts[codon] + 1) / new_aa_total
+                dist_score = -abs(curr_freq - target_prob)
                 
-                # 3. GC Score (drive toward mid GC)
+                concentration_penalty = 0.0
+                if curr_freq > 0.8 and new_aa_total > 5:
+                    concentration_penalty = (curr_freq - 0.8) * 2.0
+                
                 codon_gc = codon.count('G') + codon.count('C')
-                next_g = curr_g + codon_gc
-                expected_gc_after_this = next_g + (n_codons - i - 1) * 1.5 # estimate remaining
-                gc_diff = abs(expected_gc_after_this - target_mid_gc_count)
+                expected_gc = curr_g + codon_gc + (n_codons - i - 1) * 1.5 
+                gc_diff = abs(expected_gc - target_mid_gc_count) / total_nt
                 
-                # 4. Total heuristic score (Scale dist_score * 100 to dominate GC slightly)
-                total_score = dist_score * 100 - gc_diff
+                hash_val = int(hashlib.sha256(f"{seed}:{i}:{codon}".encode('utf-8')).hexdigest()[:8], 16)
+                noise = (hash_val / 0xFFFFFFFF) * 0.001
+                
+                total_score = (lambda_cai * cai_score) + ((1.0 - lambda_cai) * dist_score * 5.0) - concentration_penalty - (gc_diff * 2.0) + noise
                 
                 if total_score > best_score:
                     best_score = total_score
                     best_codon = codon
                     best_next_s = next_s
-                elif abs(total_score - best_score) < 1e-9:
-                    if best_codon is not None and codon < best_codon:
-                        best_score = total_score
-                        best_codon = codon
-                        best_next_s = next_s
 
             if best_codon is None:
                 raise RuntimeError(f"Dead end at position {i} for AA {aa}")
