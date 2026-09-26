@@ -427,7 +427,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadApiMetadata();
     applySopToUi(state.activeSop, { persist: false });
     initEventListeners();
-    updateDesignBriefSummary();
+    updateDesignBriefSummary();\n
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
+        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
     renderHistory();
     console.log('FactorForge v3.5.1 Engaged');
 });
@@ -516,7 +529,20 @@ function applySopToUi(profile, { persist = true } = {}) {
     elements.sopProfileName.textContent = validated.sop_name;
     elements.sopProfileMeta.textContent = `${validated.status === 'STANDARD_TEMPLATE' ? 'Default template' : 'Custom SOP'} · v${validated.version} · stored only in this browser`;
     elements.sopProfileBadge.textContent = validated.status === 'STANDARD_TEMPLATE' ? 'Active' : 'Custom';
-    updateDesignBriefSummary();
+    updateDesignBriefSummary();\n
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
+        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
 }
 
 function captureSopFromUi() {
@@ -606,7 +632,20 @@ function initEventListeners() {
         radio.addEventListener('change', (e) => {
             state.objective = e.target.value;
             captureSopFromUi();
-            updateDesignBriefSummary();
+            updateDesignBriefSummary();\n
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
+        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
         });
     });
     elements.engineModeRadios.forEach(radio => {
@@ -617,7 +656,20 @@ function initEventListeners() {
     });
     elements.hostSelect.addEventListener('change', (e) => {
         state.host = e.target.value;
-        updateDesignBriefSummary();
+        updateDesignBriefSummary();\n
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
+        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
     });
     elements.saveDbToggle.addEventListener('change', (e) => {
         state.saveDb = e.target.checked;
@@ -628,25 +680,90 @@ function initEventListeners() {
     elements.useTemplateCheck.addEventListener('change', (e) => {
         state.useTemplate = e.target.checked;
         captureSopFromUi();
-        updateDesignBriefSummary();
+        updateDesignBriefSummary();\n
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
+        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
     });
 
     elements.kozakToggle.addEventListener('change', (e) => {
         state.kozak = e.target.checked;
         captureSopFromUi();
-        updateDesignBriefSummary();
+        updateDesignBriefSummary();\n
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
+        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
     });
     elements.dinucToggle.addEventListener('change', (e) => {
         state.dinuc = e.target.checked;
         captureSopFromUi();
-        updateDesignBriefSummary();
+        updateDesignBriefSummary();\n
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
+        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
     });
     elements.customRestrictionSites.addEventListener('input', () => {
         state.customRestrictionSites = [];
-        updateDesignBriefSummary();
+        updateDesignBriefSummary();\n
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
+        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
     });
     elements.customRestrictionSites.addEventListener('change', captureSopFromUi);
-    elements.typeIisEnzymes.forEach(input => input.addEventListener('change', () => { captureSopFromUi(); updateDesignBriefSummary(); }));
+    elements.typeIisEnzymes.forEach(input => input.addEventListener('change', () => { captureSopFromUi(); updateDesignBriefSummary();\n
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
+        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+ }));
     document.querySelectorAll('.criterion-mode').forEach(select => select.addEventListener('change', captureSopFromUi));
     elements.optimizationSeed.addEventListener('change', captureSopFromUi);
     elements.saveReviewerDisposition.addEventListener('click', saveReviewerDisposition);
@@ -1217,11 +1334,11 @@ function updateCodonInspector(accounting, index) {
     if (!item.isChanged) effects.push('Codon unchanged');
     else if (item.origAa === item.optAa) effects.push('Synonymous codon shift observed');
     else effects.push(`Translated residue changed: ${item.origAa || '—'} → ${item.optAa || '—'}`);
-    if (item.origFreq != null && item.optFreq != null) effects.push(`Host preference ${formatFrequency(item.origFreq)} → ${formatFrequency(item.optFreq)}`);
-    else effects.push('Host codon frequency: N/A (not supplied by API)');
-    const target = accounting.gcTarget;
-    effects.push(`Local GC (50 nt): ${item.localGc == null ? 'N/A' : `${item.localGc.toFixed(1)}%${target ? `; target ${target.min.toFixed(1)}–${target.max.toFixed(1)}%` : ''}`}`);
-    if (index < 10) effects.push('Position lies within the annotated 5′ ramp region; no causal attribution inferred');
+    if (item.decision_rationale) {
+        effects.push(Trace: );
+    } else {
+        // Strict Rule: No UI inference
+    }
     elements.inspectorRationale.textContent = effects.join(' · ');
     elements.inspectorConstraints.textContent = accounting.aaPreserved ? 'PASS · amino-acid sequence preserved' : 'FAIL · amino-acid sequence differs';
 }
@@ -2186,7 +2303,7 @@ function standaloneReportHtml(model) {
     const referenceSequence = model.artifacts.reference_sequence?.match(/.{1,60}/g)?.join('\n') || model.artifacts.reference_sequence;
     return `<!doctype html><html lang="en" data-theme="${reportTheme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FactorForge Researcher Decision Report — ${escapeHtml(reportValue(model.identity.result_id))}</title><style>
 :root{color-scheme:light}body{margin:0;background:#f1f5f9;color:#0f172a;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.page{max-width:920px;margin:auto;padding:42px 24px 72px}h1{font-size:30px;margin:4px 0}h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:#475569;margin:28px 0 10px}h3{margin:0}.eyebrow{color:#047857;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.muted,small{color:#64748b}.outcome,.section-card{background:#fff;border:2px solid;border-radius:16px;padding:20px}.outcome strong{display:block;font-size:28px}.counts{font-weight:700}.callout{padding:14px;border-radius:12px;background:#fff7ed;border:1px solid #fdba74}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.badge{border-radius:999px;background:#fef3c7;color:#92400e;padding:5px 9px;font-size:10px;font-weight:800;text-transform:uppercase}.axis-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.axis-grid article{border:1px solid #dbe2ea;border-radius:12px;padding:12px}.axis-grid small{display:block;color:#0f766e;font-weight:800;margin-top:4px}.independent{border:1px dashed #94a3b8;border-radius:12px;padding:12px}.candidate-value{font-weight:800;color:#0e7490}.boundary{border-left:4px solid #f59e0b;padding:9px 12px;background:#fffbeb}.priority{display:grid;grid-template-columns:32px 1fr;gap:10px;background:#fff;border:1px solid #dbe2ea;border-left:4px solid;border-radius:12px;padding:14px;margin:8px 0}.priority-number{width:26px;height:26px;border-radius:50%;background:#e2e8f0;display:grid;place-items:center;font-weight:800}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;background:#fff}th,td{text-align:left;vertical-align:top;padding:9px;border-bottom:1px solid #e2e8f0}.mismatch{background:#fff1f2;color:#9f1239}dl{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:6px 14px}dt{font-weight:700}dd{margin:0;font-family:monospace;overflow-wrap:anywhere}pre{background:#0f172a;color:#a7f3d0;padding:16px;border-radius:12px;overflow:auto;font:12px/1.6 monospace}ul{padding-left:20px}[data-theme="dark"]{color-scheme:dark}[data-theme="dark"] body{background:#0b0f19;color:#f1f5f9}[data-theme="dark"] h2{color:#94a3b8}[data-theme="dark"] .eyebrow{color:#34d399}[data-theme="dark"] .muted,[data-theme="dark"] small{color:#94a3b8}[data-theme="dark"] .outcome,[data-theme="dark"] .section-card{background:#1e293b;border-color:#334155}[data-theme="dark"] .callout{background:#451a03;border-color:#9a3412;color:#fed7aa}[data-theme="dark"] .axis-grid article{border-color:#475569}[data-theme="dark"] .axis-grid small{color:#5eead4}[data-theme="dark"] .candidate-value{color:#67e8f9}[data-theme="dark"] .boundary{background:#422006}[data-theme="dark"] .priority{background:#1e293b;border-color:#334155}[data-theme="dark"] .priority-number{background:#334155;color:#f8fafc}[data-theme="dark"] table{background:#1e293b}[data-theme="dark"] th,[data-theme="dark"] td{border-bottom:1px solid #334155}[data-theme="dark"] .mismatch{background:#4c0519;color:#fda4af}[data-theme="dark"] pre{background:#020617;color:#6ee7b7;border:1px solid #1e293b}@media(max-width:640px){.page{padding:24px 14px}dl{grid-template-columns:1fr}.axis-grid{grid-template-columns:1fr}dd{margin-bottom:7px}}@media print{body{background:#fff!important;color:#0f172a!important}.page{padding:0}.outcome,.section-card,.priority,table{background:#fff!important;break-inside:avoid}.callout{border-color:#999}}
-</style></head><body><main class="page"><p class="eyebrow">FactorForge CDS Design Review</p><h1>Design Comparison &amp; Decision Report</h1><p class="muted">Result ${escapeHtml(reportValue(model.identity.result_id))} · created ${escapeHtml(reportValue(model.identity.result_created_at))} · report generated ${escapeHtml(model.identity.report_generated_at)}</p><div class="callout"><b>Sequence-data notice:</b> This HTML contains ${referenceSequence ? 'the reference and optimized DNA sequences' : 'the optimized DNA sequence'}. Handle and share it according to your sequence-data policy.</div><section><h2>Decision brief</h2><div class="outcome" style="border-color:${decisionColor}"><strong style="color:${decisionColor}">${escapeHtml(model.disposition.automated_decision.replaceAll('_', ' '))}</strong><p>${escapeHtml(model.interpretation.headline)}</p><p class="counts">${escapeHtml(`${reportValue(model.disposition.required_failure_count)} required fail · ${reportValue(model.disposition.preferred_warning_count)} warning · ${reportValue(model.disposition.unavailable_check_count)} unavailable`)}</p><small>${escapeHtml(reportValue(model.disposition.explanation))}</small></div></section>${standaloneContract}${standaloneComparison}<section><h2>Review priorities and next actions</h2>${priorities}</section><section><h2>Requested vs applied settings</h2><div class="scroll"><table><thead><tr><th>Setting</th><th>Requested</th><th>Applied / recorded</th></tr></thead><tbody>${settings}</tbody></table></div></section><section><h2>All computational checks</h2><div class="scroll"><table><thead><tr><th>Check</th><th>Observed</th><th>Policy</th><th>Status</th></tr></thead><tbody>${checks}</tbody></table></div></section>${candidates}<section><h2>Sequence and process</h2><p>Input type: <b>${escapeHtml(model.context.input_type)}</b> · output length: <b>${escapeHtml(reportValue(model.sequence_summary.output_length_nt, ' nt'))}</b> · nucleotide comparison: <b>${escapeHtml(model.sequence_summary.comparison_available ? reportValue(model.sequence_summary.nucleotide_changes) : 'Not recorded')}</b></p><p>Domestication: ${escapeHtml(model.process.domestication_attempted ? 'Attempted' : 'Not attempted')} · MFE: ${escapeHtml(model.metrics.mfe_status === 'computed' ? 'Computed' : `Not computed (${model.metrics.mfe_status_reason})`)}</p></section><section><h2>Downstream handoff checklist</h2><ul>${model.interpretation.next_steps.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section><section><h2>Reproducibility and provenance</h2><dl>${provenanceRows}</dl></section>${referenceSequence ? `<section><h2>Reference sequence (DNA)</h2><pre>${escapeHtml(referenceSequence)}</pre></section>` : ''}<section><h2>Optimized sequence (DNA)</h2><pre>${escapeHtml(sequence)}</pre></section><section><h2>Interpretation and limitations</h2><p>${escapeHtml(model.interpretation.scope)}</p><ul>${model.interpretation.limitations.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section></main></body></html>`;
+</style></head><body><main class="page"><p class="eyebrow">FactorForge CDS Design Review</p><h1>Design Comparison &amp; Decision Report</h1><p class="muted">Result ${escapeHtml(reportValue(model.identity.result_id))} · created ${escapeHtml(reportValue(model.identity.result_created_at))} · report generated ${escapeHtml(model.identity.report_generated_at)}</p><div class="callout"><b>Sequence-data notice:</b> This HTML contains ${referenceSequence ? 'the reference and optimized DNA sequences' : 'the optimized DNA sequence'}. Handle and share it according to your sequence-data policy.</div><section><h2>Decision brief</h2><div class="outcome" style="border-color:${decisionColor}"><strong style="color:${decisionColor}">${escapeHtml(model.disposition.automated_decision.replaceAll('_', ' '))}</strong><p>${escapeHtml(model.interpretation.headline)}</p><p class="counts">${escapeHtml(`${reportValue(model.disposition.required_failure_count)} required fail · ${reportValue(model.disposition.preferred_warning_count)} warning · ${reportValue(model.disposition.unavailable_check_count)} unavailable`)}</p><small>${escapeHtml(reportValue(model.disposition.explanation))}</small></div></section>${standaloneContract}${standaloneComparison}<section><h2>Review priorities and next actions</h2>${priorities}</section><section><h2>Requested vs applied settings</h2><div class="scroll"><table><thead><tr><th>Setting</th><th>Requested</th><th>Applied / recorded</th></tr></thead><tbody>${settings}</tbody></table></div></section><section><h2>All computational checks</h2><div class="scroll"><table><thead><tr><th>Detection</th><th>Enforcement</th><th>Action</th><th>Status</th></tr></thead><tbody>${checks}</tbody></table></div></section>${candidates}<section><h2>Sequence and process</h2><p>Input type: <b>${escapeHtml(model.context.input_type)}</b> · output length: <b>${escapeHtml(reportValue(model.sequence_summary.output_length_nt, ' nt'))}</b> · nucleotide comparison: <b>${escapeHtml(model.sequence_summary.comparison_available ? reportValue(model.sequence_summary.nucleotide_changes) : 'Not recorded')}</b></p><p>Domestication: ${escapeHtml(model.process.domestication_attempted ? 'Attempted' : 'Not attempted')} · MFE: ${escapeHtml(model.metrics.mfe_status === 'computed' ? 'Computed' : `Not computed (${model.metrics.mfe_status_reason})`)}</p></section><section><h2>Downstream handoff checklist</h2><ul>${model.interpretation.next_steps.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section><section><h2>Reproducibility and provenance</h2><dl>${provenanceRows}</dl></section>${referenceSequence ? `<section><h2>Reference sequence (DNA)</h2><pre>${escapeHtml(referenceSequence)}</pre></section>` : ''}<section><h2>Optimized sequence (DNA)</h2><pre>${escapeHtml(sequence)}</pre></section><section><h2>Interpretation and limitations</h2><p>${escapeHtml(model.interpretation.scope)}</p><ul>${model.interpretation.limitations.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section></main></body></html>`;
 }
 
 function downloadResultsReportHtml(model) {
@@ -2609,7 +2726,20 @@ function clearAll() {
     if (elements.mfeWarningBanner) elements.mfeWarningBanner.classList.add('hidden');
     elements.emptyState.classList.remove('hidden');
     elements.validationStatus.classList.add('hidden');
-    updateDesignBriefSummary();
+    updateDesignBriefSummary();\n
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
+        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
     showToast('Input cleared', 'info');
 }
 
