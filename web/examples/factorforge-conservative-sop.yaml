@@ -12,6 +12,9 @@
 # frame and amino-acid preservation; those invariants are not user policy.
 # Do not add raw sequences, construct IDs, patient data, or confidential details.
 
+# ========================================
+# SYSTEM / CONTRACT - DO NOT EDIT
+# ========================================
 $schema: factorforge-sop-v1
 profile_id: example_conservative_plant_expression
 sop_name: "FactorForge Conservative Sequence Policy Example"
@@ -23,16 +26,48 @@ scope_note: "Illustrative in-silico sequence-design and pre-synthesis review pol
 default_enforcement: IGNORE
 unknown_rule_policy: ERROR
 
+# ========================================
+# LABORATORY SETTINGS - EDIT BELOW
+# ========================================
+
 # Sequence-review policy: how advisory findings should be classified.
 rules:
+  # BsaI recognition site
+  # Allowed: HARD_FAIL | WARNING | IGNORE
+  # Default: HARD_FAIL
   assembly.type_iis.bsai.v1: HARD_FAIL
+  # BpiI recognition site
+  # Allowed: HARD_FAIL | WARNING | IGNORE
+  # Default: HARD_FAIL
   assembly.type_iis.bpii.v1: HARD_FAIL
+  # BsmBI recognition site
+  # Allowed: HARD_FAIL | WARNING | IGNORE
+  # Default: HARD_FAIL
   assembly.type_iis.bsmbi.v1: HARD_FAIL
+  # Cryptic splice-like motif
+  # Allowed: HARD_FAIL | WARNING | IGNORE
+  # Default: WARNING
+  # WARNING means the finding is reported for human review.
   rna.cryptic_splice.v1: WARNING
+  # PolyA-like motif
+  # Allowed: HARD_FAIL | WARNING | IGNORE
+  # Default: WARNING
   rna.polya_motifs.v1: WARNING
+  # AU-rich element
+  # Allowed: HARD_FAIL | WARNING | IGNORE
+  # Default: WARNING
   rna.au_rich_elements.v1: WARNING
+  # Local GC extreme
+  # Allowed: HARD_FAIL | WARNING | IGNORE
+  # Default: WARNING
   synthesis.gc_extremes.v1: WARNING
+  # Homopolymer
+  # Allowed: HARD_FAIL | WARNING | IGNORE
+  # Default: WARNING
   policy.synthesis.homopolymer.v1: WARNING
+  # Translation initiation MFE
+  # Allowed: HARD_FAIL | WARNING | IGNORE
+  # Default: WARNING
   policy.initiation_mfe.v1: WARNING
 
 # Optimization-workflow settings are transported in the same v1 file for web
