@@ -1,8 +1,10 @@
-from typing import List, Optional, Dict, Any, Union
-from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, Any, Literal
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 
 class FindingRecord(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    finding_id: str
     rule_id: str
     predictor_name: str
     predictor_version: str
@@ -14,6 +16,7 @@ class FindingRecord(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 class PredictorRunRecord(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     sequence_sha256: str
     predictor_name: str
     predictor_version: str
@@ -25,7 +28,24 @@ class PredictorRunRecord(BaseModel):
     normalization_version: str
     findings: List[FindingRecord] = Field(default_factory=list)
 
+class ComparisonRecord(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    retain_sequence_sha256: str
+    resolved_sequence_sha256: str
+    reference_finding_id: str
+    optimized_finding_id: Optional[str]
+    status: Literal['RESOLVED', 'PERSISTENT', 'INTRODUCED']
+    match_rule_version: str
+    match_distance_nt: int
+    match_basis: str
+    finding_type: str
+    start_pos: int
+    end_pos: int
+    strand: str
+    predictor_name: str
+
 class ConcordanceRecord(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     sequence_sha256: str
     finding_type: str
     start_pos: int
@@ -36,21 +56,13 @@ class ConcordanceRecord(BaseModel):
     consensus_score: Optional[float] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
-class ComparisonRecord(BaseModel):
-    retain_sequence_sha256: str
-    resolved_sequence_sha256: str
-    status: str  # RESOLVED, PERSISTENT, INTRODUCED
-    finding_type: str
-    start_pos: int
-    end_pos: int
-    strand: str
-    predictor_name: str
-
 class PolicyDecision(BaseModel):
-    sequence_sha256: str
-    policy_hash: str
+    model_config = ConfigDict(extra='forbid')
+    finding_id: str
+    enforcement_level: Literal['HARD_FAIL', 'WARNING', 'IGNORE']
+    authorized_action: Literal['BLOCK', 'REPORT_ONLY', 'REGENERATE', 'NONE']
     rule_id: str
-    enforcement: str
-    authorized_action: str
-    decision: str  # BLOCK, WARN, PASS
-    message: str
+    policy_profile_id: str
+    policy_version: str
+    policy_digest: str
+    authorization_source: str
