@@ -90,7 +90,7 @@ FactorForge outputs are **in-silico only** and have not been experimentally vali
 ## Citing
 
 ```
-FactorForge v3.5.1 (2026). Open-source constraint-based CDS design and sequence review.
+FactorForge v3.5.2 (2026). Open-source constraint-based CDS design and sequence review.
 Eijex. https://github.com/eijex/factorforge-cds
 ```
 
