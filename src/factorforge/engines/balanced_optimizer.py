@@ -118,7 +118,7 @@ class BalancedOptimizer:
                 hash_val = int(hashlib.sha256(f"{seed}:{i}:{codon}".encode('utf-8')).hexdigest()[:8], 16)
                 noise = (hash_val / 0xFFFFFFFF) * 0.001
                 
-                total_score = (lambda_cai * cai_score) + ((1.0 - lambda_cai) * dist_score * 5.0) - concentration_penalty - (gc_diff * 2.0) + noise
+                total_score = (lambda_cai * cai_score) + ((1.0 - lambda_cai) * dist_score * 5.0) - concentration_penalty - (gc_diff * 25.0) + noise
                 
                 if total_score > best_score:
                     best_score = total_score
