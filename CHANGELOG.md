@@ -31,6 +31,18 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
+### Added
+
+- **Scientist-Facing Review Interface:** Overhauled the web UI into a transparent review dashboard. The interface now clearly distinguishes between *Design Mode* and *Comparison Mode* with comprehensive codon shift accounting.
+- **Two-Axis Policy Dashboard:** The UI now independently displays Detection, Enforcement, and Authorized Action according to the backend evaluation, without hardcoding UI risk severity.
+- **Provenance Drawer:** Added a dedicated evidence drawer exposing the Candidate ID, cryptographic input/output hashes, active policies, and FactorForge version.
+
+### Fixed
+
+- **API Resolution Logic:** Fixed a function-local json import shadowing bug.
+- **Strict Evidence Models:** Enforced xtra=forbid across all Evidence Pydantic models for cross-repo interoperability.
+- **Codon Decision Trace:** The web interface no longer performs post-hoc UI inferences (e.g., guessing host preference); it relies solely on the recorded codon_decision backend traces.
+
 ## [3.5.1] — 2026-09-23
 
 ### Added
@@ -825,3 +837,4 @@ First official release of FactorForge.
 [3.1.1]: https://github.com/eijex/factorforge-cds/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/eijex/factorforge-cds/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/eijex/factorforge-cds/releases/tag/v3.0.0
+
