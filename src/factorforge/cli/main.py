@@ -968,6 +968,91 @@ def audit(sequence_fasta, reference_codon_profile, exclude_region, output):
     else:
         click.echo(json.dumps(results, indent=2))
 
+
+@cli.command("audit")
+@click.argument("sequence_fasta", type=click.Path(exists=True))
+@click.option("--reference-codon-profile", default="nbev11", help="Reference codon profile to use")
+@click.option("--exclude-region", help="Region to exclude from analysis (e.g., SP:1-60 or 1-60)")
+@click.option("--output", "-o", type=click.Path(), help="Output path for JSON report")
+def audit(sequence_fasta, reference_codon_profile, exclude_region, output):
+    """
+    Run generic sequence audit to report codon usage, CAI, GC, and AA distribution.
+    """
+    _configure_stdio()
+    from factorforge.engines.profile.utils import parse_fasta_records
+    from factorforge.analysis.metrics import (
+        load_codon_usage_table, calculate_cai, calculate_gc, codon_usage_profile, 
+        translate_dna, calculate_synonymous_entropy, calculate_max_synonymous_share,
+        calculate_reference_distance
+    )
+    from factorforge.engines.balanced_optimizer import STANDARD_GENETIC_CODE
+    
+    import hashlib
+    import json
+    from pathlib import Path
+    
+    fasta_records = parse_fasta_records(Path(sequence_fasta).read_text(encoding='utf-8'))
+    if not fasta_records:
+        raise click.UsageError(f"No FASTA records found in {sequence_fasta}")
+    
+    results = {}
+    for header, sequence in fasta_records:
+        seq = sequence.upper().replace("U", "T")
+        seq = "".join(seq.split())
+        
+        if exclude_region:
+            parts = exclude_region.split(":")
+            range_str = parts[-1]
+            try:
+                start, end = map(int, range_str.split("-"))
+                seq = seq[:start-1] + seq[end:]
+            except ValueError:
+                click.echo(f"Warning: Could not parse exclude region {exclude_region}", err=True)
+                
+        table_path = None
+        if reference_codon_profile and reference_codon_profile != 'nbev11':
+            table_path = Path(__file__).parent.parent / 'data' / "profiles" / f"{reference_codon_profile}_cds_hc_derived_codons.json"
+            if not table_path.exists():
+                click.echo(f"Warning: profile {reference_codon_profile} not found, falling back to default", err=True)
+                table_path = None
+                
+        table = load_codon_usage_table(table_path)
+        
+        cai = calculate_cai(seq, table.codon_weights)
+        gc = calculate_gc(seq)
+        usage = codon_usage_profile(seq)
+        
+        aa_seq = translate_dna(seq)
+        aa_counts = {}
+        for aa in aa_seq:
+            aa_counts[aa] = aa_counts.get(aa, 0) + 1
+            
+        entropy = calculate_synonymous_entropy(seq, STANDARD_GENETIC_CODE)
+        max_share = calculate_max_synonymous_share(seq, STANDARD_GENETIC_CODE)
+        ref_dist = calculate_reference_distance(seq, table.codon_weights, STANDARD_GENETIC_CODE)
+        
+        res = {
+            "input_sha256": hashlib.sha256(sequence.encode('utf-8')).hexdigest(),
+            "codon_table_sha256": hashlib.sha256(json.dumps(table.codon_weights, sort_keys=True).encode()).hexdigest(),
+            "tool_version": "1.1",
+            "cai": cai,
+            "gc_percent": gc,
+            "length": len(seq),
+            "normalized_synonymous_entropy": entropy,
+            "reference_distribution_distance": ref_dist,
+            "max_synonymous_share": max_share,
+            "aa_counts": aa_counts,
+            "codon_counts": usage,
+        }
+        results[header or "Sequence"] = res
+
+    if output:
+        with open(output, "w", encoding="utf-8") as f:
+            json.dump(results, f, indent=2)
+        click.echo(f"Audit report saved to: {output}")
+    else:
+        click.echo(json.dumps(results, indent=2))
+
 if __name__ == "__main__":
     cli()
 
