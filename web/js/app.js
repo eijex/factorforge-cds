@@ -442,7 +442,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     renderHistory();
-    console.log('FactorForge v3.5.1 Engaged');
+    console.log('FactorForge v3.5.2 Engaged');
 });
 
 // Loads server-owned GC ranges and validation labels. Supported hosts remain
@@ -2879,7 +2879,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.5.1';
+        const version = state.results.engine_versions?.product || '3.5.2';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }
