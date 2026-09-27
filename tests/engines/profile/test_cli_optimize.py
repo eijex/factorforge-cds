@@ -101,7 +101,7 @@ def test_cli_optimize_defaults_to_dp_engine(tmp_path: Path) -> None:
     result = runner.invoke(cli, ["optimize", str(input_file)])
 
     assert result.exit_code == 0, result.output
-    assert "Optimizing with DP feasibility engine" in result.output
+    assert "Optimizing with DP v2 exact constraint engine" in result.output
     assert ">input|engine=dp|objective=feasibility_best|" in result.output
     assert "target_cai=" not in result.output
     assert "  - target_cai:" not in result.output
@@ -148,7 +148,7 @@ def test_cli_optimize_profile_engine(tmp_path: Path) -> None:
     )
 
     assert result.exit_code == 0, result.output
-    assert "Optimizing with Profile-based v3.4.5" in result.output
+    assert "Optimizing with Profile-based v1.0.0" in result.output
     assert "Metrics:" in result.output
 
 

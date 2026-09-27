@@ -70,7 +70,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.4.6 Preview Notes
+                            v3.5.2 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -196,7 +196,7 @@
             </section>
 
             <!-- Panel 2: Settings -->
-            <section id="designBriefPanel" class="flex flex-col space-y-6 lg:sticky lg:top-28">
+            <section id="designBriefPanel" class="flex flex-col space-y-6">
                 <div
                     class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
                     <h2 class="text-lg font-extrabold mb-6 flex items-center text-slate-900">
@@ -287,6 +287,23 @@
                                 Compare with another implemented method
                             </summary>
                             <div class="px-3 pb-3 space-y-3" aria-label="Alternative implemented objectives">
+                                <label id="dpV21Option" class="block relative group">
+                                    <input id="dpV21Radio" type="radio" name="objective" value="dp_v2_1" class="peer sr-only" disabled>
+                                    <div class="p-4 profile-card rounded-xl cursor-pointer peer-checked:border-teal-500 peer-checked:bg-teal-50 dark:peer-checked:bg-teal-900/20 transition-all hover:border-teal-400 hover:shadow-md">
+                                        <span class="flex items-center text-sm font-bold text-slate-800">
+                                            DP v2.1 · Three-axis candidate
+                                            <span class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap bg-teal-100 text-teal-700 border border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-800/50">Development candidate</span>
+                                            <span class="tooltip-container">
+                                                <span class="info-icon">i</span>
+                                                <span class="tooltip-text">Explicit DP v2.1 path. Adds position-dependent 5′ initiation scoring while retaining hard GC and configured Type IIS constraints. This is not a biological-performance claim.</span>
+                                            </span>
+                                        </span>
+                                        <span class="block text-xs text-slate-700 dark:text-slate-400 mt-1">Assembly feasibility + codon adaptation + 5′ initiation-aware scoring. Select explicitly; DP v2 remains the default.</span>
+                                        <span id="dpV21Capability" class="block text-[10px] text-teal-700 dark:text-teal-300 mt-1">Checking API capability…</span>
+                                        <div class="absolute right-4 top-1/2 -translate-y-1/2 hidden peer-checked:block text-teal-500 text-xl">✓</div>
+                                    </div>
+                                </label>
+
                                 <label id="highCaiOption" class="block relative group">
                                     <input type="radio" name="objective" value="high_cai" class="peer sr-only">
                                     <div
@@ -350,24 +367,6 @@
                             </summary>
                             <div class="px-3 pb-3 space-y-3" aria-label="Experimental objectives not enabled">
                                 <label class="block relative group cursor-not-allowed">
-                                    <input type="radio" name="objective" value="ramp" class="peer sr-only" disabled>
-                                    <div
-                                        class="p-4 profile-card rounded-xl cursor-not-allowed opacity-60 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
-                                        <span class="flex items-center text-sm font-bold text-slate-800">
-                                            5' Ramp
-                                            <span
-                                                class="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-500 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">Experimental</span>
-                                            <span class="tooltip-container">
-                                                <span class="info-icon">i</span>
-                                                <span class="tooltip-text">Experimental N-terminal codon-ramp heuristic for design review. Disabled until reviewed evidence supports public use.</span>
-                                            </span>
-                                        </span>
-                                        <span class="block text-xs text-slate-600 dark:text-slate-400 mt-1">Experimental N-terminal ramp heuristic.</span>
-                                        <span class="block text-[10px] text-amber-600 dark:text-amber-400 mt-1">Pending activation gate before enabling.</span>
-                                    </div>
-                                </label>
-
-                                <label class="block relative group cursor-not-allowed">
                                     <input type="radio" name="objective" value="viral_delivery" class="peer sr-only" disabled>
                                     <div
                                         class="p-4 profile-card rounded-xl cursor-not-allowed opacity-60 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 dark:peer-checked:bg-emerald-900/20 transition-all">
@@ -422,123 +421,42 @@
                         </div>
                     </details>
 
-                    <!-- Advanced Settings -->
-                    <details id="advancedSettings" class="disclosure-card mb-8 rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900 dark:border-slate-800">
-                        <summary class="cursor-pointer select-none px-4 py-3 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-widest">
-                             Add sequence &amp; assembly requirements
-                        </summary>
-                        <div class="px-4 pb-4 space-y-4">
+                    <!-- Active Sequence Policy -->
+                    <section id="sopProfileCard" class="mb-8 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-800/60 dark:bg-emerald-900/15" aria-labelledby="sopProfileHeading">
+                        <div class="flex items-start justify-between gap-3">
                             <div>
-                                <label for="optimizationSeed"
-                                    class="block text-[13px] font-bold text-slate-900 dark:text-slate-100 mb-2">
-                                    Reproducibility Seed <span class="text-slate-400 font-medium">(optional)</span>
-                                </label>
-                                <input id="optimizationSeed" type="number" step="1" placeholder="e.g. 42"
-                                    class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all font-mono text-xs placeholder:text-slate-400">
-                                <p class="mt-2 text-[11px] text-slate-600 dark:text-slate-400">Use the same integer to reproduce optimizer candidate selection.</p>
+                                <p id="sopProfileHeading" class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">Active Sequence Policy</p>
+                                <p id="sopProfileName" class="mt-1 text-sm font-black text-slate-900 dark:text-slate-100">Conservative Plant Expression Review Template</p>
+                                <p id="sopProfileMeta" class="mt-1 text-[10px] text-slate-600 dark:text-slate-400">Default template · v1.1.0 · stored only in this browser</p>
                             </div>
-                            <label class="flex items-center justify-between group cursor-pointer py-1">
-                                <span class="text-[13px] font-bold text-slate-900 dark:text-slate-100">
-                                    Kozak Optimization
-                                    <span class="tooltip-container">
-                                        <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Targets positions 4-6 to match plant consensus
-                                            (AACAATG**GC**).</span>
-                                    </span>
-                                </span>
-                                <div class="relative inline-flex items-center">
-                                    <input type="checkbox" id="toggleKozak" class="sr-only peer">
-                                    <div
-                                        class="w-10 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 dark:after:border-slate-400 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 peer-checked:shadow-[0_0_10px_rgba(16,185,129,0.5)] group-hover:ring-2 group-hover:ring-slate-100 dark:group-hover:ring-slate-800 transition-all">
-                                    </div>
-                                </div>
-                            </label>
-                            <label class="flex items-center justify-between group cursor-pointer py-1">
-                                <span class="text-[13px] font-bold text-slate-900 dark:text-slate-100">
-                                    Suppress Destabilizing Dinucleotides (TpA)
-                                    <span class="tooltip-container">
-                                        <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Reduces TpA dinucleotides (associated with mRNA
-                                            instability) by default. CpG suppression is opt-in and relevant only for
-                                            mammalian systems (TLR9 immune activation), not plant expression.</span>
-                                    </span>
-                                </span>
-                                <div class="relative inline-flex items-center">
-                                    <input type="checkbox" id="toggleDinuc" class="sr-only peer">
-                                    <div
-                                        class="w-10 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 dark:after:border-slate-400 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500 peer-checked:shadow-[0_0_10px_rgba(99,102,241,0.5)] group-hover:ring-2 group-hover:ring-slate-100 dark:group-hover:ring-slate-800 transition-all">
-                                    </div>
-                                </div>
-                            </label>
-                            <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
-                                <p class="text-[13px] font-bold text-slate-900 dark:text-slate-100 mb-2">Type IIS Enzymes to Avoid</p>
-                                <div id="typeIisPresets" class="grid grid-cols-2 gap-2" aria-label="Type IIS Enzymes to Avoid">
-                                    <label class="flex items-center gap-2 text-xs"><input type="checkbox" name="typeIisEnzyme" value="BsaI" class="rounded border-slate-300 text-emerald-600"> BsaI</label>
-                                    <label class="flex items-center gap-2 text-xs"><input type="checkbox" name="typeIisEnzyme" value="BpiI" class="rounded border-slate-300 text-emerald-600"> BpiI</label>
-                                    <label class="flex items-center gap-2 text-xs"><input type="checkbox" name="typeIisEnzyme" value="BsmBI" class="rounded border-slate-300 text-emerald-600"> BsmBI</label>
-                                    <label class="flex items-center gap-2 text-xs"><input type="checkbox" name="typeIisEnzyme" value="SapI" class="rounded border-slate-300 text-emerald-600"> SapI</label>
-                                </div>
-                                <p class="mt-2 text-[11px] text-slate-600 dark:text-slate-400">Selected presets are merged with custom sites and removed by synonymous substitution where possible.</p>
-                            </div>
-                            <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
-                                <div class="flex items-center justify-between mb-2">
-                                    <label for="customRestrictionSites"
-                                        class="text-[13px] font-bold text-slate-900 dark:text-slate-100">
-                                        Custom Restriction Sites
-                                        <span class="tooltip-container">
-                                            <span class="info-icon">i</span>
-                                            <span class="tooltip-text">Format entries as Name:SEQUENCE and separate them with commas or new lines.</span>
-                                        </span>
-                                    </label>
-                                </div>
-                                <textarea id="customRestrictionSites" rows="3"
-                                    class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all font-mono text-xs placeholder:text-slate-400 resize-none"
-                                    placeholder="EcoRI:GAATTC, XhoI:CTCGAG"></textarea>
-                                <p class="mt-2 text-[11px] text-slate-600 dark:text-slate-400">
-                                    Sites will be removed from CDS by synonymous substitution where possible.
-                                </p>
-                            </div>
+                            <span id="sopProfileBadge" class="shrink-0 rounded-md border border-emerald-200 bg-white px-2 py-1 text-[9px] font-extrabold uppercase tracking-wider text-emerald-700 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-300">Active</span>
                         </div>
-                    </details>
-
-                    <!-- Acceptance Criteria -->
-                    <details id="acceptanceCriteria" class="disclosure-card mb-8 rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900 dark:border-slate-800">
-                        <summary class="cursor-pointer select-none px-4 py-3 text-[10px] font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-widest">Review policy</summary>
-                        <div class="px-4 pb-4">
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Required failures produce FAIL; preferred warnings produce CONDITIONAL PASS.</p>
-                            <div class="space-y-2 text-xs">
-                                <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionCaiMode" class="text-slate-700 dark:text-slate-300">CAI minimum 0.800</label><select id="criterionCaiMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
-                                <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionGcMode" class="text-slate-700 dark:text-slate-300">Overall GC host range</label><select id="criterionGcMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
-                                <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionLocalGcMode" class="text-slate-700 dark:text-slate-300">Local GC 30–70% / 60 bp</label><select id="criterionLocalGcMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
-                                <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionTypeIisMode" class="text-slate-700 dark:text-slate-300">Type IIS (BsaI/BsmBI/SapI)</label><select id="criterionTypeIisMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="required">Required</option><option value="preferred">Preferred</option><option value="ignored">Ignored</option></select></div>
-                                <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionRepeatsMode" class="text-slate-700 dark:text-slate-300">Direct repeats</label><select id="criterionRepeatsMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
-                                <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionHomopolymerMode" class="text-slate-700 dark:text-slate-300">Homopolymers ≤8 bp</label><select id="criterionHomopolymerMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
-                                <div class="grid grid-cols-[1fr_auto] gap-2 items-center"><label for="criterionMotifsMode" class="text-slate-700 dark:text-slate-300">Forbidden motifs</label><select id="criterionMotifsMode" class="criterion-mode rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2 py-1"><option value="preferred">Preferred</option><option value="required">Required</option><option value="ignored">Ignored</option></select></div>
-                            </div>
+                        <p class="mt-3 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">Use one versioned SOP file for the design method, sequence requirements, and review policy. The bundled profile is an editable in-silico starting template, not an approved laboratory SOP.</p>
+                        <button id="sopUploadZone" type="button" class="mt-3 flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-emerald-300 bg-white/70 px-4 py-5 text-center transition hover:border-emerald-500 hover:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-950/40 dark:hover:border-emerald-500" aria-describedby="sopStorageNotice">
+                            <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100">Drop a .yaml, .yml, or .json SOP here</span>
+                            <span class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">or click to choose a file</span>
+                        </button>
+                        <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            <a id="downloadSopExample" href="/examples/factorforge-conservative-sop.yaml" download title="Download the commented FactorForge conservative example. Edit its values in a text editor, then upload the file." aria-label="Download the commented FactorForge conservative example SOP as YAML" class="rounded-lg border border-emerald-300 bg-white px-3 py-2 text-center text-[10px] font-bold text-emerald-800 hover:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-300">Download example SOP (.yaml) <span aria-hidden="true">ⓘ</span></a>
+                            <button id="buildSopButton" type="button" title="Open the Laboratory SOP Builder to visually configure review policy and design settings." aria-label="Open SOP Builder" class="rounded-lg border border-emerald-500 bg-emerald-50 px-3 py-2 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">Build / Edit SOP <span aria-hidden="true">&rarr;</span></button>
+                            <button id="downloadSopTemplate" type="button" title="Export the SOP currently active in this browser, including uploaded or manual changes." aria-label="Export the currently active SOP as YAML" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 hover:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Export active SOP <span aria-hidden="true">ⓘ</span></button>
+                            <button id="uploadSopButton" type="button" title="Choose an edited YAML or JSON SOP. FactorForge validates it and stores it only in this browser." aria-label="Choose a YAML or JSON SOP file to validate and apply" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 hover:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Choose SOP file <span aria-hidden="true">ⓘ</span></button>
+                            <button id="resetSopProfile" type="button" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 hover:border-amber-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Restore default</button>
                         </div>
-                    </details>
-
-                    <!-- Checkbox Options -->
-                    <div class="mb-6">
-                        <label
-                            class="flex items-center space-x-3 p-4 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100 transition-colors">
-                            <input type="checkbox" id="useTemplate"
-                                class="w-5 h-5 text-emerald-600 rounded-md border-slate-300 dark:border-slate-600 focus:ring-emerald-500 transition-all">
-                            <div>
-                                <span class="flex items-center text-sm font-bold text-slate-800">
-                                    Standard Expression
-                                    <span class="tooltip-container">
-                                        <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Construct Builder: Enforces MoClo L0 overhangs (5':
-                                            AATG, 3': GCTT) and compatible terminators.</span>
-                                    </span>
-                                </span>
-                                <span
-                                    class="block text-[11px] text-slate-700 dark:text-slate-400 uppercase font-bold tracking-wider">MoClo
-                                    Compatible</span>
+                        <div class="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-semibold">
+                            <a href="https://github.com/eijex/factorforge-cds/issues/new?template=feature_request.yml&amp;title=%5BSOP%20template%5D%3A%20" target="_blank" rel="noopener" class="text-emerald-700 hover:underline dark:text-emerald-300">Share a public-safe SOP suggestion (GitHub) ↗</a>
+                            <a href="mailto:eijex.lab@gmail.com?subject=Private%20FactorForge%20SOP%20feedback" class="text-slate-500 hover:underline dark:text-slate-400">Private or sensitive feedback</a>
+                        </div>
+                        <details id="defaultSopSummary" class="mt-3 rounded-lg border border-emerald-200/80 bg-white/60 dark:border-emerald-900 dark:bg-slate-950/30">
+                            <summary class="cursor-pointer select-none px-3 py-2 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">What does the default SOP include?</summary>
+                            <div class="border-t border-emerald-100 px-3 py-2 text-[10px] leading-relaxed text-slate-600 dark:border-emerald-900 dark:text-slate-400">
+                                Stable DP v2 design; BsaI, BpiI, and BsmBI avoidance; required Type IIS review; and preferred CAI, GC, repeat, homopolymer, and motif checks. Kozak, TpA suppression, and MoClo assembly are off until explicitly requested.
                             </div>
-                        </label>
-                    </div>
+                        </details>
+                        <input id="sopFileUpload" type="file" accept=".yaml,.yml,.json,application/json,application/yaml,text/yaml,text/x-yaml" class="hidden" aria-label="Upload FactorForge SOP YAML or JSON">
+                        <p id="sopStorageNotice" class="mt-2 text-[10px] text-slate-500 dark:text-slate-500">Uploaded SOPs persist in local browser storage on this device. They are sent with an optimization request for validation and provenance, but are not uploaded as reusable server files.</p>
+                    </section>
+
 
                     <!-- Action Button -->
                     <button id="optimizeBtn" disabled
@@ -568,7 +486,7 @@
             </section>
 
             <!-- Panel 3: Results -->
-            <section id="resultsPanel" class="flex flex-col space-y-6 lg:sticky lg:top-28">
+            <section id="resultsPanel" class="flex flex-col space-y-6">
                 <div
                     class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 min-h-[600px] flex flex-col hover:shadow-md transition-shadow">
                     <h2 class="text-lg font-extrabold mb-6 flex items-center text-slate-900">
@@ -610,6 +528,21 @@
                     <!-- Success State -->
                     <div id="resultsContainer"
                         class="hidden flex-grow flex flex-col animate-in fade-in zoom-in-95 duration-500">
+                        <section id="sameProteinBanner" class="same-protein-banner mb-5" aria-labelledby="sameProteinTitle">
+                            <p class="result-eyebrow">FactorForge design principle</p>
+                            <h2 id="sameProteinTitle">Same Protein. Transparently Redesigned DNA.</h2>
+                            <p>FactorForge redesigns synonymous codons and sequence-level features for the target plant host while strictly preserving the encoded amino-acid sequence.</p>
+                            <div class="design-flow" aria-label="Original DNA to synonymous optimization to exact translated protein">
+                                <span>Original DNA</span><b>→</b><span>Synonymous optimization</span><b>→</b><span>Exact translated protein</span>
+                            </div>
+                        </section>
+
+                        <section id="codonAccounting" class="codon-accounting-grid mb-6" aria-label="Codon shift accounting">
+                            <article><p>Total codons</p><strong id="statTotalCodons">N/A</strong><small>Evaluated sense codons</small></article>
+                            <article><p>Synonymous shifts</p><strong id="statShifts">N/A</strong><small id="statShiftBreakdown">CDS reference required</small></article>
+                            <article><p>Unchanged</p><strong id="statUnchanged">N/A</strong><small>Exact codon matches</small></article>
+                            <article><p>AA substitutions</p><strong id="statSubstitutions">N/A</strong><small id="statAaIdentity">Translation comparison unavailable</small></article>
+                        </section>
                         <div
                             class="mb-6 flex items-center p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800/50 rounded-2xl">
                             <span class="text-2xl mr-4 flex-shrink-0">🚀</span>
@@ -624,6 +557,8 @@
                         <div id="mfeWarningBanner" role="alert"
                             class="hidden mb-6 p-4 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200 text-xs font-semibold">
                         </div>
+
+                        <div id="designContractSummary" class="hidden mb-6 rounded-2xl border border-teal-200 bg-teal-50/70 p-4 text-xs dark:border-teal-800 dark:bg-teal-950/30" aria-live="polite"></div>
 
                         <div id="automatedDecisionCard" class="mb-6 p-4 rounded-2xl border border-slate-200 bg-slate-50 dark:bg-slate-900 dark:border-slate-800" aria-live="polite">
                             <p class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Automated Decision</p>
@@ -701,6 +636,23 @@
                                 <canvas id="gcChart"></canvas>
                             </div>
                         </div>
+
+                        <section id="interactiveTrackContainer" class="codon-track-card mb-8" aria-labelledby="codonMapTitle">
+                            <div class="track-heading">
+                                <div><p class="result-eyebrow">Calculated sequence comparison</p><h3 id="codonMapTitle">1D Codon Optimization Map</h3></div>
+                                <span id="trackAvailability">CDS reference required</span>
+                            </div>
+                            <div class="ramp-bracket" aria-label="5 prime initiation ramp, nucleotides 1 through 30">5′ initiation ramp · nt 1–30</div>
+                            <div class="track-row"><span>Original</span><canvas id="canvasOriginalTrack" height="56"></canvas></div>
+                            <div class="track-row"><span>Optimized</span><canvas id="canvasOptimizedTrack" height="56"></canvas></div>
+                            <div class="track-legend"><span class="rare">Rare &lt;20%</span><span class="low">Low 20–35%</span><span class="moderate">Moderate 35–50%</span><span class="high">High 50–70%</span><span class="very-high">Very high &gt;70%</span><span class="unknown">N/A</span></div>
+                            <div id="codonInspector" class="codon-inspector" aria-live="polite">
+                                <div><small>Codon position &amp; amino acid</small><strong id="inspectorPosition">Hover over a track</strong></div>
+                                <div><small>Original → optimized</small><strong id="inspectorCodons">—</strong></div>
+                                <div><small>Observed effects</small><p id="inspectorRationale">Only measured effects are reported; optimizer causality is not inferred.</p></div>
+                                <div><small>Hard constraint checks</small><strong id="inspectorConstraints">—</strong></div>
+                            </div>
+                        </section>
 
                         <div id="candidateComparisonContainer" class="mb-8 hidden">
                             <h3 class="text-lg font-semibold mb-3">Candidate Comparison</h3>
@@ -784,7 +736,7 @@
                         </div>
 
                         <details id="resultsReport" class="mb-8 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-                            <summary class="cursor-pointer px-4 py-3 text-sm font-extrabold text-slate-800 dark:text-slate-100">Results Report</summary>
+                            <summary class="cursor-pointer px-4 py-3 text-sm font-extrabold text-slate-800 dark:text-slate-100">Design Comparison &amp; Decision Report</summary>
                             <div id="resultsReportBody" class="px-4 pb-4 space-y-2 text-xs text-slate-700 dark:text-slate-300"></div>
                         </details>
 
@@ -831,6 +783,10 @@
 
                         <!-- Downloads -->
                         <div class="grid grid-cols-1 gap-3">
+                            <button id="exportInteractiveReport"
+                                class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95">
+                                <span>📄</span><span>Export Interactive HTML Report (.html)</span>
+                            </button>
                             <button id="downloadFasta"
                                 class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95">
                                 <span>💾</span>
@@ -868,9 +824,9 @@
                             <p id="reviewerDispositionStatus" class="text-xs text-amber-800 dark:text-amber-200 mt-2"></p>
                         </div>
 
-                        <!-- Structure Prediction Links -->
-                        <div class="mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                            <p class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">View Predicted Structure</p>
+                        <!-- Optional external structure tools -->
+                        <div class="mt-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                            <p class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Optional external structure tools</p>
                             <div class="flex gap-2">
                                 <a id="alphafoldLink" href="#" target="_blank" rel="noopener noreferrer"
                                     class="flex-1 py-2 px-3 bg-white dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-xl flex items-center justify-center gap-2 transition-all text-xs">
@@ -957,21 +913,55 @@
                     class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
             </div>
             <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
-                <!-- Version 3.4.6 -->
+                <!-- Version 3.5.2 -->
                 <div class="relative pl-8 border-l-2 border-emerald-500">
                     <div
                         class="absolute -left-[9px] top-0 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
                     </div>
                     <div class="flex items-center space-x-2 mb-2">
                         <span
-                            class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">In preparation</span>
-                        <h3 class="font-bold text-slate-800 dark:text-white">v3.4.6 &mdash; AgentOS &amp; SLLM Preview</h3>
-                        <span class="text-slate-400 text-[10px]">2026-09-05</span>
+                            class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.5.2</h3>
+                        <span class="text-slate-400 text-[10px]">2026-09-26</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
-                        <li><b>Comparison preview:</b> Rule/ML metrics and codon alignment are available only when the deployment enables the experimental preview.</li>
+                        <!-- TODO: add v3.5.2 release notes here -->
+                    </ul>
+                </div>
+                <!-- Version 3.5.1 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-300 dark:bg-slate-600 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.5.1 &mdash; SOP Profile Workflow</h3>
+                        <span class="text-slate-400 text-[10px]">2026-09-23</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Laboratory SOP profiles:</b> download readable YAML, upload YAML or JSON, reset it, and retain the active profile in this browser.</li>
+                        <li><b>Clear separation:</b> deterministic sequence findings remain separate from the policy that classifies them as required, preferred, informational, or ignored.</li>
+                        <li><b>Reproducibility:</b> supplied SOP profiles contribute version and hash provenance to the optimization response.</li>
+                        <li><b>Boundary:</b> the bundled conservative profile is a starting template, not a complete or approved SOP for any named laboratory, and it makes no wet-lab performance claim.</li>
+                    </ul>
+                </div>
+                <!-- Version 3.5.0 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-300 dark:bg-slate-600 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.5.0 &mdash; Discovery Slates, Constrained sLLM &amp; Partial-DP Rescue</h3>
+                        <span class="text-slate-400 text-[10px]">2026-09-19</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Researcher decision report:</b> decision-first summary, prioritized next actions, requested-vs-applied settings, detailed checks, reproducibility provenance, print-friendly HTML, and sequence-free evidence JSON.</li>
+                        <li><b>Engine generations:</b> Rule 1.0.0 is Gen 1, stable DP v2 2.0.1 and explicit DP v2.1.1 2.1.1 are Gen 2, and sLLM Hybrid 0.2.0-preview.1 is Gen 3 Preview.</li>
+                        <li><b>DP v2:</b> the default public DP path tracks GC count and configured forbidden-motif automaton state while preserving the <code>feasibility_best</code> contract.</li>
+                        <li><b>Discovery slates:</b> the research API can produce several versioned, constraint-checked hypotheses with explicit generator lineage.</li>
+                        <li><b>Partial-DP rescue:</b> a blocked learned path can preserve a verified prefix and solve the suffix exactly under the carried state; this is not a global optimum claim.</li>
+                        <li><b>sLLM boundary:</b> the preview is feature-gated and does not claim biological performance.</li>
                         <li><b>Evaluation status:</b> Missing evaluations display as Not evaluated. Sequence checks do not establish biological performance.</li>
-                        <li><b>Availability:</b> ML preview and database saving remain disabled unless the deployment reports support.</li>
+                        <li><b>Availability:</b> sLLM preview and database saving remain disabled unless the deployment reports support.</li>
                     </ul>
                 </div>
                 <!-- Version 3.4.5 -->
@@ -1031,7 +1021,8 @@
                         <span class="text-slate-400 text-[10px]">2026-07-24</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
-                        <!-- TODO: add v3.4.2 release notes here -->
+                        <li><b>Fixed:</b> Corrected dark mode text contrast in Reviewer Disposition controls and resolved minor dark mode styling gaps across UI controls (Clear/Copy buttons, dropzone border, checkbox borders).</li>
+                        <li><b>Fixed:</b> Refreshed reproducibility benchmark parameter registry manifest hash following schema version updates.</li>
                     </ul>
                 </div>
                 <!-- Version 3.4.1 -->
@@ -1044,7 +1035,8 @@
                         <span class="text-slate-400 text-[10px]">2026-07-24</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
-                        <!-- TODO: add v3.4.1 release notes here -->
+                        <li><b>Fixed:</b> Corrected dark mode text contrast for labels, select boxes, and section dividers in the Acceptance Criteria section.</li>
+                        <li><b>Added:</b> Added candidate-strategy informative tooltips to the Candidate Comparison table explaining Feasibility Best, GC Target, and High CAI strategies.</li>
                     </ul>
                 </div>
                 <!-- Version 3.4.0 -->
@@ -1673,3 +1665,4 @@
 </body>
 
 </html>
+

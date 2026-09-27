@@ -4,10 +4,44 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
-## v3.4.6  2026-09-05
+## v3.5.1 — SOP profile workflow
 
-- **AgentOS Hard Gate as Production**: The deterministic AgentOS evaluator is now officially exposed as a production-ready MCP tool.
-- **FactorForge SLLM as Research Preview**: The generative 4.0 SLLM model is now available as a Research Preview.
+- Added a versioned SOP profile format that keeps sequence findings separate from
+  laboratory review policy.
+- The web app downloads human-readable YAML, accepts YAML or JSON by file upload
+  or drag and drop, and locally retains the validated active profile.
+- The default-profile summary stays visible while detailed settings are grouped
+  under one collapsed manual-overrides panel.
+- A commented conservative example can be downloaded separately from the active
+  profile export. Public SOP suggestions use a privacy-gated GitHub issue form;
+  sensitive profiles remain on the private contact path.
+- The bundled conservative plant-expression template is a starting point, not a
+  complete or approved SOP for any named laboratory.
+- SOP provenance is included in API output when a profile is supplied. These
+  settings remain computational and do not establish wet-lab performance.
+
+## v3.5.0 — Discovery slate and neuro-symbolic research update
+
+- Added Top-K discovery slates with versioned generator lineage, shared hard checks,
+  trait extraction, Pareto ranking, and sequence-free research records.
+- Added constrained sLLM Hybrid 0.2.0-preview.1 and adaptive partial-DP rescue 1.0.0.
+- DP v2.1.1 is versioned as 2.1.1; stable DP v2 2.0.1 remains the default.
+- All current evidence is computational. No expression, yield, synthesis, folding,
+  clinical, or wet-lab performance claim is made.
+
+## v3.4.6 — DP v2.1.1 product update
+
+- Product and engine versions are now distinct: Rule 1.0.0, DP v2 2.0.1,
+  DP v2.1.1 2.1.1-dev, and sLLM Hybrid 0.1.0-preview.1.
+- DP v2 is the deterministic public DP path behind the compatible `feasibility_best` objective.
+- DP v2.1.1 is an explicit development candidate with an active 5′ GC layer,
+  >=6-nt homopolymer rejection, local-composition metrics, and separately
+  evaluated MFE status. Target-mAb-A calibration is complete; holdout validation
+  remains pending.
+- sLLM Hybrid remains feature-gated; its presence does not establish a trained-model release.
+- Missing comparison evaluations display as Not evaluated; explicit failures remain visible.
+- PostgreSQL dependencies are optional for SQLite checkpoints, and unconfigured database integration tests skip before importing the database engine.
+- Docker publication now requires the same checkout's CI and browser workflows to succeed.
 
 ## v3.4.5 — 2026-08-22
 
@@ -33,6 +67,17 @@ FactorForge v3.0+ is the current public release line.
   decision, acceptance-criteria snapshot, and reviewer disposition, which made
   reloaded results show "Automated Decision: Unavailable" instead of the
   original PASS/FAIL.
+
+## v3.4.2 — 2026-07-24
+
+- Fixed dark mode text contrast in Reviewer Disposition controls and resolved
+  minor dark mode styling gaps across UI controls (Clear/Copy buttons, dropzone border, checkbox borders).
+- Refreshed benchmark parameter registry manifest hash.
+
+## v3.4.1 — 2026-07-24
+
+- Fixed dark mode text contrast for labels, select boxes, and section dividers in the Acceptance Criteria section.
+- Added candidate-strategy informative tooltips to the Candidate Comparison table explaining Feasibility Best, GC Target, and High CAI strategies.
 
 ## v3.4.0 — 2026-07-23
 

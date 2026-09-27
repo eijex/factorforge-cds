@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Paper 3 Figure 2: 4-Arm Resolution & Diversity Waterfall</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; background: #f8fafc; color: #1e293b; }
+  .card { background: white; border-radius: 12px; padding: 28px; max-width: 820px; margin: auto; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; }
+  h2 { color: #0f172a; margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; font-size: 20px; }
+  .subtitle { color: #64748b; font-size: 13px; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .metric-box { background: #f1f5f9; border-radius: 8px; padding: 16px; border-left: 4px solid #3b82f6; }
+  .metric-val { font-size: 24px; font-weight: 700; color: #0f172a; }
+  .metric-lbl { font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+  .bar-container { margin: 14px 0; }
+  .bar-label { font-weight: 600; font-size: 13px; margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .bar-track { height: 26px; background: #e2e8f0; border-radius: 6px; overflow: hidden; display: flex; }
+  .bar-fill { height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 12px; }
+  .arm1 { background: #ef4444; width: 25.0%; }
+  .arm2 { background: #f59e0b; width: 33.33%; }
+  .arm3a { background: #3b82f6; width: 100.0%; }
+  .arm3b { background: #10b981; width: 100.0%; }
+  .table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+  .table th, .table td { border: 1px solid #cbd5e1; padding: 10px 12px; text-align: left; font-size: 13px; }
+  .table th { background: #f8fafc; font-weight: 600; }
+  .highlight { background: #ecfdf5; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>Figure 2: Multi-Stage Resolution, Prefix Preservation & Diversity Waterfall</h2>
+  <div class="subtitle">Evaluated on N=36 trials (9 targets &times; 4 seeds) under canonical <i>N. benthamiana</i> hard constraints</div>
+
+  <div class="grid">
+    <div class="metric-box" style="border-left-color: #10b981;">
+      <div class="metric-lbl">Prefix Preservation Rate (PPR)</div>
+      <div class="metric-val">48.29% <span style="font-size:14px; font-weight:normal; color:#64748b;">(vs 3A: 33.33%)</span></div>
+    </div>
+    <div class="metric-box" style="border-left-color: #8b5cf6;">
+      <div class="metric-lbl">Global Fallback Reduction</div>
+      <div class="metric-val">37.5% <span style="font-size:14px; font-weight:normal; color:#64748b;">(66.67% &rarr; 41.67%)</span></div>
+    </div>
+  </div>
+
+  <div class="bar-container">
+    <div class="bar-label"><span>Stage 1: Raw Unconstrained sLLM (Arm 1)</span> <span>25.0% Compliance</span></div>
+    <div class="bar-track"><div class="bar-fill arm1">25.0%</div></div>
+  </div>
+
+  <div class="bar-container">
+    <div class="bar-label"><span>Stage 2: Neuro-Symbolic Veto Only (Arm 2)</span> <span>33.33% Compliance (41.67% Dead-end)</span></div>
+    <div class="bar-track"><div class="bar-fill arm2">33.33%</div></div>
+  </div>
+
+  <div class="bar-container">
+    <div class="bar-label"><span>Stage 3A: Global DP Rescue Baseline (Arm 3A)</span> <span>100.0% Compliance (PPR 33.33%, D_nt 0.0754)</span></div>
+    <div class="bar-track"><div class="bar-fill arm3a">100.0%</div></div>
+  </div>
+
+  <div class="bar-container">
+    <div class="bar-label"><span>Stage 3B: Adaptive Partial DP Rescue Innovation (Arm 3B)</span> <span>100.0% Compliance (PPR 48.29%, D_nt 0.089)</span></div>
+    <div class="bar-track"><div class="bar-fill arm3b">100.0%</div></div>
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Experimental Arm</th>
+        <th>Compliance</th>
+        <th>Prefix Preservation (PPR)</th>
+        <th>Nucleotide Diversity (D_nt)</th>
+        <th>Latency (ms)</th>
+        <th>Architectural Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Stage 1 (Raw AI)</strong></td>
+        <td>25.0%</td>
+        <td>100.0%</td>
+        <td>0.2122</td>
+        <td>1334.96 ms</td>
+        <td>Baseline unconstrained generation defect rate</td>
+      </tr>
+      <tr>
+        <td><strong>Stage 2 (Veto Only)</strong></td>
+        <td>33.33%</td>
+        <td>N/A (Dead-ends)</td>
+        <td>N/A</td>
+        <td>954.9 ms</td>
+        <td>Neuro-symbolic dead-end barrier</td>
+      </tr>
+      <tr>
+        <td><strong>Stage 3A (Global DP)</strong></td>
+        <td>100.0%</td>
+        <td>33.33%</td>
+        <td>0.0754</td>
+        <td>1752.55 ms</td>
+        <td>Job 285 Baseline (Full DP fallback on dead-end)</td>
+      </tr>
+      <tr class="highlight">
+        <td><strong>Stage 3B (Partial DP)</strong></td>
+        <td><strong>100.0%</strong></td>
+        <td><strong>48.29%</strong></td>
+        <td><strong>0.089</strong></td>
+        <td>4689.47 ms</td>
+        <td><strong>Job 286 Innovation: Retains AI Context & Diversity</strong></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>

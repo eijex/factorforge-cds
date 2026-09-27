@@ -1,0 +1,953 @@
+{
+  "$schema": "https://eijex.com/schemas/factorforge/paired-dbtl-v0.1.json",
+  "dataset_id": "DBTL-EXP-20260917-PILOT-01",
+  "schema_version": "0.1.0",
+  "created_at": "2026-09-18T02:12:28.223576+00:00",
+  "archive_sha256": "dcc52237bd3cb444f712979a23520e11df5b6ed920479251d065090c3f6bbd0f",
+  "provenance": {
+    "builder": "ProspectivePanelBuilder",
+    "seed": 42,
+    "target_count": 3,
+    "experimental_construct_count": 9,
+    "control_construct_count": 2,
+    "total_samples": 33,
+    "orthogonality_report": {
+      "sfGFP": {
+        "orthogonality_passed": true,
+        "pairwise_distances": {
+          "H0_vs_H1": 0.0553,
+          "H0_vs_H2": 0.3938,
+          "H1_vs_H2": 0.3648
+        }
+      },
+      "VP28": {
+        "orthogonality_passed": true,
+        "pairwise_distances": {
+          "H0_vs_H1": 0.0707,
+          "H0_vs_H2": 0.3059,
+          "H1_vs_H2": 0.2597
+        }
+      },
+      "CD47_Ectodomain": {
+        "orthogonality_passed": true,
+        "pairwise_distances": {
+          "H0_vs_H1": 0.1055,
+          "H0_vs_H2": 0.3669,
+          "H1_vs_H2": 0.4084
+        }
+      }
+    }
+  },
+  "constructs": {
+    "sfGFP_H0": {
+      "construct_id": "sfGFP_H0",
+      "target_name": "sfGFP",
+      "mature_protein_aa_length": 238,
+      "construct_aa_length": 238,
+      "hypothesis_id": "H0",
+      "hypothesis_name": "Primary Deterministic Optimum",
+      "generation_contract": "factorforge_canonical_production_v2_1_1",
+      "sequence_digest": "e8af4ea710ed1603307cdbb3a22ab9a0e34e38ace4425c39617b691ec1c35b86",
+      "trait_vector": {
+        "cai_golden_set": 0.9011,
+        "global_gc_percent": 40.06,
+        "initiation_mfe_kcal_mol": null,
+        "local_50bp_gc_min": 26.0,
+        "local_50bp_gc_max": 50.0,
+        "homopolymer_max_run": 4,
+        "synthesis_penalty": 0.1,
+        "codon_context_prior": 0.9008
+      },
+      "sequence_dna": "ATGAGTAAAGGTGAAGAATTATTTACAGGTGTTGTTCCAATTTTAGTGGAGCTTGATGGAGATGTGAATGGACATAAGTTCTCTGTGTCTGGAGAGGGAGAGGGAGATGCTACTTACGGAAAGCTTACTCTTAAGTTCATTTGCACTACTGGAAAGCTTCCTGTGCCTTGGCCTACTCTTGTGACTACTTTCTCTTACGGAGTGCAGTGCTTCTCTAGGTATCCTGATCATATGAAGCAGCATGATTTCTTCAAGTCTGCTATGCCTGAGGGATATGTGCAGGAGAGGACTATTTTCTTCAAGGATGATGGAAATTATAAGACTAGGGCTGAGGTGAAGTTCGAGGGAGATACTCTTGTGAATAGGATTGAGCTTAAGGGAATTGATTTCAAGGAGGATGGAAATATTCTTGGACATAAGCTTGAGTATAATTATAATTCTCATAATGTGTATATTATGGCTGATAAGCAGAAGAATGGAATTAAGGTGAATTTCAAGATTAGGCATAATATTGAGGATGGATCTGTGCAGCTTGCTGATCATTATCAGCAGAATACTCCTATTGGAGATGGACCTGTGCTTCTTCCTGATAATCATTATCTTTCTACTCAGTCTGCTCTTTCTAAGGATCCTAATGAGAAGAGGGATCATATGGTGCTTCTTGAGTTCGTGACTGCTGCTGGAATTACTCATGGAATGGATGAGCTTTATAAG",
+      "is_control": false,
+      "control_type": null,
+      "rationale": "FactorForge primary Pareto-optimal deterministic candidate matching canonical production /api/optimize DP parameters.",
+      "metadata": {
+        "design_contract_id": "factorforge_canonical_production_v2_1_1",
+        "target_context": "cytosolic_fluorescent_reporter",
+        "canonical_aa_length": 238,
+        "construct_aa_length": 238
+      }
+    },
+    "sfGFP_H1": {
+      "construct_id": "sfGFP_H1",
+      "target_name": "sfGFP",
+      "mature_protein_aa_length": 238,
+      "construct_aa_length": 238,
+      "hypothesis_id": "H1",
+      "hypothesis_name": "Initiation-Focused Exploration",
+      "generation_contract": "dp_v2_1_1_initiation_open",
+      "sequence_digest": "53ff7fa13e25a2cad34e6da37bd9b0d3d04f4e88bec7538d8b39b58e2906fc21",
+      "trait_vector": {
+        "cai_golden_set": 0.8928,
+        "global_gc_percent": 40.06,
+        "initiation_mfe_kcal_mol": null,
+        "local_50bp_gc_min": 26.0,
+        "local_50bp_gc_max": 50.0,
+        "homopolymer_max_run": 4,
+        "synthesis_penalty": 0.1,
+        "codon_context_prior": 0.8949
+      },
+      "sequence_dna": "ATGAGTAAAGGTGAAGAATTATTTACAGGTGTAGTACCAATATTAGTGGAGCTTGATGGAGATGTGAATGGACATAAGTTCTCTGTGTCTGGAGAGGGAGAGGGAGATGCTACTTACGGAAAGCTTACTCTTAAGTTCATTTGCACTACTGGAAAGCTTCCTGTGCCTTGGCCTACTCTTGTGACTACTTTCTCTTACGGAGTGCAGTGCTTCTCTAGGTATCCTGATCATATGAAGCAGCATGATTTCTTCAAGTCTGCTATGCCTGAGGGATATGTGCAGGAGAGGACTATTTTCTTCAAGGATGATGGAAATTATAAGACTAGGGCTGAGGTGAAGTTCGAGGGAGATACTCTTGTGAATAGGATTGAGCTTAAGGGAATTGATTTCAAGGAGGATGGAAATATTCTTGGACATAAGCTTGAGTATAATTATAATTCTCATAATGTGTATATTATGGCTGATAAGCAGAAGAATGGAATTAAGGTGAATTTCAAGATTAGGCATAATATTGAGGATGGATCTGTGCAGCTTGCTGATCATTATCAGCAGAATACTCCTATTGGAGATGGACCTGTGCTTCTTCCTGATAATCATTATCTTTCTACTCAGTCTGCTCTTTCTAAGGATCCTAATGAGAAGAGGGATCATATGGTGCTTCTTGAGTTCGTGACTGCTGCTGGAATTACTCATGGAATGGATGAGCTTTATAAG",
+      "is_control": false,
+      "control_type": null,
+      "rationale": "Reduced predicted 5' mRNA secondary structure stability (less negative 5' MFE) and AU initiation bonus to test translation initiation bottlenecks.",
+      "metadata": {
+        "design_contract_id": "dp_v2_1_1_initiation_open",
+        "target_context": "cytosolic_fluorescent_reporter",
+        "canonical_aa_length": 238,
+        "construct_aa_length": 238
+      }
+    },
+    "sfGFP_H2": {
+      "construct_id": "sfGFP_H2",
+      "target_name": "sfGFP",
+      "mature_protein_aa_length": 238,
+      "construct_aa_length": 238,
+      "hypothesis_id": "H2",
+      "hypothesis_name": "Composition-Constrained / Manufacturability Design",
+      "generation_contract": "dp_v2_1_1_composition_constrained",
+      "sequence_digest": "401690c4d9cf9bee426a69cd63cd2a36ea6d3a22444189f4b15df378605d0cbd",
+      "trait_vector": {
+        "cai_golden_set": 0.8671,
+        "global_gc_percent": 41.6,
+        "initiation_mfe_kcal_mol": null,
+        "local_50bp_gc_min": 32.0,
+        "local_50bp_gc_max": 50.0,
+        "homopolymer_max_run": 4,
+        "synthesis_penalty": 0.1,
+        "codon_context_prior": 0.8769
+      },
+      "sequence_dna": "ATGAGTAAAGGTGAAGAATTATTTACGGGTGTAGTACCGATTTTAGTGGAGCTTGATGGAGATGTGAATGGACATAAGTTCTCTGTGTCTGGAGAGGGAGAGGGAGATGCTACTTACGGAAAGCTTACTCTTAAGTTCATTTGCACTACTGGAAAGCTTCCTGTGCCTTGGCCTACTCTTGTGACTACTTTCTCTTACGGAGTGCAGTGCTTCTCTAGGTACCCTGATCATATGAAGCAGCATGATTTCTTCAAGTCTGCTATGCCTGAGGGATACGTGCAGGAGAGGACTATTTTCTTCAAGGATGATGGAAATTACAAGACTAGGGCTGAGGTGAAGTTCGAGGGAGATACTCTTGTGAATAGGATTGAGCTTAAGGGAATTGATTTCAAGGAGGATGGAAATATTCTTGGACATAAGCTTGAGTACAATTACAATTCTCATAATGTGTACATTATGGCTGATAAGCAGAAGAATGGAATTAAGGTGAATTTCAAGATTAGGCATAATATTGAGGATGGATCTGTGCAGCTTGCTGATCATTACCAGCAGAATACTCCTATTGGAGATGGACCTGTGCTTCTTCCTGATAATCATTACCTTTCTACTCAGTCTGCTCTTTCTAAGGATCCTAATGAGAAGAGGGATCATATGGTGCTTCTTGAGTTCGTGACTGCTGCTGGAATTACTCATGGAATGGATGAGCTTTACAAG",
+      "is_control": false,
+      "control_type": null,
+      "rationale": "Strict local/global GC composition constraints and homopolymer bounds for translational processivity.",
+      "metadata": {
+        "design_contract_id": "dp_v2_1_1_composition_constrained",
+        "target_context": "cytosolic_fluorescent_reporter",
+        "canonical_aa_length": 238,
+        "construct_aa_length": 238
+      }
+    },
+    "VP28_H0": {
+      "construct_id": "VP28_H0",
+      "target_name": "VP28",
+      "mature_protein_aa_length": 204,
+      "construct_aa_length": 204,
+      "hypothesis_id": "H0",
+      "hypothesis_name": "Primary Deterministic Optimum",
+      "generation_contract": "factorforge_canonical_production_v2_1_1",
+      "sequence_digest": "6d7d83bd8d0b98c5b4722ca56d585906666b55fb38b69e13fe22c396d9810d42",
+      "trait_vector": {
+        "cai_golden_set": 0.8867,
+        "global_gc_percent": 40.03,
+        "initiation_mfe_kcal_mol": null,
+        "local_50bp_gc_min": 26.0,
+        "local_50bp_gc_max": 54.0,
+        "homopolymer_max_run": 4,
+        "synthesis_penalty": 0.2,
+        "codon_context_prior": 0.8607
+      },
+      "sequence_dna": "ATGGATTTAAGTTTTACATTAAGTGTTGTTAGTGCAATTTTAGCTATTACTGCTGTGATTGCTGTGTTCATTGTGATTTTCAGGTACCATAATACTGTGACTAAGACTATTGAGACTCATACTGATAATATTGAGACTAATATGGATGAGAATCTTAGGATTCCTGTGACTGCTGAGGTGGGATCTGGATATTTCAAGATGACTGATGTGTCTTTCGATTCTGATACTCTTGGAAAGATTAAGATTAGGAATGGAAAGTCTGATGCTCAGATGAAGGAGGAGGATGCTGATCTTGTGATTACTCCTGTGGAGGGAAGGGCTCTTGAGGTGACTGTGGGACAGAATCTTACTTTCGAGGGAACTTTCAAGGTGTGGAATAATACTTCTAGGAAGATTAATATTACTGGAATGCAGATGGTGCCTAAGATTAATCCTTCTAAGGCTTTCGTGGGATCTTCTAATACTTCTTCTTTCACTCCTGTGTCTATTGATGAGGATGAGGTGGGAACTTTCGTGTGCGGAACTACTTTCGGAGCTCCTATTGCTGCTACTGCTGGAGGAAATCTTTTCGATATGTATGTGCATGTGACTTATTCTGGAACTGAGACTGAG",
+      "is_control": false,
+      "control_type": null,
+      "rationale": "FactorForge primary Pareto-optimal deterministic candidate matching canonical production /api/optimize DP parameters.",
+      "metadata": {
+        "design_contract_id": "factorforge_canonical_production_v2_1_1",
+        "transmembrane_included": true,
+        "tm_anchor_residues": "1-30",
+        "target_context": "full_length_envelope_antigen",
+        "canonical_aa_length": 204,
+        "construct_aa_length": 204
+      }
+    },
+    "VP28_H1": {
+      "construct_id": "VP28_H1",
+      "target_name": "VP28",
+      "mature_protein_aa_length": 204,
+      "construct_aa_length": 204,
+      "hypothesis_id": "H1",
+      "hypothesis_name": "Initiation-Focused Exploration",
+      "generation_contract": "dp_v2_1_1_initiation_open",
+      "sequence_digest": "65a94fedea8c37df387d658d3b3dbb08303eb4237b2b19b97d39c4f84e7c1034",
+      "trait_vector": {
+        "cai_golden_set": 0.8761,
+        "global_gc_percent": 40.03,
+        "initiation_mfe_kcal_mol": null,
+        "local_50bp_gc_min": 26.0,
+        "local_50bp_gc_max": 54.0,
+        "homopolymer_max_run": 4,
+        "synthesis_penalty": 0.2,
+        "codon_context_prior": 0.8532
+      },
+      "sequence_dna": "ATGGATTTAAGTTTTACATTAAGTGTAGTAAGTGCAATATTAGCAATTACTGCTGTGATTGCTGTGTTCATTGTGATTTTCAGGTACCATAATACTGTGACTAAGACTATTGAGACTCATACTGATAATATTGAGACTAATATGGATGAGAATCTTAGGATTCCTGTGACTGCTGAGGTGGGATCTGGATATTTCAAGATGACTGATGTGTCTTTCGATTCTGATACTCTTGGAAAGATTAAGATTAGGAATGGAAAGTCTGATGCTCAGATGAAGGAGGAGGATGCTGATCTTGTGATTACTCCTGTGGAGGGAAGGGCTCTTGAGGTGACTGTGGGACAGAATCTTACTTTCGAGGGAACTTTCAAGGTGTGGAATAATACTTCTAGGAAGATTAATATTACTGGAATGCAGATGGTGCCTAAGATTAATCCTTCTAAGGCTTTCGTGGGATCTTCTAATACTTCTTCTTTCACTCCTGTGTCTATTGATGAGGATGAGGTGGGAACTTTCGTGTGCGGAACTACTTTCGGAGCTCCTATTGCTGCTACTGCTGGAGGAAATCTTTTCGATATGTATGTGCATGTGACTTATTCTGGAACTGAGACTGAG",
+      "is_control": false,
+      "control_type": null,
+      "rationale": "Reduced predicted 5' mRNA secondary structure stability (less negative 5' MFE) and AU initiation bonus to test translation initiation bottlenecks.",
+      "metadata": {
+        "design_contract_id": "dp_v2_1_1_initiation_open",
+        "transmembrane_included": true,
+        "tm_anchor_residues": "1-30",
+        "target_context": "full_length_envelope_antigen",
+        "canonical_aa_length": 204,
+        "construct_aa_length": 204
+      }
+    },
+    "VP28_H2": {
+      "construct_id": "VP28_H2",
+      "target_name": "VP28",
+      "mature_protein_aa_length": 204,
+      "construct_aa_length": 204,
+      "hypothesis_id": "H2",
+      "hypothesis_name": "Composition-Constrained / Manufacturability Design",
+      "generation_contract": "dp_v2_1_1_composition_constrained",
+      "sequence_digest": "68a5f32b562f730a67ea098ea7e967b4eb51994c654cd7972d29e7af3cbcb490",
+      "trait_vector": {
+        "cai_golden_set": 0.8537,
+        "global_gc_percent": 41.01,
+        "initiation_mfe_kcal_mol": null,
+        "local_50bp_gc_min": 30.0,
+        "local_50bp_gc_max": 54.0,
+        "homopolymer_max_run": 4,
+        "synthesis_penalty": 0.2,
+        "codon_context_prior": 0.8376
+      },
+      "sequence_dna": "ATGGATTTAAGTTTTACGTTAAGTGTAGTAAGTGCGATTTTAGCGATTACTGCTGTGATTGCTGTGTTCATTGTGATTTTCAGGTACCATAATACTGTGACTAAGACTATTGAGACTCATACTGATAATATTGAGACTAATATGGATGAGAATCTTAGGATTCCTGTGACTGCTGAGGTGGGATCTGGATACTTCAAGATGACTGATGTGTCTTTCGATTCTGATACTCTTGGAAAGATTAAGATTAGGAATGGAAAGTCTGATGCTCAGATGAAGGAGGAGGATGCTGATCTTGTGATTACTCCTGTGGAGGGAAGGGCTCTTGAGGTGACTGTGGGACAGAATCTTACTTTCGAGGGAACTTTCAAGGTGTGGAATAATACTTCTAGGAAGATTAATATTACTGGAATGCAGATGGTGCCTAAGATTAATCCTTCTAAGGCTTTCGTGGGATCTTCTAATACTTCTTCTTTCACTCCTGTGTCTATTGATGAGGATGAGGTGGGAACTTTCGTGTGCGGAACTACTTTCGGAGCTCCTATTGCTGCTACTGCTGGAGGAAATCTTTTCGATATGTACGTGCATGTGACTTACTCTGGAACTGAGACTGAG",
+      "is_control": false,
+      "control_type": null,
+      "rationale": "Strict local/global GC composition constraints and homopolymer bounds for translational processivity.",
+      "metadata": {
+        "design_contract_id": "dp_v2_1_1_composition_constrained",
+        "transmembrane_included": true,
+        "tm_anchor_residues": "1-30",
+        "target_context": "full_length_envelope_antigen",
+        "canonical_aa_length": 204,
+        "construct_aa_length": 204
+      }
+    },
+    "CD47_Ectodomain_H0": {
+      "construct_id": "CD47_Ectodomain_H0",
+      "target_name": "CD47_Ectodomain",
+      "mature_protein_aa_length": 124,
+      "construct_aa_length": 124,
+      "hypothesis_id": "H0",
+      "hypothesis_name": "Primary Deterministic Optimum",
+      "generation_contract": "factorforge_canonical_production_v2_1_1",
+      "sequence_digest": "f782ecd40093f238e0eb95771a29f3a368cf41b89231c698030d4ce08f9428a5",
+      "trait_vector": {
+        "cai_golden_set": 0.8632,
+        "global_gc_percent": 40.05,
+        "initiation_mfe_kcal_mol": null,
+        "local_50bp_gc_min": 20.0,
+        "local_50bp_gc_max": 50.0,
+        "homopolymer_max_run": 5,
+        "synthesis_penalty": 0.3,
+        "codon_context_prior": 0.8142
+      },
+      "sequence_dna": "CAATTATTATTCAACAAAACAAAAAGTGTTGAATTTACATTTTGTAATGATACTGTGGTGATTCCTTGCTTCGTGACTAATATGGAGGCTCAGAATACTACTGAGGTGTACGTGAAGTGGAAGTTCAAGGGAAGGGATATTTACACTTTCGATGGAGCTCTTAATAAGTCTACTGTGCCTACTGATTTCTCTTCTGCTAAGATTGAGGTGTCTCAGCTTCTTAAGGGAGATGCTTCTCTTAAGATGGATAAGTCTGATGCTGTGTCTCATACTGGAAATTACACTTGCGAGGTGACTGAGCTTACTAGGGAGGGAGAGACTATTATTGAGCTTAAGTACAGGGTGGTGTCTTGGTTCTCTCCTAATGAGAAC",
+      "is_control": false,
+      "control_type": null,
+      "rationale": "FactorForge primary Pareto-optimal deterministic candidate matching canonical production /api/optimize DP parameters.",
+      "metadata": {
+        "design_contract_id": "factorforge_canonical_production_v2_1_1",
+        "expression_context": "mature_ectodomain_residues_19_141",
+        "secretion_context": "pEAQ-HT vector cassette N-terminal signal peptide required",
+        "canonical_aa_length": 305,
+        "construct_aa_length": 124
+      }
+    },
+    "CD47_Ectodomain_H1": {
+      "construct_id": "CD47_Ectodomain_H1",
+      "target_name": "CD47_Ectodomain",
+      "mature_protein_aa_length": 124,
+      "construct_aa_length": 124,
+      "hypothesis_id": "H1",
+      "hypothesis_name": "Initiation-Focused Exploration",
+      "generation_contract": "dp_v2_1_1_initiation_open",
+      "sequence_digest": "c59f68adc01755dea1648d0724e800d8a5e0dea9918f314853be28d69d1d3fbc",
+      "trait_vector": {
+        "cai_golden_set": 0.8561,
+        "global_gc_percent": 40.05,
+        "initiation_mfe_kcal_mol": null,
+        "local_50bp_gc_min": 18.0,
+        "local_50bp_gc_max": 50.0,
+        "homopolymer_max_run": 5,
+        "synthesis_penalty": 0.32,
+        "codon_context_prior": 0.8033
+      },
+      "sequence_dna": "CAATTATTATTTAATAAAACAAAAAGTGTAGAATTTACATTTTGTAACGATACTGTGGTGATTCCTTGCTTCGTGACTAACATGGAGGCTCAGAACACTACTGAGGTGTACGTGAAGTGGAAGTTCAAGGGAAGGGATATTTACACTTTCGATGGAGCTCTTAATAAGTCTACTGTGCCTACTGATTTCTCTTCTGCTAAGATTGAGGTGTCTCAGCTTCTTAAGGGAGATGCTTCTCTTAAGATGGATAAGTCTGATGCTGTGTCTCATACTGGAAATTACACTTGCGAGGTGACTGAGCTTACTAGGGAGGGAGAGACTATTATTGAGCTTAAGTACAGGGTGGTGTCTTGGTTCTCTCCTAATGAGAAT",
+      "is_control": false,
+      "control_type": null,
+      "rationale": "Reduced predicted 5' mRNA secondary structure stability (less negative 5' MFE) and AU initiation bonus to test translation initiation bottlenecks.",
+      "metadata": {
+        "design_contract_id": "dp_v2_1_1_initiation_open",
+        "expression_context": "mature_ectodomain_residues_19_141",
+        "secretion_context": "pEAQ-HT vector cassette N-terminal signal peptide required",
+        "canonical_aa_length": 305,
+        "construct_aa_length": 124
+      }
+    },
+    "CD47_Ectodomain_H2": {
+      "construct_id": "CD47_Ectodomain_H2",
+      "target_name": "CD47_Ectodomain",
+      "mature_protein_aa_length": 124,
+      "construct_aa_length": 124,
+      "hypothesis_id": "H2",
+      "hypothesis_name": "Composition-Constrained / Manufacturability Design",
+      "generation_contract": "dp_v2_1_1_composition_constrained",
+      "sequence_digest": "291b7bbab251a5ac80824bde6555650f0af66c11ad433a4d27bccf8f5b4bb920",
+      "trait_vector": {
+        "cai_golden_set": 0.8403,
+        "global_gc_percent": 40.32,
+        "initiation_mfe_kcal_mol": null,
+        "local_50bp_gc_min": 24.0,
+        "local_50bp_gc_max": 50.0,
+        "homopolymer_max_run": 4,
+        "synthesis_penalty": 0.3,
+        "codon_context_prior": 0.7982
+      },
+      "sequence_dna": "CAATTATTATTTAACAAAACGAAATCGGTAGAATTTACGTTTTGTAATGATACTGTGGTGATTCCTTGCTTCGTGACTAATATGGAGGCTCAGAATACTACTGAGGTGTACGTGAAGTGGAAGTTCAAGGGAAGGGATATTTACACTTTCGATGGAGCTCTTAATAAGTCTACTGTGCCTACTGATTTCTCTTCTGCTAAGATTGAGGTGTCTCAGCTTCTTAAGGGAGATGCTTCTCTTAAGATGGATAAGTCTGATGCTGTGTCTCATACTGGAAATTACACTTGCGAGGTGACTGAGCTTACTAGGGAGGGAGAGACTATTATTGAGCTTAAGTACAGGGTGGTGTCTTGGTTCTCTCCTAATGAGAAT",
+      "is_control": false,
+      "control_type": null,
+      "rationale": "Strict local/global GC composition constraints and homopolymer bounds for translational processivity.",
+      "metadata": {
+        "design_contract_id": "dp_v2_1_1_composition_constrained",
+        "expression_context": "mature_ectodomain_residues_19_141",
+        "secretion_context": "pEAQ-HT vector cassette N-terminal signal peptide required",
+        "canonical_aa_length": 305,
+        "construct_aa_length": 124
+      }
+    },
+    "POS_CTRL_sfGFP": {
+      "construct_id": "POS_CTRL_sfGFP",
+      "target_name": "sfGFP",
+      "mature_protein_aa_length": 238,
+      "construct_aa_length": 238,
+      "hypothesis_id": "CTRL_POS",
+      "hypothesis_name": "Positive Expression Control",
+      "generation_contract": "reference_benchmark_sfGFP",
+      "sequence_digest": "cb83c909c29bcf9250c305159a2aeb3715e95d7861dc8b623a9b552513189484",
+      "trait_vector": {
+        "cai_golden_set": 0.7834,
+        "global_gc_percent": 38.63,
+        "initiation_mfe_kcal_mol": null,
+        "local_50bp_gc_min": 26.0,
+        "local_50bp_gc_max": 52.0,
+        "homopolymer_max_run": 5,
+        "synthesis_penalty": 0.2,
+        "codon_context_prior": 0.7884
+      },
+      "sequence_dna": "ATGAGCAAAGGAGAAGAACTTTTCACTGGAGTTGTCCCAATTCTTGTTGAATTAGATGGTGATGTTAATGGGCACAAATTTTCTGTCAGTGGAGAGGGTGAAGGTGATGCAACATACGGAAAACTTACCCTTAAATTTATTTGCACTACTGGAAAACTACCTGTTCCATGGCCAACACTTGTCACTACTTTCTCTTATGGTGTTCAATGCTTTTCAAGATACCCAGATCATATGAAACAGCATGACTTTTTCAAGAGTGCCATGCCCGAAGGTTATGTACAGGAAAGAACTATATTTTTCAAAGATGACGGGAACTACAAGACACGTGCTGAAGTCAAGTTTGAAGGTGATACCCTTGTTAATAGAATCGAGTTAAAAGGTATTGATTTTAAAGAAGATGGAAACATTCTTGGACACAAATTGGAATACAACTATAACTCACACAATGTATACATCATGGCAGACAAACAAAAGAATGGAATCAAAGTTAACTTCAAAATTAGACACAACATTGAAGATGGAAGCGTTCAACTAGCAGACCATTATCAACAAAATACTCCAATTGGCGATGGCCCTGTCCTTTTACCAGACAACCATTACCTGTCGACACAATCTGCCCTTTCGAAAGATCCCAACGAAAAGAGAGACCACATGGTCCTTCTTGAGTTTGTAACAGCTGCTGGGATTACACATGGCATGGATGAACTATACAAATAA",
+      "is_control": true,
+      "control_type": "positive_expression",
+      "rationale": "Standard wild-type/benchmark sfGFP reporter with known high transient expression in N. benthamiana.",
+      "metadata": {
+        "protein_sequence_sha256": "44f268846c4fcf4cb9f563116d866406e2cf07831f2495b6c205244ddf3333ce",
+        "dna_payload_sha256": "cb83c909c29bcf9250c305159a2aeb3715e95d7861dc8b623a9b552513189484",
+        "payload_nt_length": 717,
+        "cds_nt_length": 714,
+        "stop_codon": "TAA"
+      }
+    },
+    "NEG_CTRL_EMPTY": {
+      "construct_id": "NEG_CTRL_EMPTY",
+      "target_name": "Mock_Vector",
+      "mature_protein_aa_length": 0,
+      "construct_aa_length": 0,
+      "hypothesis_id": "CTRL_NEG",
+      "hypothesis_name": "Negative / Empty Vector Control",
+      "generation_contract": "pEAQ_HT_empty_mock",
+      "sequence_digest": "de4f558fc0f681048dad3caf86e2a9e8b1266c9d7fe582365ddd2ad607243cd1",
+      "trait_vector": null,
+      "sequence_dna": null,
+      "is_control": true,
+      "control_type": "negative_empty_vector",
+      "rationale": "Agrobacterium containing empty vector / infiltration buffer to quantify autofluorescence baseline.",
+      "metadata": {
+        "control_type": "empty_vector_mock"
+      }
+    }
+  },
+  "experiments": {
+    "EXP-20260917-PILOT-01": {
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "batch_id": "BATCH-01",
+      "host_organism": "Nicotiana benthamiana",
+      "growth_conditions": "24C, 16h light / 8h dark, 60% RH",
+      "infiltration_od": 0.5,
+      "harvest_dpi": 4,
+      "protocol_version": "AGRO-INFIL-v2.1",
+      "operator_id": "OP-PLANT-01",
+      "run_timestamp": "2026-09-18T02:12:28.223576+00:00",
+      "metadata": {
+        "total_constructs": 11,
+        "replicates_per_construct": 3
+      }
+    }
+  },
+  "samples": {
+    "SMP-001": {
+      "sample_id": "SMP-001",
+      "blinded_plate_position": "A01",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "POS_CTRL_sfGFP",
+      "biological_replicate": 1,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-01",
+      "leaf_id": "LEAF-1",
+      "biological_replicate_id": "BIO-REP-01",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "A01",
+      "is_control": true,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-002": {
+      "sample_id": "SMP-002",
+      "blinded_plate_position": "A02",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "sfGFP_H1",
+      "biological_replicate": 3,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-02",
+      "leaf_id": "LEAF-3",
+      "biological_replicate_id": "BIO-REP-03",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "A02",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-003": {
+      "sample_id": "SMP-003",
+      "blinded_plate_position": "A03",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "VP28_H0",
+      "biological_replicate": 3,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-03",
+      "leaf_id": "LEAF-3",
+      "biological_replicate_id": "BIO-REP-03",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "A03",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-004": {
+      "sample_id": "SMP-004",
+      "blinded_plate_position": "A04",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "VP28_H2",
+      "biological_replicate": 2,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-01",
+      "leaf_id": "LEAF-2",
+      "biological_replicate_id": "BIO-REP-02",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "A04",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-005": {
+      "sample_id": "SMP-005",
+      "blinded_plate_position": "A05",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "CD47_Ectodomain_H2",
+      "biological_replicate": 3,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-02",
+      "leaf_id": "LEAF-3",
+      "biological_replicate_id": "BIO-REP-03",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "A05",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-006": {
+      "sample_id": "SMP-006",
+      "blinded_plate_position": "A06",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "VP28_H1",
+      "biological_replicate": 1,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-03",
+      "leaf_id": "LEAF-1",
+      "biological_replicate_id": "BIO-REP-01",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "A06",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-007": {
+      "sample_id": "SMP-007",
+      "blinded_plate_position": "A07",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "CD47_Ectodomain_H0",
+      "biological_replicate": 3,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-01",
+      "leaf_id": "LEAF-3",
+      "biological_replicate_id": "BIO-REP-03",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "A07",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-008": {
+      "sample_id": "SMP-008",
+      "blinded_plate_position": "A08",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "VP28_H2",
+      "biological_replicate": 1,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-02",
+      "leaf_id": "LEAF-1",
+      "biological_replicate_id": "BIO-REP-01",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "A08",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-009": {
+      "sample_id": "SMP-009",
+      "blinded_plate_position": "A09",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "VP28_H0",
+      "biological_replicate": 2,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-03",
+      "leaf_id": "LEAF-2",
+      "biological_replicate_id": "BIO-REP-02",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "A09",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-010": {
+      "sample_id": "SMP-010",
+      "blinded_plate_position": "A10",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "VP28_H1",
+      "biological_replicate": 3,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-01",
+      "leaf_id": "LEAF-3",
+      "biological_replicate_id": "BIO-REP-03",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "A10",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-011": {
+      "sample_id": "SMP-011",
+      "blinded_plate_position": "A11",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "CD47_Ectodomain_H0",
+      "biological_replicate": 2,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-02",
+      "leaf_id": "LEAF-2",
+      "biological_replicate_id": "BIO-REP-02",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "A11",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-012": {
+      "sample_id": "SMP-012",
+      "blinded_plate_position": "A12",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "CD47_Ectodomain_H1",
+      "biological_replicate": 2,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-03",
+      "leaf_id": "LEAF-2",
+      "biological_replicate_id": "BIO-REP-02",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "A12",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-013": {
+      "sample_id": "SMP-013",
+      "blinded_plate_position": "B01",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "VP28_H0",
+      "biological_replicate": 1,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-01",
+      "leaf_id": "LEAF-1",
+      "biological_replicate_id": "BIO-REP-01",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "B01",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-014": {
+      "sample_id": "SMP-014",
+      "blinded_plate_position": "B02",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "POS_CTRL_sfGFP",
+      "biological_replicate": 3,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-02",
+      "leaf_id": "LEAF-3",
+      "biological_replicate_id": "BIO-REP-03",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "B02",
+      "is_control": true,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-015": {
+      "sample_id": "SMP-015",
+      "blinded_plate_position": "B03",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "CD47_Ectodomain_H2",
+      "biological_replicate": 1,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-03",
+      "leaf_id": "LEAF-1",
+      "biological_replicate_id": "BIO-REP-01",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "B03",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-016": {
+      "sample_id": "SMP-016",
+      "blinded_plate_position": "B04",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "sfGFP_H2",
+      "biological_replicate": 1,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-01",
+      "leaf_id": "LEAF-1",
+      "biological_replicate_id": "BIO-REP-01",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "B04",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-017": {
+      "sample_id": "SMP-017",
+      "blinded_plate_position": "B05",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "CD47_Ectodomain_H2",
+      "biological_replicate": 2,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-02",
+      "leaf_id": "LEAF-2",
+      "biological_replicate_id": "BIO-REP-02",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "B05",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-018": {
+      "sample_id": "SMP-018",
+      "blinded_plate_position": "B06",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "sfGFP_H0",
+      "biological_replicate": 1,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-03",
+      "leaf_id": "LEAF-1",
+      "biological_replicate_id": "BIO-REP-01",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "B06",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-019": {
+      "sample_id": "SMP-019",
+      "blinded_plate_position": "B07",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "NEG_CTRL_EMPTY",
+      "biological_replicate": 2,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-01",
+      "leaf_id": "LEAF-2",
+      "biological_replicate_id": "BIO-REP-02",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "B07",
+      "is_control": true,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-020": {
+      "sample_id": "SMP-020",
+      "blinded_plate_position": "B08",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "VP28_H1",
+      "biological_replicate": 2,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-02",
+      "leaf_id": "LEAF-2",
+      "biological_replicate_id": "BIO-REP-02",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "B08",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-021": {
+      "sample_id": "SMP-021",
+      "blinded_plate_position": "B09",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "CD47_Ectodomain_H0",
+      "biological_replicate": 1,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-03",
+      "leaf_id": "LEAF-1",
+      "biological_replicate_id": "BIO-REP-01",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "B09",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-022": {
+      "sample_id": "SMP-022",
+      "blinded_plate_position": "B10",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "sfGFP_H0",
+      "biological_replicate": 3,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-01",
+      "leaf_id": "LEAF-3",
+      "biological_replicate_id": "BIO-REP-03",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "B10",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-023": {
+      "sample_id": "SMP-023",
+      "blinded_plate_position": "B11",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "VP28_H2",
+      "biological_replicate": 3,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-02",
+      "leaf_id": "LEAF-3",
+      "biological_replicate_id": "BIO-REP-03",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "B11",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-024": {
+      "sample_id": "SMP-024",
+      "blinded_plate_position": "B12",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "CD47_Ectodomain_H1",
+      "biological_replicate": 1,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-03",
+      "leaf_id": "LEAF-1",
+      "biological_replicate_id": "BIO-REP-01",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "B12",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-025": {
+      "sample_id": "SMP-025",
+      "blinded_plate_position": "C01",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "sfGFP_H1",
+      "biological_replicate": 1,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-01",
+      "leaf_id": "LEAF-1",
+      "biological_replicate_id": "BIO-REP-01",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "C01",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-026": {
+      "sample_id": "SMP-026",
+      "blinded_plate_position": "C02",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "NEG_CTRL_EMPTY",
+      "biological_replicate": 1,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-02",
+      "leaf_id": "LEAF-1",
+      "biological_replicate_id": "BIO-REP-01",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "C02",
+      "is_control": true,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-027": {
+      "sample_id": "SMP-027",
+      "blinded_plate_position": "C03",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "sfGFP_H1",
+      "biological_replicate": 2,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-03",
+      "leaf_id": "LEAF-2",
+      "biological_replicate_id": "BIO-REP-02",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "C03",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-028": {
+      "sample_id": "SMP-028",
+      "blinded_plate_position": "C04",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "POS_CTRL_sfGFP",
+      "biological_replicate": 2,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-01",
+      "leaf_id": "LEAF-2",
+      "biological_replicate_id": "BIO-REP-02",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "C04",
+      "is_control": true,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-029": {
+      "sample_id": "SMP-029",
+      "blinded_plate_position": "C05",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "NEG_CTRL_EMPTY",
+      "biological_replicate": 3,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-02",
+      "leaf_id": "LEAF-3",
+      "biological_replicate_id": "BIO-REP-03",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "C05",
+      "is_control": true,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-030": {
+      "sample_id": "SMP-030",
+      "blinded_plate_position": "C06",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "sfGFP_H2",
+      "biological_replicate": 3,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-03",
+      "leaf_id": "LEAF-3",
+      "biological_replicate_id": "BIO-REP-03",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "C06",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-031": {
+      "sample_id": "SMP-031",
+      "blinded_plate_position": "C07",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "CD47_Ectodomain_H1",
+      "biological_replicate": 3,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-01",
+      "leaf_id": "LEAF-3",
+      "biological_replicate_id": "BIO-REP-03",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "C07",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-032": {
+      "sample_id": "SMP-032",
+      "blinded_plate_position": "C08",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "sfGFP_H0",
+      "biological_replicate": 2,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-02",
+      "leaf_id": "LEAF-2",
+      "biological_replicate_id": "BIO-REP-02",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "C08",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    },
+    "SMP-033": {
+      "sample_id": "SMP-033",
+      "blinded_plate_position": "C09",
+      "experiment_id": "EXP-20260917-PILOT-01",
+      "construct_id": "sfGFP_H2",
+      "biological_replicate": 2,
+      "technical_replicate": 1,
+      "plant_id": "PLANT-03",
+      "leaf_id": "LEAF-2",
+      "biological_replicate_id": "BIO-REP-02",
+      "assay_plate_id": "PLATE-01",
+      "assay_well_position": "C09",
+      "is_control": false,
+      "metadata": {
+        "seed": 42
+      }
+    }
+  },
+  "measurements": [],
+  "derived_outcomes": []
+}

@@ -8,6 +8,8 @@ import json
 import api.optimize as optimize_api
 import pytest
 from api.optimize import DEFAULT_CAI_TARGET, DEFAULT_GC_MAX, DEFAULT_GC_MIN, handler
+from factorforge import __version__
+from factorforge.registry.versioning import engine_version
 
 
 def _handler() -> handler:
@@ -112,7 +114,7 @@ def test_get_optimize_exposes_public_reference_policy_metadata() -> None:
 def test_get_optimize_exposes_experimental_ml_capabilities_without_overclaiming() -> None:
     data = _get_optimize()
 
-    assert data["version"] == "3.4.5"
+    assert data["version"] == __version__
     assert data["capabilities"]["execution_modes"] == ["profile"]
     assert data["capabilities"]["ml_preview"] == {
         "available": False,
@@ -121,6 +123,90 @@ def test_get_optimize_exposes_experimental_ml_capabilities_without_overclaiming(
         "label": "ML update in progress",
     }
     assert data["capabilities"]["db_save"]["available"] is False
+
+
+def test_get_optimize_advertises_explicit_dp_v2_1_capabilities() -> None:
+    data = _get_optimize()
+
+    assert data["supported_objectives"] == [
+        "feasibility_best",
+        "dp_v2_1",
+        "dp_v2_1_1",
+    ]
+    assert data["engine_versions"]["dp_engine"] == engine_version("dp")
+    assert data["engine_versions"]["dp_v2_1_engine"] == engine_version("dp_v2_1")
+    assert data["engine_versions"]["dp_v2_1_1_engine"] == engine_version("dp_v2_1_1")
+
+
+def test_dp_v2_1_is_explicit_and_returns_three_axis_contract() -> None:
+    status_code, result = _post_optimize(
+        {
+            "sequence": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+            "objective": "dp_v2_1",
+            "constraints": {"gc_min": 40.0, "gc_max": 47.0},
+        }
+    )
+
+    assert status_code == 200
+    assert result["profile"] == "dp_v2_1"
+    assert result["provenance"]["engine_id"] == "dp_v2_1"
+    assert result["provenance"]["engine_version"] == engine_version("dp_v2_1")
+    assert result["provenance"]["engine_status"] == "development_rc"
+    assert result["metrics"]["gc_target_reached"] is True
+    assert result["metrics"]["mfe_status"] == "not_computed"
+    assert result["design_contract"]["scientific_axes"] == [
+        {"id": "assembly_feasibility", "evidence_class": "HARD"},
+        {"id": "codon_adaptation", "evidence_class": "OPTIMIZED"},
+        {"id": "five_prime_initiation", "evidence_class": "OPTIMIZED"},
+    ]
+    assert result["design_contract"]["independent_evaluation"] == {
+        "evidence_class": "INDEPENDENTLY_EVALUATED",
+        "status": "not_included_in_generation",
+        "rna_folding": "not_computed",
+    }
+
+
+def test_dp_v2_1_1_exposes_local_guard_metrics() -> None:
+    status_code, result = _post_optimize(
+        {
+            "sequence": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG",
+            "objective": "dp_v2_1_1",
+            "constraints": {"gc_min": 40.0, "gc_max": 47.0},
+        }
+    )
+
+    assert status_code == 200
+    assert result["profile"] == "dp_v2_1_1"
+    assert result["provenance"]["engine_id"] == "dp_v2_1_1"
+    assert result["provenance"]["engine_version"] == engine_version("dp_v2_1_1")
+    assert 20.0 <= result["metrics"]["gc_5p_45nt_percent"] <= 28.89
+    assert result["metrics"]["max_homopolymer_run"] <= 5
+    assert result["design_contract"]["local_composition_guard"] == {
+        "initiation_gc_active_count_band": [13, 13],
+        "initiation_gc_status": "SYNONYMOUS_ENVELOPE_CLAMPED",
+        "homopolymer_max_run": 5,
+    }
+
+
+def test_default_objective_remains_dp_v2() -> None:
+    status_code, result = _post_optimize({"sequence": "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEG"})
+
+    assert status_code == 200
+    assert result["provenance"]["engine_id"] == "dp"
+
+
+def test_dp_v2_1_rejects_unsupported_host() -> None:
+    status_code, result = _post_optimize(
+        {
+            "sequence": "MSKGEELFTGVVPILVELD",
+            "objective": "dp_v2_1",
+            "host": "by2",
+        }
+    )
+
+    assert status_code == 400
+    assert result["error_code"] == "UNSUPPORTED_STRATEGY_HOST_COMBINATION"
+    assert result["requested_strategy"] == "dp_v2_1"
 
 
 def test_dual_compare_returns_windowable_alignment_and_unverified_provenance(
@@ -283,7 +369,7 @@ def test_feasibility_best_response_includes_candidate_contract() -> None:
         "sequence_length": 35,
         "host_profile": "nbenthamiana",
     }
-    assert result["engine_versions"]["product"] == "3.4.5"
+    assert result["engine_versions"]["product"] == __version__
     assert result["recommended_candidate"]["validator_status"] == "pass"
     assert result["dp_target_observation"]["requested_cai_target"] == DEFAULT_CAI_TARGET
 

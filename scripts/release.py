@@ -165,23 +165,16 @@ def build_targets(old: str, new: str) -> list[tuple[str, list[tuple[str, str]], 
         ("CITATION.cff", [
             (f"version: {old}", f"version: {new}"),
         ], True),
-        ("src/factorforge/__init__.py", [
-            (f'__version__ = "{old}"', f'__version__ = "{new}"'),
-        ], True),
-        ("src/factorforge/engines/__init__.py", [
-            (f'"version": "{old}"', f'"version": "{new}"'),
-        ], True),
-        ("src/factorforge/engines/profile/__init__.py", [
-            (f'__version__ = "{old}"', f'__version__ = "{new}"'),
-        ], True),
-        ("src/factorforge/engines/profile/optimizer.py", [
-            (f'version = "{old}"', f'version = "{new}"'),
+        ("src/factorforge/registry/version_manifest.json", [
+            (
+                f'"name": "FactorForge",\n    "version": "{old}"',
+                f'"name": "FactorForge",\n    "version": "{new}"',
+            ),
         ], True),
         ("api/optimize.py", [
             (f"Product Version: {old}", f"Product Version: {new}"),
-            (f'"product": "{old}"', f'"product": "{new}"'),
-            (f'"rule_engine": "{old}"', f'"rule_engine": "{new}"'),
-            (f'"dp_engine": "{old}"', f'"dp_engine": "{new}"'),
+            (f'else "{old}"', f'else "{new}"'),
+            (f'{{"version": "{old}", "release_status"', f'{{"version": "{new}", "release_status"'),
         ], True),
         ("web/index.html", [
             (f"v{old} Release Notes", f"v{new} Release Notes"),
@@ -198,12 +191,6 @@ def build_targets(old: str, new: str) -> list[tuple[str, list[tuple[str, str]], 
         ], True),
         ("README.md", [
             (f"FactorForge v{old} (", f"FactorForge v{new} ("),
-        ], True),
-        ("tests/engines/profile/test_cli_optimize.py", [
-            (f"Profile-based v{old}", f"Profile-based v{new}"),
-        ], True),
-        ("docs/tutorials/gfp-nbenthamiana.md", [
-            (f"Profile-based v{old}", f"Profile-based v{new}"),
         ], True),
         ("docs/benchmark.md", [
             (f"FactorForge v{old} provides", f"FactorForge v{new} provides"),
@@ -223,12 +210,6 @@ def build_targets(old: str, new: str) -> list[tuple[str, list[tuple[str, str]], 
         ], True),
         ("recipes/meta.yaml", [
             (f'{{% set version = "{old}" %}}', f'{{% set version = "{new}" %}}'),
-        ], True),
-        ("src/factorforge/registry/current_parameter_registry.yaml", [
-            (f'version: "{old}"', f'version: "{new}"'),
-        ], True),
-        ("tests/conftest.py", [
-            (f'"registry_version": "{old}"', f'"registry_version": "{new}"'),
         ], True),
     ]
 

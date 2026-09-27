@@ -9,6 +9,14 @@ FactorForge is an **in-silico only** CDS design tool. It optimizes codon usage, 
 
 Public validation entries are manually reviewed, non-confidential wet-lab feedback summaries. They are not controlled validation studies, regulatory claims, or guarantees of FactorForge performance.
 
+## Sequence policy is not a laboratory SOP
+
+FactorForge enforces CDS-integrity invariants and reports deterministic or
+heuristic sequence findings. A user or laboratory remains responsible for
+deciding how advisory findings are treated in its own workflow. The bundled
+policy file is an illustrative example, not a validated or recommended
+laboratory SOP. See [Sequence Policy Boundary](sequence-policy.md).
+
 ## What FactorForge Checks
 
 Checks are grouped by domain (see `rule-engine-roadmap.md` for full per-rule

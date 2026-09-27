@@ -434,3 +434,72 @@ def detect_invalid_codons(sequence: str) -> list[dict[str, Any]]:
         elif codon not in STANDARD_GENETIC_CODE:
             findings.append({"start": start, "end": start + 3, "codon": codon, "reason": "unknown"})
     return findings
+import math
+import collections
+
+def calculate_synonymous_entropy(sequence, codon_to_aa):
+    from factorforge.analysis.metrics import _codons
+    codons = _codons(sequence)
+    aa_to_codons = collections.defaultdict(list)
+    for c in codons:
+        aa = codon_to_aa.get(c, 'X')
+        aa_to_codons[aa].append(c)
+        
+    entropies = {}
+    for aa, used_codons in aa_to_codons.items():
+        if aa in ['M', 'W', 'X']:
+            entropies[aa] = 0.0
+            continue
+        total = len(used_codons)
+        counts = collections.Counter(used_codons)
+        h = 0.0
+        for c, count in counts.items():
+            p = count / total
+            h -= p * math.log2(p)
+        
+        # Max entropy for this AA
+        possible_codons = [k for k, v in codon_to_aa.items() if v == aa]
+        k = len(possible_codons)
+        h_max = math.log2(k) if k > 1 else 1.0
+        entropies[aa] = h / h_max if h_max > 0 else 0.0
+        
+    if not entropies:
+        return 0.0
+    return sum(entropies.values()) / len(entropies)
+
+def calculate_max_synonymous_share(sequence, codon_to_aa):
+    from factorforge.analysis.metrics import _codons
+    codons = _codons(sequence)
+    aa_to_codons = collections.defaultdict(list)
+    for c in codons:
+        aa = codon_to_aa.get(c, 'X')
+        aa_to_codons[aa].append(c)
+        
+    max_shares = {}
+    for aa, used_codons in aa_to_codons.items():
+        if aa in ['M', 'W', 'X']:
+            continue
+        total = len(used_codons)
+        counts = collections.Counter(used_codons)
+        if total == 0:
+            continue
+        max_share = max(counts.values()) / total
+        max_shares[aa] = max_share
+    return max_shares
+
+def calculate_reference_distance(sequence, reference_weights, codon_to_aa):
+    from factorforge.analysis.metrics import _codons
+    codons = _codons(sequence)
+    counts = collections.Counter(codons)
+    
+    distance = 0.0
+    for codon, ref_freq in reference_weights.items():
+        aa = codon_to_aa.get(codon, 'X')
+        # find sequence frequency for this codon among its synonymous peers
+        syn_codons = [c for c, a in codon_to_aa.items() if a == aa]
+        total_aa = sum(counts.get(c, 0) for c in syn_codons)
+        
+        seq_freq = counts.get(codon, 0) / total_aa if total_aa > 0 else 0.0
+        # simple absolute distance
+        distance += abs(seq_freq - ref_freq)
+    return distance

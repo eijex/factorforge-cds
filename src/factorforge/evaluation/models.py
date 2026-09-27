@@ -50,6 +50,14 @@ class Metrics(BaseModel):
     mfe_status: Optional[str] = None
     mfe_reason: Optional[str] = None
     mfe_warning: Optional[str] = None
+    # 5' Initiation Window Metrics
+    mfe_5p_window: Optional[float] = None
+    mfe_5p_status: Optional[str] = None
+    cai_5p_ramp: Optional[float] = None
+    cai_body: Optional[float] = None
+    gc_5p_ramp_percent: Optional[float] = None
+    gc_body_percent: Optional[float] = None
+    context_digest: Optional[str] = None
 
 
 class EvaluationResult(BaseModel):

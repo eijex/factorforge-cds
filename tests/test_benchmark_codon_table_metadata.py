@@ -159,6 +159,7 @@ def test_no_raw_genome_fasta_committed():
         "tests/fixtures/",   # unit test fixtures
         "archive/",          # historical archived files
         "examples/",         # public example files
+        "benchmarks/",       # benchmark evaluation panel files
     )
     committed = [
         p for p in result.stdout.strip().splitlines()

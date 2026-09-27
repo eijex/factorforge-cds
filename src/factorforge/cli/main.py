@@ -166,28 +166,36 @@ def _build_dp_result(
         raise ValueError("--gc-min must be <= --gc-max.")
 
     from factorforge.analysis.metrics import load_codon_usage_table
-    from factorforge.analysis.feasibility import analyze_feasibility
+    from factorforge.engines.dp_v2 import DPV2Optimizer
 
     table = load_codon_usage_table(path=codon_table_path)
-    result = analyze_feasibility(
-        sequence,
-        table.codon_weights,
-        target_cai=cai_target,
-        target_gc_low=gc_min,
-        target_gc_high=gc_max,
-        codon_reference_id=codon_reference_id,
+    dp_result = DPV2Optimizer().optimize(
+        protein_sequence=sequence,
+        codon_weights=table.codon_weights,
+        target_gc_min=gc_min,
+        target_gc_max=gc_max,
     )
-    best = result["target"]["best_candidate"]
-    feasible = best is not None
-    if best is None:
-        best = result["best_candidate_without_gc"]
-    if best is None:
-        raise ValueError("No DP candidate generated.")
+    best = {
+        "dna_sequence": dp_result["sequence"],
+        "cai": dp_result["cai"],
+        "gc": dp_result["gc_percent"],
+    }
+    feasible = bool(dp_result["gc_feasible"])
+    result = {
+        "target": {
+            "gc_low": gc_min,
+            "gc_high": gc_max,
+            "cai": cai_target,
+            "best_candidate": best if feasible else None,
+        },
+        "engine": "dp_v2",
+        "codon_reference_id": codon_reference_id,
+    }
 
     reason = (
         f"Maximum CAI under GC {gc_min:g}-{gc_max:g}%"
         if feasible
-        else "Maximum CAI without GC constraint; requested GC range was infeasible"
+        else "Closest reachable GC band candidate; requested GC range was infeasible"
     )
     return best, result, reason
 
@@ -523,7 +531,7 @@ def optimize(
                 requested_cai_target=requested_cai_target,
             )
 
-            click.echo("Optimizing with DP feasibility engine...")
+            click.echo("Optimizing with DP v2 exact constraint engine...")
             if output:
                 with open(output, "w", encoding="utf-8") as f:
                     f.write(fasta)
@@ -734,7 +742,317 @@ def evaluate_model(model_id, train_snapshot, eval_snapshot, input_sequence):
     except Exception as db_e:
         click.echo("Evaluation completed, but DB persistence failed.", err=True)
         click.echo(f"DB Error Details: {db_e}", err=True)
-        raise click.Abort()
+
+@cli.command()
+@click.argument("input_file", type=click.Path(exists=True), required=False)
+@click.option("--sequence", "-s", help="Raw protein amino acid sequence string")
+@click.option("--target-name", default="Target-Protein", help="Human-readable target construct name")
+@click.option("--top-k", "-k", default=3, type=int, help="Number of Top-K candidate designs to return (1-10)")
+@click.option("--host", default="nbenthamiana", type=click.Choice(["nbenthamiana", "by2"]), help="Host organism")
+@click.option("--novelty-class", default="Class_A_InDistribution", help="Novelty stratification class")
+@click.option("--output", "-o", type=click.Path(), help="Output path for JSON Candidate Slate")
+@click.option("--json-output", is_flag=True, help="Print raw JSON to stdout")
+def slate(
+    input_file,
+    sequence,
+    target_name,
+    top_k,
+    host,
+    novelty_class,
+    output,
+    json_output,
+):
+    """
+    Run multi-contract discovery to produce a diverse, Pareto-filtered Top-K candidate slate.
+    """
+    _configure_stdio()
+    if input_file:
+        fasta_records = parse_fasta_records(input_file)
+        if not fasta_records:
+            raise click.UsageError(f"No FASTA records found in {input_file}")
+        target_name = fasta_records[0].header or target_name
+        target_aa = fasta_records[0].sequence
+    elif sequence:
+        target_aa = sequence
+    else:
+        raise click.UsageError("Either INPUT_FILE or --sequence must be provided.")
+
+    from factorforge.discovery.slate import DiscoverySlateEngine
+
+    engine = DiscoverySlateEngine(host=HOST_MAP.get(host, "nbenthamiana"))
+    candidate_slate = engine.generate_slate(
+        target_aa=target_aa,
+        target_name=target_name,
+        novelty_class=novelty_class,
+        top_k=top_k,
+    )
+
+    data = candidate_slate.to_dict()
+    if output:
+        with open(output, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        click.echo(f"Candidate slate saved to: {output}")
+    elif json_output:
+        click.echo(json.dumps(data, indent=2))
+    else:
+        click.echo("\n=======================================================")
+        click.echo(f"FactorForge Discovery Slate: {candidate_slate.target_metadata.target_name}")
+        click.echo(f"Run ID: {candidate_slate.run_id}")
+        click.echo(f"Top-K Candidates: {candidate_slate.slate_summary.top_k_count} / Feasible: {candidate_slate.slate_summary.feasible_pool_size}")
+        click.echo(f"Diversity Index: {candidate_slate.slate_summary.diversity_index:.4f}")
+        click.echo("=======================================================\n")
+        for cand in candidate_slate.candidates:
+            click.echo(f"[{cand.rank}] {cand.strategy_cluster} (Utility: {cand.utility_score:.3f})")
+            click.echo(f"    Contract: {cand.generation_contract}")
+            click.echo(f"    CAI: {cand.trait_vector.cai_golden_set:.3f} | GC: {cand.trait_vector.global_gc_percent:.1f}% | 5' MFE: {cand.trait_vector.initiation_mfe_kcal_mol} kcal/mol")
+            click.echo(f"    Digest: {cand.sequence_digest}")
+            click.echo(f"    Rationale: {cand.rationale}\n")
+
+
+@cli.command("acquisition-panel")
+@click.option("--output-dir", "-o", default="benchmarks/results/prospective_panel_v3.5", help="Output directory for prospective panel package")
+@click.option("--replicates", "-r", default=3, type=int, help="Biological replicates per construct")
+@click.option("--seed", "-s", default=42, type=int, help="Randomization seed for blinded plate assignment")
+@click.option("--experiment-id", default="EXP-20260917-PILOT-01", help="Experimental run identifier")
+@click.option("--host", default="nbenthamiana", type=click.Choice(["nbenthamiana", "by2"]), help="Host organism")
+def acquisition_panel(output_dir, replicates, seed, experiment_id, host):
+    """
+    Generate prospective 9-construct experimental panel + controls with randomized plate layout (Job 283C).
+    """
+    _configure_stdio()
+    from factorforge.discovery.acquisition_logger import AcquisitionLogger
+    from factorforge.discovery.panel_builder import ProspectivePanelBuilder
+
+    builder = ProspectivePanelBuilder(host=HOST_MAP.get(host, "nbenthamiana"))
+    dataset, aux_data = builder.build_panel(
+        replicates_per_construct=replicates,
+        seed=seed,
+        experiment_id=experiment_id,
+    )
+
+    out_p = Path(output_dir)
+    logger = AcquisitionLogger(base_output_dir=out_p.parent)
+    saved_dir = logger.export_prospective_panel(
+        dataset=dataset,
+        aux_data=aux_data,
+        subfolder=out_p.name,
+    )
+
+    click.echo("\n=======================================================")
+    click.echo("FactorForge Prospective DBTL Panel Built (Job 283C)")
+    click.echo(f"Experiment ID: {experiment_id}")
+    click.echo(f"Constructs: {len(dataset.constructs)} (9 experimental + 2 controls)")
+    click.echo(f"Total Samples (Wells): {len(dataset.samples)} (N={replicates} replicates)")
+    click.echo(f"Package Directory: {saved_dir}")
+    click.echo(f"Dataset SHA-256: {dataset.archive_sha256}")
+    click.echo("=======================================================\n")
+    for tname, rep in aux_data["orthogonality_report"].items():
+        click.echo(f"Target [{tname}] Orthogonality Gate: {'PASSED' if rep['orthogonality_passed'] else 'FAILED'}")
+        for pair, d in rep["pairwise_distances"].items():
+            click.echo(f"  - {pair}: distance = {d:.4f}")
+    click.echo("\nArtifacts Generated:")
+    click.echo("  1. panel_sequences.fasta (Synthesis FASTA)")
+    click.echo("  2. synthesis_manifest.csv (Order Manifest)")
+    click.echo("  3. blinded_plate_layout.json (Operator Infiltration Sheet)")
+    click.echo("  4. unblinded_mapping.json (Cryptographic Mapping)")
+    click.echo("  5. scientific_memory_panel.json (Sequence-Free Feature Store)")
+    click.echo("  6. prospective_dbtl_dataset.json (Paired DBTL Dataset Container)")
+    click.echo("  7. secure_archive_manifest.json (SHA-256 Tamper-Evident Index)\n")
+
+
+@cli.command("ingest-outcome")
+@click.argument("dataset_file", type=click.Path(exists=True))
+@click.argument("measurements_file", type=click.Path(exists=True))
+@click.option("--output", "-o", type=click.Path(), help="Output path for updated dataset JSON")
+def ingest_outcome(dataset_file, measurements_file, output):
+    """
+    Ingest empirical wet-lab measurements into a PairedDBTLDataset container.
+    """
+    _configure_stdio()
+    from factorforge.discovery.acquisition import PairedDBTLDataset
+    from factorforge.discovery.acquisition_logger import AcquisitionLogger
+
+    with open(dataset_file, "r", encoding="utf-8") as f:
+        ds_dict = json.load(f)
+    dataset = PairedDBTLDataset.from_dict(ds_dict)
+
+    with open(measurements_file, "r", encoding="utf-8") as f:
+        msr_data = json.load(f)
+
+    if isinstance(msr_data, dict) and "measurements" in msr_data:
+        raw_list = msr_data["measurements"]
+    elif isinstance(msr_data, list):
+        raw_list = msr_data
+    else:
+        raise click.UsageError("Measurements file must be a JSON array or object with 'measurements' key.")
+
+    updated_ds = AcquisitionLogger.ingest_wet_lab_measurements(
+        dataset=dataset,
+        raw_measurements=raw_list,
+    )
+
+    out_path = output or dataset_file
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(updated_ds.to_dict(include_sequence=True), f, indent=2)
+
+    click.echo("\n=======================================================")
+    click.echo(f"Successfully Ingested {len(raw_list)} Wet-Lab Measurements")
+    click.echo(f"Derived Outcomes Generated: {len(updated_ds.derived_outcomes)}")
+    click.echo(f"Updated Dataset Saved: {out_path}")
+    click.echo(f"Updated Archive SHA-256: {updated_ds.archive_sha256}")
+    click.echo("=======================================================\n")
+
+
+
+@cli.command("audit")
+@click.argument("sequence_fasta", type=click.Path(exists=True))
+@click.option("--reference-codon-profile", default="nbev11", help="Reference codon profile to use")
+@click.option("--exclude-region", help="Region to exclude from analysis (e.g., SP:1-60 or 1-60)")
+@click.option("--output", "-o", type=click.Path(), help="Output path for JSON report")
+def audit(sequence_fasta, reference_codon_profile, exclude_region, output):
+    """
+    Run generic sequence audit to report codon usage, CAI, GC, and AA distribution.
+    """
+    _configure_stdio()
+    from factorforge.engines.profile.utils import parse_fasta_records
+    from factorforge.analysis.metrics import load_codon_usage_table, calculate_cai, calculate_gc, codon_usage_profile, translate_dna
+    import hashlib
+    import json
+    
+    from pathlib import Path
+    fasta_records = parse_fasta_records(Path(sequence_fasta).read_text(encoding='utf-8'))
+    if not fasta_records:
+        raise click.UsageError(f"No FASTA records found in {sequence_fasta}")
+    
+    results = {}
+    for header, sequence in fasta_records:
+        seq = sequence.upper().replace("U", "T")
+        seq = "".join(seq.split())
+        
+        if exclude_region:
+            parts = exclude_region.split(":")
+            range_str = parts[-1]
+            try:
+                start, end = map(int, range_str.split("-"))
+                seq = seq[end:] # Naively assume we're removing the N-terminal SP 1-N.
+            except ValueError:
+                click.echo(f"Warning: Could not parse exclude region {exclude_region}", err=True)
+                
+        table = load_codon_usage_table()
+        
+        cai = calculate_cai(seq, table.codon_weights)
+        gc = calculate_gc(seq)
+        usage = codon_usage_profile(seq)
+        
+        aa_seq = translate_dna(seq)
+        aa_counts = {}
+        for aa in aa_seq:
+            aa_counts[aa] = aa_counts.get(aa, 0) + 1
+            
+        res = {
+            "input_sha256": hashlib.sha256(sequence.encode('utf-8')).hexdigest(),
+            "codon_table_sha256": hashlib.sha256(json.dumps(table.codon_weights, sort_keys=True).encode()).hexdigest(),
+            "tool_version": "1.0",
+            "cai": cai,
+            "gc_percent": gc,
+            "length": len(seq),
+            "aa_counts": aa_counts,
+            "codon_counts": usage,
+        }
+        results[header or "Sequence"] = res
+
+    if output:
+        with open(output, "w", encoding="utf-8") as f:
+            json.dump(results, f, indent=2)
+        click.echo(f"Audit report saved to: {output}")
+    else:
+        click.echo(json.dumps(results, indent=2))
+
+
+@cli.command("audit")
+@click.argument("sequence_fasta", type=click.Path(exists=True))
+@click.option("--reference-codon-profile", default="nbev11", help="Reference codon profile to use")
+@click.option("--exclude-region", help="Region to exclude from analysis (e.g., SP:1-60 or 1-60)")
+@click.option("--output", "-o", type=click.Path(), help="Output path for JSON report")
+def audit(sequence_fasta, reference_codon_profile, exclude_region, output):
+    """
+    Run generic sequence audit to report codon usage, CAI, GC, and AA distribution.
+    """
+    _configure_stdio()
+    from factorforge.engines.profile.utils import parse_fasta_records
+    from factorforge.analysis.metrics import (
+        load_codon_usage_table, calculate_cai, calculate_gc, codon_usage_profile, 
+        translate_dna, calculate_synonymous_entropy, calculate_max_synonymous_share,
+        calculate_reference_distance
+    )
+    from factorforge.engines.balanced_optimizer import STANDARD_GENETIC_CODE
+    
+    import hashlib
+    import json
+    from pathlib import Path
+    
+    fasta_records = parse_fasta_records(Path(sequence_fasta).read_text(encoding='utf-8'))
+    if not fasta_records:
+        raise click.UsageError(f"No FASTA records found in {sequence_fasta}")
+    
+    results = {}
+    for header, sequence in fasta_records:
+        seq = sequence.upper().replace("U", "T")
+        seq = "".join(seq.split())
+        
+        if exclude_region:
+            parts = exclude_region.split(":")
+            range_str = parts[-1]
+            try:
+                start, end = map(int, range_str.split("-"))
+                seq = seq[:start-1] + seq[end:]
+            except ValueError:
+                click.echo(f"Warning: Could not parse exclude region {exclude_region}", err=True)
+                
+        table_path = None
+        if reference_codon_profile and reference_codon_profile != 'nbev11':
+            table_path = Path(__file__).parent.parent / 'data' / "profiles" / f"{reference_codon_profile}_cds_hc_derived_codons.json"
+            if not table_path.exists():
+                click.echo(f"Warning: profile {reference_codon_profile} not found, falling back to default", err=True)
+                table_path = None
+                
+        table = load_codon_usage_table(table_path)
+        
+        cai = calculate_cai(seq, table.codon_weights)
+        gc = calculate_gc(seq)
+        usage = codon_usage_profile(seq)
+        
+        aa_seq = translate_dna(seq)
+        aa_counts = {}
+        for aa in aa_seq:
+            aa_counts[aa] = aa_counts.get(aa, 0) + 1
+            
+        entropy = calculate_synonymous_entropy(seq, STANDARD_GENETIC_CODE)
+        max_share = calculate_max_synonymous_share(seq, STANDARD_GENETIC_CODE)
+        ref_dist = calculate_reference_distance(seq, table.codon_weights, STANDARD_GENETIC_CODE)
+        
+        res = {
+            "input_sha256": hashlib.sha256(sequence.encode('utf-8')).hexdigest(),
+            "codon_table_sha256": hashlib.sha256(json.dumps(table.codon_weights, sort_keys=True).encode()).hexdigest(),
+            "tool_version": "1.1",
+            "cai": cai,
+            "gc_percent": gc,
+            "length": len(seq),
+            "normalized_synonymous_entropy": entropy,
+            "reference_distribution_distance": ref_dist,
+            "max_synonymous_share": max_share,
+            "aa_counts": aa_counts,
+            "codon_counts": usage,
+        }
+        results[header or "Sequence"] = res
+
+    if output:
+        with open(output, "w", encoding="utf-8") as f:
+            json.dump(results, f, indent=2)
+        click.echo(f"Audit report saved to: {output}")
+    else:
+        click.echo(json.dumps(results, indent=2))
 
 if __name__ == "__main__":
     cli()
+

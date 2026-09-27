@@ -1,0 +1,27 @@
+{
+  "$schema": "factorforge-sop-v1",
+  "profile_id": "golden_gate_portable",
+  "sop_name": "Golden Gate Portable Assembly",
+  "version": "1.0.0",
+  "author": "Eijex",
+  "status": "ASSEMBLY_PROFILE",
+  "derived_from": "Standard modular cloning (MoClo) requirements.",
+  "scope_note": "Ensures sequence compatibility with common Golden Gate assembly standards.",
+  "default_enforcement": "IGNORE",
+  "unknown_rule_policy": "ERROR",
+  "workflow": {
+    "sequence_requirements": {
+      "reproducibility_seed": null,
+      "type_iis_enzymes": ["BsaI", "BpiI", "BsmBI"],
+      "moclo_template": true
+    },
+    "review_policy": {
+      "type_iis": "REQUIRED"
+    }
+  },
+  "rules": {
+    "assembly.type_iis.bsai.v1": "HARD_FAIL",
+    "assembly.type_iis.bpii.v1": "HARD_FAIL",
+    "assembly.type_iis.bsmbi.v1": "HARD_FAIL"
+  }
+}

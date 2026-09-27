@@ -9,10 +9,20 @@
 [![codecov](https://codecov.io/gh/eijex/factorforge-cds/branch/main/graph/badge.svg)](https://codecov.io/gh/eijex/factorforge-cds)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20407330.svg)](https://doi.org/10.5281/zenodo.20407330)
 [![Web App](https://img.shields.io/badge/web-factorforge.eijex.com-brightgreen.svg)](https://factorforge.eijex.com)
-[![Sponsor](https://img.shields.io/badge/Sponsor-EA4AAA?style=flat&logo=github-sponsors&logoColor=white)](https://github.com/sponsors/eijex)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-yellow?style=flat&logo=buy-me-a-coffee)](https://www.buymeacoffee.com/eijex)
 
 
-FactorForge performs profile-guided CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. It is positioned as a pre-synthesis review harness: it helps teams generate reproducible CDS candidates, inspect assembly-relevant sequence constraints, and package design metadata before downstream synthesis, cloning, or experimental review. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
+FactorForge performs deterministic CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. It is positioned as a pre-synthesis review harness: it helps teams generate reproducible CDS candidates, inspect assembly-relevant sequence constraints, and package design metadata before downstream synthesis, cloning, or experimental review. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
+
+FactorForge v3.5.1 uses independently versioned engines:
+
+| Generation | Engine | Version | Availability |
+|---|---|---:|---|
+| Gen 1 | Rule/profile | 1.0.0 | Stable, public |
+| Gen 2 | DP v2 | 2.0.1 | Stable, public default feasibility path |
+| Gen 2 | DP v2.1.1 | 2.1.1 | Explicit local-guard path; computational evidence only |
+| Gen 3 | sLLM Hybrid | 0.2.0-preview.1 | Feature-gated constrained-generation research preview |
+| Rescue | Adaptive partial DP | 1.0.0 | Exact suffix rescue conditioned on a verified prefix |
 
 **→ [Full Documentation](https://eijex.github.io/factorforge-cds/)** · **[Roadmap](https://eijex.github.io/factorforge-cds/roadmap/)**
 
@@ -42,11 +52,29 @@ Or use the **[web app](https://factorforge.eijex.com)** — no installation requ
 
 ## Repository Structure
 
-The supported production engine is the deterministic profile engine under:
+The supported deterministic engines are the profile engine, stable DP v2, and
+the explicit DP v2.1.1 development candidate under:
 
 ```text
 src/factorforge/engines/profile/
+src/factorforge/engines/dp_v2.py
+src/factorforge/engines/dp_v2_1_1.py
+src/factorforge/engines/sllm/
+src/factorforge/discovery/
 ```
+
+DP v2.1.1 adds an exact active-layer 5′ GC guard and Aho-Corasick rejection of
+homopolymers of 6 nt or longer to the v2.1 initiation-aware objective. It emits
+local-composition metrics and, when ViennaRNA and sufficient transcript context
+are available, a separately evaluated 5′ MFE value. It is not the default; its
+single-target calibration does not establish holdout generalization or biological
+performance.
+
+The v3.5.1 discovery-slate surface generates versioned Top-K research candidates,
+applies a shared deterministic hard-constraint filter, and records generator and
+fallback lineage. The sLLM path is disabled by default. A partial-DP rescue solves
+an exact suffix conditioned on the retained prefix; it is not a claim of global
+optimality and does not establish biological performance.
 
 Historical implementation tracks are preserved under `archive/` for provenance
 and are not imported by the installed package or exposed as supported engines.
@@ -62,7 +90,7 @@ FactorForge outputs are **in-silico only** and have not been experimentally vali
 ## Citing
 
 ```
-FactorForge v3.4.5 (2026). Open-source constraint-based CDS design and sequence review.
+FactorForge v3.5.2 (2026). Open-source constraint-based CDS design and sequence review.
 Eijex. https://github.com/eijex/factorforge-cds
 ```
 
@@ -71,6 +99,12 @@ Eijex. https://github.com/eijex/factorforge-cds
 ## Maintainer
 
 Mun-Kyu Kim ([@eijex](https://github.com/eijex))
+
+## Optional PostgreSQL support
+
+Install `pip install "factorforge-cds[postgres]"` only when using the PostgreSQL
+connector. Explicit local SQLite checkpoints do not require a PostgreSQL driver.
+Database integration tests require an explicitly configured `DATABASE_URL`.
 
 ## License
 
@@ -85,6 +119,12 @@ GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).
 - **Sponsor** — Support our research via [GitHub Sponsors](https://github.com/sponsors/eijex) or [PayPal](https://paypal.me/munkyukim)
 - **Docs** — [eijex.github.io/factorforge-cds](https://eijex.github.io/factorforge-cds/)
 - **Wet-lab Feedback** — Public-safe feedback summaries are welcome via [Share Wet-lab Feedback (GitHub)](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml). Do not submit raw sequences, confidential construct details, internal batch IDs, patient data, private contact information, exact process parameters, or confidential partner/customer data. Email `eijex.lab@gmail.com` for private or sensitive summaries. See [VALIDATION.md](VALIDATION.md) before submitting.
+- **Sequence Policy Profiles** — FactorForge applies the sequence-review policy
+  chosen by the user; it does not define or approve a laboratory SOP. The web
+  app provides an illustrative YAML example and active-profile export.
+  Sequence-free, non-confidential suggestions can be submitted through the
+  public policy-template form; use `eijex.lab@gmail.com` for private or
+  laboratory-specific profiles. See the [sequence policy boundary](docs/sequence-policy.md).
 - **GitHub Issues** — bugs, features: [github.com/eijex/factorforge-cds/issues](https://github.com/eijex/factorforge-cds/issues)
 - **Email** — eijex.lab@gmail.com
 - **FactorForge** — [factorforge.eijex.com](https://factorforge.eijex.com)
