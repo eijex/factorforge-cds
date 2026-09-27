@@ -33,6 +33,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Added
 
+- **SOP Builder UX:** Added a visual sequence-policy builder that dynamically fetches canonical rules from the backend and strictly maps UI state to the `factorforge-sop-v1` YAML schema without maintaining duplicate rules in the frontend.
 - **Scientist-Facing Review Interface:** Overhauled the web UI into a transparent review dashboard. The interface now clearly distinguishes between *Design Mode* and *Comparison Mode* with comprehensive codon shift accounting.
 - **Two-Axis Policy Dashboard:** The UI now independently displays Detection, Enforcement, and Authorized Action according to the backend evaluation, without hardcoding UI risk severity.
 - **Provenance Drawer:** Added a dedicated evidence drawer exposing the Candidate ID, cryptographic input/output hashes, active policies, and FactorForge version.
