@@ -601,12 +601,30 @@ class handler(BaseHTTPRequestHandler):
             public_host: {**meta, "gc_range": _default_gc_constraints(HOST_MAP[public_host])}
             for public_host, meta in HOST_METADATA.items()
         }
+        # Fetch rule metadata for SOP Builder
+        try:
+            registry = RuleRegistry()
+            rules = registry.list_rules()
+            rule_metadata = [
+                {
+                    "rule_id": r.rule_id,
+                    "name": r.name,
+                    "description": r.description,
+                    "category": r.category.value,
+                    "default_enforcement": r.enforcement.value
+                }
+                for r in rules
+            ]
+        except Exception as e:
+            rule_metadata = []
+
         health_info = {
             "status": "healthy",
             "service": "FactorForge API",
             "version": ENGINE_VERSIONS["product"],
             "factorforge_available": FACTORFORGE_AVAILABLE,
             "endpoints": {
+                "rule_metadata": rule_metadata,
                 "POST /api/optimize": "Run codon optimization",
                 "POST /api/optimize/compare": "Compare profile optimization results",
                 "POST /api/optimize/batch": "Run batch profile optimization",
