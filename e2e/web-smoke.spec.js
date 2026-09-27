@@ -2,6 +2,65 @@ const { test, expect } = require('@playwright/test');
 
 const SAMPLE_PROTEIN = 'MSKGEELFTGVVPILVELD';
 const MOCK_DNA = 'ATGTCCAAGGGCGAGGAGCTGTTCACCGGCGTGGTGCCCATCCTGGTGGAGCTGGAC';
+const REVIEW_ROWS = [
+  { criterion: 'cai', mode: 'preferred', observed: 0.91, threshold: 0.8, result: 'PASS' },
+  { criterion: 'overall_gc', mode: 'preferred', observed: 45, threshold: '40-47%', result: 'PASS' },
+  { criterion: 'type_iis', mode: 'required', observed: 0, threshold: 0, result: 'PASS' },
+];
+
+function reviewResponse(overrides = {}) {
+  return {
+    success: true,
+    optimized_sequence: MOCK_DNA,
+    original_length: SAMPLE_PROTEIN.length,
+    optimized_length: MOCK_DNA.length,
+    input_type: 'protein',
+    metrics: {
+      cai: 0.91,
+      gc_percent: 45,
+      polya_signals: 0,
+      length: MOCK_DNA.length,
+      mfe_kcal_mol: null,
+      mfe_status: 'not_computed',
+      mfe_status_reason: 'missing_dependency',
+      mfe_used: false,
+      requested_gc_min_percent: 40,
+      requested_gc_max_percent: 47,
+    },
+    profile: 'feasibility_best',
+    host_profile: 'nbenthamiana',
+    automated_decision: 'PASS',
+    decision_summary: { required_failure_count: 0, preferred_warning_count: 0, explanation: 'All active acceptance criteria passed.' },
+    qc_decision_matrix: REVIEW_ROWS,
+    acceptance_criteria_snapshot: { cai: { mode: 'preferred', minimum: 0.8 } },
+    validation: { input_type: 'protein', polya: 'PASS', moclo: 'PASS', gc: 'PASS' },
+    constraint_report: { aa_identity: 1 },
+    construct_id: 'CF-TEST-272',
+    result_identifier: 'ff-result-272',
+    created_at: '2026-09-09T00:00:00Z',
+    product_version: '3.5.0',
+    codon_reference_id: 'NbeV1.1-HC',
+    reference_policy_version: '1.0',
+    gc_reference_band: '40-47%',
+    provenance: {
+      input_sequence_hash: 'sha256:input-272',
+      output_cds_hash: 'sha256:output-272',
+      parameter_hash: 'sha256:params-272',
+    },
+    cds_design: { engine: 'factorforge_cds', objective: 'feasibility_best', product_version: '3.5.0' },
+    ...overrides,
+  };
+}
+
+async function mockOptimization(page, response) {
+  await page.route('**/api/optimize', async route => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ capabilities: {}, validation_checks: [] }) });
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(response) });
+  });
+}
 
 async function openApp(page) {
   const pageErrors = [];
@@ -36,7 +95,7 @@ test('opens release notes and toggles dark mode', async ({ page }) => {
 
   await page.locator('#changelogBtn').click();
   await expect(page.locator('#changelogModal')).toBeVisible();
-  await expect(page.locator('#changelogModal')).toContainText('v3.4.5');
+  await expect(page.locator('#changelogModal')).toContainText('v3.5.0 — Discovery Slates');
   await page.locator('#closeModal').click();
   await expect(page.locator('#changelogModal')).toBeHidden();
 });
@@ -70,18 +129,146 @@ test('keeps non-default design objectives collapsed until requested', async ({ p
   await expect(implemented).not.toHaveAttribute('open', '');
   await expect(experimental).toBeHidden();
   await expect(implemented.getByText('High CAI')).toBeHidden();
-  await expect(experimental.getByText("5' Ramp")).toBeHidden();
+  await expect(implemented.getByText('DP v2.1.1 · Local-guard candidate')).toBeHidden();
 
   await implemented.locator('summary').click();
   await expect(implemented).toHaveAttribute('open', '');
   await expect(implemented).toContainText('High CAI');
   await expect(implemented).toContainText('GC Target');
   await expect(implemented).toContainText('Assembly Friendly');
+  await expect(implemented).toContainText('DP v2.1 · Three-axis candidate');
 
-  await expect(experimental).toContainText("5' Ramp");
+  await expect(experimental).not.toContainText("5' Ramp");
   await expect(experimental).toContainText('Viral Delivery');
-  await expect(page.locator('input[name="objective"][value="ramp"]')).toBeDisabled();
+  await expect(page.locator('input[name="objective"][value="dp_v2_1"]')).toBeDisabled();
   await expect(page.locator('input[name="objective"][value="viral_delivery"]')).toBeDisabled();
+});
+
+test('accounts for synonymous CDS shifts and exports the same interactive report data', async ({ page }) => {
+  const originalDna = MOCK_DNA.replace('TCC', 'TCT');
+  await page.route('**/api/optimize', async route => {
+    if (route.request().method() === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          capabilities: {}, validation_checks: [],
+          host_metadata: { nbenthamiana: { gc_range: { gc_min: 40, gc_max: 47 }, codon_frequencies: { TCT: 0.18, TCC: 0.42 } } },
+        }),
+      });
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(reviewResponse({
+        input_type: 'cds', original_length: originalDna.length,
+        validation: { input_type: 'cds', polya: 'PASS', moclo: 'PASS', gc: 'PASS' },
+      })),
+    });
+  });
+  await openApp(page);
+  await page.locator('#sequenceInput').fill(originalDna);
+  await page.locator('#optimizeBtn').click();
+
+  await expect(page.locator('#sameProteinBanner')).toContainText('Same Protein. Better-Designed DNA.');
+  await expect(page.locator('#statTotalCodons')).toHaveText('19');
+  await expect(page.locator('#statShifts')).toHaveText('1 / 5.3%');
+  await expect(page.locator('#statUnchanged')).toHaveText('18 / 94.7%');
+  await expect(page.locator('#statSubstitutions')).toHaveText('0 substitutions');
+  await expect(page.locator('#statShiftBreakdown')).toContainText('Higher 1');
+  expect(await page.locator('#canvasOriginalTrack').evaluate(canvas => canvas.width)).toBeGreaterThan(0);
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#exportInteractiveReport').click(),
+  ]);
+  expect(download.suggestedFilename()).toBe('FactorForge_Optimization_Report_CF-TEST-272.html');
+  const stream = await download.createReadStream();
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  const html = Buffer.concat(chunks).toString('utf-8');
+  expect(html).toContain('Same Protein. Better-Designed DNA.');
+  expect(html).toContain('Synonymous shifts</small><b>1 · 5.3%');
+  expect(html).toContain('const reportData=');
+  expect(html).toContain('sha256:input-272');
+});
+
+test('does not fabricate codon accounting for protein-only input', async ({ page }) => {
+  await mockOptimization(page, reviewResponse());
+  await openApp(page);
+  await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  await page.locator('#optimizeBtn').click();
+  await expect(page.locator('#statTotalCodons')).toHaveText('N/A');
+  await expect(page.locator('#statShiftBreakdown')).toHaveText('CDS reference required');
+  await expect(page.locator('#trackAvailability')).toHaveText('CDS reference required');
+});
+
+test('enables DP v2.1.1 only when the API advertises the capability', async ({ page }) => {
+  await page.route('**/api/optimize', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        capabilities: {},
+        validation_checks: [],
+        supported_objectives: ['feasibility_best', 'dp_v2_1_1'],
+      }),
+    });
+  });
+  await openApp(page);
+
+  await page.locator('#implementedObjectives summary').click();
+  await expect(page.locator('#dpV21Radio')).toBeEnabled();
+  await expect(page.locator('#dpV21Capability')).toContainText('2.1.1-dev');
+});
+
+test('renders the DP v2.1.1 evidence classes from the API result', async ({ page }) => {
+  await mockOptimization(page, reviewResponse({
+    profile: 'dp_v2_1_1',
+    design_contract: {
+      engine_id: 'dp_v2_1_1',
+      engine_version: '2.1.1-dev',
+      scientific_axes: [
+        { id: 'assembly_feasibility', evidence_class: 'HARD' },
+        { id: 'codon_adaptation', evidence_class: 'OPTIMIZED' },
+        { id: 'five_prime_initiation', evidence_class: 'OPTIMIZED' },
+      ],
+      independent_evaluation: {
+        evidence_class: 'INDEPENDENTLY_EVALUATED',
+        status: 'not_included_in_generation',
+        rna_folding: 'not_computed',
+      },
+    },
+  }));
+  await openApp(page);
+  await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  await page.locator('#optimizeBtn').click();
+
+  const contract = page.locator('#designContractSummary');
+  await expect(contract).toBeVisible();
+  await expect(contract).toContainText('DP v2.1.1 2.1.1-dev');
+  await expect(contract).toContainText('assembly_feasibility · HARD');
+  await expect(contract).toContainText('five_prime_initiation · OPTIMIZED');
+  await expect(contract).toContainText('RNA folding remains an independently evaluated metric');
+
+  await page.locator('#resultsReport > summary').click();
+  const report = page.locator('#resultsReportBody');
+  await expect(report).toContainText('Design Comparison');
+  await expect(report).toContainText('Assembly feasibility');
+  await expect(report).toContainText('INDEPENDENTLY_EVALUATED');
+  await expect(report).toContainText('No reference CDS · candidate-only view');
+  await expect(report).toContainText('do not establish expression, yield, or biological superiority');
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#downloadResultsReportBtn').click();
+  const download = await downloadPromise;
+  const stream = await download.createReadStream();
+  let reportHtml = '';
+  for await (const chunk of stream) reportHtml += chunk.toString();
+  expect(reportHtml).toContain('Design Comparison &amp; Decision Report');
+  expect(reportHtml).toContain('Declared computational scope');
+  expect(reportHtml).toContain('INDEPENDENTLY_EVALUATED');
 });
 
 test('updates sequence metadata for protein input', async ({ page }) => {
@@ -97,11 +284,13 @@ test('updates sequence metadata for protein input', async ({ page }) => {
 test('shows CDS design review controls and rejects multi-FASTA input', async ({ page }) => {
   await openApp(page);
 
+  const manualOverrides = page.locator('#manualSopOverrides');
+  await expect(manualOverrides).not.toHaveAttribute('open', '');
   const acceptanceCriteria = page.locator('#acceptanceCriteria');
-  await expect(acceptanceCriteria).toBeVisible();
-  await expect(acceptanceCriteria).not.toHaveAttribute('open', '');
+  await expect(acceptanceCriteria).toBeHidden();
   await expect(page.locator('#criterionCaiMode')).toBeHidden();
-  await acceptanceCriteria.locator('summary').click();
+  await manualOverrides.locator('summary').click();
+  await expect(acceptanceCriteria).toBeVisible();
   await expect(page.locator('#criterionCaiMode')).toBeVisible();
   await page.locator('#sequenceInput').fill('>one\nATGTCCAAG\n>two\nATGTCCAAG');
 
@@ -234,35 +423,23 @@ test('optional seed and Type IIS presets are merged into the optimization payloa
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({
-        success: true,
-        optimized_sequence: MOCK_DNA,
-        original_length: SAMPLE_PROTEIN.length,
-        optimized_length: MOCK_DNA.length,
+      body: JSON.stringify(reviewResponse({
         seed: 42,
-        metrics: {
-          cai: 0.91,
-          gc_percent: 45.0,
-          polya_signals: 0,
-          length: MOCK_DNA.length,
-          mfe_status: 'not_computed',
-          mfe_status_reason: 'missing_dependency',
-          requested_gc_min_percent: 40,
-          requested_gc_max_percent: 47
+        custom_restriction_sites: {
+          requested: [{ name: 'SapI', sequence: 'GAAGAGC' }],
+          detected: [],
+          removed: [],
+          unresolved: [],
         },
-        profile: 'feasibility_best',
-        host_profile: 'nbenthamiana',
-        custom_restriction_sites: { detected: [], removed: [], unresolved: [] },
-        validation: { input_type: 'protein', polya: 'PASS', moclo: 'PASS', gc: 'PASS' }
-      })
+      }))
     });
   });
   await openApp(page);
 
   await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
-  const advancedSettings = page.locator('#advancedSettings');
-  await expect(advancedSettings).not.toHaveAttribute('open', '');
-  await advancedSettings.locator('summary').click();
+  const manualOverrides = page.locator('#manualSopOverrides');
+  await expect(manualOverrides).not.toHaveAttribute('open', '');
+  await manualOverrides.locator('summary').click();
   await page.locator('#optimizationSeed').fill('42');
   await page.locator('#customRestrictionSites').fill('SapI:GAAGAGC');
   await page.locator('input[name="typeIisEnzyme"][value="SapI"]').check();
@@ -278,18 +455,20 @@ test('optional seed and Type IIS presets are merged into the optimization payloa
   await expect(page.locator('#resultsReportBody')).toContainText('PASS');
   await expect(page.locator('#resultsReportBody')).toContainText('SapI');
 
-  await page.locator('#resultsReport summary').click();
+  await page.locator('#resultsReport > summary').click();
   const [download] = await Promise.all([
     page.waitForEvent('download'),
     page.locator('#downloadResultsReportBtn').click(),
   ]);
-  expect(download.suggestedFilename()).toMatch(/^factorforge_results_report_\d+\.html$/);
+  expect(download.suggestedFilename()).toBe('factorforge_design_review_ff-result-272.html');
   const downloadStream = await download.createReadStream();
   const chunks = [];
   for await (const chunk of downloadStream) chunks.push(chunk);
   const downloadedHtml = Buffer.concat(chunks).toString('utf-8');
-  expect(downloadedHtml).toContain('seed=42');
-  expect(downloadedHtml).toContain('Results Report');
+  expect(downloadedHtml).toContain('<dt>Seed</dt><dd>42</dd>');
+  expect(downloadedHtml).toContain('Researcher Decision Report');
+  expect(downloadedHtml).toContain('Review priorities and next actions');
+  expect(downloadedHtml).toContain('sha256:params-272');
 });
 
 test('results distinguish no domestication and hide the MFE warning when computed', async ({ page }) => {
@@ -333,6 +512,186 @@ test('results distinguish no domestication and hide the MFE warning when compute
   await expect(page.locator('#resultsReportBody')).toContainText('seed not specified');
   await expect(page.locator('#resultsReportBody')).toContainText('MFE');
   await expect(page.locator('#resultsReportBody')).toContainText('Computed');
+});
+
+test('report treats the API decision and policy snapshot as authoritative', async ({ page }) => {
+  const response = reviewResponse();
+  response.metrics.cai = 0.75;
+  response.qc_decision_matrix = [
+    { criterion: 'cai', mode: 'preferred', observed: 0.75, threshold: 0.7, result: 'PASS' },
+  ];
+  response.acceptance_criteria_snapshot = { cai: { mode: 'preferred', minimum: 0.7 } };
+  await mockOptimization(page, response);
+  await openApp(page);
+
+  await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  await page.locator('#optimizeBtn').click();
+
+  const report = page.locator('#resultsReportBody');
+  await expect(report).toContainText('Researcher decision brief');
+  await expect(report).toContainText('PASS');
+  await expect(report).toContainText('0.75');
+  await expect(report).toContainText('0.7');
+  await expect(report).not.toContainText('0.800 minimum');
+});
+
+test('report distinguishes preferred warnings and unavailable computation', async ({ page }) => {
+  const response = reviewResponse({
+    automated_decision: 'CONDITIONAL_PASS',
+    decision_summary: { required_failure_count: 0, preferred_warning_count: 1, explanation: 'overall_gc requires review.' },
+    qc_decision_matrix: [
+      { criterion: 'overall_gc', mode: 'preferred', observed: 35.9, threshold: '40-47%', result: 'WARN' },
+    ],
+  });
+  response.metrics.gc_percent = 35.9;
+  await mockOptimization(page, response);
+  await openApp(page);
+
+  await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  await page.locator('#optimizeBtn').click();
+
+  const report = page.locator('#resultsReportBody');
+  await expect(report).toContainText('CONDITIONAL PASS');
+  await expect(report.locator('[data-report-status="WARNING"]').first()).toContainText('WARNING');
+  await expect(report.locator('[data-report-status="NOT_COMPUTED"]').first()).toContainText('NOT COMPUTED');
+  await expect(report).toContainText('missing_dependency');
+});
+
+test('report preserves a required failure instead of softening it', async ({ page }) => {
+  const response = reviewResponse({
+    automated_decision: 'FAIL',
+    decision_summary: { required_failure_count: 1, preferred_warning_count: 0, explanation: 'type_iis requires review.' },
+    qc_decision_matrix: [
+      { criterion: 'type_iis', mode: 'required', observed: 1, threshold: 0, result: 'FAIL' },
+    ],
+    acceptance_evaluation: {
+      optimized: { criteria: [], details: { type_iis_sites: [{ enzyme: 'BsaI', site: 'GGTCTC', start: 12 }] } },
+    },
+  });
+  await mockOptimization(page, response);
+  await openApp(page);
+
+  await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  await page.locator('#optimizeBtn').click();
+
+  const report = page.locator('#resultsReportBody');
+  await expect(report).toContainText('1 required fail');
+  await expect(report.locator('[data-report-status="FAIL"]').first()).toContainText('FAIL');
+  await expect(report).toContainText('BsaI at nt 13');
+  await expect(report).toContainText('redesign or explicitly resolve every required site');
+});
+
+test('report exposes requested and applied Type IIS settings when they differ', async ({ page }) => {
+  const response = reviewResponse({
+    custom_restriction_sites: {
+      requested: [{ name: 'BsaI', sequence: 'GGTCTC' }],
+      detected: [],
+      removed: [],
+      unresolved: [],
+    },
+    acceptance_criteria_snapshot: {
+      type_iis: { mode: 'required', enzymes: ['BsaI', 'BsmBI/Esp3I', 'SapI'] },
+    },
+  });
+  await mockOptimization(page, response);
+  await openApp(page);
+
+  await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  await page.locator('#optimizeBtn').click();
+
+  const report = page.locator('#resultsReportBody');
+  await expect(report).toContainText('Type IIS settings mismatch');
+  await expect(report).toContainText('Requested BsaI; applied BsaI, BsmBI/Esp3I, SapI.');
+  await expect(report).toContainText('Mismatch');
+});
+
+test('evidence JSON matches the report and excludes raw sequences', async ({ page }) => {
+  await mockOptimization(page, reviewResponse());
+  await openApp(page);
+  await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  await page.locator('#optimizeBtn').click();
+  await page.locator('#resultsReport > summary').click();
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#downloadEvidenceRecordBtn').click(),
+  ]);
+  expect(download.suggestedFilename()).toBe('factorforge_design_evidence_ff-result-272.json');
+  const stream = await download.createReadStream();
+  const chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  const text = Buffer.concat(chunks).toString('utf-8');
+  const evidence = JSON.parse(text);
+  expect(evidence.report_schema_version).toBe('1.1');
+  expect(evidence.disposition.automated_decision).toBe('PASS');
+  expect(evidence.provenance.parameter_hash).toBe('sha256:params-272');
+  expect(evidence.artifacts).toBeUndefined();
+  expect(text).not.toContain(MOCK_DNA);
+  expect(text).not.toContain(SAMPLE_PROTEIN);
+});
+
+test('current history preserves report provenance without storing the raw input', async ({ page }) => {
+  const response = reviewResponse({ input_type: 'cds', original_length: MOCK_DNA.length, validation: { input_type: 'cds', polya: 'PASS', moclo: 'PASS', gc: 'PASS' } });
+  await mockOptimization(page, response);
+  await openApp(page);
+  await page.locator('#sequenceInput').fill(MOCK_DNA);
+  await page.locator('#optimizeBtn').click();
+
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('factorforge_history')));
+  expect(stored.schemaVersion).toBe(3);
+  expect(stored.items[0].inputSequence).toBeUndefined();
+  expect(stored.items[0].resultSnapshot.provenance.parameter_hash).toBe('sha256:params-272');
+
+  await page.locator('#historyList > div').first().click();
+  await expect(page.locator('#sequenceInput')).toHaveValue('');
+  await expect(page.locator('#resultsReportBody')).toContainText('sha256:params-272');
+  await expect(page.locator('#resultsReportBody')).toContainText('nucleotide changes Not recorded');
+});
+
+test('legacy history remains readable and marks missing report fields', async ({ page }) => {
+  await page.addInitScript(({ dna }) => {
+    localStorage.setItem('factorforge_history', JSON.stringify({
+      schemaVersion: 2,
+      items: [{ id: 7, timestamp: 'legacy', inputLen: dna.length, profile: 'balanced', host: 'nbenthamiana', cai: 0.9, gc: 45, sequence: dna, inputSequence: dna }],
+    }));
+  }, { dna: MOCK_DNA });
+  await openApp(page);
+
+  await page.locator('#historyList > div').first().click();
+  await expect(page.locator('#sequenceInput')).toHaveValue(MOCK_DNA);
+  await expect(page.locator('#resultsReportBody')).toContainText('NOT AVAILABLE');
+  await expect(page.locator('#resultsReportBody')).toContainText('Not recorded');
+});
+
+test('report remains usable in dark mode at a 390px viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockOptimization(page, reviewResponse());
+  await openApp(page);
+  await page.locator('#themeToggle').click();
+  await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
+  await page.locator('#optimizeBtn').click();
+  await page.locator('#resultsReport > summary').click();
+
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await expect(page.locator('#design-review-report-title')).toBeVisible();
+  await expect(page.locator('#downloadEvidenceRecordBtn')).toBeVisible();
+
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#downloadResultsReportBtn').click();
+  const download = await downloadPromise;
+  const stream = await download.createReadStream();
+  let reportHtml = '';
+  for await (const chunk of stream) reportHtml += chunk.toString();
+  expect(reportHtml).toContain('<html lang="en" data-theme="dark">');
+  expect(reportHtml).toContain('[data-theme="dark"] body');
+});
+
+test('desktop design columns scroll with the page instead of sticking independently', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openApp(page);
+
+  await expect(page.locator('#designBriefPanel')).toHaveCSS('position', 'static');
+  await expect(page.locator('#resultsPanel')).toHaveCSS('position', 'static');
 });
 
 test('clear input resets preview and sequence badges', async ({ page }) => {

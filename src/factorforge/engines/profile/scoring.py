@@ -481,3 +481,61 @@ def compute_mfe_evidence(
         "mfe_warning": resolution.warning,
         "score_components": {"cai_used": True, "gc_used": True, "mfe_used": mfe_used},
     }
+
+
+def compute_5p_mfe_evidence(
+    cds_sequence: str | None,
+    upstream_context: str | None = None,
+    window_nt: int = 60,
+) -> dict[str, Any]:
+    """Compute true MFE of the 5' initiation transcript window.
+
+    Constructs fold window: contiguous upstream context + start codon + 5' CDS (up to window_nt).
+    """
+    if not cds_sequence:
+        return {
+            "mfe_5p_window_kcal_mol": None,
+            "mfe_5p_status": "not_computed",
+            "mfe_5p_reason": "no_input",
+            "mfe_5p_warning": "No CDS sequence provided.",
+            "fold_window_nt": 0,
+        }
+
+    up = (upstream_context or "").strip().upper()
+    cds = cds_sequence.strip().upper()
+
+    # Build contiguous transcript window
+    # If upstream context exists, take last 15-20nt of upstream + first 45-60nt of CDS
+    if up:
+        up_tail = up[-15:] if len(up) > 15 else up
+        target_window = (up_tail + cds)[:window_nt]
+    else:
+        target_window = cds[:window_nt]
+
+    if not _check_vienna_available():
+        return {
+            "mfe_5p_window_kcal_mol": None,
+            "mfe_5p_status": "not_computed",
+            "mfe_5p_reason": "missing_dependency",
+            "mfe_5p_warning": "ViennaRNA unavailable in this environment.",
+            "fold_window_nt": len(target_window),
+        }
+
+    mfe_val = _fold_mfe(target_window)
+    if mfe_val is None:
+        return {
+            "mfe_5p_window_kcal_mol": None,
+            "mfe_5p_status": "not_computed",
+            "mfe_5p_reason": "computation_failed",
+            "mfe_5p_warning": "5' window MFE computation failed.",
+            "fold_window_nt": len(target_window),
+        }
+
+    return {
+        "mfe_5p_window_kcal_mol": round(mfe_val, 2),
+        "mfe_5p_status": "computed",
+        "mfe_5p_reason": None,
+        "mfe_5p_warning": None,
+        "fold_window_nt": len(target_window),
+    }
+

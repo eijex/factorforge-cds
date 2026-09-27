@@ -35,6 +35,7 @@ nav:
   - User Guide:
     - How It Works: how-it-works.md
     - Optimization Profiles: profiles.md
+    - Sequence Policy Boundary: sequence-policy.md
     - CLI Reference: cli.md
     - Output Format: output.md
   - Validation: validation.md

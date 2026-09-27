@@ -1,0 +1,22 @@
+{
+  "$schema": "factorforge-sop-v1",
+  "profile_id": "all_advisories_hardfail",
+  "sop_name": "Strict Stress-Test Policy (All Advisories Hard-Fail)",
+  "version": "1.0.0",
+  "author": "Eijex",
+  "status": "TEST_ONLY",
+  "derived_from": "FactorForge stress-test configuration; not a recommended laboratory SOP",
+  "default_enforcement": "HARD_FAIL",
+  "unknown_rule_policy": "ERROR",
+  "rules": {
+    "assembly.type_iis.bsai.v1": "HARD_FAIL",
+    "assembly.type_iis.bsmbi.v1": "HARD_FAIL",
+    "biological.reading_frame.v1": "HARD_FAIL",
+    "rna.cryptic_splice.v1": "HARD_FAIL",
+    "rna.polya_motifs.v1": "HARD_FAIL",
+    "rna.au_rich_elements.v1": "HARD_FAIL",
+    "synthesis.gc_extremes.v1": "HARD_FAIL",
+    "policy.synthesis.homopolymer.v1": "HARD_FAIL",
+    "policy.initiation_mfe.v1": "HARD_FAIL"
+  }
+}

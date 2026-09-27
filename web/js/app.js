@@ -33,20 +33,196 @@ const TYPE_IIS_PRESETS = Object.freeze({
     SapI: 'GAAGAGC'
 });
 let hostGcRanges = {};
+let hostMetadata = {};
 let apiCapabilities = {};
+
+const CODON_TABLE = Object.freeze({
+    TTT:'F',TTC:'F',TTA:'L',TTG:'L',TCT:'S',TCC:'S',TCA:'S',TCG:'S',TAT:'Y',TAC:'Y',TAA:'*',TAG:'*',TGT:'C',TGC:'C',TGA:'*',TGG:'W',
+    CTT:'L',CTC:'L',CTA:'L',CTG:'L',CCT:'P',CCC:'P',CCA:'P',CCG:'P',CAT:'H',CAC:'H',CAA:'Q',CAG:'Q',CGT:'R',CGC:'R',CGA:'R',CGG:'R',
+    ATT:'I',ATC:'I',ATA:'I',ATG:'M',ACT:'T',ACC:'T',ACA:'T',ACG:'T',AAT:'N',AAC:'N',AAA:'K',AAG:'K',AGT:'S',AGC:'S',AGA:'R',AGG:'R',
+    GTT:'V',GTC:'V',GTA:'V',GTG:'V',GCT:'A',GCC:'A',GCA:'A',GCG:'A',GAT:'D',GAC:'D',GAA:'E',GAG:'E',GGT:'G',GGC:'G',GGA:'G',GGG:'G'
+});
+const AA_NAMES = Object.freeze({A:'Ala',R:'Arg',N:'Asn',D:'Asp',C:'Cys',Q:'Gln',E:'Glu',G:'Gly',H:'His',I:'Ile',L:'Leu',K:'Lys',M:'Met',F:'Phe',P:'Pro',S:'Ser',T:'Thr',W:'Trp',Y:'Tyr',V:'Val','*':'Stop'});
 
 function getGcRange(hostId) {
     return hostGcRanges[hostId] || OFFLINE_GC_RANGES[hostId] || OFFLINE_GC_RANGES.nbenthamiana;
 }
 
 let validationRegistry = [];
-const HISTORY_SCHEMA_VERSION = 2;
+const HISTORY_SCHEMA_VERSION = 3;
+const SOP_STORAGE_KEY = 'factorforge_active_sop_v1';
+const SOP_SCHEMA = 'factorforge-sop-v1';
+const SOP_MODES = Object.freeze(['required', 'preferred', 'ignored']);
+const DEFAULT_SOP_PROFILE = Object.freeze({
+    $schema: SOP_SCHEMA,
+    profile_id: 'default_conservative_plant_expression',
+    sop_name: 'Conservative Plant Expression Review Template',
+    version: '1.1.0',
+    author: 'Eijex',
+    status: 'STANDARD_TEMPLATE',
+    derived_from: "FactorForge public defaults plus collaborator-informed precautionary workflow assumptions; not any laboratory's complete or approved SOP",
+    scope_note: 'Editable in-silico design and pre-synthesis review policy. Laboratory approval and wet-lab testing remain separate.',
+    default_enforcement: 'IGNORE',
+    unknown_rule_policy: 'ERROR',
+    rules: {
+        'assembly.type_iis.bsai.v1': 'HARD_FAIL',
+        'assembly.type_iis.bsmbi.v1': 'HARD_FAIL',
+        'biological.reading_frame.v1': 'HARD_FAIL',
+        'rna.cryptic_splice.v1': 'WARNING',
+        'rna.polya_motifs.v1': 'WARNING',
+        'rna.au_rich_elements.v1': 'WARNING',
+        'synthesis.gc_extremes.v1': 'WARNING',
+        'policy.synthesis.homopolymer.v1': 'WARNING',
+        'policy.initiation_mfe.v1': 'WARNING'
+    },
+    workflow: {
+        design_method: 'feasibility_best',
+        comparison_methods: ['high_cai', 'gc_target', 'assembly_friendly'],
+        sequence_requirements: {
+            reproducibility_seed: null,
+            kozak_optimization: false,
+            suppress_tpa: false,
+            type_iis_enzymes: ['BsaI', 'BpiI', 'BsmBI'],
+            custom_restriction_sites: [],
+            moclo_template: false
+        },
+        review_policy: {
+            cai: 'PREFERRED', overall_gc: 'PREFERRED', local_gc: 'PREFERRED',
+            type_iis: 'REQUIRED', repeats: 'PREFERRED', homopolymers: 'PREFERRED',
+            forbidden_motifs: 'PREFERRED'
+        }
+    }
+});
+
+function cloneJson(value) {
+    return JSON.parse(JSON.stringify(value));
+}
+
+function parseYamlScalar(raw) {
+    const value = raw.trim();
+    if (!value || value === 'null' || value === '~') return null;
+    if (/^(true|yes)$/i.test(value)) return true;
+    if (/^(false|no)$/i.test(value)) return false;
+    if (/^-?(?:\d+\.?\d*|\.\d+)$/.test(value)) return Number(value);
+    if (value.startsWith('[') && value.endsWith(']')) {
+        const inner = value.slice(1, -1).trim();
+        return inner ? inner.split(',').map(item => parseYamlScalar(item)) : [];
+    }
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        return value.startsWith('"') ? JSON.parse(value) : value.slice(1, -1).replace(/''/g, "'");
+    }
+    return value;
+}
+
+function stripYamlComment(line) {
+    let quote = null;
+    for (let index = 0; index < line.length; index += 1) {
+        const char = line[index];
+        if ((char === '"' || char === "'") && line[index - 1] !== '\\') quote = quote === char ? null : (quote || char);
+        if (char === '#' && !quote && (index === 0 || /\s/.test(line[index - 1]))) return line.slice(0, index);
+    }
+    return line;
+}
+
+function parseSopYaml(text) {
+    if (/\t/.test(text)) throw new Error('YAML indentation must use spaces, not tabs.');
+    if (/(^|\s)[&*!][^\s]*/m.test(text) || /^\s*[>|]/m.test(text)) throw new Error('YAML anchors, tags, aliases, and multiline blocks are not supported.');
+    const root = {};
+    const stack = [{ indent: -1, value: root }];
+    text.split(/\r?\n/).forEach((source, lineIndex) => {
+        const uncommented = stripYamlComment(source).replace(/\s+$/, '');
+        if (!uncommented.trim() || uncommented.trim() === '---') return;
+        const indent = uncommented.length - uncommented.trimStart().length;
+        const content = uncommented.trimStart();
+        const separator = content.indexOf(':');
+        if (separator < 1) throw new Error(`Invalid YAML on line ${lineIndex + 1}.`);
+        const key = content.slice(0, separator).trim().replace(/^['"]|['"]$/g, '');
+        const rawValue = content.slice(separator + 1).trim();
+        while (stack.length > 1 && indent <= stack[stack.length - 1].indent) stack.pop();
+        const parent = stack[stack.length - 1].value;
+        if (!parent || typeof parent !== 'object' || Array.isArray(parent)) throw new Error(`Invalid YAML nesting on line ${lineIndex + 1}.`);
+        if (Object.prototype.hasOwnProperty.call(parent, key)) throw new Error(`Duplicate YAML key: ${key}`);
+        if (rawValue === '') {
+            parent[key] = {};
+            stack.push({ indent, value: parent[key] });
+        } else {
+            parent[key] = parseYamlScalar(rawValue);
+        }
+    });
+    return root;
+}
+
+function parseSopDocument(text, filename = '') {
+    const trimmed = text.trim();
+    if (!trimmed) throw new Error('SOP file is empty.');
+    if (/\.json$/i.test(filename) || trimmed.startsWith('{')) return JSON.parse(trimmed);
+    return parseSopYaml(trimmed);
+}
+
+function yamlScalar(value) {
+    if (value === null || value === undefined) return 'null';
+    if (typeof value === 'boolean' || typeof value === 'number') return String(value);
+    if (typeof value === 'string' && /^[A-Za-z0-9_$.-]+$/.test(value)) return value;
+    return JSON.stringify(String(value));
+}
+
+function serializeSopYaml(value, indent = 0) {
+    return Object.entries(value).map(([key, item]) => {
+        const prefix = `${' '.repeat(indent)}${key}:`;
+        if (Array.isArray(item)) return `${prefix} [${item.map(yamlScalar).join(', ')}]`;
+        if (item && typeof item === 'object') return `${prefix}\n${serializeSopYaml(item, indent + 2)}`;
+        return `${prefix} ${yamlScalar(item)}`;
+    }).join('\n');
+}
+
+function validateSopProfile(profile) {
+    if (!profile || typeof profile !== 'object' || Array.isArray(profile)) throw new Error('SOP must be a JSON object.');
+    if (profile.$schema !== SOP_SCHEMA) throw new Error(`SOP schema must be ${SOP_SCHEMA}.`);
+    ['profile_id', 'sop_name', 'version', 'status'].forEach(key => {
+        if (typeof profile[key] !== 'string' || !profile[key].trim()) throw new Error(`SOP field ${key} is required.`);
+    });
+    if (String(profile.unknown_rule_policy).toUpperCase() !== 'ERROR') throw new Error('unknown_rule_policy must be ERROR.');
+    if (!profile.rules || typeof profile.rules !== 'object' || Array.isArray(profile.rules)) throw new Error('SOP rules must be an object.');
+    const allowedEnforcement = new Set(['HARD_FAIL', 'WARNING', 'IGNORE', 'INFORMATIONAL']);
+    Object.entries(profile.rules).forEach(([ruleId, level]) => {
+        if (!ruleId || !allowedEnforcement.has(String(level).toUpperCase())) throw new Error(`Invalid SOP rule policy: ${ruleId}`);
+    });
+    const workflow = profile.workflow;
+    if (!workflow || typeof workflow !== 'object') throw new Error('SOP workflow is required.');
+    const validMethods = new Set(['feasibility_best', 'dp_v2_1_1', 'high_cai', 'gc_target', 'assembly_friendly']);
+    if (!validMethods.has(workflow.design_method)) throw new Error('Unsupported SOP design_method.');
+    const requirements = workflow.sequence_requirements;
+    if (!requirements || typeof requirements !== 'object') throw new Error('SOP sequence_requirements are required.');
+    if (!Array.isArray(requirements.type_iis_enzymes) || requirements.type_iis_enzymes.some(name => !TYPE_IIS_PRESETS[name])) throw new Error('SOP contains an unsupported Type IIS enzyme.');
+    if (!Array.isArray(requirements.custom_restriction_sites)) throw new Error('SOP custom_restriction_sites must be an array.');
+    const policy = workflow.review_policy;
+    if (!policy || typeof policy !== 'object') throw new Error('SOP review_policy is required.');
+    ['cai', 'overall_gc', 'local_gc', 'type_iis', 'repeats', 'homopolymers', 'forbidden_motifs'].forEach(key => {
+        if (!SOP_MODES.includes(String(policy[key]).toLowerCase())) throw new Error(`Invalid review policy mode: ${key}`);
+    });
+    return cloneJson(profile);
+}
+
+function loadSopProfile() {
+    try {
+        const saved = localStorage.getItem(SOP_STORAGE_KEY);
+        return saved ? validateSopProfile(JSON.parse(saved)) : cloneJson(DEFAULT_SOP_PROFILE);
+    } catch (_) {
+        localStorage.removeItem(SOP_STORAGE_KEY);
+        return cloneJson(DEFAULT_SOP_PROFILE);
+    }
+}
 
 function loadVersionedHistory() {
     try {
         const raw = JSON.parse(localStorage.getItem('factorforge_history') || '[]');
-        if (Array.isArray(raw)) return raw.map(item => ({ ...item, schemaVersion: HISTORY_SCHEMA_VERSION }));
-        if (raw && Array.isArray(raw.items)) return raw.items;
+        if (Array.isArray(raw)) return raw.map(item => ({ ...item, schemaVersion: item.schemaVersion || 1 }));
+        if (raw && Array.isArray(raw.items)) {
+            return raw.items.map(item => ({
+                ...item,
+                schemaVersion: item.schemaVersion || raw.schemaVersion || 1,
+            }));
+        }
     } catch (_) {
         localStorage.removeItem('factorforge_history');
     }
@@ -68,9 +244,11 @@ const state = {
     selectedTypeIisEnzymes: [],
     reviewerDisposition: null,
     results: null,
+    reportData: null,
     isOptimizing: false,
     history: loadVersionedHistory()
 };
+state.activeSop = loadSopProfile();
 
 // DOM Elements
 const elements = {
@@ -96,6 +274,7 @@ const elements = {
     optimizedSequence: document.getElementById('optimizedSequence'),
     jsonDetails: document.getElementById('jsonDetails'),
     downloadFasta: document.getElementById('downloadFasta'),
+    exportInteractiveReport: document.getElementById('exportInteractiveReport'),
     downloadGenbank: document.getElementById('downloadGenbank'),
     copyBtn: document.getElementById('copyBtn'),
     constructIdRow: document.getElementById('constructIdRow'),
@@ -105,6 +284,20 @@ const elements = {
     alphafoldLink: document.getElementById('alphafoldLink'),
     esmatlasFoldLink: document.getElementById('esmatlasFoldLink'),
     copyJsonBtn: document.getElementById('copyJsonBtn'),
+    statTotalCodons: document.getElementById('statTotalCodons'),
+    statShifts: document.getElementById('statShifts'),
+    statUnchanged: document.getElementById('statUnchanged'),
+    statSubstitutions: document.getElementById('statSubstitutions'),
+    statShiftBreakdown: document.getElementById('statShiftBreakdown'),
+    statAaIdentity: document.getElementById('statAaIdentity'),
+    interactiveTrackContainer: document.getElementById('interactiveTrackContainer'),
+    canvasOriginalTrack: document.getElementById('canvasOriginalTrack'),
+    canvasOptimizedTrack: document.getElementById('canvasOptimizedTrack'),
+    trackAvailability: document.getElementById('trackAvailability'),
+    inspectorPosition: document.getElementById('inspectorPosition'),
+    inspectorCodons: document.getElementById('inspectorCodons'),
+    inspectorRationale: document.getElementById('inspectorRationale'),
+    inspectorConstraints: document.getElementById('inspectorConstraints'),
     toggleDetails: document.getElementById('toggleDetails'),
     detailsContent: document.getElementById('detailsContent'),
     toggleArrow: document.getElementById('toggleArrow'),
@@ -119,6 +312,7 @@ const elements = {
     databaseCapability: document.getElementById('databaseCapability'),
     appliedPolicySummary: document.getElementById('appliedPolicySummary'),
     resultContextSummary: document.getElementById('resultContextSummary'),
+    designContractSummary: document.getElementById('designContractSummary'),
     comparisonDashboard: document.getElementById('comparisonDashboard'),
     comparisonNotice: document.getElementById('comparisonNotice'),
     comparisonMatrixBody: document.getElementById('comparisonMatrixBody'),
@@ -180,6 +374,14 @@ const elements = {
     criterionRepeatsMode: document.getElementById('criterionRepeatsMode'),
     criterionHomopolymerMode: document.getElementById('criterionHomopolymerMode'),
     criterionMotifsMode: document.getElementById('criterionMotifsMode'),
+    sopProfileName: document.getElementById('sopProfileName'),
+    sopProfileMeta: document.getElementById('sopProfileMeta'),
+    sopProfileBadge: document.getElementById('sopProfileBadge'),
+    sopUploadZone: document.getElementById('sopUploadZone'),
+    downloadSopTemplate: document.getElementById('downloadSopTemplate'),
+    uploadSopButton: document.getElementById('uploadSopButton'),
+    resetSopProfile: document.getElementById('resetSopProfile'),
+    sopFileUpload: document.getElementById('sopFileUpload'),
     automatedDecisionValue: document.getElementById('automatedDecisionValue'),
     automatedDecisionSummary: document.getElementById('automatedDecisionSummary'),
     qcDecisionMatrix: document.getElementById('qcDecisionMatrix'),
@@ -223,10 +425,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     applyStaticLabelPatches();
     await loadApiMetadata();
+    applySopToUi(state.activeSop, { persist: false });
     initEventListeners();
     updateDesignBriefSummary();
+
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
     renderHistory();
-    console.log('FactorForge v3.4.5 Engaged');
+    console.log('FactorForge v3.5.2 Engaged');
 });
 
 // Loads server-owned GC ranges and validation labels. Supported hosts remain
@@ -238,6 +455,7 @@ async function loadApiMetadata() {
         if (response.ok) {
             const data = await response.json();
             if (data.host_metadata && typeof data.host_metadata === 'object') {
+                hostMetadata = data.host_metadata;
                 Object.entries(data.host_metadata).forEach(([id, meta]) => {
                     if (meta && meta.gc_range) {
                         hostGcRanges[id] = meta.gc_range;
@@ -248,6 +466,16 @@ async function loadApiMetadata() {
                 validationRegistry = data.validation_checks;
             }
             apiCapabilities = data.capabilities || {};
+            const dpV21Available = Array.isArray(data.supported_objectives)
+                && data.supported_objectives.includes('dp_v2_1_1');
+            const dpV21Radio = document.getElementById('dpV21Radio');
+            const dpV21Capability = document.getElementById('dpV21Capability');
+            if (dpV21Radio) dpV21Radio.disabled = !dpV21Available;
+            if (dpV21Capability) {
+                dpV21Capability.textContent = dpV21Available
+                    ? 'Available · engine 2.1.1-dev · calibration complete / holdout pending'
+                    : 'Unavailable on this deployment';
+            }
             const mlAvailable = Boolean(apiCapabilities.ml_preview?.available);
             elements.engineModeRadios.forEach(radio => {
                 if (radio.value !== 'profile') radio.disabled = !mlAvailable;
@@ -267,17 +495,160 @@ async function loadApiMetadata() {
     }
 }
 
+function formatCustomSitesForEditor(sites) {
+    return (sites || []).map(site => `${site.name}:${site.sequence}`).join('\n');
+}
+
+function applySopToUi(profile, { persist = true } = {}) {
+    const validated = validateSopProfile(profile);
+    const workflow = validated.workflow;
+    const requirements = workflow.sequence_requirements;
+    const policy = workflow.review_policy;
+    const objective = Array.from(elements.objectiveRadios).find(radio => radio.value === workflow.design_method && !radio.disabled);
+    if (!objective) throw new Error(`Design method ${workflow.design_method} is unavailable on this deployment.`);
+    objective.checked = true;
+    state.objective = objective.value;
+    elements.optimizationSeed.value = requirements.reproducibility_seed ?? '';
+    elements.kozakToggle.checked = Boolean(requirements.kozak_optimization);
+    elements.dinucToggle.checked = Boolean(requirements.suppress_tpa);
+    elements.useTemplateCheck.checked = Boolean(requirements.moclo_template);
+    state.kozak = elements.kozakToggle.checked;
+    state.dinuc = elements.dinucToggle.checked;
+    state.useTemplate = elements.useTemplateCheck.checked;
+    const selectedEnzymes = new Set(requirements.type_iis_enzymes);
+    elements.typeIisEnzymes.forEach(input => { input.checked = selectedEnzymes.has(input.value); });
+    elements.customRestrictionSites.value = formatCustomSitesForEditor(requirements.custom_restriction_sites);
+    const modeMap = {
+        cai: elements.criterionCaiMode, overall_gc: elements.criterionGcMode,
+        local_gc: elements.criterionLocalGcMode, type_iis: elements.criterionTypeIisMode,
+        repeats: elements.criterionRepeatsMode, homopolymers: elements.criterionHomopolymerMode,
+        forbidden_motifs: elements.criterionMotifsMode
+    };
+    Object.entries(modeMap).forEach(([key, select]) => { select.value = String(policy[key]).toLowerCase(); });
+    state.activeSop = validated;
+    if (persist) localStorage.setItem(SOP_STORAGE_KEY, JSON.stringify(validated));
+    elements.sopProfileName.textContent = validated.sop_name;
+    elements.sopProfileMeta.textContent = `${validated.status === 'STANDARD_TEMPLATE' ? 'Default template' : 'Custom SOP'} · v${validated.version} · stored only in this browser`;
+    elements.sopProfileBadge.textContent = validated.status === 'STANDARD_TEMPLATE' ? 'Active' : 'Custom';
+    updateDesignBriefSummary();
+
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
+}
+
+function captureSopFromUi() {
+    const profile = cloneJson(state.activeSop || DEFAULT_SOP_PROFILE);
+    profile.status = profile.profile_id === DEFAULT_SOP_PROFILE.profile_id ? 'CUSTOMIZED_LOCAL' : profile.status;
+    profile.workflow.design_method = state.objective;
+    profile.workflow.sequence_requirements = {
+        reproducibility_seed: elements.optimizationSeed.value.trim() === '' ? null : Number(elements.optimizationSeed.value),
+        kozak_optimization: elements.kozakToggle.checked,
+        suppress_tpa: elements.dinucToggle.checked,
+        type_iis_enzymes: Array.from(elements.typeIisEnzymes).filter(input => input.checked).map(input => input.value),
+        custom_restriction_sites: parseCustomRestrictionSites(elements.customRestrictionSites.value),
+        moclo_template: elements.useTemplateCheck.checked
+    };
+    profile.workflow.review_policy = {
+        cai: elements.criterionCaiMode.value.toUpperCase(), overall_gc: elements.criterionGcMode.value.toUpperCase(),
+        local_gc: elements.criterionLocalGcMode.value.toUpperCase(), type_iis: elements.criterionTypeIisMode.value.toUpperCase(),
+        repeats: elements.criterionRepeatsMode.value.toUpperCase(), homopolymers: elements.criterionHomopolymerMode.value.toUpperCase(),
+        forbidden_motifs: elements.criterionMotifsMode.value.toUpperCase()
+    };
+    state.activeSop = validateSopProfile(profile);
+    localStorage.setItem(SOP_STORAGE_KEY, JSON.stringify(state.activeSop));
+    elements.sopProfileMeta.textContent = `Custom local settings · v${state.activeSop.version} · stored only in this browser`;
+    elements.sopProfileBadge.textContent = 'Custom';
+}
+
+function downloadActiveSop() {
+    captureSopFromUi();
+    const safeId = state.activeSop.profile_id.replace(/[^a-z0-9_-]+/gi, '_');
+    downloadTextArtifact(`${serializeSopYaml(state.activeSop)}\n`, 'application/yaml', `FactorForge_SOP_${safeId}_v${state.activeSop.version}.yaml`);
+}
+
+function applySopFile(file, input = null) {
+    if (!file) return;
+    if (file.size > 128 * 1024) {
+        showToast('SOP file must be 128 KB or smaller.', 'error');
+        if (input) input.value = '';
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            applySopToUi(parseSopDocument(String(reader.result), file.name));
+            showToast('SOP validated, applied, and saved in this browser.', 'success');
+        } catch (error) {
+            showToast(`SOP rejected: ${error.message}`, 'error');
+        } finally {
+            if (input) input.value = '';
+        }
+    };
+    reader.onerror = () => showToast('Unable to read SOP file.', 'error');
+    reader.readAsText(file);
+}
+
+function handleSopUpload(event) {
+    applySopFile(event.target.files?.[0], event.target);
+}
+
+function restoreDefaultSop() {
+    localStorage.removeItem(SOP_STORAGE_KEY);
+    applySopToUi(cloneJson(DEFAULT_SOP_PROFILE), { persist: false });
+    showToast('Default conservative SOP restored.', 'success');
+}
+
 function initEventListeners() {
     // Input Handling
     elements.fileUpload.addEventListener('change', handleFileUpload);
     elements.sequenceInput.addEventListener('input', debounce(handleSequenceChange, 300));
     elements.clearBtn.addEventListener('click', clearAll);
+    elements.downloadSopTemplate.addEventListener('click', downloadActiveSop);
+    elements.uploadSopButton.addEventListener('click', () => elements.sopFileUpload.click());
+    elements.sopUploadZone.addEventListener('click', () => elements.sopFileUpload.click());
+    ['dragenter', 'dragover'].forEach(type => elements.sopUploadZone.addEventListener(type, event => {
+        event.preventDefault();
+        elements.sopUploadZone.classList.add('ring-2', 'ring-emerald-500');
+    }));
+    ['dragleave', 'drop'].forEach(type => elements.sopUploadZone.addEventListener(type, event => {
+        event.preventDefault();
+        elements.sopUploadZone.classList.remove('ring-2', 'ring-emerald-500');
+    }));
+    elements.sopUploadZone.addEventListener('drop', event => applySopFile(event.dataTransfer?.files?.[0]));
+    elements.sopFileUpload.addEventListener('change', handleSopUpload);
+    elements.resetSopProfile.addEventListener('click', restoreDefaultSop);
 
     // Objective Change
     elements.objectiveRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             state.objective = e.target.value;
+            captureSopFromUi();
             updateDesignBriefSummary();
+
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
         });
     });
     elements.engineModeRadios.forEach(radio => {
@@ -289,6 +660,20 @@ function initEventListeners() {
     elements.hostSelect.addEventListener('change', (e) => {
         state.host = e.target.value;
         updateDesignBriefSummary();
+
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
     });
     elements.saveDbToggle.addEventListener('change', (e) => {
         state.saveDb = e.target.checked;
@@ -298,22 +683,98 @@ function initEventListeners() {
 
     elements.useTemplateCheck.addEventListener('change', (e) => {
         state.useTemplate = e.target.checked;
+        captureSopFromUi();
         updateDesignBriefSummary();
+
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
     });
 
     elements.kozakToggle.addEventListener('change', (e) => {
         state.kozak = e.target.checked;
+        captureSopFromUi();
         updateDesignBriefSummary();
+
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
     });
     elements.dinucToggle.addEventListener('change', (e) => {
         state.dinuc = e.target.checked;
+        captureSopFromUi();
         updateDesignBriefSummary();
+
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
     });
     elements.customRestrictionSites.addEventListener('input', () => {
         state.customRestrictionSites = [];
         updateDesignBriefSummary();
+
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
     });
-    elements.typeIisEnzymes.forEach(input => input.addEventListener('change', updateDesignBriefSummary));
+    elements.customRestrictionSites.addEventListener('change', captureSopFromUi);
+    elements.typeIisEnzymes.forEach(input => input.addEventListener('change', () => { captureSopFromUi(); updateDesignBriefSummary();
+
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+ }));
+    document.querySelectorAll('.criterion-mode').forEach(select => select.addEventListener('change', captureSopFromUi));
+    elements.optimizationSeed.addEventListener('change', captureSopFromUi);
     elements.saveReviewerDisposition.addEventListener('click', saveReviewerDisposition);
     elements.clearHistory.addEventListener('click', clearHistory);
 
@@ -322,6 +783,10 @@ function initEventListeners() {
 
     // Results Actions
     elements.downloadFasta.addEventListener('click', () => downloadFile('fasta'));
+    elements.exportInteractiveReport?.addEventListener('click', () => {
+        if (!state.reportData) return showToast('Run an optimization before exporting a report.', 'info');
+        downloadInteractiveReport(state.reportData);
+    });
     elements.downloadGenbank.addEventListener('click', () => downloadFile('genbank'));
     elements.copyBtn.addEventListener('click', copyToClipboard);
     elements.copyConstructId.addEventListener('click', copyConstructId);
@@ -369,6 +834,7 @@ function updateDesignBriefSummary() {
     const selectedObjective = Array.from(elements.objectiveRadios).find(radio => radio.checked)?.value || state.objective;
     const methodLabels = {
         feasibility_best: 'recommended feasibility design',
+        dp_v2_1_1: 'local-guard DP v2.1.1 development candidate',
         high_cai: 'CAI-focused comparison',
         gc_target: 'GC-focused comparison',
         assembly_friendly: 'assembly-oriented comparison'
@@ -561,6 +1027,7 @@ async function runOptimization() {
     });
 
     try {
+        captureSopFromUi();
         // Prepare Request
         const payload = {
             sequence: state.sequence,
@@ -570,19 +1037,20 @@ async function runOptimization() {
             use_template: state.useTemplate,
             kozak: state.kozak,
             dinuc: state.dinuc,
-            return_candidates: true
+            return_candidates: true,
+            sop_profile: state.activeSop
         };
         if (state.engineMode !== 'profile') {
             payload.profile = 'balanced';
-        } else if (state.objective === 'feasibility_best' && state.host === 'nbenthamiana') {
-            payload.objective = 'feasibility_best';
+        } else if (['feasibility_best', 'dp_v2_1_1'].includes(state.objective) && state.host === 'nbenthamiana') {
+            payload.objective = state.objective;
             payload.host_profile = state.host;
             // Host-aware default (v3.3.0) — previously hardcoded to
             // the legacy 55-65 band, which silently overrode the server's
             // resolve_host_gc_range() default for every feasibility_best run.
             payload.constraints = getGcRange(state.host);
         } else {
-            payload.profile = state.objective === 'feasibility_best' ? 'balanced' : state.objective;
+            payload.profile = ['feasibility_best', 'dp_v2_1_1'].includes(state.objective) ? 'balanced' : state.objective;
         }
         const seedValue = elements.optimizationSeed.value.trim();
         if (seedValue !== '') {
@@ -681,7 +1149,11 @@ function setLoading(loading) {
 
 function updateStructureLinks() {
     const seq = (state.sequence || '').replace(/[^A-Za-z]/g, '').toUpperCase();
-    if (!seq || seq.length < 10) return;
+    if (!seq || seq.length < 10) {
+        if (elements.alphafoldLink) elements.alphafoldLink.href = '#';
+        if (elements.esmatlasFoldLink) elements.esmatlasFoldLink.href = '#';
+        return;
+    }
     const encoded = encodeURIComponent(seq);
     if (elements.alphafoldLink) {
         elements.alphafoldLink.href = `https://alphafold.ebi.ac.uk/search/sequence/${encoded}`;
@@ -729,6 +1201,178 @@ function formatHostProfile(hostProfile) {
     return `${hostProfile} (${label})`;
 }
 
+function normalizedDna(value) {
+    return String(value || '').toUpperCase().replace(/[^ACGT]/g, '');
+}
+
+function codonsWithoutTerminalStop(sequence) {
+    const dna = normalizedDna(sequence);
+    if (!dna || dna.length % 3 !== 0) return { valid: false, codons: [], hasStopCodon: false };
+    const codons = dna.match(/.{3}/g) || [];
+    const hasStopCodon = CODON_TABLE[codons.at(-1)] === '*';
+    return { valid: true, codons: hasStopCodon ? codons.slice(0, -1) : codons, hasStopCodon };
+}
+
+function responseCodonFrequencies(res, hostId) {
+    const candidates = [
+        res?.host_codon_frequencies,
+        res?.codon_frequencies,
+        res?.host_metadata?.[hostId]?.codon_frequencies,
+        hostMetadata?.[hostId]?.codon_frequencies,
+    ];
+    const source = candidates.find(value => value && typeof value === 'object');
+    if (!source) return {};
+    return Object.fromEntries(Object.entries(source).map(([codon, raw]) => {
+        const value = Number(typeof raw === 'object' ? raw.frequency : raw);
+        return [codon.toUpperCase(), Number.isFinite(value) ? (value > 1 ? value / 100 : value) : null];
+    }));
+}
+
+function localGcAtCodon(sequence, codonIndex, windowSize = 50) {
+    const dna = normalizedDna(sequence);
+    if (!dna) return null;
+    const center = codonIndex * 3 + 1;
+    const start = Math.max(0, Math.min(dna.length - windowSize, center - Math.floor(windowSize / 2)));
+    const window = dna.slice(start, start + windowSize);
+    return window ? ((window.match(/[GC]/g) || []).length / window.length) * 100 : null;
+}
+
+function buildCodonAccounting(originalCds, optimizedCds, res, gcTarget) {
+    const original = codonsWithoutTerminalStop(originalCds);
+    const optimized = codonsWithoutTerminalStop(optimizedCds);
+    const comparable = original.valid && optimized.valid && original.codons.length > 0;
+    if (!comparable) return { available: false, reason: originalCds ? 'Valid CDS reference required' : 'CDS reference required', codons: [] };
+    const frequencies = responseCodonFrequencies(res, getResultHostProfile(res));
+    const length = Math.max(original.codons.length, optimized.codons.length);
+    const codons = [];
+    let synonymousChanges = 0, unchanged = 0, substitutions = 0, insertions = 0, deletions = 0;
+    let higherPref = 0, lowerPref = 0, neutralPref = 0, unknownPref = 0;
+    for (let index = 0; index < length; index += 1) {
+        const origCodon = original.codons[index] || null;
+        const optCodon = optimized.codons[index] || null;
+        const origAa = origCodon ? CODON_TABLE[origCodon] : null;
+        const optAa = optCodon ? CODON_TABLE[optCodon] : null;
+        if (!origCodon) insertions += 1;
+        else if (!optCodon) deletions += 1;
+        else if (origAa !== optAa) substitutions += 1;
+        else if (origCodon === optCodon) unchanged += 1;
+        else synonymousChanges += 1;
+        const origFreq = origCodon && Object.hasOwn(frequencies, origCodon) ? frequencies[origCodon] : null;
+        const optFreq = optCodon && Object.hasOwn(frequencies, optCodon) ? frequencies[optCodon] : null;
+        if (origCodon && optCodon && origCodon !== optCodon && origAa === optAa) {
+            if (origFreq == null || optFreq == null) unknownPref += 1;
+            else if (optFreq > origFreq) higherPref += 1;
+            else if (optFreq < origFreq) lowerPref += 1;
+            else neutralPref += 1;
+        }
+        codons.push({
+            index, aa: optAa || origAa || '?', origAa, optAa, origCodon, optCodon,
+            isChanged: origCodon !== optCodon, origFreq, optFreq,
+            localGc: localGcAtCodon(optimizedCds, index),
+        });
+    }
+    const totalCodons = original.codons.length;
+    const comparedResidues = Math.min(original.codons.length, optimized.codons.length);
+    const aaIdentity = totalCodons ? (Math.max(0, comparedResidues - substitutions) / Math.max(original.codons.length, optimized.codons.length)) * 100 : 0;
+    return {
+        available: true, totalCodons, synonymousChanges, unchanged, substitutions, insertions, deletions, aaIdentity,
+        higherPref, lowerPref, neutralPref, unknownPref, hasStopCodon: original.hasStopCodon,
+        aaPreserved: substitutions === 0 && insertions === 0 && deletions === 0,
+        gcTarget, codons,
+    };
+}
+
+function percentOf(value, total) {
+    return total ? `${((value / total) * 100).toFixed(1)}%` : '0.0%';
+}
+
+function renderCodonAccounting(accounting) {
+    if (!accounting.available) {
+        elements.statTotalCodons.textContent = 'N/A'; elements.statShifts.textContent = 'N/A';
+        elements.statUnchanged.textContent = 'N/A'; elements.statSubstitutions.textContent = 'N/A';
+        elements.statShiftBreakdown.textContent = accounting.reason;
+        elements.statAaIdentity.textContent = 'Translation comparison unavailable';
+        elements.trackAvailability.textContent = accounting.reason;
+        return;
+    }
+    elements.statTotalCodons.textContent = String(accounting.totalCodons);
+    elements.statShifts.textContent = `${accounting.synonymousChanges} / ${percentOf(accounting.synonymousChanges, accounting.totalCodons)}`;
+    elements.statUnchanged.textContent = `${accounting.unchanged} / ${percentOf(accounting.unchanged, accounting.totalCodons)}`;
+    elements.statSubstitutions.textContent = `${accounting.substitutions} substitutions`;
+    const known = `Higher ${accounting.higherPref} · Lower ${accounting.lowerPref} · Neutral ${accounting.neutralPref}`;
+    elements.statShiftBreakdown.textContent = accounting.unknownPref ? `${known} · Frequency N/A ${accounting.unknownPref}` : known;
+    elements.statAaIdentity.textContent = `${accounting.aaIdentity.toFixed(1)}% identity · ${accounting.insertions} insertions · ${accounting.deletions} deletions`;
+    elements.trackAvailability.textContent = `${accounting.totalCodons} sense codons · terminal stop ${accounting.hasStopCodon ? 'excluded' : 'not present'}`;
+}
+
+function frequencyColor(frequency) {
+    if (frequency == null) return '#334155';
+    const percent = frequency * 100;
+    if (percent < 20) return '#ef4444'; if (percent < 35) return '#f59e0b';
+    if (percent < 50) return '#64748b'; if (percent <= 70) return '#22c55e'; return '#10b981';
+}
+
+function drawCodonTrack(canvas, codons, frequencyKey, hoverIndex = null) {
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const width = Math.max(1, rect.width); const height = 56;
+    canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
+    const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = '#020617'; ctx.fillRect(0, 0, width, height);
+    if (!codons.length) { ctx.fillStyle = '#64748b'; ctx.font = '11px sans-serif'; ctx.fillText('No comparable CDS track', 12, 32); return; }
+    const segmentWidth = width / codons.length;
+    codons.forEach((codon, index) => {
+        ctx.fillStyle = frequencyColor(codon[frequencyKey]);
+        ctx.fillRect(index * segmentWidth, 13, Math.max(1, segmentWidth + .25), 30);
+    });
+    if (hoverIndex != null) {
+        const x = Math.min(width - .5, (hoverIndex + .5) * segmentWidth);
+        ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, 2); ctx.lineTo(x, 54); ctx.stroke();
+    }
+}
+
+function formatFrequency(value) { return value == null ? 'N/A' : `${(value * 100).toFixed(1)}%`; }
+
+function updateCodonInspector(accounting, index) {
+    const item = accounting.codons[index]; if (!item) return;
+    const name = AA_NAMES[item.aa] || item.aa;
+    elements.inspectorPosition.textContent = `Codon ${index + 1} / ${name} (${item.aa}) · nt ${index * 3 + 1}–${index * 3 + 3}`;
+    elements.inspectorCodons.textContent = `${item.origCodon || '—'} (${formatFrequency(item.origFreq)}) → ${item.optCodon || '—'} (${formatFrequency(item.optFreq)})`;
+    const effects = [];
+    if (!item.isChanged) effects.push('Codon unchanged');
+    else if (item.origAa === item.optAa) effects.push('Synonymous codon shift observed');
+    else effects.push(`Translated residue changed: ${item.origAa || '—'} → ${item.optAa || '—'}`);
+    if (item.decision_rationale) {
+        effects.push(`Trace: ${item.decision_rationale}`);
+    } else {
+        // Strict Rule: No UI inference
+    }
+    elements.inspectorRationale.textContent = effects.join(' · ');
+    elements.inspectorConstraints.textContent = accounting.aaPreserved ? 'PASS · amino-acid sequence preserved' : 'FAIL · amino-acid sequence differs';
+}
+
+function renderCodonTracks(accounting) {
+    const codons = accounting.available ? accounting.codons : [];
+    const draw = index => { drawCodonTrack(elements.canvasOriginalTrack, codons, 'origFreq', index); drawCodonTrack(elements.canvasOptimizedTrack, codons, 'optFreq', index); };
+    draw(null);
+    if (!elements.interactiveTrackContainer.dataset.bound) {
+        elements.interactiveTrackContainer.addEventListener('mousemove', event => {
+            const current = state.reportData?.accounting;
+            if (!current?.available || !current.codons.length) return;
+            const rect = elements.canvasOptimizedTrack.getBoundingClientRect();
+            const index = Math.max(0, Math.min(current.codons.length - 1, Math.floor(((event.clientX - rect.left) / rect.width) * current.codons.length)));
+            drawCodonTrack(elements.canvasOriginalTrack, current.codons, 'origFreq', index);
+            drawCodonTrack(elements.canvasOptimizedTrack, current.codons, 'optFreq', index);
+            updateCodonInspector(current, index);
+        });
+        elements.interactiveTrackContainer.addEventListener('mouseleave', () => renderCodonTracks(state.reportData?.accounting || { available:false, codons:[] }));
+        window.addEventListener('resize', () => renderCodonTracks(state.reportData?.accounting || { available:false, codons:[] }));
+        elements.interactiveTrackContainer.dataset.bound = 'true';
+    }
+    if (accounting.available) updateCodonInspector(accounting, 0);
+}
+
 function renderResults() {
     const res = state.results;
     if (!res) return;
@@ -739,6 +1383,23 @@ function renderResults() {
     if (elements.resultContextSummary) {
         const host = formatHostProfile(getResultHostProfile(res));
         elements.resultContextSummary.textContent = `${host} · Review the computational checks before synthesis or experimental use.`;
+    }
+    if (elements.designContractSummary) {
+        const contract = res.design_contract;
+        if (contract?.engine_id === 'dp_v2_1_1') {
+            const axes = (contract.scientific_axes || [])
+                .map(axis => `<span class="rounded-lg border border-teal-200 bg-white px-2 py-1 font-bold text-teal-800 dark:border-teal-800 dark:bg-slate-900 dark:text-teal-200">${escapeHtml(axis.id)} · ${escapeHtml(axis.evidence_class)}</span>`)
+                .join('');
+            const localGuard = contract.local_composition_guard || {};
+            const activeBand = Array.isArray(localGuard.initiation_gc_active_count_band)
+                ? localGuard.initiation_gc_active_count_band.join('–')
+                : 'not reported';
+            elements.designContractSummary.innerHTML = `<div class="font-extrabold text-teal-900 dark:text-teal-100">DP v2.1.1 ${escapeHtml(contract.engine_version)} · development candidate</div><div class="mt-3 flex flex-wrap gap-2">${axes}</div><p class="mt-3 text-slate-600 dark:text-slate-300">Local guard: active 5′ GC count layer ${escapeHtml(activeBand)} · homopolymer ceiling ${escapeHtml(localGuard.homopolymer_max_run ?? 'not reported')} nt. RNA folding remains an independently evaluated metric.</p>`;
+            elements.designContractSummary.classList.remove('hidden');
+        } else {
+            elements.designContractSummary.innerHTML = '';
+            elements.designContractSummary.classList.add('hidden');
+        }
     }
 
     if (res.construct_id) {
@@ -764,14 +1425,20 @@ function renderResults() {
 
     // Variables for calculations
     const origSeq = state.sequence;
+    const hasOriginalSequence = Boolean(origSeq);
     const optSeq = primary.optimized_sequence;
     const calculatedGC = calculateGC(optSeq);
-    const oGC = isProteinInput ? null : calculateGC(origSeq);
+    const oGC = isProteinInput || !hasOriginalSequence ? null : calculateGC(origSeq);
 
-    elements.origGC.textContent = isProteinInput ? 'N/A' : `${oGC}%`;
+    elements.origGC.textContent = isProteinInput ? 'N/A' : (hasOriginalSequence ? `${oGC}%` : 'Not recorded');
     elements.optGCComp.textContent = `${calculatedGC.toFixed(1)}%`;
     elements.gcValue.textContent = `${calculatedGC.toFixed(1)}%`;
     const gcTarget = getResultGcTarget(res, primary);
+    const baseReportData = buildResultsReportModel(res, primary, gcTarget);
+    const accounting = buildCodonAccounting(isProteinInput ? '' : origSeq, optSeq, res, gcTarget);
+    state.reportData = { ...baseReportData, accounting, codons: accounting.codons };
+    renderCodonAccounting(accounting);
+    renderCodonTracks(accounting);
     elements.gcTargetRange.textContent = `Target: ${gcTarget.min.toFixed(1)}–${gcTarget.max.toFixed(1)}%`;
     const originalEvaluation = res.acceptance_evaluation?.original;
     const originalCai = originalEvaluation?.criteria?.find(row => row.criterion === 'cai')?.observed;
@@ -782,6 +1449,9 @@ function renderResults() {
     if (isProteinInput) {
         elements.mutationRate.textContent = 'N/A';
         if (mutationRow) mutationRow.classList.add('hidden');
+    } else if (!hasOriginalSequence) {
+        if (mutationRow) mutationRow.classList.remove('hidden');
+        elements.mutationRate.textContent = 'Not recorded';
     } else {
         if (mutationRow) mutationRow.classList.remove('hidden');
         // Calculate Mutation Rate
@@ -805,7 +1475,7 @@ function renderResults() {
     renderCandidateComparison(res);
     renderCustomRestrictionResults(res);
     renderMfeWarning(res);
-        renderResultsReport(res, primary, gcTarget);
+    renderResultsReport(res, primary, gcTarget, state.reportData);
     renderComparisonDashboard(res);
 
     // PolyA color coding
@@ -1133,9 +1803,10 @@ function getResultGcTarget(res, primary) {
 
 function getMfeStatus(res) {
     const metrics = res.metrics || {};
+    const status = metrics.mfe_status || 'not_computed';
     return {
-        status: metrics.mfe_status || 'not_computed',
-        reason: metrics.mfe_status_reason || 'status unavailable'
+        status,
+        reason: metrics.mfe_status_reason ?? (status === 'computed' ? null : 'status unavailable')
     };
 }
 
@@ -1151,222 +1822,531 @@ function renderMfeWarning(res) {
     elements.mfeWarningBanner.classList.remove('hidden');
 }
 
-function reportStatCard({ label, value, sub, tone = 'neutral' }) {
-    const toneClasses = {
-        good: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
-        warn: 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300',
-        bad: 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300',
-        neutral: 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200',
-    }[tone] || 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200';
+const REPORT_CHECK_LABELS = Object.freeze({
+    cai: 'Codon Adaptation Index (CAI)',
+    overall_gc: 'Overall GC content',
+    local_gc: 'Local GC window',
+    type_iis: 'Type IIS sites',
+    repeats: 'Direct repeats',
+    homopolymers: 'Homopolymers',
+    forbidden_motifs: 'Forbidden motifs',
+    mfe: 'RNA secondary structure / MFE',
+});
 
-    return `
-        <div class="min-w-0 rounded-xl p-2.5 ${toneClasses}">
-            <p class="text-[9px] font-extrabold uppercase tracking-widest opacity-70 truncate">${escapeHtml(label)}</p>
-            <p class="mt-1 text-xs font-black leading-tight break-words">${escapeHtml(value)}</p>
-            ${sub ? `<p class="mt-0.5 text-[10px] font-medium opacity-80 break-words">${escapeHtml(sub)}</p>` : ''}
-        </div>
-    `;
+const REPORT_LIMITATIONS = Object.freeze([
+    'This report describes deterministic in-silico CDS design checks only.',
+    'It does not demonstrate or guarantee expression, yield, folding, biological activity, synthesis acceptance, or regulatory acceptance.',
+    'Independent construct review and wet-lab validation are required before experimental reliance.',
+]);
+
+const REPORT_CHECK_ACTIONS = Object.freeze({
+    cai: 'Compare an alternative implemented method or document why the observed CAI is acceptable for this study.',
+    overall_gc: 'Review the host reference band and compare an alternative implemented method before selecting a construct.',
+    local_gc: 'Inspect the out-of-range windows and confirm that the local composition is acceptable for the intended construct.',
+    type_iis: 'Inspect the listed Type IIS site locations and redesign or explicitly resolve every required site.',
+    repeats: 'Inspect repeated regions for synthesis or assembly concerns and document the disposition.',
+    homopolymers: 'Inspect the longest homopolymer and confirm it against synthesis requirements.',
+    forbidden_motifs: 'Review each detected motif and redesign or document an explicit exception.',
+    mfe: 'If RNA structure is decision-relevant, run a fit-for-purpose calculation in an environment with the required dependency.',
+});
+
+function finiteNumber(value) {
+    const parsed = Number(value);
+    return value !== null && value !== '' && Number.isFinite(parsed) ? parsed : null;
 }
 
-function computeResultsReportData(res, primary, gcTarget) {
-    const host = getResultHostProfile(res);
-    const profile = res.profile || state.objective;
-    const seedText = res.seed == null ? 'seed not specified' : `seed=${res.seed}`;
+function reportValue(value, suffix = '') {
+    if (value === null || value === undefined || value === '') return 'Not recorded';
+    if (typeof value === 'object') return JSON.stringify(value);
+    return `${value}${suffix}`;
+}
 
-    const cai = Number(primary.metrics.cai || 0);
-    const gc = Number(primary.metrics.gc_percent || 0);
-    const gcInRange = gc >= gcTarget.min && gc <= gcTarget.max;
+function reportStatusTone(status) {
+    if (status === 'FAIL') return 'bad';
+    if (status === 'WARNING' || status === 'CONDITIONAL_PASS') return 'warn';
+    if (status === 'PASS' || status === 'COMPUTED') return 'good';
+    return 'neutral';
+}
 
-    const custom = res.custom_restriction_sites;
-    const removed = Array.isArray(custom?.removed) ? custom.removed : [];
-    const unresolved = Array.isArray(custom?.unresolved) ? custom.unresolved : [];
-    const attempted = Boolean(custom);
-    const requestedNames = Array.isArray(custom?.requested)
-        ? custom.requested.map(site => site.name).filter(name => Object.hasOwn(TYPE_IIS_PRESETS, name))
-        : [];
-    const selected = requestedNames.length > 0 ? requestedNames : state.selectedTypeIisEnzymes;
-    const typeIisFail = unresolved.length > 0;
+function checkDetail(criterion, details) {
+    if (!details || typeof details !== 'object') return null;
+    if (criterion === 'type_iis' && Array.isArray(details.type_iis_sites)) {
+        return details.type_iis_sites.map(site => `${site.enzyme || 'site'} at nt ${Number(site.start) + 1}`).join(', ') || null;
+    }
+    if (criterion === 'forbidden_motifs' && Array.isArray(details.forbidden_motifs)) {
+        return details.forbidden_motifs.map(item => typeof item === 'string' ? item : JSON.stringify(item)).join(', ') || null;
+    }
+    if (criterion === 'local_gc' && details.local_gc_min != null && details.local_gc_max != null) {
+        return `Observed range ${details.local_gc_min}–${details.local_gc_max}%`;
+    }
+    if (criterion === 'repeats' && details.repeat_count != null) return `${details.repeat_count} repeat(s) detected`;
+    if (criterion === 'homopolymers' && details.longest_homopolymer != null) return `Longest run: ${details.longest_homopolymer} bp`;
+    return null;
+}
+
+function normalizedReportChecks(res) {
+    const sourceRows = Array.isArray(res.qc_decision_matrix) && res.qc_decision_matrix.length
+        ? res.qc_decision_matrix
+        : (Array.isArray(res.acceptance_evaluation?.optimized?.criteria)
+            ? res.acceptance_evaluation.optimized.criteria
+            : []);
+    const details = res.acceptance_evaluation?.optimized?.details || {};
+    const statusMap = { PASS: 'PASS', FAIL: 'FAIL', WARN: 'WARNING', WARNING: 'WARNING', IGNORED: 'NOT_APPLICABLE' };
+    const priority = { FAIL: 0, WARNING: 1, NOT_COMPUTED: 2, NOT_AVAILABLE: 3, NOT_APPLICABLE: 4, PASS: 5, COMPUTED: 5 };
+    const checks = sourceRows.map(row => ({
+        id: String(row.criterion || 'unknown'),
+        label: REPORT_CHECK_LABELS[row.criterion] || String(row.criterion || 'Unknown check'),
+        mode: row.mode || 'not_recorded',
+        observed: row.observed ?? null,
+        threshold: row.threshold ?? null,
+        status: statusMap[String(row.result || '').toUpperCase()] || 'NOT_AVAILABLE',
+        detail: checkDetail(row.criterion, details),
+    }));
 
     const mfe = getMfeStatus(res);
-    const mfeComputed = mfe.status === 'computed';
+    checks.push({
+        id: 'mfe',
+        label: REPORT_CHECK_LABELS.mfe,
+        mode: 'informational',
+        observed: res.metrics?.mfe_kcal_mol ?? null,
+        threshold: 'Informational only',
+        status: mfe.status === 'computed' ? 'COMPUTED' : 'NOT_COMPUTED',
+        detail: mfe.status === 'computed' ? 'MFE was computed.' : mfe.reason,
+    });
+    return checks.sort((a, b) => (priority[a.status] ?? 9) - (priority[b.status] ?? 9));
+}
 
+function buildResearcherReviewPlan(checks, decision, seed, settingMismatches) {
+    const priorities = checks
+        .filter(check => ['FAIL', 'WARNING', 'NOT_COMPUTED', 'NOT_AVAILABLE'].includes(check.status))
+        .map(check => ({
+            check_id: check.id,
+            label: check.label,
+            status: check.status,
+            finding: check.detail || `Observed ${reportValue(check.observed)} against ${reportValue(check.threshold)}.`,
+            action: REPORT_CHECK_ACTIONS[check.id] || 'Review this result and document the disposition before downstream use.',
+        }));
+    settingMismatches.forEach(mismatch => priorities.unshift({
+        check_id: 'settings_mismatch',
+        label: mismatch.label,
+        status: 'FAIL',
+        finding: `Requested ${mismatch.requested}; applied ${mismatch.applied}.`,
+        action: 'Do not compare or rely on this run until the requested and applied settings are reconciled.',
+    }));
+    if (seed === null) priorities.push({
+        check_id: 'seed',
+        label: 'Reproducibility seed',
+        status: 'NOT_AVAILABLE',
+        finding: 'No seed was recorded for this run.',
+        action: 'Set and record a seed before generating a comparison or final candidate.',
+    });
+    const headline = settingMismatches.length
+        ? 'Settings require reconciliation before this run can be interpreted.'
+        : decision === 'FAIL'
+            ? 'Required checks failed; redesign or document a justified resolution.'
+            : decision === 'CONDITIONAL_PASS'
+                ? 'No required check failed, but review the warnings before selection.'
+                : decision === 'PASS'
+                    ? 'Active computational checks passed; continue with independent construct review.'
+                    : 'A complete automated decision was not recorded; review the evidence before proceeding.';
+    return { headline, priorities };
+}
+
+function buildResultsReportModel(res, primary, gcTarget) {
+    const checks = normalizedReportChecks(res);
+    const summary = res.decision_summary || {};
+    const decision = ['PASS', 'CONDITIONAL_PASS', 'FAIL'].includes(res.automated_decision)
+        ? res.automated_decision
+        : 'NOT_AVAILABLE';
+    const rawCandidates = Array.isArray(res.report_candidates)
+        ? res.report_candidates
+        : (Array.isArray(res.candidates) ? res.candidates : []);
+    const custom = res.custom_restriction_sites;
+    const requestedNames = Array.isArray(custom?.requested)
+        ? custom.requested.map(site => site.name).filter(Boolean)
+        : [];
+    const selected = requestedNames;
+    const effectiveTypeIis = res.acceptance_criteria_snapshot?.type_iis?.enzymes || [];
+    const normalizedRequested = [...new Set(selected)].sort();
+    const normalizedEffective = [...new Set(effectiveTypeIis)].sort();
+    const settingMismatches = normalizedRequested.length && normalizedEffective.length
+        && JSON.stringify(normalizedRequested) !== JSON.stringify(normalizedEffective)
+        ? [{
+            label: 'Type IIS settings mismatch',
+            requested: normalizedRequested.join(', '),
+            applied: normalizedEffective.join(', '),
+        }]
+        : [];
+    const inputType = res.input_type || res.validation?.input_type || res.provenance?.normalized_input_type || 'not_recorded';
+    const outputSequence = primary.optimized_sequence || '';
+    const hasComparableInput = inputType === 'cds' && Boolean(state.sequence);
+    let baseChanges = null;
+    if (hasComparableInput) {
+        const comparableLength = Math.min(state.sequence.length, outputSequence.length);
+        baseChanges = Math.abs(state.sequence.length - outputSequence.length);
+        for (let index = 0; index < comparableLength; index += 1) {
+            if (state.sequence[index] !== outputSequence[index]) baseChanges += 1;
+        }
+    }
+    const cai = finiteNumber(primary.metrics?.cai);
+    const gc = finiteNumber(primary.metrics?.gc_percent);
+    const mfe = getMfeStatus(res);
+    const referenceSequence = hasComparableInput ? state.sequence : '';
+    const sequenceGcPercent = sequence => {
+        if (!sequence) return null;
+        const gcCount = (sequence.match(/[GC]/gi) || []).length;
+        return (gcCount / sequence.length) * 100;
+    };
+    const firstWindow = sequence => sequence ? sequence.slice(0, 30) : '';
+    const contract = res.design_contract || null;
+    const criteriaRows = checks.filter(check => check.id !== 'mfe');
+    const requiredFailures = Number.isInteger(summary.required_failure_count)
+        ? summary.required_failure_count
+        : (criteriaRows.length ? criteriaRows.filter(check => check.status === 'FAIL').length : null);
+    const preferredWarnings = Number.isInteger(summary.preferred_warning_count)
+        ? summary.preferred_warning_count
+        : (criteriaRows.length ? criteriaRows.filter(check => check.status === 'WARNING').length : null);
+
+    const reviewPlan = buildResearcherReviewPlan(checks, decision, res.seed ?? null, settingMismatches);
     return {
-        generatedAt: new Date().toISOString(),
-        host, profile, seedText, seed: res.seed ?? null,
-        cai, gc, gcTarget, gcInRange,
-        typeIis: { selected, fail: typeIisFail, checked: selected.length > 0 },
-        domestication: { attempted, removed, unresolved },
-        mfe: { computed: mfeComputed, reason: mfe.reason },
-        candidates: Array.isArray(res.candidates) ? res.candidates : [],
+        report_schema_version: '1.1',
+        identity: {
+            result_id: res.result_identifier || res.construct_id || null,
+            construct_id: res.construct_id || null,
+            result_created_at: res.created_at || null,
+            report_generated_at: new Date().toISOString(),
+        },
+        context: {
+            input_type: inputType,
+            input_length: finiteNumber(res.original_length ?? res.input_summary?.length),
+            host_profile: getResultHostProfile(res),
+            profile: res.profile || state.objective || null,
+            objective: res.cds_design?.objective || res.profile || state.objective || null,
+            engine: res.cds_design?.engine || res.mode || null,
+            seed: res.seed ?? null,
+        },
+        disposition: {
+            automated_decision: decision,
+            required_failure_count: requiredFailures,
+            preferred_warning_count: preferredWarnings,
+            unavailable_check_count: checks.filter(check => ['NOT_COMPUTED', 'NOT_AVAILABLE'].includes(check.status)).length,
+            explanation: summary.explanation || (decision === 'NOT_AVAILABLE' ? 'Acceptance criteria were not recorded by this result.' : null),
+        },
+        metrics: {
+            cai,
+            gc_percent: gc,
+            gc_target_min_percent: finiteNumber(gcTarget?.min),
+            gc_target_max_percent: finiteNumber(gcTarget?.max),
+            mfe_kcal_mol: finiteNumber(res.metrics?.mfe_kcal_mol),
+            mfe_status: mfe.status,
+            mfe_status_reason: mfe.reason,
+            mfe_used: res.metrics?.mfe_used ?? null,
+        },
+        design_contract: contract ? {
+            engine_id: contract.engine_id || res.provenance?.engine_id || null,
+            engine_version: contract.engine_version || res.provenance?.engine_version || null,
+            engine_status: res.provenance?.engine_status || null,
+            scientific_axes: Array.isArray(contract.scientific_axes) ? contract.scientific_axes : [],
+            independent_evaluation: contract.independent_evaluation || null,
+        } : null,
+        comparison: {
+            reference_available: hasComparableInput,
+            reference_label: hasComparableInput ? 'Input CDS (reference)' : 'Reference CDS not provided',
+            candidate_label: contract?.engine_id === 'dp_v2_1_1' ? 'DP v2.1.1 candidate' : 'FactorForge candidate',
+            reference_gc_percent: sequenceGcPercent(referenceSequence),
+            candidate_gc_percent: gc ?? sequenceGcPercent(outputSequence),
+            reference_first_30nt_gc_percent: sequenceGcPercent(firstWindow(referenceSequence)),
+            candidate_first_30nt_gc_percent: sequenceGcPercent(firstWindow(outputSequence)),
+        },
+        checks,
+        candidates: rawCandidates.map(candidate => ({
+            id: candidate.id || null,
+            label: candidate.label || candidate.id || 'Unnamed candidate',
+            automated_decision: candidate.automated_decision || 'NOT_AVAILABLE',
+            cai: finiteNumber(candidate.cai),
+            gc_percent: finiteNumber(candidate.gc_percent),
+            required_failure_count: Number.isInteger(candidate.required_failure_count) ? candidate.required_failure_count : null,
+            preferred_warning_count: Number.isInteger(candidate.preferred_warning_count) ? candidate.preferred_warning_count : null,
+        })),
+        sequence_summary: {
+            output_length_nt: outputSequence.length || finiteNumber(res.optimized_length),
+            amino_acid_identity: finiteNumber(res.constraint_report?.aa_identity),
+            nucleotide_changes: baseChanges,
+            comparison_available: hasComparableInput,
+        },
+        process: {
+            type_iis_requested: selected,
+            type_iis_applied: effectiveTypeIis,
+            setting_mismatches: settingMismatches,
+            domestication_attempted: Boolean(custom),
+            restriction_sites_removed_count: Array.isArray(custom?.removed) ? custom.removed.length : null,
+            restriction_sites_unresolved_count: Array.isArray(custom?.unresolved) ? custom.unresolved.length : null,
+        },
+        provenance: {
+            product_version: res.product_version || res.metadata?.product_version || res.cds_design?.product_version || null,
+            codon_reference_id: res.codon_reference_id || res.metadata?.codon_reference_id || res.cds_design?.codon_reference_id || null,
+            reference_policy_version: res.reference_policy_version || res.metadata?.reference_policy_version || res.cds_design?.reference_policy_version || null,
+            gc_reference_band: res.gc_reference_band || res.metadata?.gc_reference_band || res.cds_design?.gc_reference_band || null,
+            input_sequence_hash: res.provenance?.input_sequence_hash || null,
+            output_cds_hash: res.provenance?.output_cds_hash || null,
+            parameter_hash: res.provenance?.parameter_hash || null,
+            acceptance_criteria_snapshot: res.acceptance_criteria_snapshot || res.provenance?.acceptance_criteria_snapshot || null,
+        },
+        interpretation: {
+            scope: 'Deterministic in-silico CDS design and pre-synthesis review.',
+            headline: reviewPlan.headline,
+            review_priorities: reviewPlan.priorities,
+            next_steps: ['Resolve and document the review priorities above.', 'Confirm the sequence in its complete construct and assembly context.', 'Perform fit-for-purpose wet-lab validation before experimental reliance.'],
+            limitations: [...REPORT_LIMITATIONS],
+        },
+        artifacts: { optimized_sequence: outputSequence, reference_sequence: referenceSequence },
     };
 }
 
-function reportCardsFromData(data) {
-    return [
-        reportStatCard({ label: 'Host / Profile', value: `${data.host} · ${data.profile}`, sub: data.seedText, tone: 'neutral' }),
-        reportStatCard({
-            label: 'CAI',
-            value: data.cai.toFixed(3),
-            sub: data.cai >= 0.8 ? 'meets 0.800 minimum' : 'below 0.800 minimum',
-            tone: data.cai >= 0.8 ? 'good' : 'warn',
-        }),
-        reportStatCard({
-            label: 'GC content',
-            value: `${data.gc.toFixed(1)}%`,
-            sub: `target ${data.gcTarget.min.toFixed(1)}–${data.gcTarget.max.toFixed(1)}%`,
-            tone: data.gcInRange ? 'good' : 'warn',
-        }),
-        reportStatCard({
-            label: 'Type IIS',
-            value: data.typeIis.checked ? (data.typeIis.fail ? 'FAIL' : 'PASS') : 'Not checked',
-            sub: data.typeIis.checked ? data.typeIis.selected.join(', ') : 'no preset enzymes selected',
-            tone: !data.typeIis.checked ? 'neutral' : (data.typeIis.fail ? 'bad' : 'good'),
-        }),
-        reportStatCard({
-            label: 'Domestication',
-            value: data.domestication.attempted ? 'Attempted' : 'Not attempted',
-            sub: data.domestication.attempted
-                ? `${data.domestication.removed.length} removed · ${data.domestication.unresolved.length} unresolved`
-                : 'no enzymes selected to fix',
-            tone: !data.domestication.attempted ? 'neutral' : (data.domestication.unresolved.length > 0 ? 'warn' : 'good'),
-        }),
-        reportStatCard({
-            label: 'MFE',
-            value: data.mfe.computed ? 'Computed' : 'Not computed',
-            sub: data.mfe.computed ? '' : data.mfe.reason,
-            tone: data.mfe.computed ? 'good' : 'warn',
-        }),
-    ];
+function reportPercent(value, digits = 2) {
+    return value == null ? 'Not recorded' : `${value.toFixed(digits)}%`;
 }
 
-function renderResultsReport(res, primary, gcTarget) {
-    if (!elements.resultsReport || !elements.resultsReportBody) return;
-    const data = computeResultsReportData(res, primary, gcTarget);
-    const cards = reportCardsFromData(data);
-
-    const comparisonRows = data.candidates.length > 1
-        ? `
-            <div class="overflow-x-auto pt-1">
-                <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Candidate comparison</p>
-                <table class="w-full text-left text-xs">
-                    <thead>
-                        <tr class="text-slate-500 dark:text-slate-400">
-                            <th class="py-1 pr-3 font-bold">Profile</th>
-                            <th class="py-1 pr-3 font-bold">CAI</th>
-                            <th class="py-1 font-bold">GC%</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        ${data.candidates.map(candidate => `
-                            <tr>
-                                <td class="py-1.5 pr-3 font-semibold text-slate-700 dark:text-slate-200">${escapeHtml(candidate.label || candidate.id)}</td>
-                                <td class="py-1.5 pr-3 font-mono">${Number(candidate.cai || 0).toFixed(3)}</td>
-                                <td class="py-1.5 font-mono">${Number(candidate.gc_percent || 0).toFixed(1)}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        `
-        : '';
-
-    elements.resultsReportBody.innerHTML = `
-        <div class="grid grid-cols-2 gap-2">${cards.join('')}</div>
-        ${comparisonRows}
-        <button type="button" id="downloadResultsReportBtn" class="mt-3 w-full flex items-center justify-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-xs font-bold py-2.5 transition-colors">
-            <span>📄</span> Download Report (HTML)
-        </button>
-    `;
-    elements.resultsReport.classList.remove('hidden');
-
-    const downloadBtn = document.getElementById('downloadResultsReportBtn');
-    if (downloadBtn) {
-        downloadBtn.addEventListener('click', () => downloadResultsReportHtml(res, primary, gcTarget));
-    }
+function designContractReportHtml(model) {
+    if (!model.design_contract) return '';
+    const labels = {
+        assembly_feasibility: 'Assembly feasibility',
+        codon_adaptation: 'Codon adaptation',
+        five_prime_initiation: "5′ initiation-aware scoring",
+    };
+    const axes = model.design_contract.scientific_axes.map(axis => `<article class="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-950"><p class="font-bold text-slate-900 dark:text-white">${escapeHtml(labels[axis.id] || axis.id)}</p><p class="mt-1 text-[9px] font-extrabold uppercase tracking-widest text-teal-700 dark:text-teal-300">${escapeHtml(axis.evidence_class)}</p></article>`).join('');
+    const independent = model.design_contract.independent_evaluation;
+    return `<section aria-labelledby="report-contract-title"><div class="flex flex-wrap items-end justify-between gap-2"><div><p class="text-[9px] font-extrabold uppercase tracking-widest text-teal-600 dark:text-teal-300">Declared computational scope</p><h4 id="report-contract-title" class="mt-1 text-sm font-black text-slate-900 dark:text-white">${escapeHtml(`${reportValue(model.design_contract.engine_id)} ${reportValue(model.design_contract.engine_version)}`)}</h4></div><span class="rounded-full bg-amber-100 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wide text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">${escapeHtml(reportValue(model.design_contract.engine_status))}</span></div><div class="mt-3 grid gap-2 sm:grid-cols-3">${axes}</div>${independent ? `<div class="mt-2 rounded-xl border border-dashed border-slate-300 p-3 dark:border-slate-600"><p class="font-bold">RNA folding · ${escapeHtml(reportValue(independent.evidence_class))}</p><p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">Generation status: ${escapeHtml(reportValue(independent.rna_folding))}. This evidence remains separate from candidate generation.</p></div>` : ''}</section>`;
 }
 
-function downloadResultsReportHtml(res, primary, gcTarget) {
-    trackEvent('report_download', { format: 'html' });
-    const data = computeResultsReportData(res, primary, gcTarget);
-    const toneHex = { good: '#059669', warn: '#d97706', bad: '#e11d48', neutral: '#475569' };
-    const cardTone = (t) => toneHex[t] || toneHex.neutral;
-
-    const cardDefs = [
-        { label: 'Host / Profile', value: `${data.host} · ${data.profile}`, sub: data.seedText, tone: 'neutral' },
-        { label: 'CAI', value: data.cai.toFixed(3), sub: data.cai >= 0.8 ? 'meets 0.800 minimum' : 'below 0.800 minimum', tone: data.cai >= 0.8 ? 'good' : 'warn' },
-        { label: 'GC content', value: `${data.gc.toFixed(1)}%`, sub: `target ${data.gcTarget.min.toFixed(1)}–${data.gcTarget.max.toFixed(1)}%`, tone: data.gcInRange ? 'good' : 'warn' },
-        { label: 'Type IIS', value: data.typeIis.checked ? (data.typeIis.fail ? 'FAIL' : 'PASS') : 'Not checked', sub: data.typeIis.checked ? data.typeIis.selected.join(', ') : 'no preset enzymes selected', tone: !data.typeIis.checked ? 'neutral' : (data.typeIis.fail ? 'bad' : 'good') },
-        { label: 'Domestication', value: data.domestication.attempted ? 'Attempted' : 'Not attempted', sub: data.domestication.attempted ? `${data.domestication.removed.length} removed · ${data.domestication.unresolved.length} unresolved` : 'no enzymes selected to fix', tone: !data.domestication.attempted ? 'neutral' : (data.domestication.unresolved.length > 0 ? 'warn' : 'good') },
-        { label: 'MFE', value: data.mfe.computed ? 'Computed' : 'Not computed', sub: data.mfe.computed ? '' : data.mfe.reason, tone: data.mfe.computed ? 'good' : 'warn' },
+function designComparisonReportHtml(model) {
+    const reference = model.comparison.reference_available;
+    const rows = [
+        ['Codon adaptation index (CAI)', 'Not evaluated', model.metrics.cai == null ? 'Not recorded' : model.metrics.cai.toFixed(4), 'Computed metric'],
+        ['Global GC', reference ? reportPercent(model.comparison.reference_gc_percent) : 'Not provided', reportPercent(model.comparison.candidate_gc_percent), 'Computed metric'],
+        ['First 30 nt GC', reference ? reportPercent(model.comparison.reference_first_30nt_gc_percent) : 'Not provided', reportPercent(model.comparison.candidate_first_30nt_gc_percent), 'Descriptive metric'],
+        ['Amino-acid identity', reference ? '100.00%' : 'Input protein', model.sequence_summary.amino_acid_identity == null ? 'Not recorded' : reportPercent(model.sequence_summary.amino_acid_identity * 100), 'Sequence integrity'],
+        ['Nucleotide changes', reference ? '0 bp' : 'Not applicable', reference ? `${reportValue(model.sequence_summary.nucleotide_changes)} bp` : 'Not comparable', 'Descriptive metric'],
+        ['RNA folding', 'Not evaluated', model.metrics.mfe_status === 'computed' ? reportValue(model.metrics.mfe_kcal_mol, ' kcal/mol') : 'Not computed', 'Independent evaluation'],
     ];
+    return `<section aria-labelledby="report-comparison-title"><div class="flex flex-wrap items-end justify-between gap-2"><div><p class="text-[9px] font-extrabold uppercase tracking-widest text-cyan-600 dark:text-cyan-300">Metric-level comparison</p><h4 id="report-comparison-title" class="mt-1 text-sm font-black text-slate-900 dark:text-white">Design Comparison</h4></div><span class="text-[9px] font-bold text-slate-500 dark:text-slate-400">${escapeHtml(reference ? 'Reference CDS available' : 'No reference CDS · candidate-only view')}</span></div><div class="mt-3 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700"><table class="w-full min-w-[620px] text-left text-[10px]"><thead class="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"><tr><th class="p-2.5">Metric</th><th class="p-2.5">${escapeHtml(model.comparison.reference_label)}</th><th class="p-2.5">${escapeHtml(model.comparison.candidate_label)}</th><th class="p-2.5">Evidence</th></tr></thead><tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-slate-950">${rows.map(row => `<tr><th scope="row" class="p-2.5 font-semibold">${escapeHtml(row[0])}</th><td class="p-2.5 font-mono">${escapeHtml(row[1])}</td><td class="p-2.5 font-mono font-bold text-cyan-700 dark:text-cyan-300">${escapeHtml(row[2])}</td><td class="p-2.5 text-slate-500 dark:text-slate-400">${escapeHtml(row[3])}</td></tr>`).join('')}</tbody></table></div><p class="mt-2 text-[10px] text-slate-500 dark:text-slate-400">Differences describe deterministic in-silico metrics and do not establish expression, yield, or biological superiority.</p></section>`;
+}
 
-    const cardsHtml = cardDefs.map(c => `
-        <div style="border-radius:14px;padding:18px;background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid ${cardTone(c.tone)};">
-            <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#64748b;">${escapeHtml(c.label)}</p>
-            <p style="margin:6px 0 0;font-size:20px;font-weight:800;color:${cardTone(c.tone)};">${escapeHtml(c.value)}</p>
-            ${c.sub ? `<p style="margin:4px 0 0;font-size:12px;color:#475569;">${escapeHtml(c.sub)}</p>` : ''}
+function reportCheckRowsHtml(checks) {
+    return checks.map(check => `<article class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 p-3">
+        <div class="flex items-start justify-between gap-3">
+            <h5 class="font-bold text-slate-800 dark:text-slate-100">${escapeHtml(check.label)}</h5>
+            <span class="shrink-0 text-[9px] font-extrabold tracking-wide" data-report-status="${escapeHtml(check.status)}">${escapeHtml(check.status.replaceAll('_', ' '))}</span>
         </div>
-    `).join('');
+        <dl class="mt-2 grid grid-cols-2 gap-2 text-[10px]">
+            <div><dt class="uppercase tracking-widest text-slate-400">Observed</dt><dd class="mt-0.5 font-mono break-all">${escapeHtml(reportValue(check.observed))}</dd></div>
+            <div><dt class="uppercase tracking-widest text-slate-400">Policy</dt><dd class="mt-0.5">${escapeHtml(`${check.mode} · ${reportValue(check.threshold)}`)}</dd></div>
+        </dl>
+        ${check.detail ? `<p class="mt-2 text-[10px] text-slate-500 dark:text-slate-400">${escapeHtml(check.detail)}</p>` : ''}
+    </article>`).join('');
+}
 
-    const comparisonHtml = data.candidates.length > 1 ? `
-        <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin:32px 0 12px;">Candidate comparison</h2>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <thead><tr style="text-align:left;color:#64748b;">
-                <th style="padding:6px 12px 6px 0;border-bottom:1px solid #e2e8f0;">Profile</th>
-                <th style="padding:6px 12px 6px 0;border-bottom:1px solid #e2e8f0;">CAI</th>
-                <th style="padding:6px 0;border-bottom:1px solid #e2e8f0;">GC%</th>
-            </tr></thead>
-            <tbody>
-                ${data.candidates.map(c => `
-                    <tr>
-                        <td style="padding:8px 12px 8px 0;border-bottom:1px solid #f1f5f9;font-weight:600;">${escapeHtml(c.label || c.id)}</td>
-                        <td style="padding:8px 12px 8px 0;border-bottom:1px solid #f1f5f9;font-family:monospace;">${Number(c.cai || 0).toFixed(3)}</td>
-                        <td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-family:monospace;">${Number(c.gc_percent || 0).toFixed(1)}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    ` : '';
+function reportProvenanceHtml(model) {
+    const fields = [
+        ['Product version', model.provenance.product_version],
+        ['Codon reference', model.provenance.codon_reference_id],
+        ['Reference policy', model.provenance.reference_policy_version],
+        ['GC reference band', model.provenance.gc_reference_band],
+        ['Seed', model.context.seed === null ? 'Not specified' : model.context.seed],
+        ['Result created (UTC)', model.identity.result_created_at],
+        ['Input SHA-256', model.provenance.input_sequence_hash],
+        ['Output SHA-256', model.provenance.output_cds_hash],
+        ['Parameter SHA-256', model.provenance.parameter_hash],
+    ];
+    return fields.map(([label, value]) => `<div class="min-w-0"><dt class="text-[9px] uppercase tracking-widest text-slate-500 dark:text-slate-400">${escapeHtml(label)}</dt><dd class="mt-0.5 font-mono break-all text-[10px]">${escapeHtml(reportValue(value))}</dd></div>`).join('');
+}
 
-    const seq = primary.optimized_sequence || '';
-    const seqWrapped = seq.match(/.{1,60}/g)?.join('\n') || seq;
+function candidateReportHtml(candidates) {
+    if (candidates.length <= 1) return '';
+    return `<section aria-labelledby="report-candidates-title" class="pt-2">
+        <h4 id="report-candidates-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Candidate comparison</h4>
+        <div class="overflow-x-auto"><table class="w-full text-left text-xs">
+            <thead><tr class="text-slate-500 dark:text-slate-400"><th class="py-1 pr-3">Candidate</th><th class="py-1 pr-3">Decision</th><th class="py-1 pr-3">CAI</th><th class="py-1 pr-3">GC%</th><th class="py-1">Issues</th></tr></thead>
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-700">${candidates.map(candidate => `<tr><th scope="row" class="py-2 pr-3 font-semibold">${escapeHtml(candidate.label)}</th><td class="py-2 pr-3 font-bold">${escapeHtml(candidate.automated_decision.replaceAll('_', ' '))}</td><td class="py-2 pr-3 font-mono">${escapeHtml(candidate.cai == null ? 'Not recorded' : candidate.cai.toFixed(3))}</td><td class="py-2 pr-3 font-mono">${escapeHtml(candidate.gc_percent == null ? 'Not recorded' : candidate.gc_percent.toFixed(1))}</td><td class="py-2">${escapeHtml(`${reportValue(candidate.required_failure_count)} fail · ${reportValue(candidate.preferred_warning_count)} warn`)}</td></tr>`).join('')}</tbody>
+        </table></div>
+    </section>`;
+}
 
-    const html = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>FactorForge Results Report — ${escapeHtml(data.host)} / ${escapeHtml(data.profile)}</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  body { margin:0; background:#f1f5f9; color:#0f172a; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
-  .page { max-width:820px; margin:0 auto; padding:48px 24px 80px; }
-  .grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
-  @media (max-width:640px) { .grid { grid-template-columns:repeat(2, 1fr); } }
-  pre { background:#0f172a; color:#a7f3d0; padding:16px; border-radius:12px; overflow-x:auto; font-size:12px; line-height:1.6; }
-</style>
-</head>
-<body>
-<div class="page">
-  <p style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#059669;margin:0;">FactorForge CDS Design Review</p>
-  <h1 style="font-size:26px;margin:6px 0 4px;">Results Report</h1>
-  <p style="color:#64748b;font-size:13px;margin:0 0 28px;">Generated ${escapeHtml(new Date(data.generatedAt).toLocaleString())}</p>
-  <div class="grid">${cardsHtml}</div>
-  ${comparisonHtml}
-  <h2 style="font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin:32px 0 12px;">Optimized sequence (DNA)</h2>
-  <pre>${escapeHtml(seqWrapped)}</pre>
-  <p style="margin-top:32px;font-size:11px;color:#94a3b8;">This is an in-silico CDS design candidate and pre-synthesis review artifact. Review and wet-lab testing are required before relying on any design in experiments.</p>
-</div>
-</body>
-</html>`;
+function reportPriorityRowsHtml(priorities) {
+    if (!priorities.length) return '<p class="text-xs text-slate-500 dark:text-slate-400">No unresolved computational review priority was recorded.</p>';
+    return priorities.map((item, index) => `<article class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 p-3" data-review-priority="${escapeHtml(item.check_id)}">
+        <div class="flex items-start gap-3"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-black">${index + 1}</span><div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-2"><h5 class="font-bold text-slate-900 dark:text-white">${escapeHtml(item.label)}</h5><span class="text-[9px] font-extrabold" data-report-status="${escapeHtml(item.status)}">${escapeHtml(item.status.replaceAll('_', ' '))}</span></div>
+            <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">${escapeHtml(item.finding)}</p>
+            <p class="mt-2 text-[10px] font-semibold text-slate-700 dark:text-slate-200"><span class="uppercase tracking-wider text-slate-400">Next:</span> ${escapeHtml(item.action)}</p>
+        </div></div>
+    </article>`).join('');
+}
 
-    const blob = new Blob([html], { type: 'text/html' });
+function reportSettingsHtml(model) {
+    const requested = model.process.type_iis_requested.length ? model.process.type_iis_requested.join(', ') : 'None recorded';
+    const applied = model.process.type_iis_applied.length ? model.process.type_iis_applied.join(', ') : 'Not recorded';
+    const mismatch = model.process.setting_mismatches.length > 0;
+    const fields = [
+        ['Host', model.context.host_profile, model.context.host_profile, false],
+        ['Method / profile', model.context.objective, model.context.profile, false],
+        ['Type IIS enzymes', requested, applied, mismatch],
+        ['Seed', model.context.seed === null ? 'Not specified' : model.context.seed, model.context.seed === null ? 'Not recorded' : model.context.seed, false],
+        ['GC reference', model.provenance.gc_reference_band, model.provenance.gc_reference_band, false],
+    ];
+    return fields.map(([label, requestedValue, appliedValue, differs]) => `<tr class="border-b border-slate-200 dark:border-slate-700 ${differs ? 'bg-rose-50 dark:bg-rose-900/20' : ''}"><th scope="row" class="py-2 pr-2 text-left font-semibold">${escapeHtml(label)}</th><td class="py-2 pr-2">${escapeHtml(reportValue(requestedValue))}</td><td class="py-2">${escapeHtml(reportValue(appliedValue))}${differs ? ' <b class="text-rose-700 dark:text-rose-300">Mismatch</b>' : ''}</td></tr>`).join('');
+}
+
+function renderResultsReport(res, primary, gcTarget, reportData = null) {
+    if (!elements.resultsReport || !elements.resultsReportBody) return;
+    const model = reportData || buildResultsReportModel(res, primary, gcTarget);
+    const disposition = model.disposition.automated_decision;
+    const comparisonText = model.context.input_type === 'protein'
+        ? `Protein input · amino-acid identity ${model.sequence_summary.amino_acid_identity == null ? 'Not recorded' : `${(model.sequence_summary.amino_acid_identity * 100).toFixed(2)}%`}`
+        : `CDS input · nucleotide changes ${reportValue(model.sequence_summary.nucleotide_changes)}`;
+    const domesticationText = model.process.domestication_attempted
+        ? `Attempted · ${reportValue(model.process.restriction_sites_removed_count)} removed · ${reportValue(model.process.restriction_sites_unresolved_count)} unresolved`
+        : 'Not attempted';
+
+    elements.resultsReportBody.innerHTML = `<article aria-labelledby="design-review-report-title" class="space-y-4">
+        <header>
+            <h3 id="design-review-report-title" class="text-sm font-black text-slate-900 dark:text-white">Researcher Decision Report</h3>
+            <p class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">${escapeHtml(`${reportValue(model.identity.result_id)} · ${model.context.host_profile} · ${model.context.profile} · ${model.context.seed === null ? 'seed not specified' : `seed=${model.context.seed}`}`)}</p>
+        </header>
+        <section aria-labelledby="report-outcome-title" class="rounded-2xl border p-4 ${disposition === 'FAIL' ? 'border-rose-300 bg-rose-50 dark:border-rose-800 dark:bg-rose-900/20' : disposition === 'CONDITIONAL_PASS' ? 'border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20' : 'border-emerald-300 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20'}">
+            <p class="text-[9px] font-extrabold uppercase tracking-widest opacity-70">Researcher decision brief</p>
+            <div class="mt-2 flex flex-wrap items-end justify-between gap-2"><h4 id="report-outcome-title" class="text-xl font-black">${escapeHtml(disposition.replaceAll('_', ' '))}</h4><p class="text-[10px] font-bold">${escapeHtml(`${reportValue(model.disposition.required_failure_count)} required fail · ${reportValue(model.disposition.preferred_warning_count)} warning · ${reportValue(model.disposition.unavailable_check_count)} unavailable`)}</p></div>
+            <p class="mt-2 text-xs font-semibold">${escapeHtml(model.interpretation.headline)}</p>
+            <p class="mt-1 text-[10px] opacity-80">${escapeHtml(reportValue(model.disposition.explanation))}</p>
+        </section>
+        ${designContractReportHtml(model)}
+        ${designComparisonReportHtml(model)}
+        <section aria-labelledby="report-priorities-title">
+            <h4 id="report-priorities-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Review priorities and next actions</h4>
+            <div class="grid gap-2">${reportPriorityRowsHtml(model.interpretation.review_priorities)}</div>
+        </section>
+        <section aria-labelledby="report-settings-title"><h4 id="report-settings-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Requested vs applied settings</h4><div class="overflow-x-auto"><table class="w-full text-[10px]"><thead><tr class="text-left text-slate-500"><th class="pb-2">Setting</th><th class="pb-2">Requested</th><th class="pb-2">Applied / recorded</th></tr></thead><tbody>${reportSettingsHtml(model)}</tbody></table></div></section>
+        <section aria-labelledby="report-sequence-title" class="rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+            <h4 id="report-sequence-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Sequence and process</h4>
+            <p class="mt-2 font-semibold">${escapeHtml(comparisonText)}</p>
+            <p class="mt-1">Output length: ${escapeHtml(reportValue(model.sequence_summary.output_length_nt, ' nt'))}</p>
+            <p class="mt-1">Type IIS requested: ${escapeHtml(model.process.type_iis_requested.length ? model.process.type_iis_requested.join(', ') : 'None recorded')}</p>
+            <p class="mt-1">Domestication: ${escapeHtml(domesticationText)}</p>
+            <p class="mt-1">MFE: ${escapeHtml(model.metrics.mfe_status === 'computed' ? `Computed${model.metrics.mfe_kcal_mol == null ? '' : ` · ${model.metrics.mfe_kcal_mol} kcal/mol`}` : `Not computed · ${model.metrics.mfe_status_reason}`)}</p>
+        </section>
+        ${candidateReportHtml(model.candidates)}
+        <details class="rounded-xl border border-slate-200 dark:border-slate-700 p-3"><summary class="cursor-pointer text-[10px] font-extrabold uppercase tracking-widest">All computational checks (${model.checks.length})</summary><div class="mt-3 grid gap-2">${reportCheckRowsHtml(model.checks)}</div></details>
+        <details class="rounded-xl border border-slate-200 dark:border-slate-700 p-3"><summary class="cursor-pointer text-[10px] font-extrabold uppercase tracking-widest">Reproducibility and provenance</summary><dl class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">${reportProvenanceHtml(model)}</dl></details>
+        <section aria-labelledby="report-interpretation-title" class="grid gap-2">
+            <div class="rounded-xl bg-blue-50 dark:bg-blue-900/20 p-3"><h4 id="report-interpretation-title" class="font-extrabold">Interpretation</h4><p class="mt-1">${escapeHtml(model.interpretation.scope)}</p></div>
+            <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-3"><h4 class="font-extrabold">Downstream handoff checklist</h4><ul class="mt-1 list-disc pl-4">${model.interpretation.next_steps.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>
+            <div class="rounded-xl bg-amber-50 dark:bg-amber-900/20 p-3"><h4 class="font-extrabold">Limitations</h4><ul class="mt-1 list-disc pl-4">${model.interpretation.limitations.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></div>
+        </section>
+        <p class="rounded-xl border border-amber-200 dark:border-amber-800 p-3 text-[10px] text-amber-800 dark:text-amber-200">The HTML report contains the optimized DNA sequence. Treat it according to your sequence-data policy. The evidence JSON intentionally excludes raw sequences.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button type="button" id="downloadResultsReportBtn" class="w-full rounded-xl bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-xs font-bold py-2.5 transition-colors">📄 Download Report (HTML)</button>
+            <button type="button" id="downloadEvidenceRecordBtn" class="w-full rounded-xl bg-indigo-700 hover:bg-indigo-600 text-white text-xs font-bold py-2.5 transition-colors">🧾 Download Evidence Record (JSON)</button>
+        </div>
+    </article>`;
+    elements.resultsReport.classList.remove('hidden');
+    document.getElementById('downloadResultsReportBtn')?.addEventListener('click', () => downloadResultsReportHtml(model));
+    document.getElementById('downloadEvidenceRecordBtn')?.addEventListener('click', () => downloadEvidenceRecordJson(model));
+}
+
+function reportFileStem(model) {
+    const raw = model.identity.result_id || model.identity.report_generated_at || Date.now();
+    return String(raw).replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || String(Date.now());
+}
+
+function downloadTextArtifact(content, mimeType, fileName) {
+    const blob = new Blob([content], { type: mimeType });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `factorforge_results_report_${Date.now()}.html`;
-    a.click();
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
     window.URL.revokeObjectURL(url);
-    showToast('Report downloaded', 'success');
+}
+
+function evidenceRecordFromModel(model) {
+    const { artifacts: _artifacts, ...evidence } = model;
+    return evidence;
+}
+
+function standaloneReportHtml(model) {
+    const reportTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    const statusColor = status => ({ good: '#059669', warn: '#d97706', bad: '#e11d48', neutral: '#475569' })[reportStatusTone(status)];
+    const decisionColor = statusColor(model.disposition.automated_decision);
+    const priorities = model.interpretation.review_priorities.map((item, index) => `<article class="priority" style="border-left-color:${statusColor(item.status)}"><div class="priority-number">${index + 1}</div><div><h3>${escapeHtml(item.label)} <small style="color:${statusColor(item.status)}">${escapeHtml(item.status.replaceAll('_', ' '))}</small></h3><p>${escapeHtml(item.finding)}</p><p><b>Next:</b> ${escapeHtml(item.action)}</p></div></article>`).join('') || '<p>No unresolved computational review priority was recorded.</p>';
+    const requestedTypeIis = model.process.type_iis_requested.length ? model.process.type_iis_requested.join(', ') : 'None recorded';
+    const appliedTypeIis = model.process.type_iis_applied.length ? model.process.type_iis_applied.join(', ') : 'Not recorded';
+    const settingsMismatch = model.process.setting_mismatches.length > 0;
+    const settings = [
+        ['Host', model.context.host_profile, model.context.host_profile, false],
+        ['Method / profile', model.context.objective, model.context.profile, false],
+        ['Type IIS enzymes', requestedTypeIis, appliedTypeIis, settingsMismatch],
+        ['Seed', model.context.seed === null ? 'Not specified' : model.context.seed, model.context.seed === null ? 'Not recorded' : model.context.seed, false],
+        ['GC reference', model.provenance.gc_reference_band, model.provenance.gc_reference_band, false],
+    ].map(([label, requested, applied, mismatch]) => `<tr${mismatch ? ' class="mismatch"' : ''}><th scope="row">${escapeHtml(label)}</th><td>${escapeHtml(reportValue(requested))}</td><td>${escapeHtml(reportValue(applied))}${mismatch ? ' <b>Mismatch</b>' : ''}</td></tr>`).join('');
+    const checks = model.checks.map(check => `<tr><th scope="row">${escapeHtml(check.label)}</th><td>${escapeHtml(reportValue(check.observed))}</td><td>${escapeHtml(`${check.mode} · ${reportValue(check.threshold)}`)}</td><td><b style="color:${statusColor(check.status)}">${escapeHtml(check.status.replaceAll('_', ' '))}</b>${check.detail ? `<br><small>${escapeHtml(check.detail)}</small>` : ''}</td></tr>`).join('');
+    const candidates = model.candidates.length > 1 ? `<section><h2>Candidate comparison</h2><div class="scroll"><table><thead><tr><th>Candidate</th><th>Decision</th><th>CAI</th><th>GC%</th><th>Required failures</th><th>Warnings</th></tr></thead><tbody>${model.candidates.map(candidate => `<tr><th scope="row">${escapeHtml(candidate.label)}</th><td>${escapeHtml(candidate.automated_decision)}</td><td>${escapeHtml(candidate.cai == null ? 'Not recorded' : candidate.cai.toFixed(3))}</td><td>${escapeHtml(candidate.gc_percent == null ? 'Not recorded' : candidate.gc_percent.toFixed(1))}</td><td>${escapeHtml(reportValue(candidate.required_failure_count))}</td><td>${escapeHtml(reportValue(candidate.preferred_warning_count))}</td></tr>`).join('')}</tbody></table></div></section>` : '';
+    const axisLabels = { assembly_feasibility: 'Assembly feasibility', codon_adaptation: 'Codon adaptation', five_prime_initiation: "5′ initiation-aware scoring" };
+    const standaloneContract = model.design_contract ? `<section><h2>Declared computational scope</h2><div class="section-card"><div class="section-head"><strong>${escapeHtml(`${reportValue(model.design_contract.engine_id)} ${reportValue(model.design_contract.engine_version)}`)}</strong><span class="badge">${escapeHtml(reportValue(model.design_contract.engine_status))}</span></div><div class="axis-grid">${model.design_contract.scientific_axes.map(axis => `<article><b>${escapeHtml(axisLabels[axis.id] || axis.id)}</b><small>${escapeHtml(axis.evidence_class)}</small></article>`).join('')}</div>${model.design_contract.independent_evaluation ? `<p class="independent"><b>RNA folding · ${escapeHtml(reportValue(model.design_contract.independent_evaluation.evidence_class))}</b><br><small>Generation status: ${escapeHtml(reportValue(model.design_contract.independent_evaluation.rna_folding))}. Kept separate from candidate generation.</small></p>` : ''}</div></section>` : '';
+    const comparisonRows = [
+        ['Codon adaptation index (CAI)', 'Not evaluated', model.metrics.cai == null ? 'Not recorded' : model.metrics.cai.toFixed(4), 'Computed metric'],
+        ['Global GC', model.comparison.reference_available ? reportPercent(model.comparison.reference_gc_percent) : 'Not provided', reportPercent(model.comparison.candidate_gc_percent), 'Computed metric'],
+        ['First 30 nt GC', model.comparison.reference_available ? reportPercent(model.comparison.reference_first_30nt_gc_percent) : 'Not provided', reportPercent(model.comparison.candidate_first_30nt_gc_percent), 'Descriptive metric'],
+        ['Amino-acid identity', model.comparison.reference_available ? '100.00%' : 'Input protein', model.sequence_summary.amino_acid_identity == null ? 'Not recorded' : reportPercent(model.sequence_summary.amino_acid_identity * 100), 'Sequence integrity'],
+        ['Nucleotide changes', model.comparison.reference_available ? '0 bp' : 'Not applicable', model.comparison.reference_available ? `${reportValue(model.sequence_summary.nucleotide_changes)} bp` : 'Not comparable', 'Descriptive metric'],
+        ['RNA folding', 'Not evaluated', model.metrics.mfe_status === 'computed' ? reportValue(model.metrics.mfe_kcal_mol, ' kcal/mol') : 'Not computed', 'Independent evaluation'],
+    ];
+    const standaloneComparison = `<section><h2>Design comparison</h2><p class="muted">${escapeHtml(model.comparison.reference_available ? 'Reference CDS available' : 'No reference CDS · candidate-only view')}</p><div class="scroll"><table><thead><tr><th>Metric</th><th>${escapeHtml(model.comparison.reference_label)}</th><th>${escapeHtml(model.comparison.candidate_label)}</th><th>Evidence</th></tr></thead><tbody>${comparisonRows.map(row => `<tr><th scope="row">${escapeHtml(row[0])}</th><td>${escapeHtml(row[1])}</td><td class="candidate-value">${escapeHtml(row[2])}</td><td>${escapeHtml(row[3])}</td></tr>`).join('')}</tbody></table></div><p class="boundary">Differences describe deterministic in-silico metrics and do not establish expression, yield, or biological superiority.</p></section>`;
+    const provenanceRows = [
+        ['Product version', model.provenance.product_version], ['Engine', model.context.engine], ['Objective', model.context.objective],
+        ['Host / profile', `${model.context.host_profile} / ${model.context.profile}`], ['Codon reference', model.provenance.codon_reference_id],
+        ['Reference policy', model.provenance.reference_policy_version], ['GC reference band', model.provenance.gc_reference_band],
+        ['Seed', model.context.seed === null ? 'Not specified' : model.context.seed], ['Result created (UTC)', model.identity.result_created_at],
+        ['Input SHA-256', model.provenance.input_sequence_hash], ['Output SHA-256', model.provenance.output_cds_hash], ['Parameter SHA-256', model.provenance.parameter_hash],
+    ].map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(reportValue(value))}</dd>`).join('');
+    const sequence = model.artifacts.optimized_sequence.match(/.{1,60}/g)?.join('\n') || model.artifacts.optimized_sequence;
+    const referenceSequence = model.artifacts.reference_sequence?.match(/.{1,60}/g)?.join('\n') || model.artifacts.reference_sequence;
+    return `<!doctype html><html lang="en" data-theme="${reportTheme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FactorForge Researcher Decision Report — ${escapeHtml(reportValue(model.identity.result_id))}</title><style>
+:root{color-scheme:light}body{margin:0;background:#f1f5f9;color:#0f172a;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.page{max-width:920px;margin:auto;padding:42px 24px 72px}h1{font-size:30px;margin:4px 0}h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:#475569;margin:28px 0 10px}h3{margin:0}.eyebrow{color:#047857;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.muted,small{color:#64748b}.outcome,.section-card{background:#fff;border:2px solid;border-radius:16px;padding:20px}.outcome strong{display:block;font-size:28px}.counts{font-weight:700}.callout{padding:14px;border-radius:12px;background:#fff7ed;border:1px solid #fdba74}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.badge{border-radius:999px;background:#fef3c7;color:#92400e;padding:5px 9px;font-size:10px;font-weight:800;text-transform:uppercase}.axis-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.axis-grid article{border:1px solid #dbe2ea;border-radius:12px;padding:12px}.axis-grid small{display:block;color:#0f766e;font-weight:800;margin-top:4px}.independent{border:1px dashed #94a3b8;border-radius:12px;padding:12px}.candidate-value{font-weight:800;color:#0e7490}.boundary{border-left:4px solid #f59e0b;padding:9px 12px;background:#fffbeb}.priority{display:grid;grid-template-columns:32px 1fr;gap:10px;background:#fff;border:1px solid #dbe2ea;border-left:4px solid;border-radius:12px;padding:14px;margin:8px 0}.priority-number{width:26px;height:26px;border-radius:50%;background:#e2e8f0;display:grid;place-items:center;font-weight:800}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;background:#fff}th,td{text-align:left;vertical-align:top;padding:9px;border-bottom:1px solid #e2e8f0}.mismatch{background:#fff1f2;color:#9f1239}dl{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:6px 14px}dt{font-weight:700}dd{margin:0;font-family:monospace;overflow-wrap:anywhere}pre{background:#0f172a;color:#a7f3d0;padding:16px;border-radius:12px;overflow:auto;font:12px/1.6 monospace}ul{padding-left:20px}[data-theme="dark"]{color-scheme:dark}[data-theme="dark"] body{background:#0b0f19;color:#f1f5f9}[data-theme="dark"] h2{color:#94a3b8}[data-theme="dark"] .eyebrow{color:#34d399}[data-theme="dark"] .muted,[data-theme="dark"] small{color:#94a3b8}[data-theme="dark"] .outcome,[data-theme="dark"] .section-card{background:#1e293b;border-color:#334155}[data-theme="dark"] .callout{background:#451a03;border-color:#9a3412;color:#fed7aa}[data-theme="dark"] .axis-grid article{border-color:#475569}[data-theme="dark"] .axis-grid small{color:#5eead4}[data-theme="dark"] .candidate-value{color:#67e8f9}[data-theme="dark"] .boundary{background:#422006}[data-theme="dark"] .priority{background:#1e293b;border-color:#334155}[data-theme="dark"] .priority-number{background:#334155;color:#f8fafc}[data-theme="dark"] table{background:#1e293b}[data-theme="dark"] th,[data-theme="dark"] td{border-bottom:1px solid #334155}[data-theme="dark"] .mismatch{background:#4c0519;color:#fda4af}[data-theme="dark"] pre{background:#020617;color:#6ee7b7;border:1px solid #1e293b}@media(max-width:640px){.page{padding:24px 14px}dl{grid-template-columns:1fr}.axis-grid{grid-template-columns:1fr}dd{margin-bottom:7px}}@media print{body{background:#fff!important;color:#0f172a!important}.page{padding:0}.outcome,.section-card,.priority,table{background:#fff!important;break-inside:avoid}.callout{border-color:#999}}
+</style></head><body><main class="page"><p class="eyebrow">FactorForge CDS Design Review</p><h1>Design Comparison &amp; Decision Report</h1><p class="muted">Result ${escapeHtml(reportValue(model.identity.result_id))} · created ${escapeHtml(reportValue(model.identity.result_created_at))} · report generated ${escapeHtml(model.identity.report_generated_at)}</p><div class="callout"><b>Sequence-data notice:</b> This HTML contains ${referenceSequence ? 'the reference and optimized DNA sequences' : 'the optimized DNA sequence'}. Handle and share it according to your sequence-data policy.</div><section><h2>Decision brief</h2><div class="outcome" style="border-color:${decisionColor}"><strong style="color:${decisionColor}">${escapeHtml(model.disposition.automated_decision.replaceAll('_', ' '))}</strong><p>${escapeHtml(model.interpretation.headline)}</p><p class="counts">${escapeHtml(`${reportValue(model.disposition.required_failure_count)} required fail · ${reportValue(model.disposition.preferred_warning_count)} warning · ${reportValue(model.disposition.unavailable_check_count)} unavailable`)}</p><small>${escapeHtml(reportValue(model.disposition.explanation))}</small></div></section>${standaloneContract}${standaloneComparison}<section><h2>Review priorities and next actions</h2>${priorities}</section><section><h2>Requested vs applied settings</h2><div class="scroll"><table><thead><tr><th>Setting</th><th>Requested</th><th>Applied / recorded</th></tr></thead><tbody>${settings}</tbody></table></div></section><section><h2>All computational checks</h2><div class="scroll"><table><thead><tr><th>Detection</th><th>Enforcement</th><th>Action</th><th>Status</th></tr></thead><tbody>${checks}</tbody></table></div></section>${candidates}<section><h2>Sequence and process</h2><p>Input type: <b>${escapeHtml(model.context.input_type)}</b> · output length: <b>${escapeHtml(reportValue(model.sequence_summary.output_length_nt, ' nt'))}</b> · nucleotide comparison: <b>${escapeHtml(model.sequence_summary.comparison_available ? reportValue(model.sequence_summary.nucleotide_changes) : 'Not recorded')}</b></p><p>Domestication: ${escapeHtml(model.process.domestication_attempted ? 'Attempted' : 'Not attempted')} · MFE: ${escapeHtml(model.metrics.mfe_status === 'computed' ? 'Computed' : `Not computed (${model.metrics.mfe_status_reason})`)}</p></section><section><h2>Downstream handoff checklist</h2><ul>${model.interpretation.next_steps.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section><section><h2>Reproducibility and provenance</h2><dl>${provenanceRows}</dl></section>${referenceSequence ? `<section><h2>Reference sequence (DNA)</h2><pre>${escapeHtml(referenceSequence)}</pre></section>` : ''}<section><h2>Optimized sequence (DNA)</h2><pre>${escapeHtml(sequence)}</pre></section><section><h2>Interpretation and limitations</h2><p>${escapeHtml(model.interpretation.scope)}</p><ul>${model.interpretation.limitations.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section></main></body></html>`;
+}
+
+function downloadResultsReportHtml(model) {
+    trackEvent('report_download', { format: 'html' });
+    downloadTextArtifact(standaloneReportHtml(model), 'text/html;charset=utf-8', `factorforge_design_review_${reportFileStem(model)}.html`);
+    showToast('Design review report downloaded', 'success');
+}
+
+function standaloneInteractiveReportHtml(model) {
+    const accounting = model.accounting || { available: false, codons: [] };
+    const safeData = JSON.stringify({ accounting }).replace(/</g, '\\u003c');
+    const summary = accounting.available
+        ? `<div class="accounting"><article><small>Total sense codons</small><b>${accounting.totalCodons}</b></article><article><small>Synonymous shifts</small><b>${accounting.synonymousChanges} · ${percentOf(accounting.synonymousChanges, accounting.totalCodons)}</b></article><article><small>Unchanged</small><b>${accounting.unchanged} · ${percentOf(accounting.unchanged, accounting.totalCodons)}</b></article><article><small>AA preservation</small><b>${accounting.aaIdentity.toFixed(1)}% · ${accounting.substitutions} substitutions</b></article></div>`
+        : '<p class="callout">Codon-by-codon accounting is unavailable because the run did not include a comparable input CDS.</p>';
+    const interactive = `<section><p class="eyebrow">Same Protein. Better-Designed DNA.</p><h2>Codon shift accounting and interactive map</h2><p>FactorForge redesigns synonymous codons and sequence-level features while verifying the encoded amino-acid sequence. Values below are calculated from the embedded input and output CDS; unavailable host frequencies remain N/A.</p>${summary}<div class="standalone-track"><div><span>Original</span><canvas id="reportOriginal" height="56"></canvas></div><div><span>Optimized</span><canvas id="reportOptimized" height="56"></canvas></div><div id="reportInspector" class="report-inspector">${accounting.available ? 'Move across either track to inspect a codon.' : 'No comparable CDS track.'}</div></div></section>`;
+    const script = `<script>const reportData=${safeData};(()=>{const a=reportData.accounting,cs=a.codons||[],o=document.getElementById('reportOriginal'),p=document.getElementById('reportOptimized'),i=document.getElementById('reportInspector');const color=f=>f==null?'#334155':f*100<20?'#ef4444':f*100<35?'#f59e0b':f*100<50?'#64748b':f*100<=70?'#22c55e':'#10b981';const fmt=f=>f==null?'N/A':(f*100).toFixed(1)+'%';function draw(c,key,h){const r=c.getBoundingClientRect(),d=devicePixelRatio||1,w=Math.max(1,r.width);c.width=w*d;c.height=56*d;const x=c.getContext('2d');x.scale(d,d);x.fillStyle='#020617';x.fillRect(0,0,w,56);if(!cs.length)return;const sw=w/cs.length;cs.forEach((v,n)=>{x.fillStyle=color(v[key]);x.fillRect(n*sw,13,Math.max(1,sw+.25),30)});if(h!=null){x.strokeStyle='#fff';x.beginPath();x.moveTo((h+.5)*sw,2);x.lineTo((h+.5)*sw,54);x.stroke()}}function render(h){draw(o,'origFreq',h);draw(p,'optFreq',h)}function move(e){if(!cs.length)return;const r=p.getBoundingClientRect(),n=Math.max(0,Math.min(cs.length-1,Math.floor((e.clientX-r.left)/r.width*cs.length))),v=cs[n];render(n);i.textContent='Codon '+(n+1)+' · nt '+(n*3+1)+'–'+(n*3+3)+' · '+v.origCodon+' ('+fmt(v.origFreq)+') → '+v.optCodon+' ('+fmt(v.optFreq)+') · AA '+v.aa+' · local GC '+(v.localGc==null?'N/A':v.localGc.toFixed(1)+'%')+' · '+(v.isChanged?'change observed':'unchanged')}[o,p].forEach(c=>c.addEventListener('mousemove',move));addEventListener('resize',()=>render(null));render(null)})();<\/script>`;
+    return standaloneReportHtml(model)
+        .replace('</style>', '.accounting{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.accounting article{background:#fff;border:1px solid #dbe2ea;border-radius:12px;padding:12px}.accounting b,.accounting small{display:block}.standalone-track{background:#0f172a;border-radius:14px;padding:16px}.standalone-track>div{display:grid;grid-template-columns:70px 1fr;align-items:center;gap:8px;margin:8px 0;color:#cbd5e1;font-size:12px;font-weight:700}.standalone-track canvas{width:100%;height:56px;border-radius:8px;cursor:crosshair}.report-inspector{grid-template-columns:1fr!important;background:#1e293b;padding:12px;border-radius:8px}@media(max-width:640px){.accounting{grid-template-columns:1fr 1fr}}</style>')
+        .replace('</main></body>', `${interactive}</main>${script}</body>`);
+}
+
+function downloadInteractiveReport(model) {
+    trackEvent('report_download', { format: 'interactive_html' });
+    const constructId = model.identity.construct_id || model.identity.result_id || 'Construct';
+    const safeId = String(constructId).replace(/[^A-Za-z0-9._-]+/g, '_');
+    downloadTextArtifact(standaloneInteractiveReportHtml(model), 'text/html;charset=utf-8', `FactorForge_Optimization_Report_${safeId}.html`);
+    showToast('Interactive report downloaded', 'success');
+}
+
+function downloadEvidenceRecordJson(model) {
+    trackEvent('report_download', { format: 'evidence_json' });
+    const content = `${JSON.stringify(evidenceRecordFromModel(model), null, 2)}\n`;
+    downloadTextArtifact(content, 'application/json;charset=utf-8', `factorforge_design_evidence_${reportFileStem(model)}.json`);
+    showToast('Sequence-free evidence record downloaded', 'success');
 }
 
 function renderCustomRestrictionResults(res) {
@@ -1611,21 +2591,63 @@ function renderGCGraph(seq, hostId = state.host) {
     });
 }
 
+function historyResultSnapshot(result, primary) {
+    const clone = value => value == null ? value : JSON.parse(JSON.stringify(value));
+    const candidates = Array.isArray(result.candidates) ? result.candidates.map(candidate => ({
+        id: candidate.id || null,
+        label: candidate.label || candidate.id || null,
+        cai: candidate.cai ?? null,
+        gc_percent: candidate.gc_percent ?? null,
+        automated_decision: candidate.automated_decision || null,
+        required_failure_count: candidate.required_failure_count ?? null,
+        preferred_warning_count: candidate.preferred_warning_count ?? null,
+    })) : [];
+    return {
+        optimized_sequence: primary.optimized_sequence,
+        original_length: result.original_length ?? result.input_summary?.length ?? null,
+        optimized_length: result.optimized_length ?? primary.optimized_sequence?.length ?? null,
+        metrics: clone(result.metrics || primary.metrics || {}),
+        validation: clone(result.validation || primary.validation || {}),
+        profile: result.profile || state.objective,
+        host_profile: getResultHostProfile(result),
+        input_type: result.input_type || result.validation?.input_type || result.provenance?.normalized_input_type || null,
+        input_summary: clone(result.input_summary || null),
+        acceptance_criteria_snapshot: clone(result.acceptance_criteria_snapshot || null),
+        automated_decision: result.automated_decision || null,
+        decision_summary: clone(result.decision_summary || null),
+        qc_decision_matrix: clone(result.qc_decision_matrix || null),
+        acceptance_evaluation: clone(result.acceptance_evaluation || null),
+        reviewer_disposition: clone(result.reviewer_disposition || null),
+        result_identifier: result.result_identifier || null,
+        construct_id: result.construct_id || null,
+        created_at: result.created_at || null,
+        product_version: result.product_version || null,
+        reference_policy_version: result.reference_policy_version || null,
+        codon_reference_id: result.codon_reference_id || null,
+        gc_reference_band: result.gc_reference_band || null,
+        metadata: clone(result.metadata || null),
+        provenance: clone(result.provenance || null),
+        cds_design: clone(result.cds_design || null),
+        constraint_report: clone(result.constraint_report || null),
+        custom_restriction_sites: clone(result.custom_restriction_sites || null),
+        report_candidates: candidates,
+    };
+}
+
 function addToHistory(input, result) {
     const primary = getPrimaryResult(result);
     const item = {
         id: Date.now(),
+        schemaVersion: HISTORY_SCHEMA_VERSION,
         timestamp: new Date().toLocaleString(),
         inputLen: input.length,
+        inputType: result.input_type || result.validation?.input_type || result.provenance?.normalized_input_type || null,
         profile: state.objective,
         host: getResultHostProfile(result),
         cai: primary.metrics.cai,
         gc: calculateGC(primary.optimized_sequence),
         sequence: primary.optimized_sequence,
-        inputSequence: input
-        ,acceptanceCriteria: result.acceptance_criteria_snapshot || null
-        ,automatedDecision: result.automated_decision || null
-        ,reviewerDisposition: result.reviewer_disposition || null
+        resultSnapshot: historyResultSnapshot(result, primary),
     };
 
     state.history.unshift(item);
@@ -1645,7 +2667,7 @@ function renderHistory() {
     elements.historyList.innerHTML = state.history.map(item => `
         <div class="p-2 border border-slate-100 rounded-lg hover:bg-slate-50 cursor-pointer transition-all mb-2 flex justify-between items-center group" onclick="loadHistoryItem(${item.id})">
             <div>
-                <p class="text-[10px] font-bold text-slate-700">${item.inputLen}bp → ${item.profile}</p>
+                <p class="text-[10px] font-bold text-slate-700">${item.inputLen}${item.inputType === 'protein' ? 'aa' : 'bp'} → ${item.profile}</p>
                 <p class="text-[9px] text-slate-400">${formatHostProfile(item.host || 'nbenthamiana')} · ${item.timestamp}</p>
             </div>
             <div class="text-right">
@@ -1660,19 +2682,29 @@ window.loadHistoryItem = (id) => {
     const item = state.history.find(h => h.id === id);
     if (!item) return;
 
-    elements.sequenceInput.value = item.inputSequence;
-    handleSequenceChange({ target: { value: item.inputSequence } });
-    state.results = {
-        optimized_sequence: item.sequence,
-        metrics: { cai: item.cai, gc_percent: item.gc, polya_signals: 0, length: item.sequence.length },
-        profile: item.profile,
-        host_profile: item.host || 'nbenthamiana',
-        acceptance_criteria_snapshot: item.acceptanceCriteria || null,
-        automated_decision: item.automatedDecision || null,
-        reviewer_disposition: item.reviewerDisposition || null
-    };
+    if (item.resultSnapshot) {
+        elements.sequenceInput.value = '';
+        state.sequence = '';
+        elements.previewContainer.classList.add('hidden');
+        elements.inputTypeBadge.classList.add('hidden');
+        updateInputStats('');
+        state.results = JSON.parse(JSON.stringify(item.resultSnapshot));
+    } else {
+        const legacyInput = item.inputSequence || '';
+        elements.sequenceInput.value = legacyInput;
+        handleSequenceChange({ target: { value: legacyInput } });
+        state.results = {
+            optimized_sequence: item.sequence,
+            metrics: { cai: item.cai, gc_percent: item.gc, polya_signals: 0, length: item.sequence.length },
+            profile: item.profile,
+            host_profile: item.host || 'nbenthamiana',
+            acceptance_criteria_snapshot: item.acceptanceCriteria || null,
+            automated_decision: item.automatedDecision || null,
+            reviewer_disposition: item.reviewerDisposition || null,
+        };
+    }
     renderResults();
-    showToast('History item loaded', 'success');
+    showToast(item.resultSnapshot ? 'History report loaded (input sequence not stored)' : 'Legacy history item loaded', 'success');
 };
 
 function clearHistory() {
@@ -1704,6 +2736,20 @@ function clearAll() {
     elements.emptyState.classList.remove('hidden');
     elements.validationStatus.classList.add('hidden');
     updateDesignBriefSummary();
+
+    if (primary.provenance) {
+        const el = (id) => document.getElementById(id);
+        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
+        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
+        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
+        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
+        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
+        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
+        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
+    }
+
     showToast('Input cleared', 'info');
 }
 
@@ -1843,7 +2889,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.4.5';
+        const version = state.results.engine_versions?.product || '3.5.2';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }
@@ -1888,4 +2934,145 @@ function calculateGC(seq) {
     const gCount = (seq.match(/G/g) || []).length;
     const cCount = (seq.match(/C/g) || []).length;
     return parseFloat(((gCount + cCount) / seq.length * 100).toFixed(1));
+}
+
+
+
+// -----------------------------------------------------------------------------
+// SOP Builder Phase C: Read-Only Rendering
+// -----------------------------------------------------------------------------
+function openSopBuilder() {
+    if (!state.activeSop) return;
+    
+    document.getElementById('sopBuilderModal').classList.remove('hidden');
+    
+    // Render Metadata
+    document.getElementById('builderSopName').textContent = state.activeSop.profile_name || 'Unnamed SOP';
+    document.getElementById('builderSopVersion').textContent = state.activeSop.version || 'v?';
+    document.getElementById('builderProfileId').textContent = state.activeSop.profile_id || 'N/A';
+    document.getElementById('builderSchema').textContent = state.activeSop.$schema || 'N/A';
+    document.getElementById('builderDefaultEnforcement').textContent = state.activeSop.default_enforcement || 'N/A';
+    document.getElementById('builderUnknownRulePolicy').textContent = state.activeSop.unknown_rule_policy || 'N/A';
+    document.getElementById('builderRawPreview').textContent = jsyaml.dump(state.activeSop);
+    
+    // Render Design Settings
+    const wf = state.activeSop.workflow || {};
+    const reqs = wf.sequence_requirements || {};
+    document.getElementById('builderDesignMethodInput').value = wf.design_method || 'feasibility_best';
+    document.getElementById('builderTypeIisEnzymesInput').value = (reqs.type_iis_enzymes || []).join(', ');
+    document.getElementById('builderKozakInput').checked = reqs.kozak_optimization === true;
+    
+    // Render Review Policy Rules
+    const policyContainer = document.getElementById('builderPolicyContainer');
+    policyContainer.innerHTML = '';
+    
+    const rulesObj = state.activeSop.rules || {};
+    
+    apiRuleRegistry.forEach(rule => {
+        // Did the SOP override it?
+        const isOverridden = rule.rule_id in rulesObj;
+        let activeEnforcement = rule.default_enforcement;
+        if (isOverridden) {
+            activeEnforcement = rulesObj[rule.rule_id];
+        }
+        activeEnforcement = String(activeEnforcement).toLowerCase();
+        
+        let colorClass = 'text-slate-500 bg-slate-100 dark:bg-slate-800';
+        if (activeEnforcement === 'hard_fail' || activeEnforcement === 'block') colorClass = 'text-red-700 bg-red-100 border border-red-200 dark:border-red-900 dark:bg-red-950 dark:text-red-400';
+        if (activeEnforcement === 'warning') colorClass = 'text-amber-700 bg-amber-100 border border-amber-200 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-400';
+        if (activeEnforcement === 'report_only') colorClass = 'text-blue-700 bg-blue-100 border border-blue-200 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-400';
+        
+        const enforcements = ['hard_fail', 'warning', 'report_only', 'informational', 'ignore'];
+        const selectOptions = enforcements.map(e => `<option value="${e}" ${e === activeEnforcement ? 'selected' : ''}>${e.toUpperCase()}</option>`).join('');
+        
+        const html = `
+            <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 group focus-within:ring-2 focus-within:ring-emerald-500 transition-shadow">
+                <div class="flex-grow pr-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="font-bold text-xs text-slate-800 dark:text-slate-200">${rule.name}</span>
+                        <span class="text-[9px] font-mono text-slate-400" title="Canonical Rule ID">${rule.rule_id}</span>
+                    </div>
+                    <div class="text-[10px] text-slate-500 mt-1">${rule.description}</div>
+                </div>
+                <div class="flex-shrink-0">
+                    <select class="rule-enforcement-select bg-slate-50 border border-slate-200 text-slate-700 text-[10px] rounded focus:ring-emerald-500 focus:border-emerald-500 block w-full p-1.5 dark:bg-slate-800 dark:border-slate-600 dark:placeholder-slate-400 dark:text-white uppercase font-bold" data-rule-id="${rule.rule_id}">
+                        ${selectOptions}
+                    </select>
+                </div>
+            </div>
+        `;
+        policyContainer.insertAdjacentHTML('beforeend', html);
+    });
+}
+
+function closeSopBuilder() {
+    document.getElementById('sopBuilderModal').classList.add('hidden');
+}
+
+// Bind events
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('buildSopButton').addEventListener('click', openSopBuilder);
+    document.getElementById('closeSopBuilderBtn').addEventListener('click', closeSopBuilder);
+    document.getElementById('builderCancelBtn').addEventListener('click', closeSopBuilder);
+    document.getElementById('sopBuilderBackdrop').addEventListener('click', closeSopBuilder);
+    
+    document.getElementById('builderApplyBtn').addEventListener('click', applyBuilderChanges);
+    document.getElementById('builderExportBtn').addEventListener('click', () => {
+        // We trigger apply to ensure state is active, then export
+        applyBuilderChanges();
+        if (state.activeSop) {
+            const yamlStr = jsyaml.dump(state.activeSop, { lineWidth: -1 });
+            const blob = new Blob([yamlStr], { type: 'text/yaml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${state.activeSop.profile_name || 'custom'}_sop.yaml`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    });
+});
+
+// Phase D: Apply Changes Logic
+function applyBuilderChanges() {
+    if (!state.activeSop) return;
+    
+    // Deep clone current SOP to avoid mutating if canceled
+    const newSop = JSON.parse(JSON.stringify(state.activeSop));
+    newSop.rules = newSop.rules || {};
+    
+    // Read all selects
+    const selects = document.querySelectorAll('.rule-enforcement-select');
+    selects.forEach(select => {
+        const ruleId = select.dataset.ruleId;
+        const val = select.value.toUpperCase(); // Schema expects uppercase
+        
+        // Find canonical default
+        const canon = apiRuleRegistry.find(r => r.rule_id === ruleId);
+        if (canon && val.toLowerCase() === canon.default_enforcement.toLowerCase()) {
+            // It matches the default, we can remove it from rules to keep SOP sparse/clean
+            delete newSop.rules[ruleId];
+        } else {
+            // Add or overwrite override
+            newSop.rules[ruleId] = val;
+        }
+    });
+    
+    // Read design settings
+    newSop.workflow = newSop.workflow || {};
+    newSop.workflow.sequence_requirements = newSop.workflow.sequence_requirements || {};
+    newSop.workflow.design_method = document.getElementById('builderDesignMethodInput').value;
+    const enzymesStr = document.getElementById('builderTypeIisEnzymesInput').value;
+    newSop.workflow.sequence_requirements.type_iis_enzymes = enzymesStr.split(',').map(s => s.trim()).filter(Boolean);
+    newSop.workflow.sequence_requirements.kozak_optimization = document.getElementById('builderKozakInput').checked;
+    
+    // Hash digest separation
+    // (Here we rely on applySopToUi which parses and sets digests correctly)
+    
+    applySopToUi(newSop, { persist: true });
+    closeSopBuilder();
+    
+    showToast('SOP updated successfully. Provenance digests separated.', 'success');
 }

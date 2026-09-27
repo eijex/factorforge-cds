@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.4.5
+Product Version: 3.5.2
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -12,6 +12,7 @@ import sys
 import os
 import re
 import logging
+import tempfile
 from datetime import datetime, timezone
 from typing import Any
 
@@ -34,18 +35,23 @@ IMPORT_ERROR = None
 
 # Try to import FactorForge
 try:
-    from factorforge.engines import EngineRegistry
-    from factorforge.engines.profile.optimizer import RuleBasedOptimizer
-    from factorforge.engines.dp_adapter import DPEngineAdapter
-    EngineRegistry.register("profile", RuleBasedOptimizer)
-    EngineRegistry.register("dp", DPEngineAdapter)
+    from factorforge.engines import EngineRegistry, register_builtin_engines
 
+    register_builtin_engines()
     from factorforge.engines.profile.rules.domesticator import Domesticator
     from factorforge.engines.profile.rules.rule_engine import RuleEngine
     from factorforge.engines.profile.utils import get_data_path, load_codon_table
     from factorforge.engines.profile.scoring import resolve_host_gc_range
     from factorforge.analysis.metrics import load_codon_usage_table
     from factorforge.analysis.feasibility import DEFAULT_CAI_TARGET, analyze_feasibility
+    from factorforge.engines.dp_v2 import DPV2Optimizer
+    from factorforge.engines.dp_v2_1 import DPV21Optimizer
+    from factorforge.engines.dp_v2_1_1 import DPV211Optimizer
+    from factorforge.registry.versioning import (
+        engine_version,
+        product_version,
+        public_version_metadata,
+    )
     from factorforge.analysis.metrics import (
         calculate_cai,
         calculate_first_region_gc,
@@ -67,6 +73,8 @@ try:
         VALIDATION_REPORT_SCHEMA_VERSION,
         build_validation_report,
     )
+    from factorforge.rules.registry import RuleRegistry
+    from factorforge.sops.config import SopProfile
     from factorforge.design_review import (
         apply_reviewer_disposition,
         assert_pathway_invariants,
@@ -78,7 +86,7 @@ try:
     )
 
     FACTORFORGE_AVAILABLE = True
-    logger.info("FactorForge v3.x profile engine loaded successfully")
+    logger.info("FactorForge %s engines loaded successfully", product_version())
 except Exception as e:
     FACTORFORGE_AVAILABLE = False
     IMPORT_ERROR = f"{type(e).__name__}: {str(e)}"
@@ -105,7 +113,7 @@ DEFAULT_COMPARE_PROFILES = [
 ]
 MAX_COMPARE_PROFILES = 6
 MAX_BATCH_SEQUENCES = 20
-VALID_OBJECTIVES = ["feasibility_best"]
+VALID_OBJECTIVES = ["feasibility_best", "dp_v2_1", "dp_v2_1_1"]
 DEFAULT_OBJECTIVE = "feasibility_best"
 DEFAULT_HOST_PROFILE = "nbenthamiana"
 VALID_HOSTS = ["nbenthamiana", "by2"]
@@ -240,10 +248,12 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": "3.4.5",
-    "rule_engine": "3.4.5",
-    "dp_engine": "3.4.5",
-    "ml_preview": "3.5.0-preview",
+    "product": product_version() if FACTORFORGE_AVAILABLE else "3.5.2",
+    "rule_engine": engine_version("profile") if FACTORFORGE_AVAILABLE else "1.0.0",
+    "dp_engine": engine_version("dp") if FACTORFORGE_AVAILABLE else "2.0.1",
+    "dp_v2_1_engine": (engine_version("dp_v2_1") if FACTORFORGE_AVAILABLE else "2.1.0-dev"),
+    "dp_v2_1_1_engine": (engine_version("dp_v2_1_1") if FACTORFORGE_AVAILABLE else "2.1.1-dev"),
+    "ml_preview": (engine_version("slm") if FACTORFORGE_AVAILABLE else "0.1.0-preview.1"),
 }
 VALID_EXECUTION_MODES = ["profile", "slm", "dual_compare"]
 ML_PREVIEW_ENABLED = os.environ.get("FACTORFORGE_ML_PREVIEW_ENABLED", "false").lower() == "true"
@@ -278,11 +288,10 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             if not FACTORFORGE_AVAILABLE:
-                self.send_error_response(500, f"Backend engine initialization failed: {IMPORT_ERROR}")
+                self.send_error_response(
+                    500, f"Backend engine initialization failed: {IMPORT_ERROR}"
+                )
                 return
-
-            EngineRegistry.register("profile", RuleBasedOptimizer)
-            EngineRegistry.register("dp", DPEngineAdapter)
 
             logger.info(
                 f"Received optimization request: sequence_length={len(data.get('sequence', ''))}"
@@ -295,6 +304,10 @@ class handler(BaseHTTPRequestHandler):
                 return
             if request_path == "/api/optimize/batch":
                 status_code, result = self.handle_batch_request(data)
+                self.send_json_response(status_code, result)
+                return
+            if request_path in {"/api/slate", "/api/optimize/slate"}:
+                status_code, result = self.handle_slate_request(data)
                 self.send_json_response(status_code, result)
                 return
 
@@ -347,17 +360,22 @@ class handler(BaseHTTPRequestHandler):
             # table) and high_cai (nbenthamiana-only golden-set reference)
             # are both N. benthamiana-only by current design.
             if internal_host != DEFAULT_HOST_PROFILE:
-                if data.get("objective") == "feasibility_best":
+                if data.get("objective") in {
+                    "feasibility_best",
+                    "dp_v2_1",
+                    "dp_v2_1_1",
+                }:
+                    requested_strategy = data.get("objective")
                     self.send_error_response(
                         400,
                         {
                             "error": (
-                                "objective=feasibility_best is only supported "
+                                f"objective={requested_strategy} is only supported "
                                 "with host=nbenthamiana"
                             ),
                             "error_code": "UNSUPPORTED_STRATEGY_HOST_COMBINATION",
                             "requested_host": internal_host,
-                            "requested_strategy": "feasibility_best",
+                            "requested_strategy": requested_strategy,
                         },
                     )
                     return
@@ -398,6 +416,16 @@ class handler(BaseHTTPRequestHandler):
             return_candidates = bool(data.get("return_candidates", True))
             constraints = self.parse_constraints(data.get("constraints", {}), host=internal_host)
             seed = self.parse_seed(data.get("seed"))
+            sop_profile = None
+            if data.get("sop_profile") is not None:
+                if not isinstance(data["sop_profile"], dict):
+                    raise ValueError("sop_profile must be a JSON object")
+                if len(json.dumps(data["sop_profile"])) > 131072:
+                    raise ValueError("sop_profile exceeds the 128 KB limit")
+                known_rule_ids = [rule.rule_id for rule in RuleRegistry().list_rules()]
+                sop_profile = SopProfile.from_dict(
+                    data["sop_profile"], known_rule_ids=known_rule_ids
+                )
             input_context = parse_sequence_input(sequence)
             if not input_context["generation_allowed"]:
                 raise ValueError("; ".join(input_context["errors"]))
@@ -483,6 +511,70 @@ class handler(BaseHTTPRequestHandler):
                     acceptance_criteria=acceptance_criteria,
                     reviewer_disposition=data.get("reviewer_disposition"),
                 )
+                if sop_profile is not None:
+                    sop_registry = RuleRegistry(sop_profile=sop_profile)
+                    
+                    # First validation pass
+                    sop_evaluation = sop_registry.evaluate_sequence(
+                        self.primary_dna_sequence(result),
+                        host=HOST_METADATA[host]["display_name"],
+                    )
+                    
+                    # Job 305: Implement REGENERATE loop if required by policy
+                    original_candidate = None
+                    if any(hf.get("authorized_action") == "regenerate" for hf in sop_evaluation.get("hard_fails", []) + sop_evaluation.get("warnings", [])):
+                        original_candidate = dict(result) # preserve original
+                        
+                        # Trigger new generation (e.g. changing seed)
+                        new_seed = (seed or 0) + 1
+                        result = self.optimize_sequence(
+                            sequence, profile, use_template, kozak, dinuc,
+                            objective=objective, host_profile=host_profile, host=internal_host,
+                            return_candidates=return_candidates, constraints=constraints,
+                            custom_restriction_sites=custom_restriction_sites, seed=new_seed
+                        )
+                        result = self.attach_design_review(
+                            result, input_sequence=sequence, acceptance_criteria=acceptance_criteria,
+                            reviewer_disposition=data.get("reviewer_disposition")
+                        )
+                        
+                        # Complete re-validation
+                        sop_evaluation = sop_registry.evaluate_sequence(
+                            self.primary_dna_sequence(result),
+                            host=HOST_METADATA[host]["display_name"],
+                        )
+                        result["regenerated_from"] = original_candidate.get("construct_id")
+                        result["regenerate_action"] = True
+                    
+                    # Ensure blocking policy
+                    is_blocked = any(hf.get("authorized_action") == "block" for hf in result.get("sop_evaluation", sop_evaluation).get("hard_fails", []))
+                    result["policy_decision"] = "BLOCK" if is_blocked else "PASS"
+
+
+                    result["sop_profile"] = sop_profile.provenance()
+                    result["sop_evaluation"] = sop_evaluation
+                    
+                    # Job 305: Snapshot retention
+                    snapshot_dir = os.environ.get(
+                        "FACTORFORGE_RUN_RECORD_DIR",
+                        os.path.join(tempfile.gettempdir(), "factorforge_snapshots"),
+                    )
+                    os.makedirs(snapshot_dir, exist_ok=True)
+                    if "provenance" in result and "run_id" in result["provenance"]:
+                        run_id = result["provenance"]["run_id"]
+                        with open(os.path.join(snapshot_dir, f"{run_id}_policy_snapshot.json"), "w") as sf:
+                            json.dump(sop_profile.data, sf)
+                        # We also save the run_config snapshot
+                        run_config_data = {
+                            "target_host": host,
+                            "number_of_candidates": 1,
+                            "random_seed": seed,
+                            "optimizer_mode": objective,
+                            "assembly_methods": [] if not use_template else ["golden_gate"]
+                        }
+                        with open(os.path.join(snapshot_dir, f"{run_id}_run_config_snapshot.json"), "w") as sf:
+                            json.dump(run_config_data, sf)
+
 
             if implicit_strategy_disclosure and isinstance(result, dict):
                 result.update(implicit_strategy_disclosure)
@@ -509,15 +601,34 @@ class handler(BaseHTTPRequestHandler):
             public_host: {**meta, "gc_range": _default_gc_constraints(HOST_MAP[public_host])}
             for public_host, meta in HOST_METADATA.items()
         }
+        # Fetch rule metadata for SOP Builder
+        try:
+            registry = RuleRegistry()
+            rules = registry.list_rules()
+            rule_metadata = [
+                {
+                    "rule_id": r.rule_id,
+                    "name": r.name,
+                    "description": r.description,
+                    "category": r.category.value,
+                    "default_enforcement": r.enforcement.value
+                }
+                for r in rules
+            ]
+        except Exception as e:
+            rule_metadata = []
+
         health_info = {
             "status": "healthy",
             "service": "FactorForge API",
             "version": ENGINE_VERSIONS["product"],
             "factorforge_available": FACTORFORGE_AVAILABLE,
             "endpoints": {
+                "rule_metadata": rule_metadata,
                 "POST /api/optimize": "Run codon optimization",
                 "POST /api/optimize/compare": "Compare profile optimization results",
                 "POST /api/optimize/batch": "Run batch profile optimization",
+                "POST /api/slate": "Run multi-contract discovery and generate diverse Top-K candidate slate",
                 "GET /api/optimize": "Health check",
             },
             "supported_profiles": VALID_PROFILES,
@@ -525,9 +636,7 @@ class handler(BaseHTTPRequestHandler):
             "host_metadata": host_metadata_with_gc,
             "supported_objectives": VALID_OBJECTIVES,
             "capabilities": {
-                "execution_modes": (
-                    VALID_EXECUTION_MODES if ML_PREVIEW_ENABLED else ["profile"]
-                ),
+                "execution_modes": (VALID_EXECUTION_MODES if ML_PREVIEW_ENABLED else ["profile"]),
                 "ml_preview": {
                     "available": bool(FACTORFORGE_AVAILABLE and ML_PREVIEW_ENABLED),
                     "status": "experimental" if ML_PREVIEW_ENABLED else "in_progress",
@@ -535,9 +644,25 @@ class handler(BaseHTTPRequestHandler):
                     "label": "ML update in progress",
                 },
                 "db_save": {"available": WEB_DB_SAVE_ENABLED},
+                "sop_profiles": {
+                    "schema": "factorforge-sop-v1",
+                    "upload": True,
+                    "browser_persistence": True,
+                    "server_storage": False,
+                },
             },
             "mock_enabled": ENABLE_MOCK,
             "engine_versions": ENGINE_VERSIONS,
+            "version_manifest": (
+                public_version_metadata()
+                if FACTORFORGE_AVAILABLE
+                else {
+                    "product": {
+                        "version": "3.5.0",
+                        "release_status": "web_api_deployed_tag_pending",
+                    }
+                }
+            ),
             "validation_registry_version": VALIDATION_REGISTRY_VERSION,
             "validation_report_schema_version": VALIDATION_REPORT_SCHEMA_VERSION,
             "validation_checks": public_badge_checks(),
@@ -704,9 +829,7 @@ class handler(BaseHTTPRequestHandler):
         denominator_nt = max(aa_length * 3, 1)
         denominator_codons = max(aa_length, 1)
         original_cds = (
-            input_context["normalized_sequence"]
-            if input_context["input_type"] == "cds"
-            else None
+            input_context["normalized_sequence"] if input_context["input_type"] == "cds" else None
         )
         comparison = {
             "target_id": input_context.get("fasta_header") or "factorforge_target",
@@ -724,9 +847,7 @@ class handler(BaseHTTPRequestHandler):
             "rule": {"cds": rule_cds, "metrics": rule["metrics"]},
             "ml": {"cds": ml_cds, "metrics": ml["metrics"]},
             "nt_identity_percent": round(matching_nt / denominator_nt * 100, 2),
-            "codon_concordance_percent": round(
-                matching_codons / denominator_codons * 100, 2
-            ),
+            "codon_concordance_percent": round(matching_codons / denominator_codons * 100, 2),
             "alignment": alignment,
             "provenance": {
                 "sequence_id": None,
@@ -1058,6 +1179,97 @@ class handler(BaseHTTPRequestHandler):
 
         return {"results": results, "count": len(results), "profile": profile}
 
+    def handle_slate_request(self, data: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        """Handle POST /api/slate requests to generate diverse Top-K discovery slates."""
+        try:
+            # Slate v2 (Job 293) Handler branch
+            if "protein_sequence" in data or "slate_size" in data or data.get("version") == "v2":
+                protein_seq = str(data.get("protein_sequence") or data.get("sequence", "")).strip()
+                if not protein_seq:
+                    return 400, {
+                        "status": "error",
+                        "error": "protein_sequence is required and must be non-empty",
+                    }
+                host = self.validate_host(data.get("host", DEFAULT_HOST_PROFILE))
+                internal_host = HOST_MAP.get(host, host)
+
+                if not FACTORFORGE_AVAILABLE:
+                    logger.error("FactorForge engine unavailable for slate v2")
+                    return 503, {"status": "error", "error": "Engine unavailable. Contact support."}
+
+                from factorforge.core.slate_engine import SlateV2Engine
+
+                slate_engine = SlateV2Engine(
+                    host=internal_host,
+                    target_gc=float(data.get("target_gc", 0.45)),
+                )
+                response_payload = slate_engine.generate_slate(
+                    protein_sequence=protein_seq,
+                    source_cds=data.get("source_cds"),
+                    slate_size=int(data.get("slate_size", 25)),
+                    stop_policy=str(data.get("stop_policy", "append_preferred")),
+                    generation_mode=str(data.get("generation_mode", "deterministic_beam")),
+                    weights=data.get("weights"),
+                    forbidden_sites=data.get("forbidden_sites"),
+                    seed=int(data.get("seed", 42)),
+                )
+                return 200, response_payload
+
+            # Legacy Job 283A Discovery Slate branch
+            raw_sequence = str(data.get("sequence", "")).strip()
+            if not raw_sequence:
+                return 400, {
+                    "success": False,
+                    "error": "sequence is required and must be non-empty",
+                }
+
+            target_name = str(data.get("target_name", "Target-Protein")).strip() or "Target-Protein"
+            mature_length = data.get("mature_protein_aa_length")
+            if mature_length is not None:
+                mature_length = int(mature_length)
+            construct_length = data.get("construct_aa_length")
+            if construct_length is not None:
+                construct_length = int(construct_length)
+            signal_peptide_included = bool(data.get("signal_peptide_included", False))
+            novelty_class = str(data.get("novelty_class", "Class_A_InDistribution")).strip()
+            top_k = int(data.get("top_k", 3))
+            if top_k < 1 or top_k > 10:
+                raise ValueError("top_k must be between 1 and 10")
+
+            host = self.validate_host(data.get("host", DEFAULT_HOST_PROFILE))
+            internal_host = HOST_MAP[host]
+
+            if not FACTORFORGE_AVAILABLE:
+                logger.error("FactorForge engine unavailable for discovery slate")
+                return 503, {"success": False, "error": "Engine unavailable. Contact support."}
+
+            from factorforge.discovery.slate import DiscoverySlateEngine
+
+            engine = DiscoverySlateEngine(host=internal_host)
+            slate = engine.generate_slate(
+                target_aa=raw_sequence,
+                target_name=target_name,
+                mature_protein_aa_length=mature_length,
+                construct_aa_length=construct_length,
+                signal_peptide_included=signal_peptide_included,
+                novelty_class=novelty_class,
+                top_k=top_k,
+            )
+
+            result = {"success": True, "data": slate.to_dict()}
+            return 200, result
+
+        except (ValueError, FileNotFoundError) as e:
+            logger.warning(f"Slate validation error: {e}")
+            return 400, {"status": "error", "error": str(e), "success": False}
+        except Exception as e:
+            logger.error(f"Unexpected slate error: {e}", exc_info=True)
+            return 500, {
+                "status": "error",
+                "success": False,
+                "error": f"Internal server error: {type(e).__name__}: {str(e)}",
+            }
+
     def attach_design_review(
         self,
         response,
@@ -1137,21 +1349,7 @@ class handler(BaseHTTPRequestHandler):
         # Convert to uppercase
         return cleaned.upper()
 
-    def optimize_sequence(
-        self,
-        sequence,
-        profile,
-        use_template,
-        kozak,
-        dinuc,
-        objective=None,
-        host_profile=DEFAULT_HOST_PROFILE,
-        host=DEFAULT_HOST_PROFILE,
-        return_candidates=False,
-        constraints=None,
-        custom_restriction_sites=None,
-        seed=None,
-    ):
+    def optimize_sequence(self, sequence, profile, use_template, kozak, dinuc, objective=None, host_profile=DEFAULT_HOST_PROFILE, host=DEFAULT_HOST_PROFILE, return_candidates=False, constraints=None, custom_restriction_sites=None, seed=None, sop_profile=None):
         """Run actual FactorForge v3.x profile optimization."""
         try:
             constraints = self.parse_constraints(constraints, host=host)
@@ -1167,6 +1365,34 @@ class handler(BaseHTTPRequestHandler):
                     return_candidates=return_candidates,
                     custom_restriction_sites=custom_restriction_sites,
                     seed=seed,
+                )
+            elif objective == "balanced_cai":
+                return self.optimize_feasibility_best(
+                    sequence=sequence,
+                    profile=profile,
+                    host_profile=host_profile,
+                    host=host,
+                    constraints=constraints,
+                    kozak=kozak,
+                    dinuc=dinuc,
+                    return_candidates=return_candidates,
+                    custom_restriction_sites=custom_restriction_sites,
+                    seed=seed,
+                    use_balanced_engine=True
+                )
+            if objective in {"dp_v2_1", "dp_v2_1_1"}:
+                return self.optimize_dp_v2_1(
+                    sequence=sequence,
+                    profile=profile,
+                    host_profile=host_profile,
+                    host=host,
+                    constraints=constraints,
+                    kozak=kozak,
+                    dinuc=dinuc,
+                    return_candidates=return_candidates,
+                    custom_restriction_sites=custom_restriction_sites,
+                    seed=seed,
+                    objective=objective,
                 )
 
             # Get profile-based optimizer
@@ -1309,6 +1535,7 @@ class handler(BaseHTTPRequestHandler):
                 dinuc=dinuc,
                 constraints=constraints,
                 seed=seed,
+                sop_profile=sop_profile,
             )
             return response
 
@@ -1328,6 +1555,7 @@ class handler(BaseHTTPRequestHandler):
         return_candidates=True,
         custom_restriction_sites=None,
         seed=None,
+        use_balanced_engine=False,
     ):
         """Run feasibility_best contract and add profile comparison candidates."""
         constraints = self.parse_constraints(constraints, host=host)
@@ -1348,9 +1576,22 @@ class handler(BaseHTTPRequestHandler):
             target_gc_high=constraints["gc_max"],
             target_cai=constraints["cai_target"],
         )
-        best = feasibility["target"]["best_candidate"] or feasibility["best_candidate_without_gc"]
-        if not best:
-            raise ValueError("No feasibility_best candidate generated")
+        if use_balanced_engine:
+            from factorforge.engines.balanced_optimizer import BalancedOptimizer
+            dp_result = BalancedOptimizer().optimize(
+                protein_sequence=aa_seq,
+                codon_weights=table.codon_weights,
+                target_gc_min=constraints["gc_min"],
+                target_gc_max=constraints["gc_max"],
+            )
+        else:
+            dp_result = DPV2Optimizer().optimize(
+                protein_sequence=aa_seq,
+                codon_weights=table.codon_weights,
+                target_gc_min=constraints["gc_min"],
+                target_gc_max=constraints["gc_max"],
+            )
+        best = {"dna_sequence": dp_result["sequence"], "cai": dp_result["cai"]}
 
         candidates = [
             self.build_candidate(
@@ -1365,8 +1606,8 @@ class handler(BaseHTTPRequestHandler):
                 profile_cai=float(best["cai"]),
                 recommendation_reason=(
                     f"Maximum CAI under GC {constraints['gc_min']:g}-{constraints['gc_max']:g}%"
-                    if feasibility["target"]["best_candidate"]
-                    else "Maximum CAI without GC constraint; requested GC range was infeasible"
+                    if dp_result["gc_feasible"]
+                    else "Closest reachable GC band candidate; requested GC range was infeasible"
                 ),
                 constraints=constraints,
                 host=host,
@@ -1408,8 +1649,14 @@ class handler(BaseHTTPRequestHandler):
             "candidates": candidates if return_candidates else [],
             "dp_target_observation": {
                 "requested_cai_target": float(feasibility["target"]["cai"]),
-                "target_cai_feasible": bool(feasibility["target"]["feasible"]),
-                "max_cai_under_gc": feasibility["target"]["max_cai_under_gc"],
+                "target_cai_feasible": bool(
+                    dp_result["gc_feasible"]
+                    and float(dp_result["cai"]) >= float(feasibility["target"]["cai"])
+                ),
+                "max_cai_under_gc": (float(dp_result["cai"]) if dp_result["gc_feasible"] else None),
+                "engine": "dp_v2",
+                "engine_version": engine_version("dp"),
+                "constraint_scope": dp_result["constraint_scope"],
             },
             "validation": {
                 "input_type": "cds" if is_cds else "protein",
@@ -1466,6 +1713,170 @@ class handler(BaseHTTPRequestHandler):
             seed=seed,
         )
 
+    def optimize_dp_v2_1(
+        self,
+        sequence,
+        profile,
+        host_profile,
+        constraints,
+        kozak,
+        dinuc,
+        host=DEFAULT_HOST_PROFILE,
+        return_candidates=True,
+        custom_restriction_sites=None,
+        seed=None,
+        objective="dp_v2_1",
+    ):
+        """Run an explicit initiation-aware DP development candidate."""
+        constraints = self.parse_constraints(constraints, host=host)
+        table = load_codon_usage_table()
+        input_context = parse_sequence_input(sequence)
+        if not input_context["generation_allowed"]:
+            raise ValueError("; ".join(input_context["errors"]))
+        is_cds = input_context["input_type"] == "cds"
+        aa_seq = input_context["optimization_sequence"]
+        is_local_guard = objective == "dp_v2_1_1"
+        engine_id = "dp_v2_1_1" if is_local_guard else "dp_v2_1"
+        engine_label = "DP v2.1.1" if is_local_guard else "DP v2.1"
+        optimizer = DPV211Optimizer() if is_local_guard else DPV21Optimizer()
+        dp_result = optimizer.optimize(
+            protein_sequence=aa_seq,
+            codon_weights=table.codon_weights,
+            target_gc_min=constraints["gc_min"],
+            target_gc_max=constraints["gc_max"],
+        )
+        primary_dna = (
+            restore_cds_stop_policy(dp_result["sequence"], input_context)
+            if is_cds
+            else dp_result["sequence"]
+        )
+        candidate = self.build_candidate(
+            candidate_id=engine_id,
+            label=engine_label,
+            dna_sequence=primary_dna,
+            codon_weights=table.codon_weights,
+            profile_cai=float(dp_result["cai"]),
+            recommendation_reason=(
+                "Development candidate satisfying the requested GC band with "
+                "position-dependent 5-prime initiation scoring"
+                + (
+                    ", an exact active 5-prime GC layer, and a 5-nt homopolymer ceiling"
+                    if is_local_guard
+                    else ""
+                )
+            ),
+            constraints=constraints,
+            host=host,
+        )
+        response = {
+            "success": True,
+            "optimized_sequence": primary_dna,
+            "original_length": len(sequence),
+            "optimized_length": len(primary_dna),
+            "recommended_candidate": candidate,
+            "candidates": [candidate] if return_candidates else [],
+            "validation": {
+                "input_type": "cds" if is_cds else "protein",
+                "sequence_length": len(sequence) if is_cds else len(aa_seq),
+                "host_profile": host_profile,
+            },
+            "engine_versions": ENGINE_VERSIONS,
+            "seed": seed,
+            "metrics": {
+                "cai": float(dp_result["cai"]),
+                "cai_5p_ramp": float(dp_result["cai_5p_ramp"]),
+                "cai_body": float(dp_result["cai_body"]),
+                "gc_percent": float(dp_result["gc_percent"]),
+                "gc_5p_ramp_percent": float(dp_result["gc_5p_ramp_percent"]),
+                "gc_body_percent": float(dp_result["gc_body_percent"]),
+                "gc_target_reached": bool(dp_result["gc_feasible"]),
+                "ramp_length_codons": int(dp_result["ramp_length_codons"]),
+                "mfe_kcal_mol": None,
+                "mfe_status": (
+                    dp_result.get("mfe_5p_status", "not_computed")
+                    if is_local_guard
+                    else "not_computed"
+                ),
+                "mfe_status_reason": (
+                    dp_result.get("mfe_5p_reason")
+                    if is_local_guard
+                    else "dp_v2_1_uses_an_open_topology_proxy_not_rna_folding"
+                ),
+                "mfe_used": False,
+            },
+            "design_contract": {
+                "schema_version": "1.0",
+                "engine_id": engine_id,
+                "engine_version": engine_version(engine_id),
+                "engine_status": "development_rc",
+                "scientific_axes": [
+                    {"id": "assembly_feasibility", "evidence_class": "HARD"},
+                    {"id": "codon_adaptation", "evidence_class": "OPTIMIZED"},
+                    {"id": "five_prime_initiation", "evidence_class": "OPTIMIZED"},
+                ],
+                "independent_evaluation": {
+                    "evidence_class": "INDEPENDENTLY_EVALUATED",
+                    "status": "not_included_in_generation",
+                    "rna_folding": (
+                        dp_result.get("mfe_5p_status", "not_computed")
+                        if is_local_guard
+                        else "not_computed"
+                    ),
+                },
+                "claim_boundary": "in_silico_design_candidate",
+            },
+        }
+        if is_local_guard:
+            response["metrics"].update(
+                {
+                    "gc_5p_30nt_percent": float(dp_result["gc_5p_30nt_percent"]),
+                    "gc_5p_45nt_percent": float(dp_result["gc_5p_45nt_percent"]),
+                    "gc_constraint_status": dp_result["gc_constraint_status"],
+                    "dist_to_gc_min": float(dp_result["dist_to_gc_min"]),
+                    "dist_to_gc_max": float(dp_result["dist_to_gc_max"]),
+                    "min_50bp_gc_percent": float(dp_result["min_50bp_gc_percent"]),
+                    "outlier_50bp_gc_count": int(dp_result["outlier_50bp_gc_count"]),
+                    "max_homopolymer_run": int(dp_result["max_homopolymer_run"]),
+                    "initiation_gc_status": dp_result["initiation_gc_status"],
+                    "mfe_5p_window_kcal_mol": dp_result["mfe_5p_window_kcal_mol"],
+                    "mfe_5p_fold_window_nt": dp_result["mfe_5p_fold_window_nt"],
+                    "mfe_5p_upstream_context_nt": dp_result["mfe_5p_upstream_context_nt"],
+                }
+            )
+            response["design_contract"]["local_composition_guard"] = {
+                "initiation_gc_active_count_band": [
+                    dp_result["initiation_gc_active_min_count"],
+                    dp_result["initiation_gc_active_max_count"],
+                ],
+                "initiation_gc_status": dp_result["initiation_gc_status"],
+                "homopolymer_max_run": 5,
+            }
+        if is_cds:
+            assert_pathway_invariants(sequence, primary_dna, input_context)
+        response["validation_report"] = build_validation_report(
+            primary_dna,
+            gc_percent=float(dp_result["gc_percent"]),
+            constraints=constraints,
+            rule_engine=RuleEngine(host=host),
+        )
+        response.setdefault("metadata", {})["validation_registry_version"] = (
+            VALIDATION_REGISTRY_VERSION
+        )
+        response = self.apply_custom_restriction_sites(
+            response, custom_restriction_sites, constraints=constraints, host=host
+        )
+        return self.add_design_package_fields(
+            response=response,
+            input_sequence=sequence,
+            profile=profile,
+            objective=engine_id,
+            host_profile=host_profile,
+            kozak=kozak,
+            dinuc=dinuc,
+            constraints=constraints,
+            seed=seed,
+        )
+
     def add_design_package_fields(
         self,
         response,
@@ -1477,6 +1888,7 @@ class handler(BaseHTTPRequestHandler):
         dinuc,
         constraints,
         seed=None,
+        sop_profile=None,
     ):
         """Add DesignPackage-compatible metadata while preserving existing response keys."""
         output_cds = self.primary_dna_sequence(response)
@@ -1501,8 +1913,6 @@ class handler(BaseHTTPRequestHandler):
         }
         if seed is not None:
             param_payload["seed"] = seed
-        param_str = json.dumps(param_payload, sort_keys=True, separators=(",", ":"))
-
         response["construct_id"] = _generate_construct_id()
         response["design_package_version"] = "1.0"
         response["created_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -1524,10 +1934,44 @@ class handler(BaseHTTPRequestHandler):
                 "gc_reference_band": gc_reference_band,
             }
         )
+
+        run_id = f"run_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{self.sha256_prefix(input_sequence)[7:15]}"
+        if objective in {"dp_v2_1", "dp_v2_1_1"}:
+            resolved_engine_id = objective
+        elif objective == DEFAULT_OBJECTIVE or not profile:
+            resolved_engine_id = "dp"
+        else:
+            resolved_engine_id = "profile"
+        resolved_engine_status = (
+            "development_rc" if resolved_engine_id in {"dp_v2_1", "dp_v2_1_1"} else "stable"
+        )
+        run_config_hash = "sha256:" + hashlib.sha256(json.dumps(param_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+        effective_policy_hash = sop_profile.digest if sop_profile else None
+        policy_schema = getattr(sop_profile, 'SCHEMA', None) if sop_profile else None
+        input_hash = self.sha256_prefix(input_sequence)
+        code_commit = (
+            os.environ.get("VERCEL_GIT_COMMIT_SHA")
+            or os.environ.get("GITHUB_SHA")
+            or os.environ.get("FACTORFORGE_CODE_COMMIT")
+            or "unknown"
+        )
+
         response["provenance"] = {
-            "input_sequence_hash": self.sha256_prefix(input_sequence),
+            "run_id": run_id,
+            "input_sha256": input_hash,
+            "input_sequence_hash": input_hash,
+            "effective_policy_sha256": effective_policy_hash,
+            "run_config_sha256": run_config_hash,
+            "parameter_hash": run_config_hash,
+            "policy_schema_version": policy_schema,
+            "run_config_schema_version": "http://json-schema.org/draft-07/schema#",
+            "product_version": ENGINE_VERSIONS["product"],
+            "engine_id": resolved_engine_id,
+            "engine_generation": (2 if resolved_engine_id in {"dp", "dp_v2_1", "dp_v2_1_1"} else 1),
+            "engine_version": engine_version(resolved_engine_id),
+            "engine_status": resolved_engine_status,
+            "code_commit": code_commit,
             "output_cds_hash": self.sha256_prefix(output_cds),
-            "parameter_hash": self.sha256_prefix(param_str),
         }
         response["wet_lab_feedback"] = {"status": "pending", "submissions": []}
         response.setdefault("target", None)
@@ -1579,14 +2023,27 @@ class handler(BaseHTTPRequestHandler):
 
     def count_rare_codon_runs(self, output_cds, host_profile):
         """Count rare codon runs using the host-specific rule scanner."""
-        internal_host = HOST_MAP.get(
-            str(host_profile or DEFAULT_HOST_PROFILE).lower(), host_profile
+        cleaned_host = (
+            str(host_profile or DEFAULT_HOST_PROFILE)
+            .strip()
+            .lower()
+            .replace(" ", "")
+            .replace(".", "")
         )
-        return len(RuleEngine(host=internal_host).scan_rare_codon_runs(output_cds))
+        if "benthamiana" in cleaned_host or "nbe" in cleaned_host:
+            internal_host = "nbenthamiana"
+        elif "by2" in cleaned_host or "tabacum" in cleaned_host:
+            internal_host = "ntabacum"
+        else:
+            internal_host = HOST_MAP.get(str(host_profile).lower(), DEFAULT_HOST_PROFILE)
+        try:
+            return len(RuleEngine(host=internal_host).scan_rare_codon_runs(output_cds))
+        except Exception:
+            return 0
 
     def response_profile(self, response, profile, objective):
         """Return the selected candidate/profile name for DesignPackage metadata."""
-        if objective == DEFAULT_OBJECTIVE:
+        if objective in {DEFAULT_OBJECTIVE, "dp_v2_1", "dp_v2_1_1"}:
             recommended = response.get("recommended_candidate")
             if isinstance(recommended, dict) and recommended.get("id"):
                 return recommended["id"]
@@ -1605,7 +2062,6 @@ class handler(BaseHTTPRequestHandler):
         return len(cleaned)
 
     def design_validation_status(self, response):
-        """Map existing validation fields into DesignPackage validation status."""
         validation = response.get("validation", {})
         constraint_report = response.get("constraint_report", {})
         recommended = response.get("recommended_candidate") or {}
@@ -1644,7 +2100,7 @@ class handler(BaseHTTPRequestHandler):
 
         dna_sequence = self.primary_dna_sequence(response)
         usage_table = load_codon_usage_table()
-        codon_table = load_codon_table(DEFAULT_HOST_PROFILE, get_data_path())
+        codon_table = load_codon_table(host, get_data_path())
         before_metrics = self.custom_site_metrics(dna_sequence, usage_table.codon_weights)
 
         domestication = domesticate_custom_sites(
@@ -1981,3 +2437,4 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
+

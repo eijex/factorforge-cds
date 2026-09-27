@@ -4,6 +4,15 @@ FactorForge is an in-silico CDS design tool. It optimizes codon usage, GC conten
 
 This file tracks manually reviewed, non-confidential wet-lab feedback summaries. Public entries are user-submitted feedback summaries, not controlled validation studies, regulatory claims, or guarantees of FactorForge performance.
 
+## Sequence Policy Boundary
+
+FactorForge enforces CDS-integrity invariants and can apply a versioned
+sequence-review policy supplied by a user or laboratory. It does not define,
+approve, or validate a complete laboratory SOP. Bundled profiles are
+illustrative examples; advisory thresholds and enforcement decisions remain
+the responsibility of the user or laboratory. See
+[Sequence Policy Boundary](docs/sequence-policy.md).
+
 **Try it first**: [factorforge.eijex.com](https://factorforge.eijex.com)
 
 ---

@@ -30,3 +30,8 @@ class FileFormatError(FactorForgeError):
 
 class CodonTableError(FactorForgeError):
     """Raised when codon table is invalid or missing."""
+
+
+class UnsatisfiableDesignError(OptimizationError):
+    """Raised when no sequence candidate satisfies the requested hard constraints (e.g. GC band or Type IIS)."""
+

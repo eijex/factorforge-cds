@@ -31,7 +31,118 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
+### Added
+
+- **SOP Builder UX:** Added a visual sequence-policy builder that dynamically fetches canonical rules from the backend and strictly maps UI state to the `factorforge-sop-v1` YAML schema without maintaining duplicate rules in the frontend.
+- **Scientist-Facing Review Interface:** Overhauled the web UI into a transparent review dashboard. The interface now clearly distinguishes between *Design Mode* and *Comparison Mode* with comprehensive codon shift accounting.
+- **Two-Axis Policy Dashboard:** The UI now independently displays Detection, Enforcement, and Authorized Action according to the backend evaluation, without hardcoding UI risk severity.
+- **Provenance Drawer:** Added a dedicated evidence drawer exposing the Candidate ID, cryptographic input/output hashes, active policies, and FactorForge version.
+
+### Fixed
+
+- **API Resolution Logic:** Fixed a function-local json import shadowing bug.
+- **Strict Evidence Models:** Enforced xtra=forbid across all Evidence Pydantic models for cross-repo interoperability.
+- **Codon Decision Trace:** The web interface no longer performs post-hoc UI inferences (e.g., guessing host preference); it relies solely on the recorded codon_decision backend traces.
+
+## [3.5.1] — 2026-09-23
+
+### Added
+
+- Added a validated, versioned SOP profile format that separates deterministic
+  sequence findings from laboratory review policy.
+- Added a conservative plant-expression review template and web controls to
+  download human-readable YAML, upload YAML or JSON, reset, and retain the
+  active SOP in the local browser.
+- Added SOP provenance and resolved rule-policy evaluation to optimization API
+  responses when a profile is supplied.
+
 ### Changed
+
+- Grouped comparison methods, sequence/assembly requirements, and review policy
+  under the active SOP workflow while keeping stable DP v2 as the default path.
+- Replaced the long always-prominent SOP controls with an upload-first card,
+  concise default-profile summary, and one collapsed manual-overrides panel.
+- Added a commented conservative example SOP download, separate active-profile
+  export, and a public-safe GitHub intake for sequence-free SOP suggestions.
+- The bundled template is explicitly a conservative starting point, not a complete
+  or approved SOP for any named laboratory.
+
+### Evidence boundary
+
+- SOP settings configure computational design and review behavior only. They do
+  not establish synthesis acceptance, expression, yield, or wet-lab performance.
+
+### Added
+
+- Added exact CDS-to-CDS sense-codon accounting, translation-derived amino-acid
+  preservation checks, high-DPI dual codon tracks, and a measured-effects hover
+  inspector to the web dashboard.
+- Added a self-contained interactive HTML optimization report generated from the
+  same canonical browser report model as the dashboard.
+
+### Changed
+
+- Missing host codon frequencies now remain explicitly `N/A` in codon tracks and
+  reports; the browser does not infer optimizer causality from sequence differences.
+
+## [3.5.0] — 2026-09-19
+
+Web/API deployed; Git tag and package publication pending.
+
+### Added
+
+- Added a versioned Top-K discovery-slate API and CLI with deterministic hard-constraint
+  filtering, trait extraction, Pareto ranking, and sequence-free evidence records.
+- Added feature-gated constrained sLLM generation with synonymous masking, automaton vetoes,
+  corpus/tokenizer tooling, ONNX adapters, and explicit model provenance.
+- Added adaptive partial-DP rescue `1.0.0`, which preserves a verified prefix when possible
+  and solves the remaining suffix exactly under the carried constraint state.
+- Added reproducible discovery and four-arm, multi-seed ablation benchmark runners and tests.
+
+### Changed
+
+- Product version is `3.5.0`; stable DP v2 remains the default production path.
+- DP v2.1.1 is versioned as `2.1.1`; sLLM Hybrid is `0.2.0-preview.1` and remains disabled
+  by default. A prefix-conditioned suffix optimum is reported separately from a global optimum.
+
+### Evidence boundary
+
+- The recorded benchmark artifacts establish only computational feasibility, lineage, and
+  diversity observations. They do not establish expression, yield, synthesis success, folding,
+  clinical performance, or wet-lab validation.
+
+### Changed
+- Added the explicit `objective=dp_v2_1_1` API/web path for engine `2.1.1-dev`.
+  It retains the `(position, cumulative GC, automaton state)` DP state, prunes
+  the active 45-nt initiation GC layer, rejects homopolymers of 6 nt or longer
+  through the motif automaton, and reports local-GC, boundary, homopolymer, and
+  independently evaluated 5′ MFE status fields. The earlier `dp_v2_1` objective
+  remains available for reproducible comparison.
+- DP v2.1.1 is calibrated on one two-chain Target-mAb-A case; the preregistered
+  36-protein holdout remains pending. No expression, yield, ribosome-scanning,
+  synthesis, or wet-lab claim is made.
+- Expanded the downloadable and in-app design review into a Design Comparison
+  & Decision Report. It now presents reference/candidate metrics when a CDS
+  reference is available, DP v2.1 evidence classes, and a separate RNA-folding
+  evaluation boundary without implying biological superiority.
+- Limited Vercel deployment bundles to runtime assets so archived recipes,
+  benchmarks, local environments, and test artifacts are not packaged into the
+  Python function.
+- Added an explicit `objective=dp_v2_1` REST/web capability for the 2.1.0-dev
+  development candidate. It reports a three-axis design contract (assembly
+  feasibility, codon adaptation, and 5′ initiation-aware scoring) and preserves
+  stable DP v2 2.0.1 as the default `feasibility_best` path.
+- Replaced the disabled legacy “5′ Ramp” UI placeholder with a capability-gated
+  DP v2.1 selector. RNA folding remains independently evaluated and is reported
+  as not computed by candidate generation.
+- Removed whole-column sticky positioning from the desktop Design Brief and
+  Design Review so all three workbench columns follow one predictable page scroll.
+- Standalone HTML reports now preserve the FactorForge light or dark theme selected
+  at download time; print styling remains light.
+- Reframed the Design Review Report as a decision-first Researcher Decision
+  Report: unresolved checks now lead to prioritized, bounded next actions;
+  requested and API-recorded settings are compared; full checks and provenance
+  remain available as detail and in the standalone HTML.
 - Reorganized the web app as a persistent three-column researcher workflow:
   sequence input, a compact design brief, and design review. The review position
   remains visible before and after generation instead of appearing below the form.
@@ -39,6 +150,15 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   policy no longer occupy the primary design path. Optional sequence, assembly,
   and review requirements remain progressively disclosed without changing
   optimizer or API behavior.
+- Rebuilt the downloadable Design Review Report around the API's authoritative
+  decision and acceptance-policy snapshot, with detailed check states,
+  provenance, input-aware sequence summaries, print styling, and bounded
+  interpretation and limitations.
+- Added a machine-readable evidence-record JSON download that intentionally
+  excludes raw input and output sequences, while FASTA and GenBank remain
+  separate sequence-bearing downloads.
+- Updated browser history so new entries retain report provenance without
+  retaining the raw input sequence; legacy history entries remain readable.
 
 ### Fixed
 - Comparison metrics now distinguish explicit pass/fail results from missing or
@@ -47,14 +167,18 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 - Database integration tests skip before engine import when DATABASE_URL is absent.
 - Docker publication requires the same commit's CI and browser checks to succeed.
 
-### Candidate scope (v3.4.6, in preparation)
-- Capability-gated Rule/ML comparison UI with metrics and codon alignment.
-- Experimental preview and database availability indicators. These do not
-  establish trained-model readiness or biological performance.
+### v3.4.6 scope
+- Introduced a machine-readable product/engine version manifest. Product releases
+  and engine generations now advance independently.
+- Promoted the automaton-constrained DP v2 implementation to the public DP path,
+  preserving the existing `feasibility_best` identifier and response shape.
+- Labeled Rule as Gen 1 (`1.0.0`), DP v2 as Gen 2 (`2.0.1`), and sLLM Hybrid as
+  Gen 3 (`0.1.0-preview.1`). sLLM remains feature-gated and does not claim a
+  trained production model or biological performance.
 
 ### Notes
-- Release-note UI changes preceded package/tag publication. The formal version
-  update and distribution checks remain pending.
+- DP v2.1.1 is explicit and non-default. Its calibration does not establish
+  holdout generalization or biological performance.
 
 ## [3.4.5] — 2026-08-22
 
@@ -112,6 +236,24 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
   `automated_decision`/`acceptance_criteria_snapshot`/`reviewer_disposition`
   fields that `addToHistory()` already saves, instead of dropping them on
   reload.
+
+## [3.4.2] — 2026-07-24
+
+### Fixed
+- Fixed dark mode text contrast in Reviewer Disposition select and input controls.
+- Fixed dark mode styling gaps across web UI elements including dropzone borders,
+  Clear/Copy hover states, and checkbox borders.
+- Refreshed benchmark parameter registry manifest checksum hash.
+
+## [3.4.1] — 2026-07-24
+
+### Fixed
+- Fixed dark mode text contrast in the Acceptance Criteria section (labels, select
+  boxes, and divider).
+
+### Added
+- Added candidate-strategy tooltips to the Candidate Comparison table explaining
+  Feasibility Best, GC Target, and High CAI strategies.
 
 ## [3.4.0] — 2026-07-23
 
@@ -671,6 +813,8 @@ First official release of FactorForge.
 [3.4.5]: https://github.com/eijex/factorforge-cds/compare/v3.4.4...v3.4.5
 [3.4.4]: https://github.com/eijex/factorforge-cds/compare/v3.4.3...v3.4.4
 [3.4.3]: https://github.com/eijex/factorforge-cds/compare/v3.4.2...v3.4.3
+[3.4.2]: https://github.com/eijex/factorforge-cds/compare/v3.4.1...v3.4.2
+[3.4.1]: https://github.com/eijex/factorforge-cds/compare/v3.4.0...v3.4.1
 [3.4.0]: https://github.com/eijex/factorforge-cds/compare/v3.3.2...v3.4.0
 [3.3.2]: https://github.com/eijex/factorforge-cds/compare/v3.3.1...v3.3.2
 [3.3.1]: https://github.com/eijex/factorforge-cds/compare/v3.3.0...v3.3.1
@@ -694,3 +838,4 @@ First official release of FactorForge.
 [3.1.1]: https://github.com/eijex/factorforge-cds/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/eijex/factorforge-cds/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/eijex/factorforge-cds/releases/tag/v3.0.0
+

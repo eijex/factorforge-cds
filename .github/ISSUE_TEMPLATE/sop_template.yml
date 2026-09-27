@@ -1,0 +1,78 @@
+name: Public-safe SOP Template Suggestion
+description: Suggest a non-confidential SOP profile or policy improvement for maintainer review
+title: "[SOP template]: "
+labels: ["sop-template", "user-feedback", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an SOP profile or policy improvement.
+
+        GitHub Issues are public. Share only a sanitized, sequence-free profile.
+        Do not include raw sequences, construct or target identities, institution
+        or laboratory names without authorization, internal protocols, exact
+        process parameters, patient data, private contact information, or
+        confidential partner/customer information.
+
+        Submission does not make the profile an official FactorForge default.
+        Maintainers will review schema validity, general applicability, evidence
+        boundaries, and privacy before any public reuse.
+
+  - type: input
+    id: factorforge_version
+    attributes:
+      label: FactorForge version
+      placeholder: "e.g. 3.5.1"
+    validations:
+      required: true
+
+  - type: input
+    id: profile_id
+    attributes:
+      label: Public-safe profile ID
+      description: Use a generic ID without a laboratory, institution, customer, construct, or target name.
+      placeholder: "e.g. conservative_plant_review_v1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: change_type
+    attributes:
+      label: Suggestion type
+      options:
+        - New generic template
+        - Change to the bundled conservative template
+        - New rule-policy mapping
+        - Documentation or usability improvement
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Public-safe rationale
+      description: Explain the general workflow need and evidence boundary. Do not include private experimental details.
+      placeholder: "What general problem does this setting address, and should it be REQUIRED, PREFERRED, WARNING, or ignored?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: sanitized_yaml
+    attributes:
+      label: Sanitized YAML profile or changed section
+      description: Paste only sequence-free, non-confidential YAML. You may also drag a sanitized .yaml file into this field.
+      render: yaml
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: public_safe_confirmation
+    attributes:
+      label: Public-safe confirmation
+      options:
+        - label: I confirm that this public issue contains no raw sequence, construct or target identity, unauthorized institution/laboratory name, internal protocol, exact process parameter, patient data, private contact information, or confidential partner/customer information.
+          required: true
+        - label: I understand that this is a user-supplied policy suggestion, not wet-lab evidence, laboratory approval, regulatory guidance, or a performance guarantee.
+          required: true
+        - label: I understand that maintainers may revise, summarize, reject, or decline to publish this profile.
+          required: true

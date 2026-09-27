@@ -2,19 +2,31 @@
 
 FactorForge development direction and planned work.
 
-> Current release: **v3.4.5** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current product line: **v3.5.2** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
 
-## Current Release Status (v3.4.5)
+## Current Release Status
 
-FactorForge v3.4.5 was released on 2026-08-22. It is the current public
-release and completes the interface-reliability patch line: browser
+FactorForge v3.5.1 extends the web/API product line with versioned Sequence
+Policy Profiles (internally retained as `SopProfile` for compatibility), an
+editable browser-local policy workflow, Top-K discovery slates,
+an explicit DP v2.1.1 path, constrained-sLLM research integration, and adaptive
+partial-DP rescue while retaining stable DP v2 as the default. The preceding v3.4.5 release
+completed the interface-reliability patch line: browser
 interactions were restored, release checks were strengthened, and product,
 API, engine, registry, documentation, and fixture version surfaces were
 synchronized. The supported public boundary remains deterministic in-silico
-CDS design and pre-synthesis sequence review.
+CDS design and pre-synthesis sequence review. sLLM Gen 3 remains a separate,
+feature-gated research preview and does not imply a trained production model or
+biological validation. The v3.5.1 Git tag and package publication remain pending.
+
+DP v2.1.1 (`2.1.1`) is the current explicit Gen 2 research candidate.
+It adds a 45-nt initiation-GC active layer and >=6-nt homopolymer automaton
+guard without adding a DP state dimension. Target-mAb-A calibration is complete;
+the frozen 36-protein holdout gate remains pending, so stable DP v2 `2.0.1`
+continues as the default feasibility path.
 
 Current maintenance and evidence priorities are:
 
@@ -84,14 +96,20 @@ Current maintenance and evidence priorities are:
 
 ---
 
-## v3.5 — Validation-Driven
+## v3.5 — Multi-Engine Version Governance and Sequence Policy Profiles *(web/API deployed)*
 
 | Feature | Description |
 |---------|-------------|
-| **5' Ramp activation** | Enable only if reviewed wet-lab feedback supports N-terminal ramp benefit |
-| **Viral Delivery activation** | Enable only if reviewed wet-lab feedback supports scoring validity |
-| **Tissue-specific design profiles** | Leaf vs seed vs root codon-source review and profile gating |
-| **Documentation audit** | Comprehensive docs and capability review |
+| **Gen 1 — Rule** | Stable profile engine, independently versioned as 1.x |
+| **Gen 2 — DP v2** | Exact GC-state and configured-motif automaton constraints, independently versioned as 2.x |
+| **Gen 2 — DP v2.1.1** | Explicit local-composition development candidate; calibration complete, 36-protein holdout pending |
+| **Gen 3 — sLLM Hybrid** | Feature-gated 0.x research preview; no trained production-model claim |
+| **Version manifest** | One machine-readable product/engine source of truth exposed by the API |
+| **Sequence Policy Profiles** | Upload-first versioned review-policy examples with YAML export, YAML/JSON browser-local upload, persistence, reset, provenance, and collapsed manual overrides. FactorForge applies user-defined policy; it does not define, approve, or validate a laboratory SOP. |
+
+## Future — Validation-Driven Activation (version TBD)
+
+- Activate 5' ramp, viral-delivery, or tissue-specific profiles only after reviewed evidence supports each capability.
 
 ---
 
@@ -122,7 +140,7 @@ Current maintenance and evidence priorities are:
 
 ---
 
-## v4.0 — ML Engine *(data-conditional)*
+## Future — Trained ML Engine *(version TBD; data-conditional)*
 
 No public ML engine is scheduled until sufficient, non-confidential validation data and benchmark evidence are available.
 

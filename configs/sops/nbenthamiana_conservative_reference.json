@@ -1,0 +1,40 @@
+{
+  "$schema": "factorforge-sop-v1",
+  "profile_id": "nbenthamiana_conservative_reference",
+  "sop_name": "N. benthamiana Conservative Reference Template",
+  "version": "1.1.0",
+  "author": "Eijex",
+  "status": "REFERENCE_TEMPLATE",
+  "derived_from": "General precautionary assumptions for N. benthamiana transient expression.",
+  "scope_note": "A baseline advisory profile for Solanaceae expression. Contains no strict hardware/assembly constraints.",
+  "default_enforcement": "IGNORE",
+  "unknown_rule_policy": "ERROR",
+  "workflow": {
+    "design_method": "feasibility_best",
+    "comparison_methods": ["high_cai", "gc_target"],
+    "sequence_requirements": {
+      "reproducibility_seed": null,
+      "kozak_optimization": true,
+      "suppress_tpa": false,
+      "type_iis_enzymes": [],
+      "custom_restriction_sites": []
+    },
+    "review_policy": {
+      "cai": "PREFERRED",
+      "overall_gc": "PREFERRED",
+      "local_gc": "PREFERRED",
+      "repeats": "PREFERRED",
+      "homopolymers": "PREFERRED",
+      "forbidden_motifs": "PREFERRED"
+    }
+  },
+  "rules": {
+    "biological.reading_frame.v1": "HARD_FAIL",
+    "rna.cryptic_splice.v1": "WARNING",
+    "rna.polya_motifs.v1": "WARNING",
+    "rna.au_rich_elements.v1": "WARNING",
+    "synthesis.gc_extremes.v1": "WARNING",
+    "policy.synthesis.homopolymer.v1": "WARNING",
+    "policy.initiation_mfe.v1": "WARNING"
+  }
+}
