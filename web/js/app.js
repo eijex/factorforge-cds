@@ -427,7 +427,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadApiMetadata();
     applySopToUi(state.activeSop, { persist: false });
     initEventListeners();
-    updateDesignBriefSummary();\n
+    updateDesignBriefSummary();
+
     if (primary.provenance) {
         const el = (id) => document.getElementById(id);
         if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
@@ -435,8 +436,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
         if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
         if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
-        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
         if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
         if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
     }
@@ -529,7 +530,8 @@ function applySopToUi(profile, { persist = true } = {}) {
     elements.sopProfileName.textContent = validated.sop_name;
     elements.sopProfileMeta.textContent = `${validated.status === 'STANDARD_TEMPLATE' ? 'Default template' : 'Custom SOP'} · v${validated.version} · stored only in this browser`;
     elements.sopProfileBadge.textContent = validated.status === 'STANDARD_TEMPLATE' ? 'Active' : 'Custom';
-    updateDesignBriefSummary();\n
+    updateDesignBriefSummary();
+
     if (primary.provenance) {
         const el = (id) => document.getElementById(id);
         if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
@@ -537,8 +539,8 @@ function applySopToUi(profile, { persist = true } = {}) {
         if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
         if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
         if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
-        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
         if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
         if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
     }
@@ -632,7 +634,8 @@ function initEventListeners() {
         radio.addEventListener('change', (e) => {
             state.objective = e.target.value;
             captureSopFromUi();
-            updateDesignBriefSummary();\n
+            updateDesignBriefSummary();
+
     if (primary.provenance) {
         const el = (id) => document.getElementById(id);
         if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
@@ -640,8 +643,8 @@ function initEventListeners() {
         if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
         if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
         if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
-        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
         if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
         if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
     }
@@ -656,7 +659,8 @@ function initEventListeners() {
     });
     elements.hostSelect.addEventListener('change', (e) => {
         state.host = e.target.value;
-        updateDesignBriefSummary();\n
+        updateDesignBriefSummary();
+
     if (primary.provenance) {
         const el = (id) => document.getElementById(id);
         if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
@@ -664,8 +668,8 @@ function initEventListeners() {
         if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
         if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
         if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
-        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
         if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
         if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
     }
@@ -680,7 +684,8 @@ function initEventListeners() {
     elements.useTemplateCheck.addEventListener('change', (e) => {
         state.useTemplate = e.target.checked;
         captureSopFromUi();
-        updateDesignBriefSummary();\n
+        updateDesignBriefSummary();
+
     if (primary.provenance) {
         const el = (id) => document.getElementById(id);
         if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
@@ -688,8 +693,8 @@ function initEventListeners() {
         if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
         if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
         if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
-        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
         if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
         if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
     }
@@ -699,7 +704,8 @@ function initEventListeners() {
     elements.kozakToggle.addEventListener('change', (e) => {
         state.kozak = e.target.checked;
         captureSopFromUi();
-        updateDesignBriefSummary();\n
+        updateDesignBriefSummary();
+
     if (primary.provenance) {
         const el = (id) => document.getElementById(id);
         if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
@@ -707,8 +713,8 @@ function initEventListeners() {
         if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
         if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
         if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
-        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
         if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
         if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
     }
@@ -717,7 +723,8 @@ function initEventListeners() {
     elements.dinucToggle.addEventListener('change', (e) => {
         state.dinuc = e.target.checked;
         captureSopFromUi();
-        updateDesignBriefSummary();\n
+        updateDesignBriefSummary();
+
     if (primary.provenance) {
         const el = (id) => document.getElementById(id);
         if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
@@ -725,8 +732,8 @@ function initEventListeners() {
         if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
         if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
         if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
-        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
         if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
         if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
     }
@@ -734,7 +741,8 @@ function initEventListeners() {
     });
     elements.customRestrictionSites.addEventListener('input', () => {
         state.customRestrictionSites = [];
-        updateDesignBriefSummary();\n
+        updateDesignBriefSummary();
+
     if (primary.provenance) {
         const el = (id) => document.getElementById(id);
         if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
@@ -742,15 +750,16 @@ function initEventListeners() {
         if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
         if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
         if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
-        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
         if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
         if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
     }
 
     });
     elements.customRestrictionSites.addEventListener('change', captureSopFromUi);
-    elements.typeIisEnzymes.forEach(input => input.addEventListener('change', () => { captureSopFromUi(); updateDesignBriefSummary();\n
+    elements.typeIisEnzymes.forEach(input => input.addEventListener('change', () => { captureSopFromUi(); updateDesignBriefSummary();
+
     if (primary.provenance) {
         const el = (id) => document.getElementById(id);
         if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
@@ -758,8 +767,8 @@ function initEventListeners() {
         if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
         if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
         if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
-        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
         if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
         if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
     }
@@ -1335,7 +1344,7 @@ function updateCodonInspector(accounting, index) {
     else if (item.origAa === item.optAa) effects.push('Synonymous codon shift observed');
     else effects.push(`Translated residue changed: ${item.origAa || '—'} → ${item.optAa || '—'}`);
     if (item.decision_rationale) {
-        effects.push(Trace: );
+        effects.push(`Trace: ${item.decision_rationale}`);
     } else {
         // Strict Rule: No UI inference
     }
@@ -2726,7 +2735,8 @@ function clearAll() {
     if (elements.mfeWarningBanner) elements.mfeWarningBanner.classList.add('hidden');
     elements.emptyState.classList.remove('hidden');
     elements.validationStatus.classList.add('hidden');
-    updateDesignBriefSummary();\n
+    updateDesignBriefSummary();
+
     if (primary.provenance) {
         const el = (id) => document.getElementById(id);
         if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
@@ -2734,8 +2744,8 @@ function clearAll() {
         if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
         if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
         if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = ${primary.provenance.objective_strategy || 'N/A'} (Seed: );
-        if(el('provPolicy')) el('provPolicy').textContent = ${primary.provenance.policy_id || 'N/A'} [];
+        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
+        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
         if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
         if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
     }
