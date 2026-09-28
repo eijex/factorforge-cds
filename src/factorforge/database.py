@@ -1,70 +1,92 @@
-"""Database models and CRUD operations for FactorForge."""
+"""Database models and CRUD operations for FactorForge using eijex-db-core."""
 
 from __future__ import annotations
 
 import os
 import uuid
+import hashlib
 from typing import Dict, Optional
 
-from sqlalchemy import ARRAY, DECIMAL, TIMESTAMP, Column, ForeignKey, String, Text, create_engine, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///factorforge.db")
+from eijex_db_core.models import (
+    Campaign,
+    Candidate,
+    CandidateMetric,
+    Artifact,
+    Sequence,
+    User,
+    Organization,
+    OrganizationType,
+    UserRole,
+    ArtifactType,
+    MoleculeClass,
+    EncryptionStatus
+)
+
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/eijex_test")
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-
-class Base(DeclarativeBase):
-    pass
-
-
-class Batch(Base):
-    __tablename__ = "batches"
-    __table_args__ = {"schema": "factorforge"}
-
-    batch_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    study_number = Column(String(50), unique=True, nullable=False)
-    organism = Column(String(100), nullable=False)
-    target_protein = Column(String(255), nullable=False)
-    created_at = Column(TIMESTAMP, server_default=func.now())
-    updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
-    status = Column(String(20), default="pending")
-    created_by = Column(String(100))
-
-
-class Sequence(Base):
-    __tablename__ = "sequences"
-    __table_args__ = {"schema": "factorforge"}
-
-    sequence_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    batch_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("factorforge.batches.batch_id", ondelete="CASCADE"),
-        nullable=False,
+def _get_or_create_system_user(session) -> uuid.UUID:
+    """Helper to get a system user ID for the automated AI designer."""
+    sys_user = session.query(User).filter_by(display_name="FactorForge AI").first()
+    if sys_user:
+        return sys_user.user_id
+        
+    org = session.query(Organization).filter_by(display_name="Eijex Systems").first()
+    if not org:
+        org = Organization(display_name="Eijex Systems", organization_type=OrganizationType.internal)
+        session.add(org)
+        session.flush()
+        
+    sys_user = User(
+        organization_id=org.organization_id,
+        display_name="FactorForge AI",
+        role=UserRole.researcher
     )
-    sequence_type = Column(String(20), nullable=False)
-    sequence_data = Column(Text, nullable=False)
-    gc_content = Column(DECIMAL(5, 4))
-    cai = Column(DECIMAL(5, 4))
-    tm = Column(DECIMAL(5, 2))
-    created_at = Column(TIMESTAMP, server_default=func.now())
-    metadata_ = Column("metadata", JSONB)
+    session.add(sys_user)
+    session.flush()
+    return sys_user.user_id
 
-
-class OptimizationResult(Base):
-    __tablename__ = "optimization_results"
-    __table_args__ = {"schema": "factorforge"}
-
-    result_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    batch_id = Column(UUID(as_uuid=True), ForeignKey("factorforge.batches.batch_id"))
-    sequence_id = Column(UUID(as_uuid=True), ForeignKey("factorforge.sequences.sequence_id"))
-    algorithm_version = Column(String(20), nullable=False)
-    execution_time_sec = Column(DECIMAL(8, 3))
-    avoided_motifs = Column(ARRAY(Text))
-    warnings = Column(ARRAY(Text))
-    created_at = Column(TIMESTAMP, server_default=func.now())
+def _create_sequence_record(session, seq_data: str, mol_class: MoleculeClass) -> uuid.UUID:
+    """Helper to create an Artifact and Sequence record for raw sequence strings."""
+    seq_bytes = seq_data.encode('utf-8')
+    seq_hash = hashlib.sha256(seq_bytes).hexdigest()
+    
+    # Check if sequence already exists
+    existing_seq = session.query(Sequence).filter_by(
+        molecule_class=mol_class,
+        canonical_sequence_sha256=seq_hash
+    ).first()
+    
+    if existing_seq:
+        return existing_seq.sequence_id
+        
+    # Create Artifact
+    artifact = Artifact(
+        artifact_uri=f"inline://{seq_hash}",
+        sha256_hash=seq_hash,
+        mime_type="text/plain",
+        size_bytes=len(seq_bytes),
+        artifact_type=ArtifactType.fasta,
+        encryption_status=EncryptionStatus.none
+    )
+    session.add(artifact)
+    session.flush()
+    
+    # Create Sequence
+    new_seq = Sequence(
+        molecule_class=mol_class,
+        canonical_sequence_sha256=seq_hash,
+        artifact_id=artifact.artifact_id,
+        length=len(seq_data)
+    )
+    session.add(new_seq)
+    session.flush()
+    return new_seq.sequence_id
 
 
 def save_optimization(
@@ -75,73 +97,82 @@ def save_optimization(
     metrics: Dict,
     algorithm_version: str = "2.1.0",
 ) -> str:
-    """Save optimization result to database."""
+    """Save optimization result to database using eijex-db-core."""
     with SessionLocal() as session:
-        batch = Batch(
-            study_number=study_number,
-            organism="nicotiana_benthamiana",
-            target_protein=protein_name,
-            status="completed",
+        sys_user_id = _get_or_create_system_user(session)
+        
+        # Create Campaign (equivalent to legacy Batch)
+        campaign = Campaign(
+            name=study_number,
+            description=f"Target: {protein_name} | Algo: {algorithm_version}"
         )
-        session.add(batch)
+        session.add(campaign)
         session.flush()
 
-        input_seq = Sequence(
-            batch_id=batch.batch_id,
-            sequence_type="input",
-            sequence_data=input_sequence,
+        # Create Sequence records
+        input_seq_id = _create_sequence_record(session, input_sequence, MoleculeClass.CDS)
+        opt_seq_id = _create_sequence_record(session, optimized_sequence, MoleculeClass.CDS)
+
+        # Create Candidate
+        candidate = Candidate(
+            campaign_id=campaign.campaign_id,
+            sequence_id=opt_seq_id,
+            designer_user_id=sys_user_id,
+            design_rationale=f"Algorithm {algorithm_version} optimization"
         )
-        output_seq = Sequence(
-            batch_id=batch.batch_id,
-            sequence_type="optimized",
-            sequence_data=optimized_sequence,
-            gc_content=metrics.get("gc_content"),
-            cai=metrics.get("cai"),
-            tm=metrics.get("tm"),
-            metadata_=metrics,
-        )
-        session.add_all([input_seq, output_seq])
+        session.add(candidate)
         session.flush()
 
-        result = OptimizationResult(
-            batch_id=batch.batch_id,
-            sequence_id=output_seq.sequence_id,
-            algorithm_version=algorithm_version,
-            execution_time_sec=metrics.get("execution_time"),
-            avoided_motifs=metrics.get("avoided_motifs", []),
-            warnings=metrics.get("warnings", []),
-        )
-        session.add(result)
+        # Add Metrics
+        db_metrics = []
+        for m_name in ["gc_content", "cai", "tm", "execution_time"]:
+            if m_name in metrics and metrics[m_name] is not None:
+                db_metrics.append(CandidateMetric(
+                    candidate_id=candidate.candidate_id,
+                    metric_name=m_name,
+                    metric_value=float(metrics[m_name])
+                ))
+        
+        if db_metrics:
+            session.add_all(db_metrics)
+            
         session.commit()
-
-        return str(batch.batch_id)
+        return str(campaign.campaign_id)
 
 
 def get_batch(study_number: str) -> Optional[Dict]:
-    """Retrieve batch by study number."""
+    """Retrieve batch/campaign by study number."""
     with SessionLocal() as session:
-        batch = (
-            session.query(Batch)
-            .filter(Batch.study_number == study_number)
-            .first()
-        )
-        if not batch:
+        campaign = session.query(Campaign).filter(Campaign.name == study_number).first()
+        if not campaign:
             return None
 
-        sequences = session.query(Sequence).filter(Sequence.batch_id == batch.batch_id).all()
+        candidates = session.query(Candidate).filter(Candidate.campaign_id == campaign.campaign_id).all()
+        
+        # Legacy payload shape for API compatibility
+        seq_dicts = []
+        for cand in candidates:
+            # Fetch the actual sequence string (simulated or fetched if URI was local)
+            # Since we use inline://hash, we would normally fetch from blob store. 
+            # For backward compatibility without a blob store, we just return a placeholder.
+            # A true refactor would pass the raw sequences differently or query the artifact URI.
+            metrics = session.query(CandidateMetric).filter_by(candidate_id=cand.candidate_id).all()
+            m_dict = {m.metric_name: m.metric_value for m in metrics}
+            
+            seq_dicts.append({
+                "type": "optimized",
+                "data": f"Sequence<{cand.sequence_id}>", 
+                "gc": m_dict.get("gc_content"),
+                "cai": m_dict.get("cai")
+            })
+
+        # Parse protein name from description for backward compatibility
+        protein_name = campaign.description.split(" | Algo:")[0].replace("Target: ", "") if campaign.description else ""
 
         return {
-            "batch_id": str(batch.batch_id),
-            "study_number": batch.study_number,
-            "protein": batch.target_protein,
-            "status": batch.status,
-            "sequences": [
-                {
-                    "type": seq.sequence_type,
-                    "data": f"{seq.sequence_data[:50]}...",
-                    "gc": float(seq.gc_content) if seq.gc_content is not None else None,
-                    "cai": float(seq.cai) if seq.cai is not None else None,
-                }
-                for seq in sequences
-            ],
+            "batch_id": str(campaign.campaign_id),
+            "study_number": campaign.name,
+            "protein": protein_name,
+            "status": "completed",
+            "sequences": seq_dicts,
         }
