@@ -49,10 +49,7 @@ class FactorForgeDBConnector:
                 self.db_path = str(db_path)
             self._init_sqlite_checkpoint()
             return
-        self.dsn = dsn or os.environ.get(
-            "FACTORFORGE_DB_DSN", 
-            "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=postgres"
-        )
+        self.dsn = dsn or os.environ.get("FACTORFORGE_DB_DSN")
         self._init_db_extensions()
 
     def _sqlite_connection(self) -> sqlite3.Connection:
@@ -129,6 +126,8 @@ class FactorForgeDBConnector:
                 "PostgreSQL support requires factorforge-cds[postgres]. "
                 "Install it before connecting to PostgreSQL."
             ) from exc
+        if not self.dsn:
+            raise RuntimeError("Set FACTORFORGE_DB_DSN before using the legacy PostgreSQL connector")
         conn = psycopg2.connect(self.dsn)
         try:
             yield conn

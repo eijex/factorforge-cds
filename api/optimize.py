@@ -615,7 +615,7 @@ class handler(BaseHTTPRequestHandler):
                 }
                 for r in rules
             ]
-        except Exception as e:
+        except Exception:
             rule_metadata = []
 
         health_info = {
@@ -659,7 +659,7 @@ class handler(BaseHTTPRequestHandler):
                 else {
                     "product": {
                         "version": "3.5.0",
-                        "release_status": "web_api_deployed_tag_pending",
+                        "release_status": "published",
                     }
                 }
             ),

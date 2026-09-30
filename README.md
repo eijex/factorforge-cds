@@ -14,7 +14,7 @@
 
 FactorForge performs deterministic CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. It is positioned as a pre-synthesis review harness: it helps teams generate reproducible CDS candidates, inspect assembly-relevant sequence constraints, and package design metadata before downstream synthesis, cloning, or experimental review. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
 
-FactorForge v3.5.1 uses independently versioned engines:
+FactorForge v3.5.3 uses independently versioned engines:
 
 | Generation | Engine | Version | Availability |
 |---|---|---:|---|
@@ -70,7 +70,7 @@ are available, a separately evaluated 5′ MFE value. It is not the default; its
 single-target calibration does not establish holdout generalization or biological
 performance.
 
-The v3.5.1 discovery-slate surface generates versioned Top-K research candidates,
+The v3.5.x discovery-slate surface generates versioned Top-K research candidates,
 applies a shared deterministic hard-constraint filter, and records generator and
 fallback lineage. The sLLM path is disabled by default. A partial-DP rescue solves
 an exact suffix conditioned on the retained prefix; it is not a claim of global
@@ -102,9 +102,17 @@ Mun-Kyu Kim ([@eijex](https://github.com/eijex))
 
 ## Optional PostgreSQL support
 
-Install `pip install "factorforge-cds[postgres]"` only when using the PostgreSQL
-connector. Explicit local SQLite checkpoints do not require a PostgreSQL driver.
-Database integration tests require an explicitly configured `DATABASE_URL`.
+FactorForge design, CLI, Python API, and file export do not require a database.
+PostgreSQL persistence is an explicit Eijex integration path for retaining shared
+campaign and candidate identities; it is not enabled by default.
+
+Install `pip install "factorforge-cds[postgres]"` only when using that integration.
+The deployment must also provide a compatible `eijex-db-core` package and set
+`FACTORFORGE_DATABASE_URL`. FactorForge contains no default database credentials and
+does not silently fall back to another backend. See [Persistence](docs/persistence.md).
+
+Explicit local SQLite research checkpoints in `factorforge.db.connector` remain a
+separate local-only utility and are not the shared DBTL system of record.
 
 ## License
 

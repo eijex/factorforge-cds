@@ -127,7 +127,10 @@ def test_compact_codon_transformer_forward():
 
 def test_onnx_model_adapter_inference():
     pytest.importorskip("onnxruntime")
-    adapter = OnnxSLMAdapter()
+    try:
+        adapter = OnnxSLMAdapter()
+    except FileNotFoundError:
+        pytest.skip("optional trained ONNX model is not installed")
     assert "onnx" in adapter.model_name
 
     logits = adapter.predict_logits(
@@ -153,7 +156,10 @@ def test_biological_slate_constrained_generation():
         expected_stop="TAA",
     )
 
-    adapter = OnnxSLMAdapter()
+    try:
+        adapter = OnnxSLMAdapter()
+    except FileNotFoundError:
+        pytest.skip("optional trained ONNX model is not installed")
     beam_decoder = ConstrainedBeamDecoder(contract=contract, model_adapter=adapter, beam_width=3)
     sample_decoder = ConstrainedSampleDecoder(
         contract=contract, model_adapter=adapter, temperature=0.7, seed=42
