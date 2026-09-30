@@ -12,7 +12,7 @@ import math
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from factorforge.analysis.metrics import STANDARD_GENETIC_CODE
-from factorforge.constraints.type_iis import TYPE_IIS_MOTIFS, get_canonical_forbidden_motifs
+from factorforge.constraints.type_iis import get_canonical_forbidden_motifs
 from factorforge.engines.sllm.automaton import AutomatonCompiler, CompiledAutomaton
 
 AA_TO_CODONS: Dict[str, List[str]] = {}

@@ -15,14 +15,12 @@ import csv
 import hashlib
 import json
 import math
-import os
 from pathlib import Path
 import re
 import time
 from typing import Any, Dict, List, Tuple
 
 from factorforge.engines.dp_v2_1 import DPV21Optimizer
-from factorforge.scoring.quantization import CanonicalQuantizer
 
 # Paths
 CORPUS_PATH = Path("c:/Work/eijex/eijex-workspace/_papers/manuscripts/_prism/paper5-factorforge-assembly/corpus/36_proteins_benchmark.fasta")

@@ -79,7 +79,7 @@ def main() -> None:
 
     print(f"\nrecipes/meta.yaml updated on branch '{branch}' (sha256: {sha256}).")
     print(f"This commit does NOT touch the v{version} release tag/commit.")
-    print(f"Push and open a PR (or push to your bioconda-recipes fork) manually:")
+    print("Push and open a PR (or push to your bioconda-recipes fork) manually:")
     print(f"  git push origin {branch}")
 
 

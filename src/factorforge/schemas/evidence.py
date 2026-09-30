@@ -1,6 +1,5 @@
 from typing import List, Optional, Dict, Any, Literal
 from pydantic import BaseModel, Field, ConfigDict
-from datetime import datetime
 
 class FindingRecord(BaseModel):
     model_config = ConfigDict(extra='forbid')

@@ -110,3 +110,12 @@ def test_concurrent_retry_has_one_campaign():
         ids = list(pool.map(lambda _: save(), range(4)))
     assert len(set(ids)) == 1
     assert get_batch(study, session_factory=SessionLocal)["sequences"][0]["data"] == "MK..."
+
+
+def test_legacy_campaign_without_sequence_roles_is_not_completed():
+    from eijex_db_core.models import Campaign
+    study = f"LEGACY-{uuid.uuid4().hex}"
+    with SessionLocal() as session, session.begin():
+        session.add(Campaign(name=study, description="Legacy fixture"))
+    with pytest.raises(RuntimeError, match="legacy-record migration"):
+        get_batch(study, session_factory=SessionLocal)

@@ -14,7 +14,7 @@
 
 FactorForge performs deterministic CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. It is positioned as a pre-synthesis review harness: it helps teams generate reproducible CDS candidates, inspect assembly-relevant sequence constraints, and package design metadata before downstream synthesis, cloning, or experimental review. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
 
-FactorForge v3.5.3 uses independently versioned engines:
+FactorForge v3.5.4 uses independently versioned engines:
 
 | Generation | Engine | Version | Availability |
 |---|---|---:|---|
@@ -90,7 +90,7 @@ FactorForge outputs are **in-silico only** and have not been experimentally vali
 ## Citing
 
 ```
-FactorForge v3.5.3 (2026). Open-source constraint-based CDS design and sequence review.
+FactorForge v3.5.4 (2026). Open-source constraint-based CDS design and sequence review.
 Eijex. https://github.com/eijex/factorforge-cds
 ```
 

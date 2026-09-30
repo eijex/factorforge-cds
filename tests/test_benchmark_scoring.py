@@ -1,6 +1,5 @@
 import dataclasses
 import pandas as pd
-import pytest
 from benchmarks.config import load_benchmark_config
 from benchmarks.scoring import score_cds, canonical_multi_constraint_pass
 
@@ -88,7 +87,6 @@ def test_canonical_helper_biological_fail_implies_false():
 
 def test_canonical_helper_nan_treated_as_false():
     """canonical_multi_constraint_pass: NaN in any primitive → result=False."""
-    import numpy as np
     df = pd.DataFrame([{
         "biological_pass": True,
         "assembly_pass": True,

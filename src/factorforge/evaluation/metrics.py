@@ -3,7 +3,7 @@
 Includes PolyA, Homopolymer, and Repeat detectors.
 """
 import re
-from typing import List, Optional
+from typing import List
 
 def calculate_polya_motifs(dna_sequence: str, threshold: int = 6) -> List[str]:
     """Find PolyA-like motifs (A runs) of length >= threshold."""

@@ -2,6 +2,12 @@
 
 Focused CDS design and pre-synthesis review for N. benthamiana workflows.
 
+Sequence policy files can be downloaded as examples, edited, and uploaded. The
+active profile persists only in this browser. Optional advanced settings remain
+collapsed; the edit button expands them. A separate registry-backed modal builder
+is not part of the verified web runtime. Uploaded profiles are examples or user
+policies, not approved laboratory SOPs.
+
 ## 🌐 Live Demo
 
 **Web App**: https://factorforge.eijex.com

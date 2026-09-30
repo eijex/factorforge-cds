@@ -4,7 +4,10 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
-## Unreleased — persistence stability gate
+## v3.5.4 — standalone and optional-persistence stability
+
+- Kept product and public metadata synchronized with v3.5.4 while engine versions,
+  scoring defaults, and frozen scientific evidence remain unchanged.
 
 - Standalone FactorForge remains database-free by default.
 - Shared PostgreSQL persistence now requires explicit configuration and a compatible

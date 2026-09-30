@@ -401,6 +401,10 @@ def get_batch(
             return None
 
         sequences = _campaign_sequence_map(session, models, campaign.campaign_id)
+        if set(sequences) != {"input", "optimized"}:
+            raise RuntimeError(
+                "Campaign lacks input/output provenance; explicit legacy-record migration is required"
+            )
         candidate = (
             session.query(models.Candidate)
             .filter(models.Candidate.campaign_id == campaign.campaign_id)

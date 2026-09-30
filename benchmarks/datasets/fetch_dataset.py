@@ -24,11 +24,13 @@ def _read_fasta(text: str) -> dict[str, str]:
     seqs, name, buf = {}, None, []
     for line in text.splitlines():
         if line.startswith(">"):
-            if name: seqs[name] = "".join(buf).upper()
+            if name:
+                seqs[name] = "".join(buf).upper()
             name, buf = line[1:].strip().split()[0], []
         elif line.strip():
             buf.append(line.strip())
-    if name: seqs[name] = "".join(buf).upper()
+    if name:
+        seqs[name] = "".join(buf).upper()
     return seqs
 
 

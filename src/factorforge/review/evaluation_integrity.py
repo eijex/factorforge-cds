@@ -1,5 +1,5 @@
 import hashlib
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 
 def _hash_sequence(sequence: str) -> str:
     """Returns canonical sequence hash."""

@@ -1,7 +1,6 @@
 # factorforge/tests/test_quantized_scoring.py
 """Tests for Canonical Fixed-Point Quantization and Deterministic Tie-Breaking."""
 
-import pytest
 from factorforge.scoring.quantization import CanonicalQuantizer, PathRank
 
 

@@ -9,7 +9,6 @@ Generates:
 from __future__ import annotations
 
 import csv
-import json
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
@@ -136,7 +135,7 @@ def plot_figure_3(results):
         sum(1 for r in results if r["solver_arm"] == k and r["feasible"]) / sum(1 for r in results if r["solver_arm"] == k) * 100.0
         for k in arm_keys
     ]
-    bars = ax1_bars = ax2.bar(arm_labels, feas_rates, color=palette, alpha=0.85, edgecolor="black", linewidth=1.2)
+    bars = ax2.bar(arm_labels, feas_rates, color=palette, alpha=0.85, edgecolor="black", linewidth=1.2)
     ax2.set_ylabel("Hard-Constraint Feasible Rate (%)", fontsize=11, fontweight="bold")
     ax2.set_ylim(0, 115)
     ax2.set_title("Panel B: Assembly Invariant Feasibility (BsaI/BsmBI=0)", fontsize=12, fontweight="bold")

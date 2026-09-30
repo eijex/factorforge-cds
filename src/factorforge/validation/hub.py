@@ -18,7 +18,6 @@ from factorforge.core.host_model import HostModel
 from factorforge.core.reranker import ScoredCandidate
 from factorforge.core.slate_generator import (
     DEFAULT_FORBIDDEN_SITES,
-    CandidateDesign,
     normalize_protein_sequence,
     translate_dna,
 )

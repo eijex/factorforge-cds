@@ -1,5 +1,20 @@
 const { test, expect } = require('@playwright/test');
 
+test('policy edit action opens existing controls without missing modal errors', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/');
+  await expect(page.locator('#sopProfileName')).toHaveText('Conservative Plant Expression Review Template');
+  await page.locator('#buildSopButton').click();
+  await expect(page.locator('#manualSopOverrides')).toHaveAttribute('open', '');
+  await expect(page.locator('#optimizationSeed')).toBeVisible();
+  await page.locator('#optimizationSeed').fill('0');
+  await page.locator('#optimizationSeed').dispatchEvent('change');
+  await page.reload();
+  await expect(page.locator('#optimizationSeed')).toHaveValue('0');
+  expect(errors).toEqual([]);
+});
+
 test('default SOP is applied and a custom upload persists locally', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#sopProfileName')).toHaveText('Conservative Plant Expression Review Template');

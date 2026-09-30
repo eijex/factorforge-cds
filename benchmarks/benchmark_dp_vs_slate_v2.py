@@ -16,7 +16,6 @@ Metrics compared:
 - Archetype Profile Name
 """
 
-import json
 from tabulate import tabulate
 from factorforge.engines.dp_v2_1_1 import DPV211Optimizer
 from factorforge.core.slate_engine import SlateV2Engine
@@ -25,7 +24,6 @@ from factorforge.analysis.metrics import (
     calculate_cai,
     calculate_gc,
     calculate_gc_windows,
-    detect_homopolymers,
 )
 
 ADALIMUMAB_VH = (

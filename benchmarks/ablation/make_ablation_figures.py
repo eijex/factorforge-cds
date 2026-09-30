@@ -45,10 +45,10 @@ HEATMAP_METRICS = [
 
 def make_ablation_pass_rate_figure(summary: dict, out_dir: Path) -> None:
     layers = summary["layers"]
-    present = [l for l in LAYER_ORDER if l in layers]
-    rates = [layers[l]["multi_constraint_pass_rate"] for l in present]
-    labels = [LAYER_LABELS[l] for l in present]
-    colors = [BAR_COLORS[l] for l in present]
+    present = [layer for layer in LAYER_ORDER if layer in layers]
+    rates = [layers[layer]["multi_constraint_pass_rate"] for layer in present]
+    labels = [LAYER_LABELS[layer] for layer in present]
+    colors = [BAR_COLORS[layer] for layer in present]
 
     fig, ax = plt.subplots(figsize=(9, 5))
     x = np.arange(len(present))
@@ -73,12 +73,12 @@ def make_ablation_pass_rate_figure(summary: dict, out_dir: Path) -> None:
 
 def make_ablation_heatmap_figure(summary: dict, out_dir: Path) -> None:
     layers = summary["layers"]
-    present = [l for l in LAYER_ORDER if l in layers]
+    present = [layer for layer in LAYER_ORDER if layer in layers]
     metric_keys = [k for k, _ in HEATMAP_METRICS]
     metric_labels = [lbl for _, lbl in HEATMAP_METRICS]
 
-    data = np.array([[layers[l].get(m, 0.0) for m in metric_keys] for l in present])
-    row_labels = [LAYER_LABELS[l] for l in present]
+    data = np.array([[layers[layer].get(m, 0.0) for m in metric_keys] for layer in present])
+    row_labels = [LAYER_LABELS[layer] for layer in present]
 
     fig, ax = plt.subplots(figsize=(7, 5))
     im = ax.imshow(data, aspect="auto", cmap="YlGn", vmin=0, vmax=1)

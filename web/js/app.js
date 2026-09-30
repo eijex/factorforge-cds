@@ -429,21 +429,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     initEventListeners();
     updateDesignBriefSummary();
 
-    if (primary.provenance) {
-        const el = (id) => document.getElementById(id);
-        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
-        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
-        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
-        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
-        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
-        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
-        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
-        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
-    }
 
     renderHistory();
-    console.log('FactorForge v3.5.3 Engaged');
+    console.log('FactorForge v3.5.4 Engaged');
 });
 
 // Loads server-owned GC ranges and validation labels. Supported hosts remain
@@ -532,18 +520,6 @@ function applySopToUi(profile, { persist = true } = {}) {
     elements.sopProfileBadge.textContent = validated.status === 'STANDARD_TEMPLATE' ? 'Active' : 'Custom';
     updateDesignBriefSummary();
 
-    if (primary.provenance) {
-        const el = (id) => document.getElementById(id);
-        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
-        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
-        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
-        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
-        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
-        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
-        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
-        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
-    }
 
 }
 
@@ -636,18 +612,6 @@ function initEventListeners() {
             captureSopFromUi();
             updateDesignBriefSummary();
 
-    if (primary.provenance) {
-        const el = (id) => document.getElementById(id);
-        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
-        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
-        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
-        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
-        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
-        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
-        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
-        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
-    }
 
         });
     });
@@ -661,18 +625,6 @@ function initEventListeners() {
         state.host = e.target.value;
         updateDesignBriefSummary();
 
-    if (primary.provenance) {
-        const el = (id) => document.getElementById(id);
-        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
-        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
-        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
-        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
-        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
-        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
-        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
-        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
-    }
 
     });
     elements.saveDbToggle.addEventListener('change', (e) => {
@@ -686,18 +638,6 @@ function initEventListeners() {
         captureSopFromUi();
         updateDesignBriefSummary();
 
-    if (primary.provenance) {
-        const el = (id) => document.getElementById(id);
-        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
-        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
-        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
-        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
-        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
-        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
-        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
-        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
-    }
 
     });
 
@@ -706,18 +646,6 @@ function initEventListeners() {
         captureSopFromUi();
         updateDesignBriefSummary();
 
-    if (primary.provenance) {
-        const el = (id) => document.getElementById(id);
-        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
-        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
-        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
-        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
-        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
-        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
-        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
-        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
-    }
 
     });
     elements.dinucToggle.addEventListener('change', (e) => {
@@ -725,53 +653,17 @@ function initEventListeners() {
         captureSopFromUi();
         updateDesignBriefSummary();
 
-    if (primary.provenance) {
-        const el = (id) => document.getElementById(id);
-        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
-        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
-        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
-        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
-        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
-        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
-        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
-        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
-    }
 
     });
     elements.customRestrictionSites.addEventListener('input', () => {
         state.customRestrictionSites = [];
         updateDesignBriefSummary();
 
-    if (primary.provenance) {
-        const el = (id) => document.getElementById(id);
-        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
-        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
-        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
-        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
-        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
-        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
-        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
-        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
-    }
 
     });
     elements.customRestrictionSites.addEventListener('change', captureSopFromUi);
     elements.typeIisEnzymes.forEach(input => input.addEventListener('change', () => { captureSopFromUi(); updateDesignBriefSummary();
 
-    if (primary.provenance) {
-        const el = (id) => document.getElementById(id);
-        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
-        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
-        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
-        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
-        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
-        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
-        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
-        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
-    }
  }));
     document.querySelectorAll('.criterion-mode').forEach(select => select.addEventListener('change', captureSopFromUi));
     elements.optimizationSeed.addEventListener('change', captureSopFromUi);
@@ -2737,18 +2629,6 @@ function clearAll() {
     elements.validationStatus.classList.add('hidden');
     updateDesignBriefSummary();
 
-    if (primary.provenance) {
-        const el = (id) => document.getElementById(id);
-        if(el('provCandidateId')) el('provCandidateId').textContent = primary.identity?.result_id || 'N/A';
-        if(el('provInputSha')) el('provInputSha').textContent = primary.provenance.input_sequence_hash || 'N/A';
-        if(el('provOutputSha')) el('provOutputSha').textContent = primary.provenance.output_sequence_hash || 'N/A';
-        if(el('provHost')) el('provHost').textContent = primary.provenance.host_profile_id || 'N/A';
-        if(el('provCodonRef')) el('provCodonRef').textContent = primary.provenance.codon_reference_hash || 'N/A';
-        if(el('provOptimizer')) el('provOptimizer').textContent = `${primary.provenance.objective_strategy || 'N/A'} (Seed: ${primary.provenance.random_seed || 'N/A'})`;
-        if(el('provPolicy')) el('provPolicy').textContent = `${primary.provenance.policy_id || 'N/A'} [${primary.provenance.policy_hash ? primary.provenance.policy_hash.substring(0,8) : 'N/A'}]`;
-        if(el('provRunConfig')) el('provRunConfig').textContent = primary.provenance.run_config_hash || 'N/A';
-        if(el('provVersion')) el('provVersion').textContent = primary.provenance.factorforge_version || 'N/A';
-    }
 
     showToast('Input cleared', 'info');
 }
@@ -2889,7 +2769,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.5.3';
+        const version = state.results.engine_versions?.product || '3.5.4';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }
@@ -2939,140 +2819,12 @@ function calculateGC(seq) {
 
 
 // -----------------------------------------------------------------------------
-// SOP Builder Phase C: Read-Only Rendering
-// -----------------------------------------------------------------------------
-function openSopBuilder() {
-    if (!state.activeSop) return;
-    
-    document.getElementById('sopBuilderModal').classList.remove('hidden');
-    
-    // Render Metadata
-    document.getElementById('builderSopName').textContent = state.activeSop.profile_name || 'Unnamed SOP';
-    document.getElementById('builderSopVersion').textContent = state.activeSop.version || 'v?';
-    document.getElementById('builderProfileId').textContent = state.activeSop.profile_id || 'N/A';
-    document.getElementById('builderSchema').textContent = state.activeSop.$schema || 'N/A';
-    document.getElementById('builderDefaultEnforcement').textContent = state.activeSop.default_enforcement || 'N/A';
-    document.getElementById('builderUnknownRulePolicy').textContent = state.activeSop.unknown_rule_policy || 'N/A';
-    document.getElementById('builderRawPreview').textContent = jsyaml.dump(state.activeSop);
-    
-    // Render Design Settings
-    const wf = state.activeSop.workflow || {};
-    const reqs = wf.sequence_requirements || {};
-    document.getElementById('builderDesignMethodInput').value = wf.design_method || 'feasibility_best';
-    document.getElementById('builderTypeIisEnzymesInput').value = (reqs.type_iis_enzymes || []).join(', ');
-    document.getElementById('builderKozakInput').checked = reqs.kozak_optimization === true;
-    
-    // Render Review Policy Rules
-    const policyContainer = document.getElementById('builderPolicyContainer');
-    policyContainer.innerHTML = '';
-    
-    const rulesObj = state.activeSop.rules || {};
-    
-    apiRuleRegistry.forEach(rule => {
-        // Did the SOP override it?
-        const isOverridden = rule.rule_id in rulesObj;
-        let activeEnforcement = rule.default_enforcement;
-        if (isOverridden) {
-            activeEnforcement = rulesObj[rule.rule_id];
-        }
-        activeEnforcement = String(activeEnforcement).toLowerCase();
-        
-        let colorClass = 'text-slate-500 bg-slate-100 dark:bg-slate-800';
-        if (activeEnforcement === 'hard_fail' || activeEnforcement === 'block') colorClass = 'text-red-700 bg-red-100 border border-red-200 dark:border-red-900 dark:bg-red-950 dark:text-red-400';
-        if (activeEnforcement === 'warning') colorClass = 'text-amber-700 bg-amber-100 border border-amber-200 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-400';
-        if (activeEnforcement === 'report_only') colorClass = 'text-blue-700 bg-blue-100 border border-blue-200 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-400';
-        
-        const enforcements = ['hard_fail', 'warning', 'report_only', 'informational', 'ignore'];
-        const selectOptions = enforcements.map(e => `<option value="${e}" ${e === activeEnforcement ? 'selected' : ''}>${e.toUpperCase()}</option>`).join('');
-        
-        const html = `
-            <div class="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 group focus-within:ring-2 focus-within:ring-emerald-500 transition-shadow">
-                <div class="flex-grow pr-4">
-                    <div class="flex items-center space-x-2">
-                        <span class="font-bold text-xs text-slate-800 dark:text-slate-200">${rule.name}</span>
-                        <span class="text-[9px] font-mono text-slate-400" title="Canonical Rule ID">${rule.rule_id}</span>
-                    </div>
-                    <div class="text-[10px] text-slate-500 mt-1">${rule.description}</div>
-                </div>
-                <div class="flex-shrink-0">
-                    <select class="rule-enforcement-select bg-slate-50 border border-slate-200 text-slate-700 text-[10px] rounded focus:ring-emerald-500 focus:border-emerald-500 block w-full p-1.5 dark:bg-slate-800 dark:border-slate-600 dark:placeholder-slate-400 dark:text-white uppercase font-bold" data-rule-id="${rule.rule_id}">
-                        ${selectOptions}
-                    </select>
-                </div>
-            </div>
-        `;
-        policyContainer.insertAdjacentHTML('beforeend', html);
-    });
-}
-
-function closeSopBuilder() {
-    document.getElementById('sopBuilderModal').classList.add('hidden');
-}
-
-// Bind events
+// Upload-first policy workflow; existing advanced settings remain optional.
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('buildSopButton').addEventListener('click', openSopBuilder);
-    document.getElementById('closeSopBuilderBtn').addEventListener('click', closeSopBuilder);
-    document.getElementById('builderCancelBtn').addEventListener('click', closeSopBuilder);
-    document.getElementById('sopBuilderBackdrop').addEventListener('click', closeSopBuilder);
-    
-    document.getElementById('builderApplyBtn').addEventListener('click', applyBuilderChanges);
-    document.getElementById('builderExportBtn').addEventListener('click', () => {
-        // We trigger apply to ensure state is active, then export
-        applyBuilderChanges();
-        if (state.activeSop) {
-            const yamlStr = jsyaml.dump(state.activeSop, { lineWidth: -1 });
-            const blob = new Blob([yamlStr], { type: 'text/yaml' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${state.activeSop.profile_name || 'custom'}_sop.yaml`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
+    document.getElementById('buildSopButton')?.addEventListener('click', () => {
+        const settings = document.getElementById('manualSopOverrides');
+        if (!settings) return;
+        settings.open = true;
+        settings.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 });
-
-// Phase D: Apply Changes Logic
-function applyBuilderChanges() {
-    if (!state.activeSop) return;
-    
-    // Deep clone current SOP to avoid mutating if canceled
-    const newSop = JSON.parse(JSON.stringify(state.activeSop));
-    newSop.rules = newSop.rules || {};
-    
-    // Read all selects
-    const selects = document.querySelectorAll('.rule-enforcement-select');
-    selects.forEach(select => {
-        const ruleId = select.dataset.ruleId;
-        const val = select.value.toUpperCase(); // Schema expects uppercase
-        
-        // Find canonical default
-        const canon = apiRuleRegistry.find(r => r.rule_id === ruleId);
-        if (canon && val.toLowerCase() === canon.default_enforcement.toLowerCase()) {
-            // It matches the default, we can remove it from rules to keep SOP sparse/clean
-            delete newSop.rules[ruleId];
-        } else {
-            // Add or overwrite override
-            newSop.rules[ruleId] = val;
-        }
-    });
-    
-    // Read design settings
-    newSop.workflow = newSop.workflow || {};
-    newSop.workflow.sequence_requirements = newSop.workflow.sequence_requirements || {};
-    newSop.workflow.design_method = document.getElementById('builderDesignMethodInput').value;
-    const enzymesStr = document.getElementById('builderTypeIisEnzymesInput').value;
-    newSop.workflow.sequence_requirements.type_iis_enzymes = enzymesStr.split(',').map(s => s.trim()).filter(Boolean);
-    newSop.workflow.sequence_requirements.kozak_optimization = document.getElementById('builderKozakInput').checked;
-    
-    // Hash digest separation
-    // (Here we rely on applySopToUi which parses and sets digests correctly)
-    
-    applySopToUi(newSop, { persist: true });
-    closeSopBuilder();
-    
-    showToast('SOP updated successfully. Provenance digests separated.', 'success');
-}

@@ -171,7 +171,7 @@ test('accounts for synonymous CDS shifts and exports the same interactive report
   await page.locator('#sequenceInput').fill(originalDna);
   await page.locator('#optimizeBtn').click();
 
-  await expect(page.locator('#sameProteinBanner')).toContainText('Same Protein. Better-Designed DNA.');
+  await expect(page.locator('#sameProteinBanner')).toContainText('Same Protein. Transparently Redesigned DNA.');
   await expect(page.locator('#statTotalCodons')).toHaveText('19');
   await expect(page.locator('#statShifts')).toHaveText('1 / 5.3%');
   await expect(page.locator('#statUnchanged')).toHaveText('18 / 94.7%');

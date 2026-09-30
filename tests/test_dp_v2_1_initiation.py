@@ -13,15 +13,15 @@ Verifies:
 import itertools
 import math
 import pytest
-from typing import Dict, List
+from typing import Dict
 
-from factorforge.analysis.metrics import STANDARD_GENETIC_CODE, translate_dna, calculate_cai, calculate_gc
+from factorforge.analysis.metrics import translate_dna, calculate_gc
 from factorforge.engines.dp_v2 import DPV2Optimizer
 from factorforge.engines.dp_v2_1 import DPV21Optimizer, AA_TO_CODONS
 from factorforge.engines.profile.utils import load_golden_set
 from factorforge.engines.profile.rules.reverse_translator import ReverseTranslator
 from factorforge.evaluation.evaluator import SharedEvaluator
-from factorforge.evaluation.models import CheckEnforcement, CheckResultValue
+from factorforge.evaluation.models import CheckResultValue
 from factorforge.utils.exceptions import UnsatisfiableDesignError
 
 # Humira Sequences for Production Benchmark

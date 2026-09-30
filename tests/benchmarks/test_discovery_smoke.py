@@ -15,18 +15,14 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-import pytest
 
 from benchmarks.run_discovery_benchmark import (
     compute_codon_distance,
     compute_pairwise_hamming,
     compute_slate_diversity_metrics,
-    evaluate_slate_condition,
     run_benchmark,
 )
-from factorforge.discovery.filter import HardConstraintFilter
 from factorforge.discovery.schemas import SlateCandidate, TraitVector
-from factorforge.discovery.traits import TraitVectorExtractor
 
 
 def test_diversity_metric_invariants():

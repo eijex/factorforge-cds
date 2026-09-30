@@ -2,14 +2,14 @@
 
 FactorForge development direction and planned work.
 
-> Current product line: **v3.5.3** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current product line: **v3.5.4** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
 
 ## Current Release Status
 
-FactorForge v3.5.3 extends the web/API product line with versioned Sequence
+FactorForge v3.5.4 retains the web/API product line with versioned Sequence
 Policy Profiles (internally retained as `SopProfile` for compatibility), an
 editable browser-local policy workflow and SOP Builder, Top-K discovery slates,
 an explicit DP v2.1.1 path, constrained-sLLM research integration, and adaptive
@@ -20,7 +20,10 @@ API, engine, registry, documentation, and fixture version surfaces were
 synchronized. The supported public boundary remains deterministic in-silico
 CDS design and pre-synthesis sequence review. sLLM Gen 3 remains a separate,
 feature-gated research preview and does not imply a trained production model or
-biological validation. The v3.5.3 Git tag and PyPI package are published.
+biological validation. The v3.5.4 maintenance release isolates optional database
+dependencies and improves packaging and private provenance retrieval. Shared
+persistence remains separately provisioned and experimental; production database
+migration and legacy-record conversion are not performed by this release.
 
 DP v2.1.1 (`2.1.1`) is the current explicit Gen 2 research candidate.
 It adds a 45-nt initiation-GC active layer and >=6-nt homopolymer automaton
