@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "factorforge-cds"
-version = "3.5.3"
+version = "3.5.4"
 description = "FactorForge - open-source CDS design and pre-synthesis sequence review by Eijex."
 readme = "README.md"
 license = "AGPL-3.0-only"
@@ -69,4 +69,10 @@ pythonpath = ["src"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
-exclude = ["archive"]
+# Versioned reproducibility deposits are immutable evidence, not maintained code.
+exclude = ["archive", "reproducibility"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests initialize paths/optional-dependency skips before importing modules.
+"tests/**" = ["E402"]
+"benchmarks/test_data/test_toy_flip.py" = ["E402"]

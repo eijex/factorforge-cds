@@ -7,7 +7,6 @@ weights (w_ij), reference GC bounds, and model provenance.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-import json
 import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple

@@ -11,7 +11,6 @@ Stage 5: Exact Top-K Slate Assembly (Successive Pareto Fronts + Boundary Furthes
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import datetime
 import logging
 import time
@@ -21,7 +20,6 @@ from factorforge.core.host_model import HostModel
 from factorforge.core.reranker import (
     MultiFactorSlateReranker,
     PhenotypeDiversitySelector,
-    ScoredCandidate,
 )
 from factorforge.core.slate_generator import (
     DEFAULT_FORBIDDEN_SITES,

@@ -1,7 +1,6 @@
 """Security guardrail: raw CDS/protein sequences must not appear in logs or error messages."""
 from __future__ import annotations
 import logging
-import pytest
 from factorforge.utils.sequence_validator import validate_cds_output
 from factorforge.analysis.metrics import calculate_cai, load_codon_usage_table
 

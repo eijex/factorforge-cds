@@ -31,6 +31,8 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
+## [3.5.4] — 2026-10-01
+
 ### Changed
 
 - Made shared PostgreSQL persistence explicit and lazy so standalone package imports,
@@ -42,10 +44,23 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Fixed
 
+- Fixed web initialization after removed manual controls and unscoped result
+  provenance references; retained upload-first policies with collapsed advanced
+  settings. The incomplete modal builder is withheld from the verified runtime.
 - Preserved private batch sequence previews using verified, explicitly configured
   sequence artifacts; included canonical sequence IDs and SHA-256 identities.
 - Serialized integrated writes and reject retries with conflicting sequence or metric
   provenance rather than silently retaining a different result.
+- Restricted wheel discovery to FactorForge modules and pinned the declared PostgreSQL
+  driver explicitly across supported SQLAlchemy versions.
+- Removed shadowed CLI audit registration and unused imports without changing engine
+  scoring or codon-reference data. Versioned reproducibility deposits remain immutable.
+
+### Deployment boundary
+
+- Public design remains stateless and database-free. Shared persistence is separately
+  provisioned and experimental; this release performs no production database migration
+  and does not automatically migrate legacy batch or campaign records.
 
 ## [3.5.3] — 2026-09-27
 

@@ -1,8 +1,8 @@
 
 import itertools
-from typing import Dict, Any, List, Optional
-from factorforge.engines.balanced_optimizer import STANDARD_GENETIC_CODE, AA_TO_CODONS
-from factorforge.analysis.metrics import translate_dna, _codons
+from typing import Dict, Any
+from factorforge.engines.balanced_optimizer import AA_TO_CODONS
+from factorforge.analysis.metrics import translate_dna
 
 class TargetedRemediator:
     """

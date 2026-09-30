@@ -1,6 +1,6 @@
 """Shared Evaluator for all Generator Candidates."""
 import hashlib
-from typing import Dict, Any, List, Set, Optional
+from typing import Dict, Set, Optional
 
 from factorforge.analysis.metrics import calculate_gc, amino_acid_identity, translate_dna, calculate_cai
 from factorforge.constraints.type_iis import TYPE_IIS_MOTIFS

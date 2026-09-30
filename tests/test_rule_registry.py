@@ -1,7 +1,6 @@
 # factorforge/tests/test_rule_registry.py
 """Comprehensive Tests for Rule Registry, Scopes, Authority Attribution, and Enforcement Levels."""
 
-import pytest
 from factorforge.rules.models import (
     AuthorityType,
     EnforcementLevel,

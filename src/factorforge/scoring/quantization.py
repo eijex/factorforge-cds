@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from decimal import Decimal, ROUND_HALF_EVEN
 import hashlib
-from typing import List, Tuple, Union
+from typing import List, Union
 
 
 class CanonicalQuantizer:

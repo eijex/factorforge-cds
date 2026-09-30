@@ -9,7 +9,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import hashlib
 import random
-import re
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from factorforge.analysis.metrics import (

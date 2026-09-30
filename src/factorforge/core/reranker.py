@@ -6,9 +6,9 @@ Stage 3 (Real 7-D Normalized Trait Space Furthest-First Diversity Selection).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import math
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional
 
 from factorforge.analysis.metrics import calculate_gc_windows, detect_homopolymers
 from factorforge.core.host_model import HostModel

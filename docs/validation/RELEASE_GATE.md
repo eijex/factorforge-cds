@@ -1,8 +1,14 @@
-# FactorForge v3.4.5 Release Gate
+# FactorForge v3.5.4 Release Gate
 
 This gate covers the public Open Bio output and I/O contracts. FactorForge remains
 an in-silico CDS design assistant; this gate does not establish wet-lab, yield, or
 clinical performance.
+
+The maintenance gate also verifies database-free wheel/source installs, an explicit
+PostgreSQL plus pinned DB-core integration, private artifact checksums, transaction
+rollback, and concurrent retries. Shared persistence remains experimental and is
+not automatically enabled in the public stateless deployment. No legacy-data or
+production-schema migration is authorized by the public package release.
 
 ## Release Gate Commands
 

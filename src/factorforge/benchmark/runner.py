@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Type
+from typing import List, Dict
 import time
 import hashlib
 
@@ -108,7 +108,6 @@ class BenchmarkRunner:
         pass_counts = {}
         total_targets = len(set(r.target_id for r in results))
         
-        cai_sums = {}
         cai_vals = {}
         gc_sums = {}
         engine_counts = {}

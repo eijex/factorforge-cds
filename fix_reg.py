@@ -1,4 +1,3 @@
-import re
 
 with open(r'src/factorforge/rules/registry.py', 'r', encoding='utf-8') as f:
     text = f.read()

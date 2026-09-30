@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import collections
 import json
 import math
 from collections import Counter
@@ -434,9 +435,6 @@ def detect_invalid_codons(sequence: str) -> list[dict[str, Any]]:
         elif codon not in STANDARD_GENETIC_CODE:
             findings.append({"start": start, "end": start + 3, "codon": codon, "reason": "unknown"})
     return findings
-import math
-import collections
-
 def calculate_synonymous_entropy(sequence, codon_to_aa):
     from factorforge.analysis.metrics import _codons
     codons = _codons(sequence)

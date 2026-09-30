@@ -3,7 +3,7 @@
 Extracted from legacy RuleEngine to serve as shared evaluation metrics.
 """
 import re
-from typing import Dict, Any, List, Set, Tuple
+from typing import Dict, Any, List
 
 # Polyadenylation signals (true biological motifs)
 POLYA_PATTERNS = {
