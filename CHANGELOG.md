@@ -31,6 +31,24 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
+### Changed
+
+- Made shared PostgreSQL persistence explicit and lazy so standalone package imports,
+  CLI use, and CDS design do not require database dependencies or a running server.
+- Removed credential-bearing PostgreSQL defaults and added redacted persistence status
+  metadata for diagnostics.
+- Added role-qualified input/output sequence identity for persisted campaigns through
+  the `eijex-db-core` schema, without storing raw sequence text in campaign rows.
+
+### Fixed
+
+- Preserved private batch sequence previews using verified, explicitly configured
+  sequence artifacts; included canonical sequence IDs and SHA-256 identities.
+- Serialized integrated writes and reject retries with conflicting sequence or metric
+  provenance rather than silently retaining a different result.
+
+## [3.5.3] — 2026-09-27
+
 ### Added
 
 - **SOP Builder UX:** Added a visual sequence-policy builder that dynamically fetches canonical rules from the backend and strictly maps UI state to the `factorforge-sop-v1` YAML schema without maintaining duplicate rules in the frontend.
@@ -41,8 +59,25 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 ### Fixed
 
 - **API Resolution Logic:** Fixed a function-local json import shadowing bug.
-- **Strict Evidence Models:** Enforced xtra=forbid across all Evidence Pydantic models for cross-repo interoperability.
+- **Strict Evidence Models:** Enforced `extra="forbid"` across all Evidence Pydantic models for cross-repo interoperability.
 - **Codon Decision Trace:** The web interface no longer performs post-hoc UI inferences (e.g., guessing host preference); it relies solely on the recorded codon_decision backend traces.
+
+## [3.5.2] — 2026-09-26
+
+### Added
+
+- Added deterministic distribution-aware codon balancing as an explicit, non-default objective strategy while preserving the stable DP v2 path.
+- Added a generic sequence-audit CLI and strict evidence models for cross-repository evidence exchange.
+- Added the targeted-remediation foundation used to construct traceable retain-versus-remediate comparisons from externally supplied findings.
+
+### Changed
+
+- Enforced legal combinations of policy enforcement and authorized action and made regeneration policy-derived.
+- Extended controlled-run provenance and policy snapshots without promoting advisory findings to biological ground truth.
+
+### Fixed
+
+- Repaired API scope resolution and profile-path handling regressions found during the sequence-policy integration.
 
 ## [3.5.1] — 2026-09-23
 

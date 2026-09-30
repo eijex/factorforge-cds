@@ -4,6 +4,16 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current public release line.
 
+## Unreleased — persistence stability gate
+
+- Standalone FactorForge remains database-free by default.
+- Shared PostgreSQL persistence now requires explicit configuration and a compatible
+  `eijex-db-core` installation; no credentials are bundled as runtime defaults.
+- Persisted campaigns retain role-qualified input and optimized sequence identities,
+  while raw sequence content remains outside campaign records.
+- These changes concern computational provenance storage only and do not add wet-lab
+  evidence or biological-performance claims.
+
 ## v3.5.1 — SOP profile workflow
 
 - Added a versioned SOP profile format that keeps sequence findings separate from

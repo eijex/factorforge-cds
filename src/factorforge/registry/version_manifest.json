@@ -3,7 +3,7 @@
   "product": {
     "name": "FactorForge",
     "version": "3.5.3",
-    "release_status": "web_api_deployed_tag_pending",
+    "release_status": "published",
     "previous_stable_version": "3.4.5"
   },
   "engines": {

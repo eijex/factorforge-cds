@@ -144,6 +144,10 @@ def iter_public_files(root: Path, include_dirs: set[str], include_root_files: se
         if not path.is_file():
             continue
         rel = path.relative_to(root)
+        # Generated benchmark figures/results are evidence artifacts, not curated
+        # public documentation. Preserve their frozen bytes and audit source docs.
+        if rel.parts[:2] == ("benchmarks", "results"):
+            continue
         if any(part in EXCLUDE_PARTS for part in rel.parts):
             continue
         if path.suffix.lower() not in INCLUDE_SUFFIXES:
@@ -233,7 +237,16 @@ def scan_lines(source: str, text: str) -> list[tuple[str, str, int, str]]:
         if allowed(line):
             continue
         for name, pattern in PATTERNS.items():
-            if pattern.search(line):
+            candidate_line = line
+            if name == "unsupported_claim":
+                # Remove only the explicit negative claim, not the whole line:
+                # a second affirmative claim on that line must still be flagged.
+                candidate_line = re.sub(
+                    r"\b(?:without implying|(?:do |does )?not establish)\s+"
+                    r"(?:expression,\s*yield,\s*or\s*)?biological superiority\b",
+                    "", candidate_line, flags=re.IGNORECASE,
+                )
+            if pattern.search(candidate_line):
                 findings.append((name, source, lineno, line.strip()))
     return findings
 
