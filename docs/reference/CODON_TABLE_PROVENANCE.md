@@ -84,4 +84,4 @@ Current production results should be interpreted against the active `nbenthamian
 
 ## Machine-Readable Manifest
 
-See [`data/reference/codon_table_manifest.json`](../../data/reference/codon_table_manifest.json) for the machine-readable version of this provenance record, validated against [`schemas/codon_table_manifest.schema.json`](../../schemas/codon_table_manifest.schema.json).
+See [`data/reference/codon_table_manifest.json`](https://github.com/eijex/factorforge-cds/blob/main/data/reference/codon_table_manifest.json) for the machine-readable version of this provenance record, validated against [`schemas/codon_table_manifest.schema.json`](https://github.com/eijex/factorforge-cds/blob/main/schemas/codon_table_manifest.schema.json).
