@@ -75,6 +75,15 @@ async function openApp(page) {
   expect(pageErrors).toEqual([]);
 }
 
+test('historical v3.5.2 release notes are populated', async ({ page }) => {
+  await openApp(page);
+  const entry = page.locator('h3').filter({ hasText: /^v3\.5\.2$/ }).locator('..').locator('..');
+  await expect(entry.locator('li')).toHaveCount(4);
+  await expect(entry).toContainText('Optional codon balancing');
+  await expect(entry).toContainText('stable DP v2 as the default');
+  await expect(entry).toContainText('not biological validation');
+});
+
 test('loads the main web UI', async ({ page }) => {
   await openApp(page);
 

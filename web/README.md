@@ -8,6 +8,10 @@ collapsed; the edit button expands them. A separate registry-backed modal builde
 is not part of the verified web runtime. Uploaded profiles are examples or user
 policies, not approved laboratory SOPs.
 
+The What's New panel summarizes the versioned CHANGELOG, including v3.5.2's
+optional codon balancing, sequence-audit/evidence support and policy-driven review.
+These historical notes do not change the current default engine or validation boundary.
+
 ## 🌐 Live Demo
 
 **Web App**: https://factorforge.eijex.com

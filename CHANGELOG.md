@@ -31,6 +31,11 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
+### Fixed
+
+- Filled the missing v3.5.2 web release-note summary from its recorded changelog;
+  this is a display-only correction, with no engine or product-version change.
+
 ## [3.5.4] — 2026-10-01
 
 ### Changed
