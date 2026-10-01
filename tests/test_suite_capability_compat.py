@@ -2,6 +2,7 @@
 """Tests for Suite Capability Compatibility & 3-Tier Manifest Integrity."""
 
 import json
+import os
 from pathlib import Path
 import pytest
 from factorforge.profiles.profile_snapshot import HostProfileSnapshot
@@ -11,10 +12,10 @@ def test_host_profile_snapshot_integrity() -> None:
     sample_data = {
         "organism": "Nicotiana benthamiana",
         "snapshot_version": "nbent-2026.09",
-        "description": "PlantForm Certified N. benthamiana Codon Bias Table",
+        "description": "Synthetic codon-profile integrity fixture; not laboratory certified",
         "codon_table": {"TTT": 0.85, "TTC": 0.15, "ATG": 1.0},
         "frequency_table": {"TTT": 0.024, "TTC": 0.018, "ATG": 0.021},
-        "metadata": {"source": "PlantForm-RNA-seq-2026-08"},
+        "metadata": {"source": "synthetic-test-fixture"},
     }
     
     # Calculate canonical digest
@@ -38,8 +39,16 @@ def test_host_profile_snapshot_integrity() -> None:
         HostProfileSnapshot.from_dict(tampered_data)
 
 
+def private_workspace_schema(filename: str) -> Path:
+    """Private suite contracts are opt-in, not standalone package dependencies."""
+    workspace_root = os.environ.get("EIJEX_TEST_WORKSPACE_ROOT")
+    if not workspace_root:
+        pytest.skip("Private suite integration requires EIJEX_TEST_WORKSPACE_ROOT")
+    return Path(workspace_root) / "manifests" / "schemas" / filename
+
+
 def test_suite_release_lock_schema_structure() -> None:
-    schema_path = Path("c:/Work/eijex/eijex-workspace/manifests/schemas/suite_release_lock.schema.json")
+    schema_path = private_workspace_schema("suite_release_lock.schema.json")
     assert schema_path.exists()
     
     with open(schema_path, "r", encoding="utf-8") as f:
@@ -51,7 +60,7 @@ def test_suite_release_lock_schema_structure() -> None:
 
 
 def test_run_manifest_schema_structure() -> None:
-    schema_path = Path("c:/Work/eijex/eijex-workspace/manifests/schemas/run_manifest.schema.json")
+    schema_path = private_workspace_schema("run_manifest.schema.json")
     assert schema_path.exists()
     
     with open(schema_path, "r", encoding="utf-8") as f:

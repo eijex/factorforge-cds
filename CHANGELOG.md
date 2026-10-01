@@ -47,6 +47,11 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 - Fixed web initialization after removed manual controls and unscoped result
   provenance references; retained upload-first policies with collapsed advanced
   settings. The incomplete modal builder is withheld from the verified runtime.
+- Made private suite-schema tests explicitly opt-in instead of requiring a
+  developer's absolute Windows workspace path on public CI runners.
+- Removed the misplaced daily AgentOS learning schedule from this public repository;
+  retained manual dispatch with an explicit missing-runner diagnostic. This does
+  not enable, train, or certify an AgentOS learning service.
 - Preserved private batch sequence previews using verified, explicitly configured
   sequence artifacts; included canonical sequence IDs and SHA-256 identities.
 - Serialized integrated writes and reject retries with conflicting sequence or metric
