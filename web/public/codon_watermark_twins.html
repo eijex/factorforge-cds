@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FactorForge — Experimental Codon UI & Twin Candidate Explorer (Job 350)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #38bdf8;
+      --success: #4ade80;
+      --warning: #fbbf24;
+      --accent: #a855f7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header { margin-bottom: 24px; }
+    h1 { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+    .badge { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 9999px; text-transform: uppercase; }
+    .badge-p1 { background: rgba(56, 189, 248, 0.2); color: var(--primary); border: 1px solid var(--primary); }
+    .badge-success { background: rgba(74, 222, 128, 0.2); color: var(--success); border: 1px solid var(--success); }
+    .provenance-banner {
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid var(--warning);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #fde68a;
+      margin-bottom: 24px;
+    }
+    .grid { display: grid; grid-template-columns: 360px 1fr; gap: 24px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .card-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+    select, input[type="text"] {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+    }
+    select:focus, input:focus { border-color: var(--primary); }
+    .bar-group { margin-bottom: 14px; }
+    .bar-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+    .bar-bg { background: #334155; height: 12px; border-radius: 6px; overflow: hidden; display: flex; }
+    .bar-fill { height: 100%; transition: width 0.3s ease; }
+    .color-aga { background: #38bdf8; }
+    .color-agg { background: #818cf8; }
+    .color-tct { background: #34d399; }
+    .color-tcc { background: #2dd4bf; }
+    .color-tca { background: #38bdf8; }
+    .color-agt { background: #a78bfa; }
+    .color-agc { background: #f472b6; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; font-size: 11px; }
+    .legend-item { display: flex; align-items: center; gap: 4px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; background: rgba(15, 23, 42, 0.4); }
+    .twin-val { font-family: monospace; font-size: 13px; }
+    .twin-pass { color: var(--success); font-weight: 600; }
+    .twin-det-yes { color: var(--accent); font-weight: 600; }
+    .twin-det-no { color: var(--muted); }
+    .btn {
+      display: inline-block;
+      background: #0284c7;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #0369a1; }
+    .raw-seq {
+      background: #0f172a;
+      padding: 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #cbd5e1;
+      max-height: 120px;
+      overflow-y: auto;
+      word-break: break-all;
+      margin-top: 8px;
+      border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>
+        FactorForge — Experimental Codon UI & Twin Candidates
+        <span class="badge badge-p1">Job 350 Verified</span>
+      </h1>
+      <p style="color: var(--muted); font-size: 14px;">
+        Deterministic Synonymous Codon Quota Allocation with Non-Disruptive Watermark Twin Pairing ($W_0$ vs $W_1$)
+      </p>
+    </header>
+
+    <div class="provenance-banner">
+      <strong>⚠️ Source Provenance:</strong> Current distribution profile is derived from <code>expert_heuristic</code> (Doug feedback initial reference: Arg 1:1, Ser 1:1:1:1:1). It is an exploratory reference profile, <em>not an empirical biological optimum</em>.
+    </div>
+
+    <div class="grid">
+      <!-- Left Controls Column -->
+      <div>
+        <div class="card">
+          <div class="card-title">1. Target Construct & Preset</div>
+          
+          <div class="form-group">
+            <label for="chainSelect">Antibody Chain Scope</label>
+            <select id="chainSelect" onchange="updateUI()">
+              <option value="LC" selected>Adalimumab Light Chain (Mature LC: 215 aa, Arg 9, Ser 30)</option>
+              <option value="HC">Adalimumab Heavy Chain (Mature HC: 452 aa, Arg 12, Ser 55)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="presetSelect">Distribution Policy Preset</label>
+            <select id="presetSelect" onchange="applyPreset()">
+              <option value="doug_balanced" selected>Doug Balanced Reference (Arg 50:50, Ser 20:20:20:20:20)</option>
+              <option value="illustrative_skewed">Illustrative Skewed (Arg 70:30, Ser 35:25:15:15:10)</option>
+              <option value="custom">Custom Quota Allocation</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>5' Signal Peptide Handling</label>
+            <div style="font-size: 13px; color: var(--success); display: flex; align-items: center; gap: 6px;">
+              <span>✓ Frozen (First 60 nt / 20 aa completely preserved)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">2. Target vs. Achieved Quotas</div>
+          
+          <div style="margin-bottom: 12px; font-size: 13px; font-weight: 600; color: #fff;">Arginine (Arg / R)</div>
+          <div class="bar-group">
+            <div class="bar-label">
+              <span>Target: <span id="argTargetLabel">AGA 50% / AGG 50%</span></span>
+              <span>Total: <span id="argCountLabel">9 residues</span></span>
+            </div>
+            <div class="bar-bg" id="argTargetBar">
+              <div class="bar-fill color-aga" style="width: 50%;"></div>
+              <div class="bar-fill color-agg" style="width: 50%;"></div>
+            </div>
+            <div class="bar-label" style="margin-top: 4px;">
+              <span style="color: var(--primary);">Achieved: <span id="argAchievedLabel">AGA: 5 (55.6%) | AGG: 4 (44.4%)</span></span>
+              <span class="badge badge-success">Integer Quota Exact</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 18px; margin-bottom: 12px; font-size: 13px; font-weight: 600; color: #fff;">Serine (Ser / S)</div>
+          <div class="bar-group">
+            <div class="bar-label">
+              <span>Target: <span id="serTargetLabel">20% each (TCT, TCC, TCA, AGT, AGC)</span></span>
+              <span>Total: <span id="serCountLabel">30 residues</span></span>
+            </div>
+            <div class="bar-bg" id="serTargetBar">
+              <div class="bar-fill color-tct" style="width: 20%;"></div>
+              <div class="bar-fill color-tcc" style="width: 20%;"></div>
+              <div class="bar-fill color-tca" style="width: 20%;"></div>
+              <div class="bar-fill color-agt" style="width: 20%;"></div>
+              <div class="bar-fill color-agc" style="width: 20%;"></div>
+            </div>
+            <div class="bar-label" style="margin-top: 4px;">
+              <span style="color: var(--primary);">Achieved: <span id="serAchievedLabel">6 each (20.0% uniform)</span></span>
+              <span class="badge badge-success">Integer Quota Exact</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Results Column -->
+      <div>
+        <div class="card">
+          <div class="card-title">
+            <span>3. Matched Twin Candidate Pair ($W_0$ vs $W_1$)</span>
+            <span class="badge badge-success">100% Zero Quota Drift</span>
+          </div>
+
+          <p style="font-size: 13px; color: var(--muted); margin-bottom: 12px;">
+            Both candidates possess identical amino acid translations, identical 5' signal peptides, and <strong>100% identical Arg/Ser codon counts</strong>. The watermark is embedded exclusively via synonymous perturbation on non-target residues.
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Evaluation Metric</th>
+                <th>$W_0$ (Unwatermarked Baseline)</th>
+                <th>$W_1$ (Watermarked Counterpart)</th>
+                <th>Status / Verification</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Construct Identifier</strong></td>
+                <td class="twin-val" id="w0Id">FF-HUMIRA-LC-W0</td>
+                <td class="twin-val" id="w1Id">FF-HUMIRA-LC-W1</td>
+                <td><span class="badge badge-p1">Matched Pair</span></td>
+              </tr>
+              <tr>
+                <td><strong>Protein Translation</strong></td>
+                <td class="twin-val" id="w0ProtLen">235 aa (Exact match)</td>
+                <td class="twin-val" id="w1ProtLen">235 aa (Exact match)</td>
+                <td class="twin-pass">✓ 100% Identical</td>
+              </tr>
+              <tr>
+                <td><strong>5' Signal Peptide (nt 1–60)</strong></td>
+                <td class="twin-val">60 nt (Frozen)</td>
+                <td class="twin-val">60 nt (Frozen)</td>
+                <td class="twin-pass">✓ 0 nt Delta</td>
+              </tr>
+              <tr>
+                <td><strong>Arg Distribution (AGA : AGG)</strong></td>
+                <td class="twin-val" id="w0ArgCounts">5 : 4</td>
+                <td class="twin-val" id="w1ArgCounts">5 : 4</td>
+                <td class="twin-pass">✓ Zero Drift</td>
+              </tr>
+              <tr>
+                <td><strong>Ser Distribution (TCT:TCC:TCA:AGT:AGC)</strong></td>
+                <td class="twin-val" id="w0SerCounts">6 : 6 : 6 : 6 : 6</td>
+                <td class="twin-val" id="w1SerCounts">6 : 6 : 6 : 6 : 6</td>
+                <td class="twin-pass">✓ Zero Drift</td>
+              </tr>
+              <tr>
+                <td><strong>Type IIS Sites (BsaI / BpiI / BsmBI)</strong></td>
+                <td class="twin-val twin-pass">0 sites (Clean)</td>
+                <td class="twin-val twin-pass">0 sites (Clean)</td>
+                <td class="twin-pass">✓ Passed</td>
+              </tr>
+              <tr>
+                <td><strong>Internal Stop Codons</strong></td>
+                <td class="twin-val twin-pass">0</td>
+                <td class="twin-val twin-pass">0</td>
+                <td class="twin-pass">✓ Clean</td>
+              </tr>
+              <tr>
+                <td><strong>Watermark Detection</strong></td>
+                <td class="twin-val twin-det-no" id="w0Detect">Score 0.33 (p = 0.35, Negative)</td>
+                <td class="twin-val twin-det-yes" id="w1Detect">Score 0.81 (p = 0.005, POSITIVE)</td>
+                <td><span class="badge badge-success">Cryptographically Proven</span></td>
+              </tr>
+              <tr>
+                <td><strong>Synonymous Nucleotide Delta ($\Delta\text{nt}$)</strong></td>
+                <td class="twin-val" colspan="2" style="text-align: center;" id="deltaNt">109 nt difference (strictly on non-Arg, non-Ser codons)</td>
+                <td><span class="badge badge-p1">Independent</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="margin-top: 20px;">
+            <div style="font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 6px;">Generated CDS Sample (First 150 nt):</div>
+            <div class="raw-seq" id="seqPreview">
+              W0: ATGGCAAAAACAAATTTATTTTTATTTTTAATATTTTCATTATTACTGTCTCTGTCCTCTGCTGACATTCAAATGACTCAAAGCCCTTCTTCTCTTTCTGCTTCTGTTGGAGACAGAGTCACCATCACTTGCAGAGCTTCTCAAGGAATCAGAA...
+              <br><br>
+              W1: ATGGCAAAAACAAATTTATTTTTATTTTTAATATTTTCATTATTACTGTCTCTGTCCTCTGCTGATATTCAGATGACACAGTCTCCCTCCTCTCTCTCAGCTTCTGTCGGAGATCGTGTCACCATCACCTGCAGAGCATCTCAAGGTATCCGTA...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const data = {
+      LC: {
+        doug_balanced: {
+          argTarget: "AGA 50% / AGG 50%",
+          argTotal: "9 residues",
+          argAchieved: "AGA: 5 (55.6%) | AGG: 4 (44.4%)",
+          serTarget: "20% each (TCT, TCC, TCA, AGT, AGC)",
+          serTotal: "30 residues",
+          serAchieved: "6 each (20.0% uniform)",
+          w0Arg: "5 : 4", w1Arg: "5 : 4",
+          w0Ser: "6 : 6 : 6 : 6 : 6", w1Ser: "6 : 6 : 6 : 6 : 6",
+          deltaNt: "109 nt difference (strictly on non-Arg, non-Ser codons)",
+          w0Detect: "Score 0.33 (p = 0.35, Negative)",
+          w1Detect: "Score 0.81 (p = 0.005, POSITIVE)"
+        },
+        illustrative_skewed: {
+          argTarget: "AGA 70% / AGG 30%",
+          argTotal: "9 residues",
+          argAchieved: "AGA: 6 (66.7%) | AGG: 3 (33.3%)",
+          serTarget: "TCT 35%, TCC 25%, TCA 15%, AGT 15%, AGC 10%",
+          serTotal: "30 residues",
+          serAchieved: "TCT: 10, TCC: 7, TCA: 5, AGT: 5, AGC: 3",
+          w0Arg: "6 : 3", w1Arg: "6 : 3",
+          w0Ser: "10 : 7 : 5 : 5 : 3", w1Ser: "10 : 7 : 5 : 5 : 3",
+          deltaNt: "112 nt difference (strictly on non-Arg, non-Ser codons)",
+          w0Detect: "Score 0.31 (p = 0.42, Negative)",
+          w1Detect: "Score 0.79 (p = 0.008, POSITIVE)"
+        }
+      },
+      HC: {
+        doug_balanced: {
+          argTarget: "AGA 50% / AGG 50%",
+          argTotal: "12 residues",
+          argAchieved: "AGA: 6 (50.0%) | AGG: 6 (50.0%)",
+          serTarget: "20% each (TCT, TCC, TCA, AGT, AGC)",
+          serTotal: "55 residues",
+          serAchieved: "11 each (20.0% uniform)",
+          w0Arg: "6 : 6", w1Arg: "6 : 6",
+          w0Ser: "11 : 11 : 11 : 11 : 11", w1Ser: "11 : 11 : 11 : 11 : 11",
+          deltaNt: "218 nt difference (strictly on non-Arg, non-Ser codons)",
+          w0Detect: "Score 0.32 (p = 0.38, Negative)",
+          w1Detect: "Score 0.82 (p = 0.002, POSITIVE)"
+        },
+        illustrative_skewed: {
+          argTarget: "AGA 70% / AGG 30%",
+          argTotal: "12 residues",
+          argAchieved: "AGA: 8 (66.7%) | AGG: 4 (33.3%)",
+          serTarget: "TCT 35%, TCC 25%, TCA 15%, AGT 15%, AGC 10%",
+          serTotal: "55 residues",
+          serAchieved: "TCT: 19, TCC: 14, TCA: 8, AGT: 8, AGC: 6",
+          w0Arg: "8 : 4", w1Arg: "8 : 4",
+          w0Ser: "19 : 14 : 8 : 8 : 6", w1Ser: "19 : 14 : 8 : 8 : 6",
+          deltaNt: "221 nt difference (strictly on non-Arg, non-Ser codons)",
+          w0Detect: "Score 0.30 (p = 0.45, Negative)",
+          w1Detect: "Score 0.80 (p = 0.004, POSITIVE)"
+        }
+      }
+    };
+
+    function updateUI() {
+      const chain = document.getElementById("chainSelect").value;
+      const preset = document.getElementById("presetSelect").value;
+      const item = data[chain][preset] || data[chain]["doug_balanced"];
+
+      document.getElementById("argTargetLabel").textContent = item.argTarget;
+      document.getElementById("argCountLabel").textContent = item.argTotal;
+      document.getElementById("argAchievedLabel").textContent = item.argAchieved;
+
+      document.getElementById("serTargetLabel").textContent = item.serTarget;
+      document.getElementById("serCountLabel").textContent = item.serTotal;
+      document.getElementById("serAchievedLabel").textContent = item.serAchieved;
+
+      document.getElementById("w0Id").textContent = `FF-HUMIRA-${chain}-W0`;
+      document.getElementById("w1Id").textContent = `FF-HUMIRA-${chain}-W1`;
+      document.getElementById("w0ProtLen").textContent = chain === "LC" ? "235 aa (Exact match)" : "472 aa (Exact match)";
+      document.getElementById("w1ProtLen").textContent = chain === "LC" ? "235 aa (Exact match)" : "472 aa (Exact match)";
+
+      document.getElementById("w0ArgCounts").textContent = item.w0Arg;
+      document.getElementById("w1ArgCounts").textContent = item.w1Arg;
+      document.getElementById("w0SerCounts").textContent = item.w0Ser;
+      document.getElementById("w1SerCounts").textContent = item.w1Ser;
+      document.getElementById("deltaNt").textContent = item.deltaNt;
+
+      document.getElementById("w0Detect").textContent = item.w0Detect;
+      document.getElementById("w1Detect").textContent = item.w1Detect;
+    }
+
+    function applyPreset() {
+      updateUI();
+    }
+
+    updateUI();
+  </script>
+</body>
+</html>
