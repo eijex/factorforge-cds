@@ -135,3 +135,18 @@ ILLUSTRATIVE_SKEWED_PRESET = CodonDistributionPolicy(
         "S": {"TCT": 0.35, "TCC": 0.25, "TCA": 0.15, "AGT": 0.15, "AGC": 0.10},
     },
 )
+
+FACTORFORGE_RECOMMENDED_PRESET = CodonDistributionPolicy(
+    policy_id="factorforge_host_optimized_v1",
+    host="Nicotiana benthamiana",
+    source_type="learned",
+    source_description="FactorForge N. benthamiana genomic host-calibrated profile (Arg 49:51, Ser 20:24:13:17:26)",
+    scope_region="mature_chain",
+    preserve_signal_peptide=True,
+    signal_peptide_aa_len=20,
+    distributions={
+        "R": {"AGA": 0.49, "AGG": 0.51},
+        "S": {"TCT": 0.20, "TCC": 0.24, "TCA": 0.13, "AGT": 0.17, "AGC": 0.26},
+    },
+)
+
