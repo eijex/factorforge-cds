@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Dict, List, Optional
+
 from pydantic import BaseModel
-from factorforge.closed_loop.contracts import MeasurementRecord, ExperimentRecord
+
+from factorforge.closed_loop.contracts import MeasurementRecord
 
 
 class ReadinessStatus(str, Enum):
@@ -19,7 +20,7 @@ class ReadinessStatus(str, Enum):
 
 
 # Provisional software thresholds (Not statistical guarantees; subject to future power analysis)
-PROVISIONAL_READINESS_THRESHOLDS: Dict[str, int] = {
+PROVISIONAL_READINESS_THRESHOLDS: dict[str, int] = {
     "min_bioreps_collection": 3,
     "min_sets_collection": 2,
     "min_bioreps_exploratory": 6,
@@ -39,7 +40,7 @@ class ReadinessReport(BaseModel):
     distinct_batches: int
     model_training_permitted: bool
     status_explanation: str
-    thresholds_applied: Dict[str, int] = PROVISIONAL_READINESS_THRESHOLDS
+    thresholds_applied: dict[str, int] = PROVISIONAL_READINESS_THRESHOLDS
 
 
 class ReadinessEvaluator:
@@ -47,22 +48,28 @@ class ReadinessEvaluator:
 
     @staticmethod
     def evaluate(
-        measurements: List[MeasurementRecord],
-        experiments: Optional[Dict[str, object]] = None,
-        thresholds: Optional[Dict[str, int]] = None,
+        measurements: list[MeasurementRecord],
+        experiments: dict[str, object] | None = None,
+        thresholds: dict[str, int] | None = None,
     ) -> ReadinessReport:
         active_thresholds = thresholds or PROVISIONAL_READINESS_THRESHOLDS
         synthetic_count = sum(1 for m in measurements if m.is_synthetic)
-        real_records = [m for m in measurements if not m.is_synthetic and m.qc_status == "PASS"]
+        real_records = [
+            m
+            for m in measurements
+            if not m.is_synthetic
+            and m.tag != "test_only"
+            and m.qc_status == "PASS"
+            and m.value is not None
+        ]
         real_count = len(real_records)
 
-        distinct_sets = len(set(m.construct_set_id for m in real_records))
+        distinct_sets = len({m.construct_set_id for m in real_records})
 
         # Hardening 1: Compound biological replicate key to avoid ID collision across constructs/experiments
-        distinct_bioreps = len(set(
-            (m.experiment_id, m.construct_set_id, m.biological_replicate_id)
-            for m in real_records
-        ))
+        distinct_bioreps = len(
+            {(m.experiment_id, m.construct_set_id, m.biological_replicate_id) for m in real_records}
+        )
 
         # Hardening 2: Resolve true batch_id from ExperimentRecord if provided
         if experiments:
@@ -70,17 +77,23 @@ class ReadinessEvaluator:
             for m in real_records:
                 exp = experiments.get(m.experiment_id)
                 if exp:
-                    b_id = getattr(exp, "batch_id", None) if hasattr(exp, "batch_id") else exp.get("batch_id")
+                    b_id = (
+                        getattr(exp, "batch_id", None)
+                        if hasattr(exp, "batch_id")
+                        else exp.get("batch_id")
+                    )
                     batch_ids.add(b_id or m.experiment_id)
                 else:
                     batch_ids.add(m.experiment_id)
             distinct_batches = len(batch_ids)
         else:
-            distinct_batches = len(set(m.experiment_id for m in real_records))
+            distinct_batches = len({m.experiment_id for m in real_records})
 
         if real_count == 0:
             status = ReadinessStatus.NO_DATA
-            explanation = "No empirical wet-lab measurements recorded yet. Learning models remain offline."
+            explanation = (
+                "No empirical wet-lab measurements recorded yet. Learning models remain offline."
+            )
             permitted = False
         elif (
             distinct_bioreps < active_thresholds["min_bioreps_collection"]
@@ -101,10 +114,9 @@ class ReadinessEvaluator:
             permitted = False
         else:
             status = ReadinessStatus.MODEL_ELIGIBLE
-            explanation = (
-                "Dataset meets provisional software coverage thresholds for formal model training approval review."
-            )
-            permitted = True
+            explanation = "Dataset meets provisional software coverage thresholds for formal model training approval review."
+            # Coverage is not analysis-plan approval and never enables training.
+            permitted = False
 
         return ReadinessReport(
             status=status,
@@ -126,8 +138,8 @@ class ModelRecommendationGate:
     @staticmethod
     def query_next_ratio(
         report: ReadinessReport,
-        explicit_human_approval_token: Optional[str] = None,
-    ) -> Dict[str, object]:
+        explicit_human_approval_token: str | None = None,
+    ) -> dict[str, object]:
         """Query for model-recommended next-generation codon distribution."""
         if not report.model_training_permitted or report.status != ReadinessStatus.MODEL_ACTIVE:
             return {
@@ -153,9 +165,8 @@ class ModelRecommendationGate:
             }
 
         return {
-            "recommendation_status": "ACTIVE",
+            "recommendation_status": "UNAVAILABLE",
             "current_readiness": report.status.value,
-            "suggested_profile": "learned_active_learner_v1",
-            "approved_token": explicit_human_approval_token,
-            "reason": "Empirically validated and human-approved closed-loop recommendation available.",
+            "suggested_profile": None,
+            "reason": "Foundation only: no registered, validated model backend is implemented.",
         }

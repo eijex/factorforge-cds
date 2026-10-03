@@ -4,30 +4,79 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Dict, List, Optional
+import math
+
 from pydantic import BaseModel, Field, model_validator
 
 # Standard genetic code dictionary
-CODON_TO_AA: Dict[str, str] = {
-    "ATA": "I", "ATC": "I", "ATT": "I", "ATG": "M",
-    "ACA": "T", "ACC": "T", "ACG": "T", "ACT": "T",
-    "AAC": "N", "AAT": "N", "AAA": "K", "AAG": "K",
-    "AGC": "S", "AGT": "S", "AGA": "R", "AGG": "R",
-    "CTA": "L", "CTC": "L", "CTG": "L", "CTT": "L",
-    "CCA": "P", "CCC": "P", "CCG": "P", "CCT": "P",
-    "CAC": "H", "CAT": "H", "CAA": "Q", "CAG": "Q",
-    "CGA": "R", "CGC": "R", "CGG": "R", "CGT": "R",
-    "GTA": "V", "GTC": "V", "GTG": "V", "GTT": "V",
-    "GCA": "A", "GCC": "A", "GCG": "A", "GCT": "A",
-    "GAC": "D", "GAT": "D", "GAA": "E", "GAG": "E",
-    "GGA": "G", "GGC": "G", "GGG": "G", "GGT": "G",
-    "TCA": "S", "TCC": "S", "TCG": "S", "TCT": "S",
-    "TTC": "F", "TTT": "F", "TTA": "L", "TTG": "L",
-    "TAC": "Y", "TAT": "Y", "TAA": "*", "TAG": "*",
-    "TGC": "C", "TGT": "C", "TGA": "*", "TGG": "W",
+CODON_TO_AA: dict[str, str] = {
+    "ATA": "I",
+    "ATC": "I",
+    "ATT": "I",
+    "ATG": "M",
+    "ACA": "T",
+    "ACC": "T",
+    "ACG": "T",
+    "ACT": "T",
+    "AAC": "N",
+    "AAT": "N",
+    "AAA": "K",
+    "AAG": "K",
+    "AGC": "S",
+    "AGT": "S",
+    "AGA": "R",
+    "AGG": "R",
+    "CTA": "L",
+    "CTC": "L",
+    "CTG": "L",
+    "CTT": "L",
+    "CCA": "P",
+    "CCC": "P",
+    "CCG": "P",
+    "CCT": "P",
+    "CAC": "H",
+    "CAT": "H",
+    "CAA": "Q",
+    "CAG": "Q",
+    "CGA": "R",
+    "CGC": "R",
+    "CGG": "R",
+    "CGT": "R",
+    "GTA": "V",
+    "GTC": "V",
+    "GTG": "V",
+    "GTT": "V",
+    "GCA": "A",
+    "GCC": "A",
+    "GCG": "A",
+    "GCT": "A",
+    "GAC": "D",
+    "GAT": "D",
+    "GAA": "E",
+    "GAG": "E",
+    "GGA": "G",
+    "GGC": "G",
+    "GGG": "G",
+    "GGT": "G",
+    "TCA": "S",
+    "TCC": "S",
+    "TCG": "S",
+    "TCT": "S",
+    "TTC": "F",
+    "TTT": "F",
+    "TTA": "L",
+    "TTG": "L",
+    "TAC": "Y",
+    "TAT": "Y",
+    "TAA": "*",
+    "TAG": "*",
+    "TGC": "C",
+    "TGT": "C",
+    "TGA": "*",
+    "TGG": "W",
 }
 
-AA_TO_CODONS: Dict[str, List[str]] = {}
+AA_TO_CODONS: dict[str, list[str]] = {}
 for codon, aa in CODON_TO_AA.items():
     AA_TO_CODONS.setdefault(aa, []).append(codon)
 
@@ -44,7 +93,7 @@ class CodonDistributionPolicy(BaseModel):
     )
     source_description: str = Field(
         default="",
-        description="Provenance annotation (e.g. 'Doug feedback balanced reference')",
+        description="User-provided provenance annotation",
     )
     scope_region: str = Field(
         default="mature_chain",
@@ -52,7 +101,7 @@ class CodonDistributionPolicy(BaseModel):
     )
     preserve_signal_peptide: bool = True
     signal_peptide_aa_len: int = 20
-    distributions: Dict[str, Dict[str, float]] = Field(
+    distributions: dict[str, dict[str, float]] = Field(
         ...,
         description="Target frequencies per amino acid, e.g. {'R': {'AGA': 0.5, 'AGG': 0.5}}",
     )
@@ -61,8 +110,20 @@ class CodonDistributionPolicy(BaseModel):
 
     @model_validator(mode="after")
     def validate_distributions(self) -> CodonDistributionPolicy:
+        if self.schema_version != "0.1":
+            raise ValueError("Unsupported policy schema version")
+        if self.scope_region not in {"mature_chain", "full_cds"}:
+            raise ValueError("Unsupported policy region")
+        if self.signal_peptide_aa_len < 0:
+            raise ValueError("Signal peptide length cannot be negative")
+        if self.allocation_method != "largest_remainder" or self.tie_break != "lexical_codon_order":
+            raise ValueError("Unsupported allocation contract")
+        if not self.distributions:
+            raise ValueError("At least one distribution is required")
         for aa, codon_weights in self.distributions.items():
             aa_upper = aa.upper()
+            if aa != aa_upper or aa == "*":
+                raise ValueError("Use uppercase protein amino acid keys")
             valid_codons = AA_TO_CODONS.get(aa_upper, [])
             if not valid_codons:
                 raise ValueError(f"Unknown or non-proteinogenic amino acid: '{aa}'")
@@ -74,7 +135,7 @@ class CodonDistributionPolicy(BaseModel):
                     raise ValueError(
                         f"Codon '{codon_upper}' does not code for amino acid '{aa_upper}' (valid: {valid_codons})"
                     )
-                if weight < 0.0:
+                if codon != codon_upper or not math.isfinite(weight) or weight < 0.0:
                     raise ValueError(f"Codon weight cannot be negative: {codon_upper}={weight}")
                 total_weight += weight
 
@@ -139,8 +200,8 @@ ILLUSTRATIVE_SKEWED_PRESET = CodonDistributionPolicy(
 FACTORFORGE_RECOMMENDED_PRESET = CodonDistributionPolicy(
     policy_id="factorforge_host_optimized_v1",
     host="Nicotiana benthamiana",
-    source_type="learned",
-    source_description="FactorForge N. benthamiana genomic host-calibrated profile (Arg 49:51, Ser 20:24:13:17:26)",
+    source_type="custom",
+    source_description="Illustrative experimental distribution; not learned, host-calibrated, or validated",
     scope_region="mature_chain",
     preserve_signal_peptide=True,
     signal_peptide_aa_len=20,
@@ -149,4 +210,3 @@ FACTORFORGE_RECOMMENDED_PRESET = CodonDistributionPolicy(
         "S": {"TCT": 0.20, "TCC": 0.24, "TCA": 0.13, "AGT": 0.17, "AGC": 0.26},
     },
 )
-

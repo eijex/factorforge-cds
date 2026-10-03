@@ -52,6 +52,12 @@ Or use the **[web app](https://factorforge.eijex.com)** — no installation requ
 
 ## Repository Structure
 
+Experimental codon-distribution and evidence-ledger modules in the development
+checkout are scaffolds, not a validated laboratory policy or active learned
+recommendation service. Computational checks do not establish synthesis readiness
+or biological performance. Private inputs and collaborator packages must remain
+outside public repositories and dashboards.
+
 The supported deterministic engines are the profile engine, stable DP v2, and
 the explicit DP v2.1.1 development candidate under:
 
