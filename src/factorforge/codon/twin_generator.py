@@ -90,6 +90,9 @@ class TwinCandidatePair(BaseModel):
     watermark_key: str
     delta_nt: int
     delta_codons: int
+    gc_percent_w0: float
+    gc_percent_w1: float
+    gc_delta_percent: float
     arg_counts_w0: Dict[str, int]
     arg_counts_w1: Dict[str, int]
     ser_counts_w0: Dict[str, int]
@@ -260,6 +263,10 @@ class TwinCandidateGenerator:
         w0_detection = detector.compute_detectability(cds_w0, self.watermark_key)
         w1_detection = detector.compute_detectability(cds_w1, self.watermark_key)
 
+        gc_percent_w0 = w0_qa.gc_percent
+        gc_percent_w1 = w1_qa.gc_percent
+        gc_delta_percent = round(w1_qa.gc_percent - w0_qa.gc_percent, 2)
+
         return TwinCandidatePair(
             chain=chain,
             construct_id_w0=construct_id_w0,
@@ -271,6 +278,9 @@ class TwinCandidateGenerator:
             watermark_key=self.watermark_key,
             delta_nt=delta_nt,
             delta_codons=delta_codons,
+            gc_percent_w0=gc_percent_w0,
+            gc_percent_w1=gc_percent_w1,
+            gc_delta_percent=gc_delta_percent,
             arg_counts_w0=arg_counts_w0,
             arg_counts_w1=arg_counts_w1,
             ser_counts_w0=ser_counts_w0,

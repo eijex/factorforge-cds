@@ -167,3 +167,83 @@ class TestJob351ClosedLoopFoundation:
             )
             assert "policies.jsonl" in synced
             assert synced["policies.jsonl"].startswith("gs://factorforge-fair-conduit/")
+            assert "ledger_manifest.json" in synced
+
+    def test_compound_biological_replicate_counting(self):
+        # Two different constructs using the same biological replicate label (e.g. BIO-REP-01)
+        # must be counted as 2 distinct biological observations, not 1!
+        m1 = MeasurementRecord(
+            measurement_id="M1",
+            experiment_id="EXP1",
+            construct_set_id="SET-A",
+            biological_replicate_id="BIO-REP-01",
+            technical_replicate_id="T1",
+            measurement_type="protein_yield",
+            value=10.0,
+            unit="mg/L",
+            qc_status="PASS",
+            is_synthetic=False,
+        )
+        m2 = MeasurementRecord(
+            measurement_id="M2",
+            experiment_id="EXP1",
+            construct_set_id="SET-B",
+            biological_replicate_id="BIO-REP-01",
+            technical_replicate_id="T1",
+            measurement_type="protein_yield",
+            value=12.0,
+            unit="mg/L",
+            qc_status="PASS",
+            is_synthetic=False,
+        )
+        report = ReadinessEvaluator.evaluate([m1, m2])
+        assert report.distinct_biological_replicates == 2
+        assert report.distinct_construct_sets == 2
+
+    def test_referential_integrity_violation_in_lineage(self, temp_ledger):
+        # Register Experiment pointing to SET-A
+        exp = ExperimentRecord(
+            experiment_id="EXP-MISMATCH",
+            construct_set_id="SET-A",
+            host="Nicotiana benthamiana",
+            batch_id="BATCH-01",
+            experiment_date="2026-10-03",
+        )
+        temp_ledger.register_experiment(exp)
+
+        # Register measurement pointing to SET-B (Mismatch!)
+        meas = MeasurementRecord(
+            measurement_id="MEAS-MISMATCH",
+            experiment_id="EXP-MISMATCH",
+            construct_set_id="SET-B",
+            biological_replicate_id="BIO-01",
+            technical_replicate_id="T1",
+            measurement_type="protein_yield",
+            value=5.0,
+            unit="mg/L",
+            qc_status="PASS",
+            is_synthetic=False,
+        )
+        temp_ledger.record_measurement(meas)
+
+        lineage = temp_ledger.verify_lineage("MEAS-MISMATCH")
+        assert lineage["lineage_intact"] is False
+        assert any("Referential mismatch" in v or "does not exist" in v for v in lineage["violations"])
+
+    def test_model_active_requires_explicit_human_approval(self):
+        # Create a report with MODEL_ACTIVE status
+        report = ReadinessEvaluator.evaluate([])
+        # Artificially test MODEL_ACTIVE gate
+        report.status = ReadinessStatus.MODEL_ACTIVE
+        report.model_training_permitted = True
+
+        # Without human approval token: must return APPROVAL_REQUIRED
+        gate_res = ModelRecommendationGate.query_next_ratio(report)
+        assert gate_res["recommendation_status"] == "APPROVAL_REQUIRED"
+
+        # With explicit approval token: activates
+        gate_active = ModelRecommendationGate.query_next_ratio(
+            report, explicit_human_approval_token="HUMAN-SIGNOFF-2026-OCT-PLANTFORM"
+        )
+        assert gate_active["recommendation_status"] == "ACTIVE"
+        assert gate_active["approved_token"] == "HUMAN-SIGNOFF-2026-OCT-PLANTFORM"

@@ -126,6 +126,10 @@ class TestJob350TwinCandidateGeneration:
 
         # Invariant 6: Synonymous nucleotide delta exists
         assert pair.delta_nt > 50
+        assert pair.gc_delta_percent > 8.0
+        assert pair.w0_qa.cai is None
+        assert pair.w0_qa.cai_status == "unavailable"
+        assert pair.w0_qa.cai_reason == "host_codon_weight_reference_not_provided"
 
     def test_hc_twin_candidate_generation_invariants(self):
         gen = TwinCandidateGenerator(watermark_key="Eijex_FactorForge_Watermark_2026")
