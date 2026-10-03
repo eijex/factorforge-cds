@@ -38,7 +38,9 @@ class InSilicoQAReport(BaseModel):
     type_iis_findings: Dict[str, List[int]]  # Enzyme name -> 1-based start positions
     type_iis_clean: bool
     gc_percent: float
-    cai: float
+    cai: Optional[float] = None
+    cai_status: str = "unavailable"
+    cai_reason: Optional[str] = None
     consecutive_repeat_count: int  # count of adjacent identical codons for same AA
     overall_passed: bool
     rejection_reasons: List[str]
@@ -115,8 +117,12 @@ class InSilicoQA:
         if codon_weights and len(codons) > 0:
             log_sum = sum(math.log(max(codon_weights.get(c, 0.01), 1e-4)) for c in codons)
             cai = round(math.exp(log_sum / len(codons)), 4)
+            cai_status = "calculated"
+            cai_reason = None
         else:
-            cai = 0.85  # default baseline approximation
+            cai = None
+            cai_status = "unavailable"
+            cai_reason = "host_codon_weight_reference_not_provided"
 
         # 7. Consecutive codon repeats
         consecutive_repeats = 0
@@ -143,6 +149,8 @@ class InSilicoQA:
             type_iis_clean=type_iis_clean,
             gc_percent=gc_percent,
             cai=cai,
+            cai_status=cai_status,
+            cai_reason=cai_reason,
             consecutive_repeat_count=consecutive_repeats,
             overall_passed=overall_passed,
             rejection_reasons=rejection_reasons,
