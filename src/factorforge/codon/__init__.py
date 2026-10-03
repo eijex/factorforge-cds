@@ -1,13 +1,13 @@
 """FactorForge Experimental Codon Distribution & Twin Candidate Package."""
 
+from factorforge.codon.allocator import (
+    AllocationResult,
+    DeterministicAllocator,
+)
 from factorforge.codon.policy import (
-    CodonDistributionPolicy,
     DOUG_BALANCED_PRESET,
     ILLUSTRATIVE_SKEWED_PRESET,
-)
-from factorforge.codon.allocator import (
-    DeterministicAllocator,
-    AllocationResult,
+    CodonDistributionPolicy,
 )
 from factorforge.codon.twin_generator import (
     TwinCandidateGenerator,
@@ -15,11 +15,11 @@ from factorforge.codon.twin_generator import (
 )
 
 __all__ = [
-    "CodonDistributionPolicy",
     "DOUG_BALANCED_PRESET",
     "ILLUSTRATIVE_SKEWED_PRESET",
-    "DeterministicAllocator",
     "AllocationResult",
+    "CodonDistributionPolicy",
+    "DeterministicAllocator",
     "TwinCandidateGenerator",
     "TwinCandidatePair",
 ]

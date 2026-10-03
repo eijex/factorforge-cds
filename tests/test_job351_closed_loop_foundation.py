@@ -1,21 +1,19 @@
 """Unit tests for Job 351: Codon Closed-Loop Evidence Foundation."""
 
 import os
-import shutil
-import tempfile
-from pathlib import Path
+
 import pytest
 
 from factorforge.closed_loop import (
-    PolicyRecord,
     ConstructRecord,
     ConstructSetRecord,
+    EvidenceLedger,
     ExperimentRecord,
     MeasurementRecord,
-    ReadinessStatus,
-    ReadinessEvaluator,
     ModelRecommendationGate,
-    EvidenceLedger,
+    PolicyRecord,
+    ReadinessEvaluator,
+    ReadinessStatus,
 )
 
 
@@ -149,6 +147,8 @@ class TestJob351ClosedLoopFoundation:
         assert lineage["policy"]["policy_id"] == "doug_balanced_v1"
 
     def test_gcs_cloud_sync_plumbing(self, temp_ledger):
+        if os.environ.get("FACTORFORGE_RUN_GCS_TESTS") != "1":
+            pytest.skip("Live GCS integration requires explicit opt-in")
         # Register a test policy and check GCS sync capability
         pol = PolicyRecord(
             policy_id="test_gcs_policy",
@@ -228,7 +228,9 @@ class TestJob351ClosedLoopFoundation:
 
         lineage = temp_ledger.verify_lineage("MEAS-MISMATCH")
         assert lineage["lineage_intact"] is False
-        assert any("Referential mismatch" in v or "does not exist" in v for v in lineage["violations"])
+        assert any(
+            "Referential mismatch" in v or "does not exist" in v for v in lineage["violations"]
+        )
 
     def test_model_active_requires_explicit_human_approval(self):
         # Create a report with MODEL_ACTIVE status
@@ -245,5 +247,6 @@ class TestJob351ClosedLoopFoundation:
         gate_active = ModelRecommendationGate.query_next_ratio(
             report, explicit_human_approval_token="HUMAN-SIGNOFF-2026-OCT-PLANTFORM"
         )
-        assert gate_active["recommendation_status"] == "ACTIVE"
-        assert gate_active["approved_token"] == "HUMAN-SIGNOFF-2026-OCT-PLANTFORM"
+        assert gate_active["recommendation_status"] == "UNAVAILABLE"
+        assert gate_active["suggested_profile"] is None
+        assert "approved_token" not in gate_active

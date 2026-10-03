@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
-from pydantic import BaseModel, Field
+
+from pydantic import BaseModel, Field, model_validator
 
 
 class PolicyRecord(BaseModel):
@@ -14,12 +15,10 @@ class PolicyRecord(BaseModel):
 
     policy_id: str
     canonical_sha256: str
-    target_distribution: Dict[str, Dict[str, float]]
+    target_distribution: dict[str, dict[str, float]]
     region_definition: str = "mature_chain"
-    feedback_source_id: str = "doug_2026_10_02_humira_feedback"
-    created_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    feedback_source_id: str = "unspecified"
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 class ConstructRecord(BaseModel):
@@ -31,7 +30,7 @@ class ConstructRecord(BaseModel):
     chain: str  # "LC" or "HC"
     watermark_pair_id: str
     watermark_applied: bool
-    achieved_distribution: Dict[str, Dict[str, float]]
+    achieved_distribution: dict[str, dict[str, float]]
     policy_id: str
     engine_version: str = "FactorForge-v3.3.0"
 
@@ -55,7 +54,7 @@ class ExperimentRecord(BaseModel):
     expression_system: str = "Agroinfiltration (Transient Leaf Expression)"
     batch_id: str
     experiment_date: str
-    protocol_version: str = "PlantForm-Humira-Standard-v1.0"
+    protocol_version: str = "unspecified"
 
 
 class MeasurementRecord(BaseModel):
@@ -67,15 +66,25 @@ class MeasurementRecord(BaseModel):
     biological_replicate_id: str
     technical_replicate_id: str
     measurement_type: str  # "protein_yield", "mrna_abundance", "functional_binding"
-    value: Optional[float]
+    value: float | None
     unit: str  # "mg/L", "relative_fold", "%"
     qc_status: str = "PASS"  # "PASS", "FAIL", "FLAGGED"
-    is_synthetic: bool = False  # CRITICAL: If True, flagged as test_only and excluded from real training
-    tag: str = "test_only" if True else "empirical"
-    notes: str = ""
-    recorded_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    is_synthetic: bool = (
+        False  # CRITICAL: If True, flagged as test_only and excluded from real training
     )
+    tag: str = "empirical"
+    notes: str = ""
+    recorded_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+    @model_validator(mode="after")
+    def validate_measurement(self):
+        if self.value is not None and not math.isfinite(self.value):
+            raise ValueError("Measurement value must be finite or null")
+        if self.is_synthetic:
+            self.tag = "test_only"
+        if self.qc_status not in {"PASS", "FAIL", "FLAGGED"}:
+            raise ValueError("Unknown QC status")
+        return self
 
     @property
     def record_hash(self) -> str:

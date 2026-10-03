@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import math
-from typing import Dict, List
-from pydantic import BaseModel, Field
+
+from pydantic import BaseModel
+
+from factorforge.codon.policy import CodonDistributionPolicy
 
 
 class AllocationResult(BaseModel):
@@ -12,9 +14,9 @@ class AllocationResult(BaseModel):
 
     aa: str
     total_residues: int
-    target_fractions: Dict[str, float]
-    achieved_counts: Dict[str, int]
-    achieved_fractions: Dict[str, float]
+    target_fractions: dict[str, float]
+    achieved_counts: dict[str, int]
+    achieved_fractions: dict[str, float]
 
 
 class DeterministicAllocator:
@@ -22,7 +24,7 @@ class DeterministicAllocator:
 
     @staticmethod
     def allocate(
-        aa: str, total_count: int, target_distribution: Dict[str, float]
+        aa: str, total_count: int, target_distribution: dict[str, float]
     ) -> AllocationResult:
         """Allocate total_count among codons according to largest remainder method.
 
@@ -34,7 +36,12 @@ class DeterministicAllocator:
         Returns:
             AllocationResult with exact integer counts and achieved fractions.
         """
-        if total_count <= 0:
+        if type(total_count) is not int or total_count < 0:
+            raise ValueError("Residue count must be a nonnegative integer")
+        CodonDistributionPolicy(
+            policy_id="allocation_validation", distributions={aa: target_distribution}
+        )
+        if total_count == 0:
             return AllocationResult(
                 aa=aa,
                 total_residues=0,
@@ -44,19 +51,21 @@ class DeterministicAllocator:
             )
 
         codons = sorted(target_distribution.keys())
-        floors: Dict[str, int] = {}
-        remainders: Dict[str, float] = {}
+        floors: dict[str, int] = {}
+        remainders: dict[str, float] = {}
 
         total_floor = 0
         for c in codons:
             exact_quota = total_count * target_distribution[c]
-            floor_val = int(math.floor(exact_quota))
+            floor_val = math.floor(exact_quota)
             rem = exact_quota - floor_val
             floors[c] = floor_val
             remainders[c] = round(rem, 8)
             total_floor += floor_val
 
         unassigned = total_count - total_floor
+        if not 0 <= unassigned <= len(codons):
+            raise ValueError("Distribution precision cannot realize the requested integer quota")
 
         # Sort codons by remainder descending, tie-breaking by lexical codon order
         # Key: (-remainder, codon_string)
@@ -67,9 +76,7 @@ class DeterministicAllocator:
             c_recipient = sorted_by_rem[i % len(sorted_by_rem)]
             achieved_counts[c_recipient] += 1
 
-        achieved_fractions = {
-            c: round(achieved_counts[c] / total_count, 6) for c in codons
-        }
+        achieved_fractions = {c: round(achieved_counts[c] / total_count, 6) for c in codons}
 
         return AllocationResult(
             aa=aa,

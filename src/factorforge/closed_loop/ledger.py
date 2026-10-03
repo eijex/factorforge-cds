@@ -2,31 +2,29 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
-import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from factorforge.closed_loop.contracts import (
-    PolicyRecord,
     ConstructRecord,
     ConstructSetRecord,
     ExperimentRecord,
     MeasurementRecord,
+    PolicyRecord,
 )
 from factorforge.closed_loop.readiness import (
-    ReadinessStatus,
-    ReadinessReport,
     ReadinessEvaluator,
+    ReadinessReport,
 )
 
 
 class EvidenceLedger:
     """Local file-based append-only registry storing closed-loop DBTL evidence."""
 
-    def __init__(self, ledger_dir: Optional[Path] = None):
+    def __init__(self, ledger_dir: Path | None = None):
         if ledger_dir is None:
             ledger_dir = Path(__file__).resolve().parents[3] / "data" / "evidence_ledger"
         self.ledger_dir = Path(ledger_dir)
@@ -39,10 +37,24 @@ class EvidenceLedger:
         self.measurements_file = self.ledger_dir / "measurements.jsonl"
 
     def _append_jsonl(self, file_path: Path, record: dict):
+        identity_field = {
+            "policies.jsonl": "policy_id",
+            "constructs.jsonl": "construct_id",
+            "construct_sets.jsonl": "construct_set_id",
+            "experiments.jsonl": "experiment_id",
+            "measurements.jsonl": "measurement_id",
+        }[file_path.name]
+        for existing in self._read_jsonl(file_path):
+            if existing.get(identity_field) == record[identity_field]:
+                if existing == record:
+                    return  # Same record is idempotent, not another observation.
+                raise ValueError(
+                    "Conflicting identity; preserve the original and use an explicit new revision"
+                )
         with open(file_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
-    def _read_jsonl(self, file_path: Path) -> List[dict]:
+    def _read_jsonl(self, file_path: Path) -> list[dict]:
         if not file_path.exists():
             return []
         records = []
@@ -68,7 +80,7 @@ class EvidenceLedger:
     def record_measurement(self, record: MeasurementRecord):
         self._append_jsonl(self.measurements_file, record.model_dump())
 
-    def list_measurements(self, include_synthetic: bool = True) -> List[MeasurementRecord]:
+    def list_measurements(self, include_synthetic: bool = True) -> list[MeasurementRecord]:
         raw = self._read_jsonl(self.measurements_file)
         measurements = [MeasurementRecord(**r) for r in raw]
         if not include_synthetic:
@@ -79,14 +91,22 @@ class EvidenceLedger:
         all_measurements = self.list_measurements(include_synthetic=True)
         raw_experiments = self._read_jsonl(self.experiments_file)
         experiments = {e["experiment_id"]: ExperimentRecord(**e) for e in raw_experiments}
+        all_measurements = [
+            m
+            if m.is_synthetic or self.verify_lineage(m.measurement_id)["lineage_intact"]
+            else m.model_copy(update={"qc_status": "FLAGGED"})
+            for m in all_measurements
+        ]
         return ReadinessEvaluator.evaluate(all_measurements, experiments=experiments)
 
-    def verify_lineage(self, measurement_id: str) -> Dict[str, object]:
+    def verify_lineage(self, measurement_id: str) -> dict[str, object]:
         """Verify unbroken provenance & referential consistency:
         Measurement -> Experiment -> ConstructSet -> Construct -> Policy."""
         measurements = {m["measurement_id"]: m for m in self._read_jsonl(self.measurements_file)}
         experiments = {e["experiment_id"]: e for e in self._read_jsonl(self.experiments_file)}
-        construct_sets = {s["construct_set_id"]: s for s in self._read_jsonl(self.construct_sets_file)}
+        construct_sets = {
+            s["construct_set_id"]: s for s in self._read_jsonl(self.construct_sets_file)
+        }
         constructs = {c["construct_id"]: c for c in self._read_jsonl(self.constructs_file)}
         policies = {p["policy_id"]: p for p in self._read_jsonl(self.policies_file)}
 
@@ -106,7 +126,7 @@ class EvidenceLedger:
         policy_id = lc_construct.get("policy_id") if lc_construct else None
         pol = policies.get(policy_id) if policy_id else None
 
-        violations: List[str] = []
+        violations: list[str] = []
 
         # 1. Existence validations
         if exp is None:
@@ -121,12 +141,11 @@ class EvidenceLedger:
             violations.append(f"Referenced policy '{policy_id}' does not exist in ledger.")
 
         # 2. Referential integrity validations
-        if exp and cset:
-            if exp.get("construct_set_id") != set_id:
-                violations.append(
-                    f"Referential mismatch: Measurement points to construct_set '{set_id}' "
-                    f"but Experiment '{exp_id}' points to '{exp.get('construct_set_id')}'"
-                )
+        if exp and cset and exp.get("construct_set_id") != set_id:
+            violations.append(
+                f"Referential mismatch: Measurement points to construct_set '{set_id}' "
+                f"but Experiment '{exp_id}' points to '{exp.get('construct_set_id')}'"
+            )
 
         if lc_construct and hc_construct:
             lc_pol = lc_construct.get("policy_id")
@@ -136,7 +155,7 @@ class EvidenceLedger:
                     f"Policy mismatch between chains: LC is linked to '{lc_pol}' but HC is linked to '{hc_pol}'"
                 )
 
-        lineage_intact = (len(violations) == 0)
+        lineage_intact = len(violations) == 0
 
         return {
             "measurement_id": measurement_id,
@@ -154,8 +173,8 @@ class EvidenceLedger:
         self,
         bucket_name: str,
         destination_folder: str = "validationhub/ledger_v0",
-        gcp_key_path: Optional[str] = None,
-    ) -> Dict[str, str]:
+        gcp_key_path: str | None = None,
+    ) -> dict[str, str]:
         """Sync append-only ledger snapshot with atomic manifest to Google Cloud Storage."""
         from google.cloud import storage
 

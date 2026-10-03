@@ -31,6 +31,20 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ## [Unreleased]
 
+### Maintenance and experimental safety
+
+- Refresh the urllib3 lock to 2.8.0 without changing optimizer defaults.
+- Retain existing sLLM adapter interfaces alongside the input_ids ONNX contract;
+  optional imports, artifact checks, vocabulary/shape validation and local seeded
+  sampling fail explicitly instead of silently substituting mock inference.
+- Reject non-finite policy weights and incomplete CDS frames in experimental checks.
+  Illustrative codon distributions are not labeled learned or host-calibrated.
+- Exclude missing and test-only measurements from experimental readiness; coverage
+  alone cannot authorize training. The foundation has no active model backend,
+  and arbitrary approval strings cannot produce model recommendations.
+- Live cloud tests require explicit opt-in. Synthetic contract tests are not model
+  performance measurements or biological validation.
+
 ### Fixed
 
 - Filled the missing v3.5.2 web release-note summary from its recorded changelog;
