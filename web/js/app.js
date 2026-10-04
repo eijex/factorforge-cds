@@ -696,7 +696,7 @@ function setupDesignPanel() {
     experimental.append(document.getElementById('toggleWatermark').closest('label'));
     advanced.append(document.getElementById('useTemplate').closest('label'));
     document.getElementById('manualSopOverrides').after(experimental);
-    const exampleLabels = ['A · Baseline example (default)', 'B · Protein design example',
+    const exampleLabels = ['FactorForge Default (example)', 'B · Protein design example',
         'C · Modular cloning example', 'D · Expression workflow example', 'E · Synthesis review example'];
     Array.from(elements.sopPresetSelect.options).forEach((option, index) => {
         if (exampleLabels[index]) option.textContent = exampleLabels[index];
@@ -725,10 +725,15 @@ function setupDesignPanel() {
     });
     elements.uploadSopButton.parentElement.classList.add('flex-wrap');
     elements.downloadSopExample.title = 'Download an editable example configuration, not a validated laboratory SOP.';
-    document.getElementById('sopProfileHeading').textContent = 'Sequence design profile';
+    document.getElementById('sopProfileHeading').textContent = 'Sequence Design Profile';
     const note = document.createElement('p');
+    note.id = 'profileExampleNote';
     note.className = 'text-xs text-slate-500 dark:text-slate-400';
-    note.textContent = 'Example settings, not an approved laboratory SOP. Adapt to your workflow; computational checks do not establish biological performance.';
+    note.textContent = 'Example configuration · Adapt to your workflow';
+    const boundary = document.createElement('p');
+    boundary.className = 'mt-2 text-xs text-slate-500 dark:text-slate-400';
+    boundary.textContent = 'These are example settings, not an approved laboratory SOP. Computational checks do not establish biological performance.';
+    document.getElementById('defaultSopSummary').append(boundary);
     card.insertBefore(note, card.children[1]);
     elements.sopPresetSelect.setAttribute('aria-label', 'Design policy example');
     const resultNotice = document.createElement('p');
@@ -843,7 +848,7 @@ function updatePresetUiFromProfile(profile) {
         elements.sopPresetSelect.value = matchedKey;
         const preset = SOP_PRESETS[matchedKey];
         if (elements.sopPresetTag) {
-            elements.sopPresetTag.textContent = preset.tag;
+            elements.sopPresetTag.textContent = matchedKey === 'preset_a' ? 'Default example active' : preset.tag;
             elements.sopPresetTag.className = 'px-2 py-0.5 rounded text-[9px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700';
         }
         if (elements.sopPresetDescription) {
@@ -928,6 +933,7 @@ function applySopToUi(profile, { persist = true } = {}) {
     state.activeSop = validated;
     if (persist) localStorage.setItem(SOP_STORAGE_KEY, JSON.stringify(validated));
     const displayNames = {
+        preset_a_conservative_baseline: 'FactorForge Default',
         preset_b_therapeutic_biologics: 'B · Protein design example',
         preset_c_moclo_goldenbraid: 'C · Modular cloning example',
         preset_d_high_yield_agro: 'D · Expression workflow example',

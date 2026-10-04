@@ -33,6 +33,9 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Web maintenance
 
+- Rename the displayed baseline profile to FactorForge Default, retaining its
+  existing internal ID, settings and explicit example-policy boundary.
+
 - Group existing engine/constraint controls under Advanced settings and experimental
   controls under Experimental features; retain profile upload/export and example YAML.
 - Connect sequence input handlers before fetching server metadata, fixing early-paste
