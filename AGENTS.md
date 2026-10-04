@@ -169,3 +169,10 @@ The 8 public surfaces and their required checks:
 | Zenodo | https://zenodo.org/records/20407330 | new version record visible |
 - Run or report proportional checks for CLI, API, package build metadata, and
   untracked-file hygiene before push.
+
+## Manuscript Update Policy
+**IMPORTANT:** The Eijex repository maintains dual tracking for scientific manuscripts:
+1. _oxford (or target journal) directory (e.g., _papers/manuscripts/_oxford)
+2. _prism internal evidence-governance directory (e.g., _papers/manuscripts/_prism)
+
+Whenever you make content updates, section additions, or text corrections to a manuscript, **you MUST update BOTH directories**. They use physically separate .tex files. Never update just the _oxford or just the _prism version.
