@@ -307,15 +307,13 @@ test('shows CDS design review controls and rejects multi-FASTA input', async ({ 
   await expect(page.locator('#optimizeBtn')).toBeDisabled();
 });
 
-test('offers host selection while marking BY-2 experimental', async ({ page }) => {
+test('sets primary N. benthamiana host profile and displays applied policy', async ({ page }) => {
   await openApp(page);
 
   await expect(page.locator('#hostSelect')).toHaveValue('nbenthamiana');
-  await expect(page.locator('#hostSelect option[value="by2"]')).toContainText('experimental');
   await expect(page).toHaveTitle('FactorForge | N. benthamiana CDS Design');
-  await expect(page.locator('input[name="objective"][value="feasibility_best"]')).toBeEnabled();
-  await page.locator('#hostSelect').selectOption('by2');
-  await expect(page.locator('#appliedPolicySummary')).toContainText('Tobacco BY-2');
+  await expect(page.locator('#engineVersionSelect')).toHaveValue('dp_v2_1_1');
+  await expect(page.locator('#appliedPolicySummary')).toContainText('N. benthamiana');
 });
 
 test('renders experimental dual comparison and paged codon alignment', async ({ page }) => {
