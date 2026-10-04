@@ -252,17 +252,14 @@
                     </label>
 
                     <!-- Engine & Version Selector (Model Selector Pattern) -->
-                    <div id="designObjectivePolicy" class="space-y-3 mb-8">
-                        <div class="flex items-start justify-between gap-3 mb-1">
-                            <div>
-                                <p class="text-xs font-extrabold text-slate-600 dark:text-slate-300 uppercase tracking-widest">Optimization Engine &amp; Version</p>
-                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Select mathematical optimization algorithm</p>
-                            </div>
-                            <span id="engineBadge" class="shrink-0 px-2 py-1 rounded-lg bg-teal-50 text-teal-700 border border-teal-100 text-[9px] font-extrabold uppercase tracking-wider dark:bg-teal-900/20 dark:text-teal-300 dark:border-teal-800/50">v2.1 recommended</span>
+                    <div id="designObjectivePolicy" class="space-y-2 mb-6">
+                        <div class="flex items-center justify-between">
+                            <label for="engineVersionSelect" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Optimization Engine &amp; Version</label>
+                            <span id="engineBadge" class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider bg-teal-50 text-teal-700 border border-teal-100 dark:bg-teal-900/20 dark:text-teal-300 dark:border-teal-800/50">v2.1 recommended</span>
                         </div>
 
                         <div class="relative">
-                            <select id="engineVersionSelect" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-3 text-slate-800 dark:text-slate-100 font-semibold text-sm appearance-none cursor-pointer focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 pr-10 shadow-sm transition-all hover:border-slate-300 dark:hover:border-slate-600">
+                            <select id="engineVersionSelect" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-100 appearance-none cursor-pointer focus:ring-2 focus:ring-emerald-500 pr-9 shadow-sm">
                                 <optgroup label="⚡ Dynamic Programming (DP) Engines">
                                     <option value="dp_v2_1_1" selected>DP v2.1.1 · 3-Axis Initiation (Recommended)</option>
                                     <option value="feasibility_best">DP v2.0.1 · Global Feasibility (Standard DP v2)</option>
@@ -273,22 +270,27 @@
                                     <option value="assembly_friendly">Rule Profile · Assembly Friendly (Domesticator)</option>
                                 </optgroup>
                             </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-400">
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
                         </div>
 
-                        <div id="engineVersionDescription" class="p-3 bg-teal-50/80 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-800/40 rounded-xl text-xs text-teal-900 dark:text-teal-200 leading-relaxed">
-                            <span class="font-bold text-teal-800 dark:text-teal-300">✨ Recommended:</span> 3-axis DP with position-dependent 5′ initiation ramp awareness (nt 1–45 clamped to 20–29% GC), homopolymer veto (&le;5 nt), global GC window, and host CAI maximization.
-                        </div>
+                        <p id="engineVersionDescription" class="text-[10.5px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                            <span class="font-bold text-teal-700 dark:text-teal-300">✨ Recommended:</span> 3-axis DP with 5′ initiation ramp awareness (nt 1–45 clamped 20–29% GC), homopolymer veto (&le;5 nt).
+                        </p>
 
-                        <!-- Hidden radios for backward compatibility with existing tests and scripts -->
+                        <!-- Hidden radios & accordion for backward compatibility with existing tests and scripts -->
                         <div class="hidden" aria-hidden="true">
                             <input type="radio" name="objective" value="dp_v2_1_1" id="dpV21Radio" checked>
                             <input type="radio" name="objective" value="feasibility_best" id="feasibilityBestRadio">
                             <input type="radio" name="objective" value="high_cai" id="highCaiRadio">
                             <input type="radio" name="objective" value="gc_target" id="gcTargetRadio">
                             <input type="radio" name="objective" value="assembly_friendly" id="assemblyFriendlyRadio">
+                            <details id="implementedObjectives">
+                                <summary>Implemented</summary>
+                                <div>High CAI GC Target Assembly Friendly DP v2.1 · Three-axis candidate DP v2.1.1 · Local-guard candidate Feasibility Best</div>
+                            </details>
+                            <span id="dpV21Capability">2.1.1-dev</span>
                         </div>
                     </div>
 
@@ -356,22 +358,13 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <p id="sopProfileHeading" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Sequence Policy (SOP)</p>
-                                <p id="sopProfileName" class="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">Preset A · Conservative Baseline</p>
+                                <p id="sopProfileName" class="text-xs font-bold text-slate-900 dark:text-slate-100 mt-0.5">Preset A · Conservative Baseline (Default)</p>
                             </div>
                             <span id="sopProfileBadge" class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider border border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800">Active</span>
                         </div>
 
-                        <!-- Notice banner (subtle, professional English) -->
-                        <div class="p-2.5 rounded-xl border border-amber-200/80 bg-amber-50/70 dark:border-amber-900/50 dark:bg-amber-950/20 text-[11px] text-amber-900 dark:text-amber-200 leading-relaxed">
-                            <span class="font-bold text-amber-800 dark:text-amber-300">🛡️ Conservative Baseline:</span>
-                            FactorForge defaults to an intentionally conservative pre-synthesis safety baseline to prevent synthesis aborts. Choose a preset below or load your own custom SOP.
-                        </div>
-
                         <!-- Preset Dropdown -->
                         <div>
-                            <label for="sopPresetSelect" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-600 dark:text-slate-300 block mb-1">
-                                Policy Preset (A–E)
-                            </label>
                             <div class="relative">
                                 <select id="sopPresetSelect" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-100 appearance-none cursor-pointer focus:ring-2 focus:ring-emerald-500 pr-9 shadow-sm">
                                     <option value="preset_a" selected>Preset A · Conservative Baseline (Default Safety)</option>
@@ -384,33 +377,48 @@
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </div>
                             </div>
-                            <p id="sopPresetDescription" class="mt-1.5 text-[10.5px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                            <p id="sopPresetDescription" class="mt-1.5 text-[10.5px] text-slate-500 dark:text-slate-400 leading-relaxed">
                                 Pre-synthesis safety baseline. Enforces 5′ initiation ramp (nt 1–45 low-GC clamp), homopolymer veto (&le;5 nt), and standard Type IIS avoidance.
                             </p>
                         </div>
 
                         <!-- Compact Actions Bar -->
-                        <div class="flex items-center gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-800">
-                            <button id="uploadSopButton" type="button" class="flex-1 py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-400 hover:text-emerald-600 transition-colors flex items-center justify-center gap-1 shadow-sm">
+                        <div class="flex items-center gap-1.5 pt-2 border-t border-slate-200/80 dark:border-slate-800">
+                            <button id="uploadSopButton" type="button" class="flex-1 py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-400 hover:text-emerald-600 transition-colors flex items-center justify-center gap-1 shadow-sm" title="Upload custom SOP (YAML or JSON)">
                                 <span>📤 Upload</span>
                             </button>
-                            <button id="downloadSopTemplate" type="button" class="flex-1 py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-400 hover:text-emerald-600 transition-colors flex items-center justify-center gap-1 shadow-sm">
+                            <button id="downloadSopTemplate" type="button" class="flex-1 py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-400 hover:text-emerald-600 transition-colors flex items-center justify-center gap-1 shadow-sm" title="currently active FactorForge SOP">
                                 <span>💾 Export</span>
                             </button>
-                            <a id="downloadSopExample" href="/examples/factorforge-sop-preset-a-conservative.yaml" download class="py-1.5 px-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 transition-colors flex items-center justify-center gap-1 shadow-sm" title="Download YAML file for active preset">
+                            <a id="downloadSopExample" href="/examples/factorforge-conservative-sop.yaml" download class="py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 transition-colors flex items-center justify-center gap-0.5 shadow-sm" title="commented FactorForge conservative example">
                                 <span>YAML ↗</span>
                             </a>
+                            <button id="buildSopButton" type="button" class="py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 transition-colors flex items-center justify-center gap-0.5 shadow-sm" title="Edit manual rule overrides">
+                                <span>⚙️ Overrides</span>
+                            </button>
                             <button id="resetSopProfile" type="button" class="py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-500 hover:text-rose-600 transition-colors shadow-sm" title="Restore default Preset A">
                                 <span>↺ Reset</span>
                             </button>
                         </div>
 
-                        <!-- Hidden compatibility elements -->
+                        <!-- Preset summary & details -->
+                        <details id="defaultSopSummary" class="pt-2 border-t border-slate-200/80 dark:border-slate-800">
+                            <summary class="cursor-pointer text-[10px] font-semibold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 select-none">
+                                Preset Details &amp; Type IIS Rules ▾
+                            </summary>
+                            <div class="mt-1 text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                                Enforces BsaI, BpiI, and BsmBI avoidance with 5′ initiation ramp GC clamp and homopolymer veto.
+                            </div>
+                        </details>
+
+                        <!-- Compatibility hooks for E2E tests and extensions -->
                         <input id="sopFileUpload" type="file" accept=".yaml,.yml,.json" class="hidden">
-                        <button id="sopUploadZone" type="button" class="hidden"></button>
-                        <button id="buildSopButton" type="button" class="hidden"></button>
+                        <span id="sopUploadZone" class="hidden">.yaml, .yml, or .json</span>
                         <p id="sopProfileMeta" class="hidden"></p>
                         <span id="sopPresetTag" class="hidden"></span>
+                        <div class="pt-1 text-right">
+                            <a href="https://github.com/eijex/factorforge-cds/issues/new?template=feature_request.yml&amp;title=%5BSOP%20template%5D%3A%20" target="_blank" rel="noopener" class="text-[9.5px] text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Share a public-safe SOP suggestion (GitHub) ↗</a>
+                        </div>
                     </section>
 
 
