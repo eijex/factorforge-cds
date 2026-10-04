@@ -8,6 +8,19 @@ collapsed; the edit button expands them. A separate registry-backed modal builde
 is not part of the verified web runtime. Uploaded profiles are examples or user
 policies, not approved laboratory SOPs.
 
+The default Design Setup shows the host, applied-settings summary and sequence
+design profile. Engine selection, sequence/assembly constraints, review policy,
+codon distribution and MoClo controls remain available under Advanced settings.
+Watermark and capability-gated ML comparisons are under Experimental features.
+Profile upload, example YAML download, active-profile export and editing are
+available under Upload, download or edit profile. Collapsing a section does not
+disable its settings or change the optimization request.
+
+Sequence input listeners are connected before server metadata is fetched, so
+early paste and slow metadata responses do not leave Generate disabled. The
+server rule registry includes BpiI and SapI recognition targets requested by
+the bundled profiles; profile-selected enforcement remains separate from detection.
+
 The What's New panel summarizes the versioned CHANGELOG, including v3.5.2's
 optional codon balancing, sequence-audit/evidence support and policy-driven review.
 These historical notes do not change the current default engine or validation boundary.

@@ -88,7 +88,7 @@ test('loads the main web UI', async ({ page }) => {
   await openApp(page);
 
   await expect(page.locator('#sequenceInput')).toBeVisible();
-  await expect(page.getByRole('heading', { name: '⚙️ Design Brief' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '⚙️ Design Setup' })).toBeVisible();
   await expect(page.locator('#optimizeBtn')).toBeVisible();
   await expect(page.locator('#resultsPanel')).toBeVisible();
   await expect(page.locator('#emptyState')).toContainText('Awaiting a sequence');
@@ -134,6 +134,8 @@ test('keeps non-default design objectives collapsed until requested', async ({ p
   await expect(page.locator('input[name="objective"]:checked')).toHaveCount(1);
 
   const select = page.locator('#engineVersionSelect');
+  await expect(select).toBeHidden();
+  await page.locator('#manualSopOverrides > summary').click();
   await expect(select).toBeVisible();
   await expect(select).toContainText('High CAI');
   await expect(select).toContainText('Host GC Target');
@@ -289,7 +291,7 @@ test('shows CDS design review controls and rejects multi-FASTA input', async ({ 
   const acceptanceCriteria = page.locator('#acceptanceCriteria');
   await expect(acceptanceCriteria).toBeHidden();
   await expect(page.locator('#criterionCaiMode')).toBeHidden();
-  await manualOverrides.locator('summary').click();
+  await manualOverrides.locator(':scope > summary').click();
   await expect(acceptanceCriteria).toBeVisible();
   await expect(page.locator('#criterionCaiMode')).toBeVisible();
   await page.locator('#sequenceInput').fill('>one\nATGTCCAAG\n>two\nATGTCCAAG');
@@ -354,6 +356,7 @@ test('renders experimental dual comparison and paged codon alignment', async ({ 
     }) });
   });
   await openApp(page);
+  await page.locator('#experimentalSettings > summary').click();
   await page.locator('input[name="engineMode"][value="dual_compare"]').check();
   await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
   await page.locator('#optimizeBtn').click();
@@ -437,7 +440,7 @@ test('optional seed and Type IIS presets are merged into the optimization payloa
   await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
   const manualOverrides = page.locator('#manualSopOverrides');
   await expect(manualOverrides).not.toHaveAttribute('open', '');
-  await manualOverrides.locator('summary').click();
+  await manualOverrides.locator(':scope > summary').click();
   await page.locator('#optimizationSeed').fill('42');
   await page.locator('#customRestrictionSites').fill('SapI:GAAGAGC');
   await page.locator('input[name="typeIisEnzyme"][value="SapI"]').check();

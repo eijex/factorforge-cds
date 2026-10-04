@@ -203,6 +203,26 @@ def _check_codon_concentration(sequence: str, context: Dict[str, Any]) -> Dict[s
         }
     return {"status": "ok"}
 
+def _check_additional_type_iis(sequence: str, context: dict[str, Any], motifs) -> dict[str, Any]:
+    seq_upper = sequence.upper()
+    forward = [m.start() for m in re.finditer(motifs[0], seq_upper)]
+    reverse = [m.start() for m in re.finditer(motifs[1], seq_upper)]
+    return {
+        "passed": not (forward or reverse),
+        "site_count": len(forward) + len(reverse),
+        "forward_positions": forward,
+        "reverse_positions": reverse,
+    }
+
+
+def _check_bpii(sequence: str, context: dict[str, Any]) -> dict[str, Any]:
+    return _check_additional_type_iis(sequence, context, ("GAAGAC", "GTCTTC"))
+
+
+def _check_sapi(sequence: str, context: dict[str, Any]) -> dict[str, Any]:
+    return _check_additional_type_iis(sequence, context, ("GAAGAGC", "GCTCTTC"))
+
+
 class RuleRegistry:
     """Registry managing collection of versioned, scoped, and attributed rules."""
 
@@ -214,6 +234,28 @@ class RuleRegistry:
 
     def _register_default_rules(self) -> None:
         """Register the standard suite across Hard Invariants, Warnings, and Policies."""
+        # Expose existing recognition targets to uploaded policy profiles.
+        # Mandatory enforcement remains a user's profile decision.
+        for rule_id, name, evaluator in (
+            ("assembly.type_iis.bpii.v1", "BpiI Type IIS Absence", _check_bpii),
+            ("assembly.type_iis.sapi.v1", "SapI Type IIS Absence", _check_sapi),
+        ):
+            self.register(
+                RuleDefinition(
+                    rule_id=rule_id,
+                    name=name,
+                    description="Configured Type IIS recognition-site scan on both strands.",
+                    category=RuleCategory.ASSEMBLY,
+                    enforcement=EnforcementLevel.WARNING,
+                    authority=RuleAuthority(
+                        authority_type=AuthorityType.EIJEX_INTERNAL_POLICY,
+                        source_name="factorforge-sequence-policy-example",
+                    ),
+                    scope=RuleScope(molecule_types={"dna"}),
+                    version="1.0.0",
+                    evaluator_fn=evaluator,
+                )
+            )
         
         # 1. Hard Invariants (hard_fail)
         self.register(

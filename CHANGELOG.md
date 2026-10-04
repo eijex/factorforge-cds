@@ -29,6 +29,18 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
+## [Unreleased]
+
+### Web maintenance
+
+- Group existing engine/constraint controls under Advanced settings and experimental
+  controls under Experimental features; retain profile upload/export and example YAML.
+- Connect sequence input handlers before fetching server metadata, fixing early-paste
+  inputs that otherwise left Generate disabled.
+- Register existing BpiI and SapI recognition targets for sequence-policy validation,
+  fixing bundled profiles rejected as unknown rules without dropping their checks.
+- Clarify example-policy, MoClo and watermark wording without changing optimizer defaults.
+
 ## [3.5.5] — 2026-10-04
 
 ### Added
