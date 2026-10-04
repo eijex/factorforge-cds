@@ -1,7 +1,8 @@
 # FactorForge SOP Preset D: High-Yield Agroinfiltration Overexpression
 # ==============================================================================
-# 아그로인필트레이션을 통한 일시적 초고발현(Transient Overexpression) 목적.
-# 숙주 최선호 코돈(Max CAI)을 집중 할당하고, Kozak 및 TpA 억제로 번역 처리량을 극대화합니다.
+# High-yield transient overexpression profile for Nicotiana benthamiana leaf
+# agroinfiltration. Prioritizes maximum translation throughput using host Max CAI
+# codon allocation, Kozak initiation consensus, and TpA mRNA stabilization.
 # ==============================================================================
 $schema: factorforge-sop-v1
 profile_id: preset_d_high_yield_agro
@@ -10,7 +11,7 @@ version: 1.2.0
 author: Eijex
 status: PRESET_TEMPLATE
 derived_from: "Plant transient overexpression high-throughput translation heuristics"
-scope_note: "N. benthamiana 잎 아그로인필트레이션을 통한 최고 수율 단백질 발현 SOP"
+scope_note: "Maximum yield protein expression policy for N. benthamiana leaf agroinfiltration"
 default_enforcement: IGNORE
 unknown_rule_policy: ERROR
 
