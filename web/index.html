@@ -19,6 +19,8 @@
         rel="stylesheet">
     <!-- Chart.js for GC Graph -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- JSZip for Evidence Package Client Compilation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
@@ -900,6 +902,10 @@
 
                         <!-- Downloads -->
                         <div class="grid grid-cols-1 gap-3">
+                            <button id="downloadEvidencePackageZip"
+                                class="w-full py-3 px-4 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95">
+                                <span>📦</span><span>Download Evidence Package (.zip)</span>
+                            </button>
                             <button id="exportInteractiveReport"
                                 class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95">
                                 <span>📄</span><span>Export Interactive HTML Report (.html)</span>

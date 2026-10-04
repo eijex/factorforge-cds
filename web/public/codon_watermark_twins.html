@@ -241,15 +241,15 @@
                 <td class="twin-pass">✓ 0 nt Delta</td>
               </tr>
               <tr>
-                <td><strong>Arg Distribution (AGA : AGG)</strong></td>
-                <td class="twin-val" id="w0ArgCounts">5 : 4</td>
-                <td class="twin-val" id="w1ArgCounts">5 : 4</td>
+                <td><strong>Arg Counts & Ratio (AGA : AGG)</strong><br><span style="font-size:11px;color:var(--muted);">Integer quota allocated across mature Arg</span></td>
+                <td class="twin-val" id="w0ArgCounts">5 : 4 (55.6% : 44.4%, n=9)</td>
+                <td class="twin-val" id="w1ArgCounts">5 : 4 (55.6% : 44.4%, n=9)</td>
                 <td class="twin-pass">✓ Zero Drift</td>
               </tr>
               <tr>
-                <td><strong>Ser Distribution (TCT:TCC:TCA:AGT:AGC)</strong></td>
-                <td class="twin-val" id="w0SerCounts">6 : 6 : 6 : 6 : 6</td>
-                <td class="twin-val" id="w1SerCounts">6 : 6 : 6 : 6 : 6</td>
+                <td><strong>Ser Counts & Ratio (TCT:TCC:TCA:AGT:AGC)</strong><br><span style="font-size:11px;color:var(--muted);">Integer quota allocated across mature Ser (Target: 20% each)</span></td>
+                <td class="twin-val" id="w0SerCounts">6 : 6 : 6 : 6 : 6 (20% each, n=30)</td>
+                <td class="twin-val" id="w1SerCounts">6 : 6 : 6 : 6 : 6 (20% each, n=30)</td>
                 <td class="twin-pass">✓ Zero Drift</td>
               </tr>
               <tr>
@@ -301,8 +301,8 @@
           serTarget: "20% each (TCT, TCC, TCA, AGT, AGC)",
           serTotal: "30 residues",
           serAchieved: "6 each (20.0% uniform)",
-          w0Arg: "5 : 4", w1Arg: "5 : 4",
-          w0Ser: "6 : 6 : 6 : 6 : 6", w1Ser: "6 : 6 : 6 : 6 : 6",
+          w0Arg: "5 : 4 (55.6% : 44.4%, n=9)", w1Arg: "5 : 4 (55.6% : 44.4%, n=9)",
+          w0Ser: "6 : 6 : 6 : 6 : 6 (20% each, n=30)", w1Ser: "6 : 6 : 6 : 6 : 6 (20% each, n=30)",
           deltaNt: "109 nt difference (strictly on non-Arg, non-Ser codons)",
           w0Detect: "Score 0.33 (p = 0.35, Negative)",
           w1Detect: "Score 0.81 (p = 0.005, POSITIVE)"
@@ -314,8 +314,8 @@
           serTarget: "TCT 35%, TCC 25%, TCA 15%, AGT 15%, AGC 10%",
           serTotal: "30 residues",
           serAchieved: "TCT: 10, TCC: 7, TCA: 5, AGT: 5, AGC: 3",
-          w0Arg: "6 : 3", w1Arg: "6 : 3",
-          w0Ser: "10 : 7 : 5 : 5 : 3", w1Ser: "10 : 7 : 5 : 5 : 3",
+          w0Arg: "6 : 3 (66.7% : 33.3%, n=9)", w1Arg: "6 : 3 (66.7% : 33.3%, n=9)",
+          w0Ser: "10 : 7 : 5 : 5 : 3 (33.3% : 23.3% : 16.7% : 16.7% : 10.0%, n=30)", w1Ser: "10 : 7 : 5 : 5 : 3 (33.3% : 23.3% : 16.7% : 16.7% : 10.0%, n=30)",
           deltaNt: "112 nt difference (strictly on non-Arg, non-Ser codons)",
           w0Detect: "Score 0.31 (p = 0.42, Negative)",
           w1Detect: "Score 0.79 (p = 0.008, POSITIVE)"
@@ -329,8 +329,8 @@
           serTarget: "20% each (TCT, TCC, TCA, AGT, AGC)",
           serTotal: "55 residues",
           serAchieved: "11 each (20.0% uniform)",
-          w0Arg: "6 : 6", w1Arg: "6 : 6",
-          w0Ser: "11 : 11 : 11 : 11 : 11", w1Ser: "11 : 11 : 11 : 11 : 11",
+          w0Arg: "6 : 6 (50.0% : 50.0%, n=12)", w1Arg: "6 : 6 (50.0% : 50.0%, n=12)",
+          w0Ser: "11 : 11 : 11 : 11 : 11 (20% each, n=55)", w1Ser: "11 : 11 : 11 : 11 : 11 (20% each, n=55)",
           deltaNt: "218 nt difference (strictly on non-Arg, non-Ser codons)",
           w0Detect: "Score 0.32 (p = 0.38, Negative)",
           w1Detect: "Score 0.82 (p = 0.002, POSITIVE)"
@@ -342,8 +342,8 @@
           serTarget: "TCT 35%, TCC 25%, TCA 15%, AGT 15%, AGC 10%",
           serTotal: "55 residues",
           serAchieved: "TCT: 19, TCC: 14, TCA: 8, AGT: 8, AGC: 6",
-          w0Arg: "8 : 4", w1Arg: "8 : 4",
-          w0Ser: "19 : 14 : 8 : 8 : 6", w1Ser: "19 : 14 : 8 : 8 : 6",
+          w0Arg: "8 : 4 (66.7% : 33.3%, n=12)", w1Arg: "8 : 4 (66.7% : 33.3%, n=12)",
+          w0Ser: "19 : 14 : 8 : 8 : 6 (34.5% : 25.5% : 14.5% : 14.5% : 10.9%, n=55)", w1Ser: "19 : 14 : 8 : 8 : 6 (34.5% : 25.5% : 14.5% : 14.5% : 10.9%, n=55)",
           deltaNt: "221 nt difference (strictly on non-Arg, non-Ser codons)",
           w0Detect: "Score 0.30 (p = 0.45, Negative)",
           w1Detect: "Score 0.80 (p = 0.004, POSITIVE)"
