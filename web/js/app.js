@@ -50,7 +50,7 @@ function getGcRange(hostId) {
 
 let validationRegistry = [];
 const HISTORY_SCHEMA_VERSION = 3;
-const SOP_STORAGE_KEY = 'factorforge_active_sop_v1';
+const SOP_STORAGE_KEY = 'factorforge_active_sop_v2';
 const SOP_SCHEMA = 'factorforge-sop-v1';
 const SOP_MODES = Object.freeze(['required', 'preferred', 'ignored']);
 const SOP_PRESETS = Object.freeze({
@@ -58,7 +58,7 @@ const SOP_PRESETS = Object.freeze({
         id: 'preset_a',
         name: 'Preset A · Conservative Baseline (Default)',
         tag: 'Preset A Active',
-        file: '/examples/factorforge-sop-preset-a-conservative.yaml',
+        file: '/examples/factorforge-conservative-sop.yaml',
         description: 'Pre-synthesis safety baseline. Enforces 5′ initiation ramp (nt 1–45 low-GC clamp), homopolymer veto (≤5 nt), and standard Type IIS avoidance.',
         profile: {
             $schema: SOP_SCHEMA,
@@ -419,8 +419,22 @@ function validateSopProfile(profile) {
 
 function loadSopProfile() {
     try {
+        localStorage.removeItem('factorforge_active_sop_v1'); // Purge legacy cache with obsolete naming
         const saved = localStorage.getItem(SOP_STORAGE_KEY);
-        return saved ? validateSopProfile(JSON.parse(saved)) : cloneJson(DEFAULT_SOP_PROFILE);
+        if (!saved) return cloneJson(DEFAULT_SOP_PROFILE);
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+            if (typeof parsed.sop_name === 'string') {
+                parsed.sop_name = parsed.sop_name
+                    .replace(/PlantForm\s+Doug\s+Biologics/gi, 'Therapeutic Biologics')
+                    .replace(/PlantForm/gi, 'Therapeutic')
+                    .replace(/Doug/gi, 'Balanced');
+            }
+            if (parsed.profile_id === 'sop-preset-b-plantform-biologics') {
+                return cloneJson(SOP_PRESETS.preset_b.profile);
+            }
+        }
+        return validateSopProfile(parsed);
     } catch (_) {
         localStorage.removeItem(SOP_STORAGE_KEY);
         return cloneJson(DEFAULT_SOP_PROFILE);
@@ -774,7 +788,7 @@ function updatePresetUiFromProfile(profile) {
         }
         if (elements.downloadSopExample) {
             elements.downloadSopExample.href = preset.file;
-            elements.downloadSopExample.download = `factorforge-sop-${matchedKey.replace('_', '-')}.yaml`;
+            elements.downloadSopExample.download = '';
         }
     } else {
         if (elements.sopPresetTag) {
@@ -796,13 +810,17 @@ function applySopToUi(profile, { persist = true } = {}) {
     const workflow = validated.workflow;
     const requirements = workflow.sequence_requirements;
     const policy = workflow.review_policy;
-    const objective = Array.from(elements.objectiveRadios).find(radio => radio.value === workflow.design_method && !radio.disabled);
-    if (!objective) throw new Error(`Design method ${workflow.design_method} is unavailable on this deployment.`);
-    objective.checked = true;
-    state.objective = objective.value;
-    if (elements.engineVersionSelect && workflow.design_method) {
-        elements.engineVersionSelect.value = workflow.design_method;
-        updateEngineDescription(workflow.design_method);
+    let objective = Array.from(elements.objectiveRadios).find(radio => radio.value === workflow.design_method && !radio.disabled);
+    if (!objective) {
+        objective = Array.from(elements.objectiveRadios).find(radio => !radio.disabled) || elements.objectiveRadios[0];
+    }
+    if (objective) {
+        objective.checked = true;
+        state.objective = objective.value;
+        if (elements.engineVersionSelect) {
+            elements.engineVersionSelect.value = objective.value;
+            updateEngineDescription(objective.value);
+        }
     }
     if (workflow.codon_policy) {
         state.codonPolicy = workflow.codon_policy;

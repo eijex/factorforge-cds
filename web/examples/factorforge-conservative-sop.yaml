@@ -1,4 +1,5 @@
 # FactorForge Conservative Sequence Policy Example (Default Baseline)
+# This is an illustrative in-silico template
 # ==============================================================================
 # FactorForge's default sequence policy is configured as an intentionally
 # conservative pre-synthesis baseline to minimize synthesis rejects and sequence
@@ -20,7 +21,6 @@ rules:
   assembly.type_iis.bsai.v1: HARD_FAIL
   assembly.type_iis.bpii.v1: HARD_FAIL
   assembly.type_iis.bsmbi.v1: HARD_FAIL
-  biological.reading_frame.v1: HARD_FAIL
   rna.cryptic_splice.v1: WARNING
   rna.polya_motifs.v1: WARNING
   rna.au_rich_elements.v1: WARNING

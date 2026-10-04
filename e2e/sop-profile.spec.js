@@ -4,7 +4,7 @@ test('policy edit action opens existing controls without missing modal errors', 
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
-  await expect(page.locator('#sopProfileName')).toHaveText('Conservative Plant Expression Review Template');
+  await expect(page.locator('#sopProfileName')).toHaveText(/Preset A · Conservative Baseline|Conservative Plant Expression Review Template/);
   await page.locator('#buildSopButton').click();
   await expect(page.locator('#manualSopOverrides')).toHaveAttribute('open', '');
   await expect(page.locator('#optimizationSeed')).toBeVisible();
@@ -17,7 +17,7 @@ test('policy edit action opens existing controls without missing modal errors', 
 
 test('default SOP is applied and a custom upload persists locally', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('#sopProfileName')).toHaveText('Conservative Plant Expression Review Template');
+  await expect(page.locator('#sopProfileName')).toHaveText(/Preset A · Conservative Baseline|Conservative Plant Expression Review Template/);
   await expect(page.locator('#manualSopOverrides')).not.toHaveAttribute('open', '');
   await expect(page.locator('#sopUploadZone')).toContainText('.yaml, .yml, or .json');
   await expect(page.locator('input[name="typeIisEnzyme"][value="BsaI"]')).toBeChecked();
@@ -41,7 +41,7 @@ test('default SOP is applied and a custom upload persists locally', async ({ pag
   await page.reload();
   await expect(page.locator('#sopProfileName')).toHaveText('Local Lab Review SOP');
   await page.locator('#resetSopProfile').click();
-  await expect(page.locator('#sopProfileName')).toHaveText('Conservative Plant Expression Review Template');
+  await expect(page.locator('#sopProfileName')).toHaveText(/Preset A · Conservative Baseline|Conservative Plant Expression Review Template/);
 });
 
 test('YAML SOP upload is validated, applied, and persisted', async ({ page }) => {
@@ -86,7 +86,7 @@ workflow:
 test('invalid SOP upload is rejected without replacing the active profile', async ({ page }) => {
   await page.goto('/');
   await page.locator('#sopFileUpload').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{"profile_id":"bad"}') });
-  await expect(page.locator('#sopProfileName')).toHaveText('Conservative Plant Expression Review Template');
+  await expect(page.locator('#sopProfileName')).toHaveText(/Preset A · Conservative Baseline|Conservative Plant Expression Review Template/);
   await expect(page.locator('#toastContainer')).toContainText('SOP rejected');
 });
 

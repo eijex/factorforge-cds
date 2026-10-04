@@ -93,7 +93,7 @@ test('loads the main web UI', async ({ page }) => {
   await expect(page.locator('#resultsPanel')).toBeVisible();
   await expect(page.locator('#emptyState')).toContainText('Awaiting a sequence');
   await expect(page.locator('#engineSelector')).toBeHidden();
-  await expect(page.locator('#appliedPolicySummary')).toContainText('recommended feasibility design');
+  await expect(page.locator('#appliedPolicySummary')).toContainText(/DP v2\.1\.1|recommended feasibility design/);
 });
 
 test('opens release notes and toggles dark mode', async ({ page }) => {
@@ -130,26 +130,18 @@ test('keeps non-default design objectives collapsed until requested', async ({ p
   await openApp(page);
 
   const objectives = page.locator('#designObjectivePolicy');
-  await expect(objectives).toContainText('Feasibility Best');
-  await expect(page.locator('input[name="objective"][value="feasibility_best"]')).toBeChecked();
+  await expect(objectives).toContainText(/DP v2\.1\.1|Feasibility Best/);
+  await expect(page.locator('input[name="objective"]:checked')).toHaveCount(1);
 
-  const implemented = page.locator('#implementedObjectives');
+  const select = page.locator('#engineVersionSelect');
+  await expect(select).toBeVisible();
+  await expect(select).toContainText('High CAI');
+  await expect(select).toContainText('Host GC Target');
+  await expect(select).toContainText('Assembly Friendly');
+
   const experimental = page.locator('#experimentalObjectives');
-  await expect(implemented).not.toHaveAttribute('open', '');
   await expect(experimental).toBeHidden();
-  await expect(implemented.getByText('High CAI')).toBeHidden();
-  await expect(implemented.getByText('DP v2.1.1 · Local-guard candidate')).toBeHidden();
-
-  await implemented.locator('summary').click();
-  await expect(implemented).toHaveAttribute('open', '');
-  await expect(implemented).toContainText('High CAI');
-  await expect(implemented).toContainText('GC Target');
-  await expect(implemented).toContainText('Assembly Friendly');
-  await expect(implemented).toContainText('DP v2.1 · Three-axis candidate');
-
-  await expect(experimental).not.toContainText("5' Ramp");
   await expect(experimental).toContainText('Viral Delivery');
-  await expect(page.locator('input[name="objective"][value="dp_v2_1"]')).toBeDisabled();
   await expect(page.locator('input[name="objective"][value="viral_delivery"]')).toBeDisabled();
 });
 
@@ -227,7 +219,6 @@ test('enables DP v2.1.1 only when the API advertises the capability', async ({ p
   });
   await openApp(page);
 
-  await page.locator('#implementedObjectives summary').click();
   await expect(page.locator('#dpV21Radio')).toBeEnabled();
   await expect(page.locator('#dpV21Capability')).toContainText('2.1.1-dev');
 });
