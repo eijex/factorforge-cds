@@ -33,13 +33,13 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ### Added
 
-- Generalized `DesignExperiment`, `Variant`, and `EvidenceRecord` core models supporting arbitrary candidate variant capacity and lineage traceability (Job 355).
+- Generalized `DesignExperiment`, `Variant`, and `EvidenceRecord` core models supporting arbitrary candidate variant capacity and lineage traceability.
 - Structured `CodonPolicy` object with Hamilton Largest Remainder allocation, repeat avoidance, and named non-CpG presets (`plantform_balanced_codon_v1`).
 - Deterministic synonymous auto-repair for Type IIS restriction sites (BsaI, BpiI, BsmBI) and motif-local cryptic splice remediation.
 - `EvidencePackageCompiler` generating self-contained ZIP archives with multi-FASTA, experiment JSON, Markdown Design Dossier, standalone HTML dashboard, and SHA-256 manifest.
 - Web UI one-click Evidence Package (.zip) download integration.
-- Codon Watermark Twins generator with zero-drift verification (Job 350).
-- Closed-loop optimization foundation and lineage gates (Job 351).
+- Codon Watermark Twins generator with zero-drift verification.
+- Closed-loop optimization foundation and lineage gates.
 
 ### Maintenance and experimental safety
 
