@@ -16,6 +16,10 @@ Profile upload, example YAML download, active-profile export and editing are
 available under Upload, download or edit profile. Collapsing a section does not
 disable its settings or change the optimization request.
 
+The baseline example is displayed as **FactorForge Default**, with the description
+"Example configuration · Adapt to your workflow". Its internal profile ID and
+serialized settings are unchanged; the laboratory-SOP boundary remains in profile details.
+
 Sequence input listeners are connected before server metadata is fetched, so
 early paste and slow metadata responses do not leave Generate disabled. The
 server rule registry includes BpiI and SapI recognition targets requested by
