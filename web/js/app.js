@@ -53,46 +53,260 @@ const HISTORY_SCHEMA_VERSION = 3;
 const SOP_STORAGE_KEY = 'factorforge_active_sop_v1';
 const SOP_SCHEMA = 'factorforge-sop-v1';
 const SOP_MODES = Object.freeze(['required', 'preferred', 'ignored']);
-const DEFAULT_SOP_PROFILE = Object.freeze({
-    $schema: SOP_SCHEMA,
-    profile_id: 'default_conservative_plant_expression',
-    sop_name: 'Conservative Plant Expression Review Template',
-    version: '1.1.0',
-    author: 'Eijex',
-    status: 'STANDARD_TEMPLATE',
-    derived_from: "FactorForge public defaults plus collaborator-informed precautionary workflow assumptions; not any laboratory's complete or approved SOP",
-    scope_note: 'Editable in-silico design and pre-synthesis review policy. Laboratory approval and wet-lab testing remain separate.',
-    default_enforcement: 'IGNORE',
-    unknown_rule_policy: 'ERROR',
-    rules: {
-        'assembly.type_iis.bsai.v1': 'HARD_FAIL',
-        'assembly.type_iis.bsmbi.v1': 'HARD_FAIL',
-        'biological.reading_frame.v1': 'HARD_FAIL',
-        'rna.cryptic_splice.v1': 'WARNING',
-        'rna.polya_motifs.v1': 'WARNING',
-        'rna.au_rich_elements.v1': 'WARNING',
-        'synthesis.gc_extremes.v1': 'WARNING',
-        'policy.synthesis.homopolymer.v1': 'WARNING',
-        'policy.initiation_mfe.v1': 'WARNING'
+const SOP_PRESETS = Object.freeze({
+    preset_a: {
+        id: 'preset_a',
+        name: 'Preset A · Conservative Baseline (Default)',
+        tag: 'Preset A Active',
+        file: '/examples/factorforge-sop-preset-a-conservative.yaml',
+        description: '사전 합성 안전 최우선 보수적 기준선. 5′ 번역 개시 램프(nt 1–45 저-GC 제약), 호모폴리머 억제, 표준 BsaI/BpiI/BsmBI 배제.',
+        profile: {
+            $schema: SOP_SCHEMA,
+            profile_id: 'preset_a_conservative_baseline',
+            sop_name: 'Preset A · Conservative Baseline (Default)',
+            version: '1.2.0',
+            author: 'Eijex',
+            status: 'STANDARD_TEMPLATE',
+            derived_from: 'FactorForge default conservative pre-synthesis baseline; not identical to any single proprietary SOP',
+            scope_note: '가장 보수적인 사전 합성 안전 기준선. 각 연구실 고유의 SOP 업로드 및 설정을 권장합니다.',
+            default_enforcement: 'IGNORE',
+            unknown_rule_policy: 'ERROR',
+            rules: {
+                'assembly.type_iis.bsai.v1': 'HARD_FAIL',
+                'assembly.type_iis.bpii.v1': 'HARD_FAIL',
+                'assembly.type_iis.bsmbi.v1': 'HARD_FAIL',
+                'biological.reading_frame.v1': 'HARD_FAIL',
+                'rna.cryptic_splice.v1': 'WARNING',
+                'rna.polya_motifs.v1': 'WARNING',
+                'rna.au_rich_elements.v1': 'WARNING',
+                'synthesis.gc_extremes.v1': 'WARNING',
+                'policy.synthesis.homopolymer.v1': 'WARNING',
+                'policy.initiation_mfe.v1': 'WARNING'
+            },
+            workflow: {
+                design_method: 'dp_v2_1_1',
+                codon_policy: 'plantform_balanced_codon_v1',
+                watermark: false,
+                comparison_methods: ['high_cai', 'gc_target', 'assembly_friendly'],
+                sequence_requirements: {
+                    reproducibility_seed: null,
+                    kozak_optimization: false,
+                    suppress_tpa: false,
+                    type_iis_enzymes: ['BsaI', 'BpiI', 'BsmBI'],
+                    custom_restriction_sites: [],
+                    moclo_template: false
+                },
+                review_policy: {
+                    cai: 'PREFERRED', overall_gc: 'PREFERRED', local_gc: 'PREFERRED',
+                    type_iis: 'REQUIRED', repeats: 'PREFERRED', homopolymers: 'PREFERRED',
+                    forbidden_motifs: 'PREFERRED'
+                }
+            }
+        }
     },
-    workflow: {
-        design_method: 'feasibility_best',
-        comparison_methods: ['high_cai', 'gc_target', 'assembly_friendly'],
-        sequence_requirements: {
-            reproducibility_seed: null,
-            kozak_optimization: false,
-            suppress_tpa: false,
-            type_iis_enzymes: ['BsaI', 'BpiI', 'BsmBI'],
-            custom_restriction_sites: [],
-            moclo_template: false
-        },
-        review_policy: {
-            cai: 'PREFERRED', overall_gc: 'PREFERRED', local_gc: 'PREFERRED',
-            type_iis: 'REQUIRED', repeats: 'PREFERRED', homopolymers: 'PREFERRED',
-            forbidden_motifs: 'PREFERRED'
+    preset_b: {
+        id: 'preset_b',
+        name: 'Preset B · PlantForm Doug Biologics (항체/치료용 단백질)',
+        tag: 'Preset B Active',
+        file: '/examples/factorforge-sop-preset-b-plantform-biologics.yaml',
+        description: 'PlantForm Doug v1.1 코돈 배분(Arg 50/50, Ser 5-way non-CpG), 식물 전사 Kozak 최적화, mRNA 안정성(TpA 억제), 4대 Type IIS 효소 배제.',
+        profile: {
+            $schema: SOP_SCHEMA,
+            profile_id: 'preset_b_plantform_biologics',
+            sop_name: 'Preset B · PlantForm Doug Biologics',
+            version: '1.2.0',
+            author: 'PlantForm / Eijex',
+            status: 'PRESET_TEMPLATE',
+            derived_from: 'PlantForm Doug v1.1 balanced codon distribution and therapeutic biologics expression heuristics',
+            scope_note: '항체 및 치료용 복합 당단백질의 N. benthamiana 생산 최적화 SOP',
+            default_enforcement: 'IGNORE',
+            unknown_rule_policy: 'ERROR',
+            rules: {
+                'assembly.type_iis.bsai.v1': 'HARD_FAIL',
+                'assembly.type_iis.bpii.v1': 'HARD_FAIL',
+                'assembly.type_iis.bsmbi.v1': 'HARD_FAIL',
+                'assembly.type_iis.sapi.v1': 'HARD_FAIL',
+                'biological.reading_frame.v1': 'HARD_FAIL',
+                'rna.cryptic_splice.v1': 'HARD_FAIL',
+                'rna.polya_motifs.v1': 'HARD_FAIL',
+                'rna.au_rich_elements.v1': 'WARNING',
+                'synthesis.gc_extremes.v1': 'WARNING',
+                'policy.synthesis.homopolymer.v1': 'WARNING',
+                'policy.initiation_mfe.v1': 'WARNING'
+            },
+            workflow: {
+                design_method: 'dp_v2_1_1',
+                codon_policy: 'plantform_balanced_codon_v1',
+                watermark: false,
+                comparison_methods: ['high_cai', 'gc_target', 'assembly_friendly'],
+                sequence_requirements: {
+                    reproducibility_seed: null,
+                    kozak_optimization: true,
+                    suppress_tpa: true,
+                    type_iis_enzymes: ['BsaI', 'BpiI', 'BsmBI', 'SapI'],
+                    custom_restriction_sites: [],
+                    moclo_template: false
+                },
+                review_policy: {
+                    cai: 'REQUIRED', overall_gc: 'REQUIRED', local_gc: 'REQUIRED',
+                    type_iis: 'REQUIRED', repeats: 'PREFERRED', homopolymers: 'PREFERRED',
+                    forbidden_motifs: 'REQUIRED'
+                }
+            }
+        }
+    },
+    preset_c: {
+        id: 'preset_c',
+        name: 'Preset C · MoClo / GoldenBraid Assembly (골든게이트 조립)',
+        tag: 'Preset C Active',
+        file: '/examples/factorforge-sop-preset-c-moclo-goldenbraid.yaml',
+        description: 'MoClo Level 0 / GoldenBraid 2.0 표준. BsaI/BpiI/BsmBI/SapI 완전 배제, MoClo L0 오버행 호환(5′ AATG, 3′ GCTT), 반복서열 엄격 검증.',
+        profile: {
+            $schema: SOP_SCHEMA,
+            profile_id: 'preset_c_moclo_goldenbraid',
+            sop_name: 'Preset C · MoClo / GoldenBraid Assembly',
+            version: '1.2.0',
+            author: 'Eijex',
+            status: 'PRESET_TEMPLATE',
+            derived_from: 'Modular Cloning (MoClo) and GoldenBraid 2.0 plant assembly standards',
+            scope_note: '다중 유전자 및 모듈형 식물 벡터 클로닝용 표준 SOP',
+            default_enforcement: 'IGNORE',
+            unknown_rule_policy: 'ERROR',
+            rules: {
+                'assembly.type_iis.bsai.v1': 'HARD_FAIL',
+                'assembly.type_iis.bpii.v1': 'HARD_FAIL',
+                'assembly.type_iis.bsmbi.v1': 'HARD_FAIL',
+                'assembly.type_iis.sapi.v1': 'HARD_FAIL',
+                'biological.reading_frame.v1': 'HARD_FAIL',
+                'rna.cryptic_splice.v1': 'WARNING',
+                'rna.polya_motifs.v1': 'WARNING',
+                'rna.au_rich_elements.v1': 'WARNING',
+                'synthesis.gc_extremes.v1': 'WARNING',
+                'policy.synthesis.homopolymer.v1': 'WARNING',
+                'policy.initiation_mfe.v1': 'WARNING'
+            },
+            workflow: {
+                design_method: 'assembly_friendly',
+                codon_policy: 'plantform_balanced_codon_v1',
+                watermark: false,
+                comparison_methods: ['dp_v2_1_1', 'high_cai', 'gc_target'],
+                sequence_requirements: {
+                    reproducibility_seed: null,
+                    kozak_optimization: false,
+                    suppress_tpa: false,
+                    type_iis_enzymes: ['BsaI', 'BpiI', 'BsmBI', 'SapI'],
+                    custom_restriction_sites: [],
+                    moclo_template: true
+                },
+                review_policy: {
+                    cai: 'PREFERRED', overall_gc: 'PREFERRED', local_gc: 'PREFERRED',
+                    type_iis: 'REQUIRED', repeats: 'REQUIRED', homopolymers: 'REQUIRED',
+                    forbidden_motifs: 'REQUIRED'
+                }
+            }
+        }
+    },
+    preset_d: {
+        id: 'preset_d',
+        name: 'Preset D · High-Yield Agroinfiltration (일시 과발현)',
+        tag: 'Preset D Active',
+        file: '/examples/factorforge-sop-preset-d-high-yield-agro.yaml',
+        description: '아그로인필트레이션(Agroinfiltration) 일시 발현 시 최대 번역 처리량(Max CAI) 집중 할당, Kozak 최적화 및 불안정 TpA 디뉴클레오티드 억제.',
+        profile: {
+            $schema: SOP_SCHEMA,
+            profile_id: 'preset_d_high_yield_agro',
+            sop_name: 'Preset D · High-Yield Agroinfiltration Overexpression',
+            version: '1.2.0',
+            author: 'Eijex',
+            status: 'PRESET_TEMPLATE',
+            derived_from: 'Plant transient overexpression high-throughput translation heuristics',
+            scope_note: 'N. benthamiana 잎 아그로인필트레이션을 통한 최고 수율 단백질 발현 SOP',
+            default_enforcement: 'IGNORE',
+            unknown_rule_policy: 'ERROR',
+            rules: {
+                'assembly.type_iis.bsai.v1': 'HARD_FAIL',
+                'assembly.type_iis.bpii.v1': 'HARD_FAIL',
+                'biological.reading_frame.v1': 'HARD_FAIL',
+                'rna.cryptic_splice.v1': 'WARNING',
+                'rna.polya_motifs.v1': 'WARNING',
+                'rna.au_rich_elements.v1': 'WARNING',
+                'synthesis.gc_extremes.v1': 'WARNING',
+                'policy.synthesis.homopolymer.v1': 'WARNING',
+                'policy.initiation_mfe.v1': 'WARNING'
+            },
+            workflow: {
+                design_method: 'high_cai',
+                codon_policy: 'max_cai',
+                watermark: false,
+                comparison_methods: ['dp_v2_1_1', 'gc_target', 'assembly_friendly'],
+                sequence_requirements: {
+                    reproducibility_seed: null,
+                    kozak_optimization: true,
+                    suppress_tpa: true,
+                    type_iis_enzymes: ['BsaI', 'BpiI'],
+                    custom_restriction_sites: [],
+                    moclo_template: false
+                },
+                review_policy: {
+                    cai: 'REQUIRED', overall_gc: 'PREFERRED', local_gc: 'PREFERRED',
+                    type_iis: 'REQUIRED', repeats: 'PREFERRED', homopolymers: 'PREFERRED',
+                    forbidden_motifs: 'PREFERRED'
+                }
+            }
+        }
+    },
+    preset_e: {
+        id: 'preset_e',
+        name: 'Preset E · Synthesis House Feasibility (Twist / IDT 합성 통과율 최적화)',
+        tag: 'Preset E Active',
+        file: '/examples/factorforge-sop-preset-e-synthesis-feasibility.yaml',
+        description: '상용 DNA 합성사(Twist, IDT, GenScript) Complexity 검사 통과 및 합성 거절 방지. 자연 빈도 분산, 로컬 GC 극단치 및 호모폴리머 엄격 차단.',
+        profile: {
+            $schema: SOP_SCHEMA,
+            profile_id: 'preset_e_synthesis_feasibility',
+            sop_name: 'Preset E · Synthesis House Feasibility (Twist / IDT)',
+            version: '1.2.0',
+            author: 'Eijex',
+            status: 'PRESET_TEMPLATE',
+            derived_from: 'Commercial DNA synthesis manufacturing complexity guidelines (Twist / IDT / GenScript)',
+            scope_note: '합성 난이도(Complexity Score) 불합격 및 제조 지연 방지용 SOP',
+            default_enforcement: 'IGNORE',
+            unknown_rule_policy: 'ERROR',
+            rules: {
+                'assembly.type_iis.bsai.v1': 'HARD_FAIL',
+                'assembly.type_iis.bsmbi.v1': 'HARD_FAIL',
+                'biological.reading_frame.v1': 'HARD_FAIL',
+                'rna.cryptic_splice.v1': 'WARNING',
+                'rna.polya_motifs.v1': 'WARNING',
+                'rna.au_rich_elements.v1': 'WARNING',
+                'synthesis.gc_extremes.v1': 'HARD_FAIL',
+                'policy.synthesis.homopolymer.v1': 'HARD_FAIL',
+                'policy.initiation_mfe.v1': 'WARNING'
+            },
+            workflow: {
+                design_method: 'feasibility_best',
+                codon_policy: 'host_frequency',
+                watermark: false,
+                comparison_methods: ['dp_v2_1_1', 'high_cai', 'assembly_friendly'],
+                sequence_requirements: {
+                    reproducibility_seed: null,
+                    kozak_optimization: false,
+                    suppress_tpa: false,
+                    type_iis_enzymes: ['BsaI', 'BsmBI'],
+                    custom_restriction_sites: [],
+                    moclo_template: false
+                },
+                review_policy: {
+                    cai: 'PREFERRED', overall_gc: 'REQUIRED', local_gc: 'REQUIRED',
+                    type_iis: 'REQUIRED', repeats: 'REQUIRED', homopolymers: 'REQUIRED',
+                    forbidden_motifs: 'PREFERRED'
+                }
+            }
         }
     }
 });
+
+const DEFAULT_SOP_PROFILE = Object.freeze(SOP_PRESETS.preset_a.profile);
 
 function cloneJson(value) {
     return JSON.parse(JSON.stringify(value));
@@ -383,6 +597,10 @@ const elements = {
     criterionRepeatsMode: document.getElementById('criterionRepeatsMode'),
     criterionHomopolymerMode: document.getElementById('criterionHomopolymerMode'),
     criterionMotifsMode: document.getElementById('criterionMotifsMode'),
+    sopPresetSelect: document.getElementById('sopPresetSelect'),
+    sopPresetTag: document.getElementById('sopPresetTag'),
+    sopPresetDescription: document.getElementById('sopPresetDescription'),
+    downloadSopExample: document.getElementById('downloadSopExample'),
     sopProfileName: document.getElementById('sopProfileName'),
     sopProfileMeta: document.getElementById('sopProfileMeta'),
     sopProfileBadge: document.getElementById('sopProfileBadge'),
@@ -541,6 +759,38 @@ function formatCustomSitesForEditor(sites) {
     return (sites || []).map(site => `${site.name}:${site.sequence}`).join('\n');
 }
 
+function updatePresetUiFromProfile(profile) {
+    if (!elements.sopPresetSelect) return;
+    const matchedKey = Object.keys(SOP_PRESETS).find(k => SOP_PRESETS[k].profile.profile_id === profile?.profile_id);
+    if (matchedKey) {
+        elements.sopPresetSelect.value = matchedKey;
+        const preset = SOP_PRESETS[matchedKey];
+        if (elements.sopPresetTag) {
+            elements.sopPresetTag.textContent = preset.tag;
+            elements.sopPresetTag.className = 'px-2 py-0.5 rounded text-[9px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700';
+        }
+        if (elements.sopPresetDescription) {
+            elements.sopPresetDescription.textContent = preset.description;
+        }
+        if (elements.downloadSopExample) {
+            elements.downloadSopExample.href = preset.file;
+            elements.downloadSopExample.download = `factorforge-sop-${matchedKey.replace('_', '-')}.yaml`;
+        }
+    } else {
+        if (elements.sopPresetTag) {
+            elements.sopPresetTag.textContent = 'Custom Local Policy';
+            elements.sopPresetTag.className = 'px-2 py-0.5 rounded text-[9px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700';
+        }
+        if (elements.sopPresetDescription) {
+            elements.sopPresetDescription.textContent = '사용자 맞춤 설정이 활성화되었습니다. "Restore default"를 누르면 기본 보수적 기준선(Preset A)으로 복원됩니다.';
+        }
+        if (elements.downloadSopExample) {
+            elements.downloadSopExample.href = SOP_PRESETS.preset_a.file;
+            elements.downloadSopExample.download = 'factorforge-sop-preset-a-conservative.yaml';
+        }
+    }
+}
+
 function applySopToUi(profile, { persist = true } = {}) {
     const validated = validateSopProfile(profile);
     const workflow = validated.workflow;
@@ -589,8 +839,9 @@ function applySopToUi(profile, { persist = true } = {}) {
     state.activeSop = validated;
     if (persist) localStorage.setItem(SOP_STORAGE_KEY, JSON.stringify(validated));
     elements.sopProfileName.textContent = validated.sop_name;
-    elements.sopProfileMeta.textContent = `${validated.status === 'STANDARD_TEMPLATE' ? 'Default template' : 'Custom SOP'} · v${validated.version} · stored only in this browser`;
-    elements.sopProfileBadge.textContent = validated.status === 'STANDARD_TEMPLATE' ? 'Active' : 'Custom';
+    elements.sopProfileMeta.textContent = `${validated.status === 'STANDARD_TEMPLATE' ? 'Default template' : (validated.status === 'PRESET_TEMPLATE' ? 'SOP Preset' : 'Custom SOP')} · v${validated.version} · stored only in this browser`;
+    elements.sopProfileBadge.textContent = validated.status === 'STANDARD_TEMPLATE' ? 'Active' : (validated.status === 'PRESET_TEMPLATE' ? 'Preset' : 'Custom');
+    updatePresetUiFromProfile(validated);
     updateDesignBriefSummary();
 }
 
@@ -618,6 +869,7 @@ function captureSopFromUi() {
     localStorage.setItem(SOP_STORAGE_KEY, JSON.stringify(state.activeSop));
     elements.sopProfileMeta.textContent = `Custom local settings · v${state.activeSop.version} · stored only in this browser`;
     elements.sopProfileBadge.textContent = 'Custom';
+    updatePresetUiFromProfile(state.activeSop);
 }
 
 function downloadActiveSop() {
@@ -677,6 +929,18 @@ function initEventListeners() {
     elements.sopUploadZone.addEventListener('drop', event => applySopFile(event.dataTransfer?.files?.[0]));
     elements.sopFileUpload.addEventListener('change', handleSopUpload);
     elements.resetSopProfile.addEventListener('click', restoreDefaultSop);
+
+    // Multi-SOP Presets Selector
+    if (elements.sopPresetSelect) {
+        elements.sopPresetSelect.addEventListener('change', (e) => {
+            const presetKey = e.target.value;
+            const targetPreset = SOP_PRESETS[presetKey];
+            if (targetPreset) {
+                applySopToUi(cloneJson(targetPreset.profile), { persist: true });
+                showToast(`Applied ${targetPreset.name}`, 'info');
+            }
+        });
+    }
 
     // Engine / Version Selector
     if (elements.engineVersionSelect) {

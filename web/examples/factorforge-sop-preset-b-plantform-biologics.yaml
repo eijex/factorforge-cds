@@ -1,0 +1,50 @@
+# FactorForge SOP Preset B: PlantForm Doug Biologics
+# ==============================================================================
+# 항체(IgG, mAb) 및 바이오로직스 대량 생산용 특화 프로필.
+# PlantForm Doug v1.1 코돈 배분(Arg 50/50, Ser 5-way non-CpG), 식물 전사 Kozak 최적화,
+# mRNA 안정성(TpA 디뉴클레오티드 억제), 4대 Type IIS 효소(BsaI, BpiI, BsmBI, SapI) 배제.
+# ==============================================================================
+$schema: factorforge-sop-v1
+profile_id: preset_b_plantform_biologics
+sop_name: "Preset B · PlantForm Doug Biologics"
+version: 1.2.0
+author: "PlantForm / Eijex"
+status: PRESET_TEMPLATE
+derived_from: "PlantForm Doug v1.1 balanced codon distribution and therapeutic biologics expression heuristics"
+scope_note: "항체 및 치료용 복합 당단백질의 N. benthamiana 생산 최적화 SOP"
+default_enforcement: IGNORE
+unknown_rule_policy: ERROR
+
+rules:
+  assembly.type_iis.bsai.v1: HARD_FAIL
+  assembly.type_iis.bpii.v1: HARD_FAIL
+  assembly.type_iis.bsmbi.v1: HARD_FAIL
+  assembly.type_iis.sapi.v1: HARD_FAIL
+  biological.reading_frame.v1: HARD_FAIL
+  rna.cryptic_splice.v1: HARD_FAIL
+  rna.polya_motifs.v1: HARD_FAIL
+  rna.au_rich_elements.v1: WARNING
+  synthesis.gc_extremes.v1: WARNING
+  policy.synthesis.homopolymer.v1: WARNING
+  policy.initiation_mfe.v1: WARNING
+
+workflow:
+  design_method: dp_v2_1_1
+  codon_policy: plantform_balanced_codon_v1
+  watermark: false
+  comparison_methods: [high_cai, gc_target, assembly_friendly]
+  sequence_requirements:
+    reproducibility_seed: null
+    kozak_optimization: true
+    suppress_tpa: true
+    type_iis_enzymes: [BsaI, BpiI, BsmBI, SapI]
+    custom_restriction_sites: []
+    moclo_template: false
+  review_policy:
+    cai: REQUIRED
+    overall_gc: REQUIRED
+    local_gc: REQUIRED
+    type_iis: REQUIRED
+    repeats: PREFERRED
+    homopolymers: PREFERRED
+    forbidden_motifs: REQUIRED

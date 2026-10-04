@@ -1,17 +1,11 @@
-# FactorForge conservative sequence-policy example
+# FactorForge Conservative Sequence Policy (Default Baseline)
 #
-# How to use:
-# 1. Save a copy of this file and edit the values below in a text editor.
-# 2. Keep $schema and unknown_rule_policy unchanged so unsupported rules fail closed.
-# 3. Upload the edited .yaml file in the FactorForge Sequence Policy panel.
+# 안내 (Guidance):
+# FactorForge의 기본 SOP는 사전 합성 안전성을 위한 가장 보수적인 기준선입니다.
+# PlantForm의 경험적 지침을 참고하되 100% 동일하게 복제하지 않고, 사전 합성 실패 방지를
+# 위해 가장 보수적으로 설정되었습니다.
+# 각 연구실 고유의 발현 조건에 맞추어 설정을 변경하거나 맞춤 SOP(.yaml)를 업로드하여 사용하십시오.
 #
-# This is an illustrative in-silico template, not an approved laboratory SOP.
-# Enforcement values are examples only. Adapt them to your own laboratory,
-# assembly, and validation requirements.
-# FactorForge always enforces CDS-integrity invariants such as a valid reading
-# frame and amino-acid preservation; those invariants are not user policy.
-# Do not add raw sequences, construct IDs, patient data, or confidential details.
-
 # ========================================
 # SYSTEM / CONTRACT - DO NOT EDIT
 # ========================================
@@ -21,8 +15,8 @@ sop_name: "FactorForge Conservative Sequence Policy Example"
 version: 1.2.0
 author: Eijex
 status: EXAMPLE_TEMPLATE
-derived_from: "Eijex FactorForge example defaults; not derived from a partner laboratory SOP"
-scope_note: "Illustrative in-silico sequence-design and pre-synthesis review policy. Laboratory approval and wet-lab validation remain separate."
+derived_from: "Eijex FactorForge conservative defaults; collaborator-informed precautionary baseline"
+scope_note: "사전 합성 안전 최우선 보수적 기준선. 각 연구실 고유의 SOP 설정을 권장합니다."
 default_enforcement: IGNORE
 unknown_rule_policy: ERROR
 
@@ -73,7 +67,9 @@ rules:
 # Optimization-workflow settings are transported in the same v1 file for web
 # compatibility, but they are distinct from the sequence-review policy above.
 workflow:
-  design_method: feasibility_best
+  design_method: dp_v2_1_1
+  codon_policy: plantform_balanced_codon_v1
+  watermark: false
   comparison_methods: [high_cai, gc_target, assembly_friendly]
   sequence_requirements:
     reproducibility_seed: null

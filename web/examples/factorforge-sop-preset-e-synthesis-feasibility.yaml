@@ -1,0 +1,48 @@
+# FactorForge SOP Preset E: Synthesis House Feasibility (Twist / IDT)
+# ==============================================================================
+# 상용 올리고/유전자 합성(Twist Bioscience, IDT, GenScript)의 Complexity 스코어링
+# 통과 및 합성 지연/거절(Quotation reject) 방지 프로필.
+# 숙주 자연 빈도 분산, 로컬 GC 극단치 및 호모폴리머/반복 서열을 집중 차단합니다.
+# ==============================================================================
+$schema: factorforge-sop-v1
+profile_id: preset_e_synthesis_feasibility
+sop_name: "Preset E · Synthesis House Feasibility (Twist / IDT)"
+version: 1.2.0
+author: Eijex
+status: PRESET_TEMPLATE
+derived_from: "Commercial DNA synthesis manufacturing complexity guidelines (Twist / IDT / GenScript)"
+scope_note: "합성 난이도(Complexity Score) 불합격 및 제조 지연 방지용 SOP"
+default_enforcement: IGNORE
+unknown_rule_policy: ERROR
+
+rules:
+  assembly.type_iis.bsai.v1: HARD_FAIL
+  assembly.type_iis.bsmbi.v1: HARD_FAIL
+  biological.reading_frame.v1: HARD_FAIL
+  rna.cryptic_splice.v1: WARNING
+  rna.polya_motifs.v1: WARNING
+  rna.au_rich_elements.v1: WARNING
+  synthesis.gc_extremes.v1: HARD_FAIL
+  policy.synthesis.homopolymer.v1: HARD_FAIL
+  policy.initiation_mfe.v1: WARNING
+
+workflow:
+  design_method: feasibility_best
+  codon_policy: host_frequency
+  watermark: false
+  comparison_methods: [dp_v2_1_1, high_cai, assembly_friendly]
+  sequence_requirements:
+    reproducibility_seed: null
+    kozak_optimization: false
+    suppress_tpa: false
+    type_iis_enzymes: [BsaI, BsmBI]
+    custom_restriction_sites: []
+    moclo_template: false
+  review_policy:
+    cai: PREFERRED
+    overall_gc: REQUIRED
+    local_gc: REQUIRED
+    type_iis: REQUIRED
+    repeats: REQUIRED
+    homopolymers: REQUIRED
+    forbidden_motifs: PREFERRED

@@ -1,0 +1,50 @@
+# FactorForge SOP Preset A: Conservative Baseline (Default)
+# ==============================================================================
+# FactorForge의 기본 SOP는 사전 합성 안전성을 위한 가장 보수적인 기준선입니다.
+# PlantForm의 경험적 지침을 참고하되 100% 동일하게 복제하지 않고, 유전자 합성 거절(Reject)
+# 및 식물 발현 실패 위험을 최소화하도록 설정되었습니다.
+# 각 연구실 및 합성 목적에 맞추어 설정을 변경하거나 자체 SOP(.yaml)를 업로드하시기 바랍니다.
+# ==============================================================================
+$schema: factorforge-sop-v1
+profile_id: preset_a_conservative_baseline
+sop_name: "Preset A · Conservative Baseline (Default)"
+version: 1.2.0
+author: Eijex
+status: STANDARD_TEMPLATE
+derived_from: "FactorForge default conservative pre-synthesis baseline; not identical to any single proprietary SOP"
+scope_note: "가장 보수적인 사전 합성 안전 기준선. 각 연구실 고유의 SOP 업로드 및 설정을 권장합니다."
+default_enforcement: IGNORE
+unknown_rule_policy: ERROR
+
+rules:
+  assembly.type_iis.bsai.v1: HARD_FAIL
+  assembly.type_iis.bpii.v1: HARD_FAIL
+  assembly.type_iis.bsmbi.v1: HARD_FAIL
+  biological.reading_frame.v1: HARD_FAIL
+  rna.cryptic_splice.v1: WARNING
+  rna.polya_motifs.v1: WARNING
+  rna.au_rich_elements.v1: WARNING
+  synthesis.gc_extremes.v1: WARNING
+  policy.synthesis.homopolymer.v1: WARNING
+  policy.initiation_mfe.v1: WARNING
+
+workflow:
+  design_method: dp_v2_1_1
+  codon_policy: plantform_balanced_codon_v1
+  watermark: false
+  comparison_methods: [high_cai, gc_target, assembly_friendly]
+  sequence_requirements:
+    reproducibility_seed: null
+    kozak_optimization: false
+    suppress_tpa: false
+    type_iis_enzymes: [BsaI, BpiI, BsmBI]
+    custom_restriction_sites: []
+    moclo_template: false
+  review_policy:
+    cai: PREFERRED
+    overall_gc: PREFERRED
+    local_gc: PREFERRED
+    type_iis: REQUIRED
+    repeats: PREFERRED
+    homopolymers: PREFERRED
+    forbidden_motifs: PREFERRED

@@ -1,0 +1,49 @@
+# FactorForge SOP Preset C: MoClo & GoldenBraid Modular Assembly
+# ==============================================================================
+# MoClo Level 0 및 GoldenBraid 2.0 표준 식물 발현 파트 조립 규격.
+# BsaI, BpiI, BsmBI, SapI 제한효소 인식 자리를 철저히 제거하며, MoClo 오버행 호환 규격 적용.
+# ==============================================================================
+$schema: factorforge-sop-v1
+profile_id: preset_c_moclo_goldenbraid
+sop_name: "Preset C · MoClo / GoldenBraid Assembly"
+version: 1.2.0
+author: Eijex
+status: PRESET_TEMPLATE
+derived_from: "Modular Cloning (MoClo) and GoldenBraid 2.0 plant assembly standards"
+scope_note: "다중 유전자 및 모듈형 식물 벡터 클로닝용 표준 SOP"
+default_enforcement: IGNORE
+unknown_rule_policy: ERROR
+
+rules:
+  assembly.type_iis.bsai.v1: HARD_FAIL
+  assembly.type_iis.bpii.v1: HARD_FAIL
+  assembly.type_iis.bsmbi.v1: HARD_FAIL
+  assembly.type_iis.sapi.v1: HARD_FAIL
+  biological.reading_frame.v1: HARD_FAIL
+  rna.cryptic_splice.v1: WARNING
+  rna.polya_motifs.v1: WARNING
+  rna.au_rich_elements.v1: WARNING
+  synthesis.gc_extremes.v1: WARNING
+  policy.synthesis.homopolymer.v1: WARNING
+  policy.initiation_mfe.v1: WARNING
+
+workflow:
+  design_method: assembly_friendly
+  codon_policy: plantform_balanced_codon_v1
+  watermark: false
+  comparison_methods: [dp_v2_1_1, high_cai, gc_target]
+  sequence_requirements:
+    reproducibility_seed: null
+    kozak_optimization: false
+    suppress_tpa: false
+    type_iis_enzymes: [BsaI, BpiI, BsmBI, SapI]
+    custom_restriction_sites: []
+    moclo_template: true
+  review_policy:
+    cai: PREFERRED
+    overall_gc: PREFERRED
+    local_gc: PREFERRED
+    type_iis: REQUIRED
+    repeats: REQUIRED
+    homopolymers: REQUIRED
+    forbidden_motifs: REQUIRED
