@@ -351,82 +351,66 @@
                         </div>
                     </details>
 
-                    <!-- Active Sequence Policy -->
-                    <section id="sopProfileCard" class="mb-8 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-800/60 dark:bg-emerald-900/15" aria-labelledby="sopProfileHeading">
-                        <div class="flex items-start justify-between gap-3">
+                    <!-- Active Sequence Policy (SOP Profile & Presets) -->
+                    <section id="sopProfileCard" class="mb-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 p-4 space-y-3" aria-labelledby="sopProfileHeading">
+                        <div class="flex items-center justify-between">
                             <div>
-                                <p id="sopProfileHeading" class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">Active Sequence Policy</p>
-                                <p id="sopProfileName" class="mt-1 text-sm font-black text-slate-900 dark:text-slate-100">Conservative Plant Expression Review Template</p>
-                                <p id="sopProfileMeta" class="mt-1 text-[10px] text-slate-600 dark:text-slate-400">Default template · v1.1.0 · stored only in this browser</p>
+                                <p id="sopProfileHeading" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Sequence Policy (SOP)</p>
+                                <p id="sopProfileName" class="text-sm font-bold text-slate-900 dark:text-slate-100 mt-0.5">Preset A · Conservative Baseline</p>
                             </div>
-                            <span id="sopProfileBadge" class="shrink-0 rounded-md border border-emerald-200 bg-white px-2 py-1 text-[9px] font-extrabold uppercase tracking-wider text-emerald-700 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-300">Active</span>
-                        </div>
-                        <div class="mt-3 p-3 rounded-xl border border-amber-200 bg-amber-50/80 dark:border-amber-900/60 dark:bg-amber-950/20 text-[11px] text-amber-900 dark:text-amber-200 leading-relaxed">
-                            <div class="flex items-center gap-1.5 font-bold mb-1 text-amber-800 dark:text-amber-300">
-                                <span>🛡️</span>
-                                <span>보수적 안전 기준선 안내 (Conservative Pre-Synthesis Baseline)</span>
-                            </div>
-                            <p>
-                                FactorForge의 기본 SOP는 PlantForm의 경험적 지침을 참고하되 100% 동일하게 복제하지 않고, <strong>사전 합성 안전성을 극대화하도록 가장 보수적으로 설정된 안전 기준선</strong>입니다. 각 연구실/기업의 고유한 합성 조건 및 발현 프로토콜에 맞추어 아래 <strong>SOP 프리셋(A~E)</strong>을 선택하거나 자체 <strong>SOP(.yaml)</strong>를 설정·업로드하여 사용할 것을 권장합니다.
-                            </p>
+                            <span id="sopProfileBadge" class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider border border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800">Active</span>
                         </div>
 
-                        <!-- Multi-SOP Presets Picker (Presets A - E) -->
-                        <div class="mt-4 p-3 bg-white/80 dark:bg-slate-900/50 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
-                            <div class="flex items-center justify-between mb-1.5">
-                                <label for="sopPresetSelect" class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-                                    <span>📑</span>
-                                    <span>SOP Presets (A–E)</span>
-                                </label>
-                                <span id="sopPresetTag" class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700">
-                                    Preset A Active
-                                </span>
-                            </div>
+                        <!-- Notice banner (subtle, professional English) -->
+                        <div class="p-2.5 rounded-xl border border-amber-200/80 bg-amber-50/70 dark:border-amber-900/50 dark:bg-amber-950/20 text-[11px] text-amber-900 dark:text-amber-200 leading-relaxed">
+                            <span class="font-bold text-amber-800 dark:text-amber-300">🛡️ Conservative Baseline:</span>
+                            FactorForge defaults to an intentionally conservative pre-synthesis safety baseline to prevent synthesis aborts. Choose a preset below or load your own custom SOP.
+                        </div>
+
+                        <!-- Preset Dropdown -->
+                        <div>
+                            <label for="sopPresetSelect" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-600 dark:text-slate-300 block mb-1">
+                                Policy Preset (A–E)
+                            </label>
                             <div class="relative">
-                                <select id="sopPresetSelect" class="w-full rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-100 appearance-none cursor-pointer focus:ring-2 focus:ring-emerald-500 pr-9 shadow-sm">
-                                    <option value="preset_a" selected>Preset A · Conservative Baseline (Default · 보수적 사전 합성 안전 최우선)</option>
-                                    <option value="preset_b">Preset B · PlantForm Doug Biologics (항체/치료용 단백질 발현)</option>
-                                    <option value="preset_c">Preset C · MoClo / GoldenBraid Assembly (골든게이트 부품 모듈화)</option>
-                                    <option value="preset_d">Preset D · High-Yield Agroinfiltration (일시 과발현 최대 번역)</option>
-                                    <option value="preset_e">Preset E · Synthesis House Feasibility (Twist / IDT 합성 통과율 최적화)</option>
+                                <select id="sopPresetSelect" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-100 appearance-none cursor-pointer focus:ring-2 focus:ring-emerald-500 pr-9 shadow-sm">
+                                    <option value="preset_a" selected>Preset A · Conservative Baseline (Default Safety)</option>
+                                    <option value="preset_b">Preset B · Therapeutic Biologics (Antibodies &amp; Proteins)</option>
+                                    <option value="preset_c">Preset C · Modular Cloning (MoClo / GoldenBraid)</option>
+                                    <option value="preset_d">Preset D · High-Yield Agroinfiltration (Overexpression)</option>
+                                    <option value="preset_e">Preset E · Synthesis House Feasibility (Twist / IDT Pass)</option>
                                 </select>
                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </div>
                             </div>
-                            <p id="sopPresetDescription" class="mt-2 text-[10.5px] text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                                사전 합성 안전 최우선 보수적 기준선. 5′ 번역 개시 램프(nt 1–45 저-GC 제약), 호모폴리머 억제, 표준 BsaI/BpiI/BsmBI 배제.
+                            <p id="sopPresetDescription" class="mt-1.5 text-[10.5px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                                Pre-synthesis safety baseline. Enforces 5′ initiation ramp (nt 1–45 low-GC clamp), homopolymer veto (&le;5 nt), and standard Type IIS avoidance.
                             </p>
                         </div>
 
-                        <p class="mt-3 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">Use one versioned SOP file for the design method, sequence requirements, and review policy. The bundled profile is an editable in-silico starting template, not an approved laboratory SOP.</p>
-                        <button id="sopUploadZone" type="button" class="mt-3 flex w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-emerald-300 bg-white/70 px-4 py-5 text-center transition hover:border-emerald-500 hover:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-950/40 dark:hover:border-emerald-500" aria-describedby="sopStorageNotice">
-                            <span class="text-xs font-extrabold text-slate-800 dark:text-slate-100">Drop a .yaml, .yml, or .json SOP here</span>
-                            <span class="mt-1 text-[10px] text-slate-500 dark:text-slate-400">or click to choose a file</span>
-                        </button>
-                        <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                            <a id="downloadSopExample" href="/examples/factorforge-sop-preset-a-conservative.yaml" download title="Download the commented FactorForge active preset YAML. Edit its values in a text editor, then upload the file." aria-label="Download active preset SOP as YAML" class="rounded-lg border border-emerald-300 bg-white px-3 py-2 text-center text-[10px] font-bold text-emerald-800 hover:border-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-emerald-300">Download active preset (.yaml) <span aria-hidden="true">ⓘ</span></a>
-                            <button id="buildSopButton" type="button" title="Open optional advanced design and review settings. Uploading a policy file remains the primary workflow." aria-label="Edit advanced policy settings" class="rounded-lg border border-emerald-500 bg-emerald-50 px-3 py-2 text-[10px] font-bold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">Edit advanced settings <span aria-hidden="true">&rarr;</span></button>
-                            <button id="downloadSopTemplate" type="button" title="Export the SOP currently active in this browser, including uploaded or manual changes." aria-label="Export the currently active SOP as YAML" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 hover:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Export active SOP <span aria-hidden="true">ⓘ</span></button>
-                            <button id="uploadSopButton" type="button" title="Choose an edited YAML or JSON SOP. FactorForge validates it and stores it only in this browser." aria-label="Choose a YAML or JSON SOP file to validate and apply" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 hover:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Choose SOP file <span aria-hidden="true">ⓘ</span></button>
-                            <button id="resetSopProfile" type="button" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[10px] font-bold text-slate-700 hover:border-amber-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">Restore default</button>
+                        <!-- Compact Actions Bar -->
+                        <div class="flex items-center gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-800">
+                            <button id="uploadSopButton" type="button" class="flex-1 py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-400 hover:text-emerald-600 transition-colors flex items-center justify-center gap-1 shadow-sm">
+                                <span>📤 Upload</span>
+                            </button>
+                            <button id="downloadSopTemplate" type="button" class="flex-1 py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-400 hover:text-emerald-600 transition-colors flex items-center justify-center gap-1 shadow-sm">
+                                <span>💾 Export</span>
+                            </button>
+                            <a id="downloadSopExample" href="/examples/factorforge-sop-preset-a-conservative.yaml" download class="py-1.5 px-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 transition-colors flex items-center justify-center gap-1 shadow-sm" title="Download YAML file for active preset">
+                                <span>YAML ↗</span>
+                            </a>
+                            <button id="resetSopProfile" type="button" class="py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-500 hover:text-rose-600 transition-colors shadow-sm" title="Restore default Preset A">
+                                <span>↺ Reset</span>
+                            </button>
                         </div>
-                        <div class="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-semibold">
-                            <a href="https://github.com/eijex/factorforge-cds/issues/new?template=feature_request.yml&amp;title=%5BSOP%20template%5D%3A%20" target="_blank" rel="noopener" class="text-emerald-700 hover:underline dark:text-emerald-300">Share a public-safe SOP suggestion (GitHub) ↗</a>
-                            <a href="mailto:eijex.lab@gmail.com?subject=Private%20FactorForge%20SOP%20feedback" class="text-slate-500 hover:underline dark:text-slate-400">Private or sensitive feedback</a>
-                        </div>
-                        <details id="defaultSopSummary" class="mt-3 rounded-lg border border-emerald-200/80 bg-white/60 dark:border-emerald-900 dark:bg-slate-950/30">
-                            <summary class="cursor-pointer select-none px-3 py-2 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">What do the SOP Presets include?</summary>
-                            <div class="border-t border-emerald-100 px-3 py-2 text-[10px] leading-relaxed text-slate-600 dark:border-emerald-900 dark:text-slate-400 space-y-1.5">
-                                <p><b>Preset A (Conservative Baseline)</b>: 3-Axis DP v2.1 (5′ nt 1–45 GC 20–29% ramp clamp, homopolymer veto), PlantForm balanced codons, BsaI/BpiI/BsmBI avoidance, pre-synthesis advisory checks.</p>
-                                <p><b>Preset B (PlantForm Doug Biologics)</b>: mAb/치료용 단백질 발현 특화. PlantForm Doug v1.1 balanced codons, 5′ Kozak 개시, TpA 분해 억제, 4대 효소 배제, 엄격 품질 검사.</p>
-                                <p><b>Preset C (MoClo &amp; GoldenBraid)</b>: 골든게이트 Level 0 파트 규격. BsaI/BpiI/BsmBI/SapI 완전 배제, MoClo 오버행 호환(5′ AATG, 3′ GCTT), 반복서열 엄격 검증.</p>
-                                <p><b>Preset D (High-Yield Agroinfiltration)</b>: N. benthamiana 잎 아그로인필트레이션 일시 과발현. 숙주 최선호 Max CAI 할당, Kozak 개시 및 TpA 억제 극대화.</p>
-                                <p><b>Preset E (Synthesis House Feasibility)</b>: Twist / IDT / GenScript 복잡도(Complexity) 검사 통과 및 합성 지연 방지. 자연 빈도 분산, 로컬 GC 및 호모폴리머 엄격 차단.</p>
-                            </div>
-                        </details>
-                        <input id="sopFileUpload" type="file" accept=".yaml,.yml,.json,application/json,application/yaml,text/yaml,text/x-yaml" class="hidden" aria-label="Upload FactorForge SOP YAML or JSON">
-                        <p id="sopStorageNotice" class="mt-2 text-[10px] text-slate-500 dark:text-slate-500">Uploaded SOPs persist in local browser storage on this device. They are sent with an optimization request for validation and provenance, but are not uploaded as reusable server files.</p>
+
+                        <!-- Hidden compatibility elements -->
+                        <input id="sopFileUpload" type="file" accept=".yaml,.yml,.json" class="hidden">
+                        <button id="sopUploadZone" type="button" class="hidden"></button>
+                        <button id="buildSopButton" type="button" class="hidden"></button>
+                        <p id="sopProfileMeta" class="hidden"></p>
+                        <span id="sopPresetTag" class="hidden"></span>
                     </section>
 
 
@@ -527,15 +511,15 @@
                         <section id="codonPolicySection" class="border-t border-slate-200 pt-4 dark:border-slate-800" aria-labelledby="codonPolicyHeading">
                             <div class="flex items-center justify-between mb-2">
                                 <h3 id="codonPolicyHeading" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Codon Allocation Policy</h3>
-                                <span id="activePolicyBadge" class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">PlantForm Balanced</span>
+                                <span id="activePolicyBadge" class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">Balanced Non-CpG</span>
                             </div>
                             <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Synonymous codon distribution and methylation-risk avoidance.</p>
                             <div class="space-y-2 text-xs" role="radiogroup" aria-label="Codon allocation policy">
                                 <label class="flex items-start space-x-2.5 p-2.5 rounded-xl border border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20 dark:border-emerald-600 cursor-pointer">
                                     <input type="radio" name="codonPolicy" value="plantform_balanced_codon_v1" checked class="mt-0.5 text-emerald-600 focus:ring-emerald-500">
                                     <div>
-                                        <span class="font-bold text-slate-900 dark:text-slate-100">PlantForm Balanced (Doug v1.1)</span>
-                                        <span class="block text-[10px] text-slate-600 dark:text-slate-400 mt-0.5">Arg: AGA 50% / AGG 50% · Ser: TCT/TCC/TCA/AGT/AGC 20% each (non-CpG)</span>
+                                        <span class="font-bold text-slate-900 dark:text-slate-100">Balanced Non-CpG (Methylation-Safe)</span>
+                                        <span class="block text-[10px] text-slate-600 dark:text-slate-400 mt-0.5">Arg: AGA 50% / AGG 50% · Ser: 5-way non-CpG codons 20% each</span>
                                     </div>
                                 </label>
                                 <label class="flex items-start space-x-2.5 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 cursor-pointer hover:border-slate-300 dark:hover:border-slate-600">

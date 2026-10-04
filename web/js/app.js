@@ -59,7 +59,7 @@ const SOP_PRESETS = Object.freeze({
         name: 'Preset A · Conservative Baseline (Default)',
         tag: 'Preset A Active',
         file: '/examples/factorforge-sop-preset-a-conservative.yaml',
-        description: '사전 합성 안전 최우선 보수적 기준선. 5′ 번역 개시 램프(nt 1–45 저-GC 제약), 호모폴리머 억제, 표준 BsaI/BpiI/BsmBI 배제.',
+        description: 'Pre-synthesis safety baseline. Enforces 5′ initiation ramp (nt 1–45 low-GC clamp), homopolymer veto (≤5 nt), and standard Type IIS avoidance.',
         profile: {
             $schema: SOP_SCHEMA,
             profile_id: 'preset_a_conservative_baseline',
@@ -67,8 +67,8 @@ const SOP_PRESETS = Object.freeze({
             version: '1.2.0',
             author: 'Eijex',
             status: 'STANDARD_TEMPLATE',
-            derived_from: 'FactorForge default conservative pre-synthesis baseline; not identical to any single proprietary SOP',
-            scope_note: '가장 보수적인 사전 합성 안전 기준선. 각 연구실 고유의 SOP 업로드 및 설정을 권장합니다.',
+            derived_from: 'FactorForge conservative pre-synthesis baseline; precautionary plant expression heuristics',
+            scope_note: 'Conservative pre-synthesis baseline. Custom laboratory SOP upload or configuration is recommended.',
             default_enforcement: 'IGNORE',
             unknown_rule_policy: 'ERROR',
             rules: {
@@ -106,19 +106,19 @@ const SOP_PRESETS = Object.freeze({
     },
     preset_b: {
         id: 'preset_b',
-        name: 'Preset B · PlantForm Doug Biologics (항체/치료용 단백질)',
+        name: 'Preset B · Therapeutic Biologics (Antibodies & Complex Proteins)',
         tag: 'Preset B Active',
-        file: '/examples/factorforge-sop-preset-b-plantform-biologics.yaml',
-        description: 'PlantForm Doug v1.1 코돈 배분(Arg 50/50, Ser 5-way non-CpG), 식물 전사 Kozak 최적화, mRNA 안정성(TpA 억제), 4대 Type IIS 효소 배제.',
+        file: '/examples/factorforge-sop-preset-b-therapeutic-biologics.yaml',
+        description: 'Biologics expression profile. Enforces balanced non-CpG codons (Arg 50/50, Ser 5-way), plant Kozak initiation, mRNA stability (TpA suppression), and comprehensive Type IIS avoidance.',
         profile: {
             $schema: SOP_SCHEMA,
-            profile_id: 'preset_b_plantform_biologics',
-            sop_name: 'Preset B · PlantForm Doug Biologics',
+            profile_id: 'preset_b_therapeutic_biologics',
+            sop_name: 'Preset B · Therapeutic Biologics (Antibodies & Complex Proteins)',
             version: '1.2.0',
-            author: 'PlantForm / Eijex',
+            author: 'Eijex',
             status: 'PRESET_TEMPLATE',
-            derived_from: 'PlantForm Doug v1.1 balanced codon distribution and therapeutic biologics expression heuristics',
-            scope_note: '항체 및 치료용 복합 당단백질의 N. benthamiana 생산 최적화 SOP',
+            derived_from: 'Plant expression heuristics for therapeutic antibodies and complex recombinant glycoproteins',
+            scope_note: 'Optimized sequence policy for therapeutic antibodies and complex proteins in N. benthamiana',
             default_enforcement: 'IGNORE',
             unknown_rule_policy: 'ERROR',
             rules: {
@@ -157,19 +157,19 @@ const SOP_PRESETS = Object.freeze({
     },
     preset_c: {
         id: 'preset_c',
-        name: 'Preset C · MoClo / GoldenBraid Assembly (골든게이트 조립)',
+        name: 'Preset C · MoClo & GoldenBraid Modular Assembly',
         tag: 'Preset C Active',
         file: '/examples/factorforge-sop-preset-c-moclo-goldenbraid.yaml',
-        description: 'MoClo Level 0 / GoldenBraid 2.0 표준. BsaI/BpiI/BsmBI/SapI 완전 배제, MoClo L0 오버행 호환(5′ AATG, 3′ GCTT), 반복서열 엄격 검증.',
+        description: 'MoClo Level 0 & GoldenBraid 2.0 standards. Complete avoidance of BsaI/BpiI/BsmBI/SapI, MoClo overhang compatibility (5′ AATG, 3′ GCTT), and strict repeat filtering.',
         profile: {
             $schema: SOP_SCHEMA,
             profile_id: 'preset_c_moclo_goldenbraid',
-            sop_name: 'Preset C · MoClo / GoldenBraid Assembly',
+            sop_name: 'Preset C · MoClo & GoldenBraid Modular Assembly',
             version: '1.2.0',
             author: 'Eijex',
             status: 'PRESET_TEMPLATE',
             derived_from: 'Modular Cloning (MoClo) and GoldenBraid 2.0 plant assembly standards',
-            scope_note: '다중 유전자 및 모듈형 식물 벡터 클로닝용 표준 SOP',
+            scope_note: 'Standard sequence policy for multi-gene and modular plant vector cloning',
             default_enforcement: 'IGNORE',
             unknown_rule_policy: 'ERROR',
             rules: {
@@ -208,10 +208,10 @@ const SOP_PRESETS = Object.freeze({
     },
     preset_d: {
         id: 'preset_d',
-        name: 'Preset D · High-Yield Agroinfiltration (일시 과발현)',
+        name: 'Preset D · High-Yield Agroinfiltration (Transient Overexpression)',
         tag: 'Preset D Active',
         file: '/examples/factorforge-sop-preset-d-high-yield-agro.yaml',
-        description: '아그로인필트레이션(Agroinfiltration) 일시 발현 시 최대 번역 처리량(Max CAI) 집중 할당, Kozak 최적화 및 불안정 TpA 디뉴클레오티드 억제.',
+        description: 'High-yield transient expression via agroinfiltration. Max CAI codon adaptation, optimized Kozak initiation, and mRNA destabilization suppression.',
         profile: {
             $schema: SOP_SCHEMA,
             profile_id: 'preset_d_high_yield_agro',
@@ -220,7 +220,7 @@ const SOP_PRESETS = Object.freeze({
             author: 'Eijex',
             status: 'PRESET_TEMPLATE',
             derived_from: 'Plant transient overexpression high-throughput translation heuristics',
-            scope_note: 'N. benthamiana 잎 아그로인필트레이션을 통한 최고 수율 단백질 발현 SOP',
+            scope_note: 'Maximum yield protein expression policy for N. benthamiana leaf agroinfiltration',
             default_enforcement: 'IGNORE',
             unknown_rule_policy: 'ERROR',
             rules: {
@@ -257,10 +257,10 @@ const SOP_PRESETS = Object.freeze({
     },
     preset_e: {
         id: 'preset_e',
-        name: 'Preset E · Synthesis House Feasibility (Twist / IDT 합성 통과율 최적화)',
+        name: 'Preset E · Synthesis House Feasibility (Twist / IDT Pass-Through)',
         tag: 'Preset E Active',
         file: '/examples/factorforge-sop-preset-e-synthesis-feasibility.yaml',
-        description: '상용 DNA 합성사(Twist, IDT, GenScript) Complexity 검사 통과 및 합성 거절 방지. 자연 빈도 분산, 로컬 GC 극단치 및 호모폴리머 엄격 차단.',
+        description: 'Optimized for commercial DNA synthesis (Twist, IDT, GenScript) complexity metrics. Distributes host codon frequencies and strictly limits GC extremes and homopolymers.',
         profile: {
             $schema: SOP_SCHEMA,
             profile_id: 'preset_e_synthesis_feasibility',
@@ -269,7 +269,7 @@ const SOP_PRESETS = Object.freeze({
             author: 'Eijex',
             status: 'PRESET_TEMPLATE',
             derived_from: 'Commercial DNA synthesis manufacturing complexity guidelines (Twist / IDT / GenScript)',
-            scope_note: '합성 난이도(Complexity Score) 불합격 및 제조 지연 방지용 SOP',
+            scope_note: 'Sequence policy targeting commercial synthesis approval without complexity delays',
             default_enforcement: 'IGNORE',
             unknown_rule_policy: 'ERROR',
             rules: {
@@ -721,7 +721,7 @@ const ENGINE_DESCRIPTIONS = {
         badge: 'v2.0 standard',
         badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/50',
         cardClass: 'bg-emerald-50/80 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/40 text-emerald-900 dark:text-emerald-200',
-        text: '<span class="font-bold text-emerald-800 dark:text-emerald-300">Standard DP:</span> Paper 1 baseline DP engine with global GC constraints and CAI maximization without 5′ initiation ramp clamping.'
+        text: '<span class="font-bold text-emerald-800 dark:text-emerald-300">Global Feasibility DP:</span> Classical exact dynamic programming enforcing host GC equilibrium and CAI maximization across the complete CDS.'
     },
     high_cai: {
         badge: 'rule v1.0',
@@ -778,11 +778,11 @@ function updatePresetUiFromProfile(profile) {
         }
     } else {
         if (elements.sopPresetTag) {
-            elements.sopPresetTag.textContent = 'Custom Local Policy';
+            elements.sopPresetTag.textContent = 'Custom Policy';
             elements.sopPresetTag.className = 'px-2 py-0.5 rounded text-[9px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700';
         }
         if (elements.sopPresetDescription) {
-            elements.sopPresetDescription.textContent = '사용자 맞춤 설정이 활성화되었습니다. "Restore default"를 누르면 기본 보수적 기준선(Preset A)으로 복원됩니다.';
+            elements.sopPresetDescription.textContent = 'Custom sequence policy active. Click "Restore default" to reset to Preset A.';
         }
         if (elements.downloadSopExample) {
             elements.downloadSopExample.href = SOP_PRESETS.preset_a.file;
@@ -811,7 +811,7 @@ function applySopToUi(profile, { persist = true } = {}) {
         });
         if (elements.activePolicyBadge) {
             elements.activePolicyBadge.textContent = workflow.codon_policy === 'plantform_balanced_codon_v1'
-                ? 'PlantForm Balanced'
+                ? 'Balanced Non-CpG'
                 : (workflow.codon_policy === 'host_frequency' ? 'Host Frequency' : 'Max-CAI');
         }
     }
@@ -981,7 +981,7 @@ function initEventListeners() {
                 state.codonPolicy = e.target.value;
                 if (elements.activePolicyBadge) {
                     elements.activePolicyBadge.textContent = e.target.value === 'plantform_balanced_codon_v1'
-                        ? 'PlantForm Balanced'
+                        ? 'Balanced Non-CpG'
                         : (e.target.value === 'host_frequency' ? 'Host Frequency' : 'Max-CAI');
                 }
                 captureSopFromUi();
@@ -1109,7 +1109,7 @@ function updateDesignBriefSummary() {
     const requirements = [];
     if (elements.useTemplateCheck?.checked) requirements.push('MoClo');
     if (state.watermark) requirements.push('watermark twin');
-    if (state.codonPolicy === 'plantform_balanced_codon_v1') requirements.push('PlantForm codon policy');
+    if (state.codonPolicy === 'plantform_balanced_codon_v1') requirements.push('Balanced non-CpG');
     const enzymes = Array.from(elements.typeIisEnzymes || [])
         .filter(input => input.checked)
         .map(input => input.value);
@@ -2632,8 +2632,8 @@ async function downloadEvidencePackageZip() {
         const timestamp = new Date().toISOString();
 
         // 1. FASTA files
-        const fastaFolder = zip.folder("sequences");
-        const multiFasta = `>${targetName}_OPTIMIZED | GC=${primary.metrics.gc_percent || 'N/A'}% | Policy=plantform_balanced_codon_v1\n${optSeq}\n`;
+        const policyLabel = state.codonPolicy === 'plantform_balanced_codon_v1' ? 'balanced_non_cpg' : (state.codonPolicy || 'standard');
+        const multiFasta = `>${targetName}_OPTIMIZED | GC=${primary.metrics.gc_percent || 'N/A'}% | Policy=${policyLabel}\n${optSeq}\n`;
         fastaFolder.file("all_variants.fasta", multiFasta);
         fastaFolder.file(`${targetName}_optimized.fasta`, multiFasta);
         if (state.originalSequence) {

@@ -1,17 +1,18 @@
-# FactorForge SOP Preset E: Synthesis House Feasibility (Twist / IDT)
+# FactorForge SOP Preset E: Synthesis House Feasibility (Twist / IDT Pass-Through)
 # ==============================================================================
-# 상용 올리고/유전자 합성(Twist Bioscience, IDT, GenScript)의 Complexity 스코어링
-# 통과 및 합성 지연/거절(Quotation reject) 방지 프로필.
-# 숙주 자연 빈도 분산, 로컬 GC 극단치 및 호모폴리머/반복 서열을 집중 차단합니다.
+# Optimized for commercial gene synthesis vendors (Twist Bioscience, IDT,
+# GenScript) complexity score scoring and automated synthesis qualification.
+# Distributes host codon frequencies and strictly limits GC extremes,
+# homopolymer runs, and direct repeats to eliminate manufacturing aborts.
 # ==============================================================================
 $schema: factorforge-sop-v1
 profile_id: preset_e_synthesis_feasibility
-sop_name: "Preset E · Synthesis House Feasibility (Twist / IDT)"
+sop_name: "Preset E · Synthesis House Feasibility (Twist / IDT Pass-Through)"
 version: 1.2.0
 author: Eijex
 status: PRESET_TEMPLATE
 derived_from: "Commercial DNA synthesis manufacturing complexity guidelines (Twist / IDT / GenScript)"
-scope_note: "합성 난이도(Complexity Score) 불합격 및 제조 지연 방지용 SOP"
+scope_note: "Sequence policy targeting commercial synthesis approval without complexity delays"
 default_enforcement: IGNORE
 unknown_rule_policy: ERROR
 

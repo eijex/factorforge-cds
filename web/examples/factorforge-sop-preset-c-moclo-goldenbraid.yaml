@@ -1,16 +1,17 @@
 # FactorForge SOP Preset C: MoClo & GoldenBraid Modular Assembly
 # ==============================================================================
-# MoClo Level 0 및 GoldenBraid 2.0 표준 식물 발현 파트 조립 규격.
-# BsaI, BpiI, BsmBI, SapI 제한효소 인식 자리를 철저히 제거하며, MoClo 오버행 호환 규격 적용.
+# Modular Cloning (MoClo Level 0) and GoldenBraid 2.0 plant assembly standards.
+# Guarantees complete domesticator avoidance of BsaI, BpiI, BsmBI, and SapI
+# recognition sites, with MoClo L0 overhang compliance and repeat filtering.
 # ==============================================================================
 $schema: factorforge-sop-v1
 profile_id: preset_c_moclo_goldenbraid
-sop_name: "Preset C · MoClo / GoldenBraid Assembly"
+sop_name: "Preset C · MoClo & GoldenBraid Modular Assembly"
 version: 1.2.0
 author: Eijex
 status: PRESET_TEMPLATE
 derived_from: "Modular Cloning (MoClo) and GoldenBraid 2.0 plant assembly standards"
-scope_note: "다중 유전자 및 모듈형 식물 벡터 클로닝용 표준 SOP"
+scope_note: "Standard sequence policy for multi-gene and modular plant vector cloning"
 default_enforcement: IGNORE
 unknown_rule_policy: ERROR
 

@@ -1,17 +1,19 @@
-# FactorForge SOP Preset B: PlantForm Doug Biologics
+# FactorForge SOP Preset B: Therapeutic Biologics (Antibodies & Complex Proteins)
 # ==============================================================================
-# 항체(IgG, mAb) 및 바이오로직스 대량 생산용 특화 프로필.
-# PlantForm Doug v1.1 코돈 배분(Arg 50/50, Ser 5-way non-CpG), 식물 전사 Kozak 최적화,
-# mRNA 안정성(TpA 디뉴클레오티드 억제), 4대 Type IIS 효소(BsaI, BpiI, BsmBI, SapI) 배제.
+# Specialized sequence-design profile for recombinant therapeutic proteins and
+# monoclonal antibodies expressed in Nicotiana benthamiana.
+# Enforces balanced non-CpG codons (Arg 50/50, Ser 5-way non-CpG split),
+# plant Kozak initiation, mRNA stability via TpA suppression, and complete
+# avoidance of 4 Type IIS recognition sites (BsaI, BpiI, BsmBI, SapI).
 # ==============================================================================
 $schema: factorforge-sop-v1
-profile_id: preset_b_plantform_biologics
-sop_name: "Preset B · PlantForm Doug Biologics"
+profile_id: preset_b_therapeutic_biologics
+sop_name: "Preset B · Therapeutic Biologics (Antibodies & Complex Proteins)"
 version: 1.2.0
-author: "PlantForm / Eijex"
+author: Eijex
 status: PRESET_TEMPLATE
-derived_from: "PlantForm Doug v1.1 balanced codon distribution and therapeutic biologics expression heuristics"
-scope_note: "항체 및 치료용 복합 당단백질의 N. benthamiana 생산 최적화 SOP"
+derived_from: "Plant molecular farming heuristics for therapeutic antibodies and complex recombinant glycoproteins"
+scope_note: "Optimized sequence policy for therapeutic antibodies and complex proteins in N. benthamiana"
 default_enforcement: IGNORE
 unknown_rule_policy: ERROR
 

@@ -1,9 +1,9 @@
 # FactorForge SOP Preset A: Conservative Baseline (Default)
 # ==============================================================================
-# FactorForge의 기본 SOP는 사전 합성 안전성을 위한 가장 보수적인 기준선입니다.
-# PlantForm의 경험적 지침을 참고하되 100% 동일하게 복제하지 않고, 유전자 합성 거절(Reject)
-# 및 식물 발현 실패 위험을 최소화하도록 설정되었습니다.
-# 각 연구실 및 합성 목적에 맞추어 설정을 변경하거나 자체 SOP(.yaml)를 업로드하시기 바랍니다.
+# FactorForge's default sequence policy is configured as an intentionally
+# conservative pre-synthesis baseline to minimize synthesis rejects and sequence
+# toxicity. We recommend customizing these settings or uploading your lab's own
+# SOP (.yaml) to match your specific assembly and expression protocols.
 # ==============================================================================
 $schema: factorforge-sop-v1
 profile_id: preset_a_conservative_baseline
@@ -11,8 +11,8 @@ sop_name: "Preset A · Conservative Baseline (Default)"
 version: 1.2.0
 author: Eijex
 status: STANDARD_TEMPLATE
-derived_from: "FactorForge default conservative pre-synthesis baseline; not identical to any single proprietary SOP"
-scope_note: "가장 보수적인 사전 합성 안전 기준선. 각 연구실 고유의 SOP 업로드 및 설정을 권장합니다."
+derived_from: "FactorForge default conservative pre-synthesis baseline; precautionary plant expression heuristics"
+scope_note: "Conservative in-silico pre-synthesis baseline. Custom laboratory SOP configuration is recommended."
 default_enforcement: IGNORE
 unknown_rule_policy: ERROR
 
