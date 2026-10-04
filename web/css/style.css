@@ -625,7 +625,8 @@ section>div:hover {
 .dark .track-heading > span { background: #334155; color: #cbd5e1; }
 .ramp-bracket { width: min(30%, 10rem); margin: 1rem 0 .35rem 4.8rem; border: solid #22d3ee; border-width: 1px 1px 0; color: #0891b2; font-size: .56rem; font-weight: 800; text-align: center; }
 .track-row { display: grid; grid-template-columns: 4.2rem minmax(0,1fr); align-items: center; gap: .6rem; margin-top: .45rem; color: #64748b; font-size: .62rem; font-weight: 800; }
-.track-row canvas { width: 100%; height: 56px; border-radius: .6rem; background: #020617; cursor: crosshair; }
+.track-row canvas { width: 100%; height: 56px; border-radius: .6rem; background: #020617; cursor: default; }
+.track-row canvas.has-track { cursor: crosshair; }
 .track-legend { display: flex; flex-wrap: wrap; gap: .65rem; margin: .75rem 0 0 4.8rem; color: #64748b; font-size: .55rem; }
 .track-legend span::before { content: ''; display: inline-block; width: .48rem; height: .48rem; margin-right: .25rem; border-radius: 50%; background: var(--legend); }
 .track-legend .rare { --legend:#ef4444; }.track-legend .low { --legend:#f59e0b; }.track-legend .moderate { --legend:#64748b; }.track-legend .high { --legend:#22c55e; }.track-legend .very-high { --legend:#10b981; }.track-legend .unknown { --legend:#334155; }

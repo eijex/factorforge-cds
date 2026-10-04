@@ -233,8 +233,10 @@ function loadVersionedHistory() {
 const state = {
     sequence: '',
     engineMode: 'profile',
-    objective: 'feasibility_best',
+    objective: 'dp_v2_1_1',
     host: 'nbenthamiana',
+    watermark: false,
+    codonPolicy: 'plantform_balanced_codon_v1',
     saveDb: false,
     alignmentPage: 0,
     useTemplate: false,
@@ -262,6 +264,12 @@ const elements = {
     btnText: document.getElementById('btnText'),
     loadingIndicator: document.getElementById('loadingIndicator'),
     validationStatus: document.getElementById('validationStatus'),
+    engineVersionSelect: document.getElementById('engineVersionSelect'),
+    engineVersionDescription: document.getElementById('engineVersionDescription'),
+    engineBadge: document.getElementById('engineBadge'),
+    toggleWatermark: document.getElementById('toggleWatermark'),
+    codonPolicyRadios: document.getElementsByName('codonPolicy'),
+    activePolicyBadge: document.getElementById('activePolicyBadge'),
     designWorkspace: document.getElementById('designWorkspace'),
     designBriefPanel: document.getElementById('designBriefPanel'),
     resultsPanel: document.getElementById('resultsPanel'),
@@ -484,6 +492,51 @@ async function loadApiMetadata() {
     }
 }
 
+const ENGINE_DESCRIPTIONS = {
+    dp_v2_1_1: {
+        badge: 'v2.1 recommended',
+        badgeClass: 'bg-teal-50 text-teal-700 border-teal-100 dark:bg-teal-900/20 dark:text-teal-300 dark:border-teal-800/50',
+        cardClass: 'bg-teal-50/80 dark:bg-teal-900/20 border-teal-100 dark:border-teal-800/40 text-teal-900 dark:text-teal-200',
+        text: '<span class="font-bold text-teal-800 dark:text-teal-300">✨ Recommended:</span> 3-axis DP with position-dependent 5′ initiation ramp awareness (nt 1–45 clamped to 20–29% GC), homopolymer veto (&le;5 nt), global GC window, and host CAI maximization.'
+    },
+    feasibility_best: {
+        badge: 'v2.0 standard',
+        badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800/50',
+        cardClass: 'bg-emerald-50/80 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/40 text-emerald-900 dark:text-emerald-200',
+        text: '<span class="font-bold text-emerald-800 dark:text-emerald-300">Standard DP:</span> Paper 1 baseline DP engine with global GC constraints and CAI maximization without 5′ initiation ramp clamping.'
+    },
+    high_cai: {
+        badge: 'rule v1.0',
+        badgeClass: 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800/50',
+        cardClass: 'bg-blue-50/80 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800/40 text-blue-900 dark:text-blue-200',
+        text: '<span class="font-bold text-blue-800 dark:text-blue-300">Rule Profile:</span> Greedy selection favoring the highest codon adaptation index (CAI) for each residue.'
+    },
+    gc_target: {
+        badge: 'rule v1.0',
+        badgeClass: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+        cardClass: 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200',
+        text: '<span class="font-bold text-slate-800 dark:text-slate-300">Rule Profile:</span> Prioritizes overall CDS proximity to the host natural GC band.'
+    },
+    assembly_friendly: {
+        badge: 'rule v1.0',
+        badgeClass: 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800/50',
+        cardClass: 'bg-amber-50/80 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/40 text-amber-900 dark:text-amber-200',
+        text: '<span class="font-bold text-amber-800 dark:text-amber-300">Rule Domesticator:</span> Automatically removes BsaI, BpiI, and BsmBI sites via synonymous substitution.'
+    }
+};
+
+function updateEngineDescription(objective) {
+    const meta = ENGINE_DESCRIPTIONS[objective] || ENGINE_DESCRIPTIONS.dp_v2_1_1;
+    if (elements.engineBadge) {
+        elements.engineBadge.textContent = meta.badge;
+        elements.engineBadge.className = `shrink-0 px-2 py-1 rounded-lg border text-[9px] font-extrabold uppercase tracking-wider ${meta.badgeClass}`;
+    }
+    if (elements.engineVersionDescription) {
+        elements.engineVersionDescription.innerHTML = meta.text;
+        elements.engineVersionDescription.className = `p-3 border rounded-xl text-xs leading-relaxed ${meta.cardClass}`;
+    }
+}
+
 function formatCustomSitesForEditor(sites) {
     return (sites || []).map(site => `${site.name}:${site.sequence}`).join('\n');
 }
@@ -497,6 +550,25 @@ function applySopToUi(profile, { persist = true } = {}) {
     if (!objective) throw new Error(`Design method ${workflow.design_method} is unavailable on this deployment.`);
     objective.checked = true;
     state.objective = objective.value;
+    if (elements.engineVersionSelect && workflow.design_method) {
+        elements.engineVersionSelect.value = workflow.design_method;
+        updateEngineDescription(workflow.design_method);
+    }
+    if (workflow.codon_policy) {
+        state.codonPolicy = workflow.codon_policy;
+        Array.from(elements.codonPolicyRadios).forEach(r => {
+            r.checked = (r.value === workflow.codon_policy);
+        });
+        if (elements.activePolicyBadge) {
+            elements.activePolicyBadge.textContent = workflow.codon_policy === 'plantform_balanced_codon_v1'
+                ? 'PlantForm Balanced'
+                : (workflow.codon_policy === 'host_frequency' ? 'Host Frequency' : 'Max-CAI');
+        }
+    }
+    if (workflow.watermark !== undefined && elements.toggleWatermark) {
+        elements.toggleWatermark.checked = Boolean(workflow.watermark);
+        state.watermark = Boolean(workflow.watermark);
+    }
     elements.optimizationSeed.value = requirements.reproducibility_seed ?? '';
     elements.kozakToggle.checked = Boolean(requirements.kozak_optimization);
     elements.dinucToggle.checked = Boolean(requirements.suppress_tpa);
@@ -520,14 +592,14 @@ function applySopToUi(profile, { persist = true } = {}) {
     elements.sopProfileMeta.textContent = `${validated.status === 'STANDARD_TEMPLATE' ? 'Default template' : 'Custom SOP'} · v${validated.version} · stored only in this browser`;
     elements.sopProfileBadge.textContent = validated.status === 'STANDARD_TEMPLATE' ? 'Active' : 'Custom';
     updateDesignBriefSummary();
-
-
 }
 
 function captureSopFromUi() {
     const profile = cloneJson(state.activeSop || DEFAULT_SOP_PROFILE);
     profile.status = profile.profile_id === DEFAULT_SOP_PROFILE.profile_id ? 'CUSTOMIZED_LOCAL' : profile.status;
     profile.workflow.design_method = state.objective;
+    profile.workflow.codon_policy = state.codonPolicy;
+    profile.workflow.watermark = Boolean(state.watermark);
     profile.workflow.sequence_requirements = {
         reproducibility_seed: elements.optimizationSeed.value.trim() === '' ? null : Number(elements.optimizationSeed.value),
         kozak_optimization: elements.kozakToggle.checked,
@@ -606,16 +678,53 @@ function initEventListeners() {
     elements.sopFileUpload.addEventListener('change', handleSopUpload);
     elements.resetSopProfile.addEventListener('click', restoreDefaultSop);
 
-    // Objective Change
+    // Engine / Version Selector
+    if (elements.engineVersionSelect) {
+        elements.engineVersionSelect.addEventListener('change', (e) => {
+            state.objective = e.target.value;
+            Array.from(elements.objectiveRadios).forEach(radio => {
+                radio.checked = (radio.value === e.target.value);
+            });
+            updateEngineDescription(e.target.value);
+            captureSopFromUi();
+            updateDesignBriefSummary();
+        });
+    }
+
     elements.objectiveRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             state.objective = e.target.value;
+            if (elements.engineVersionSelect) {
+                elements.engineVersionSelect.value = e.target.value;
+                updateEngineDescription(e.target.value);
+            }
             captureSopFromUi();
             updateDesignBriefSummary();
-
-
         });
     });
+
+    if (elements.toggleWatermark) {
+        elements.toggleWatermark.addEventListener('change', (e) => {
+            state.watermark = e.target.checked;
+            captureSopFromUi();
+            updateDesignBriefSummary();
+        });
+    }
+
+    if (elements.codonPolicyRadios) {
+        elements.codonPolicyRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                state.codonPolicy = e.target.value;
+                if (elements.activePolicyBadge) {
+                    elements.activePolicyBadge.textContent = e.target.value === 'plantform_balanced_codon_v1'
+                        ? 'PlantForm Balanced'
+                        : (e.target.value === 'host_frequency' ? 'Host Frequency' : 'Max-CAI');
+                }
+                captureSopFromUi();
+                updateDesignBriefSummary();
+            });
+        });
+    }
     elements.engineModeRadios.forEach(radio => {
         radio.addEventListener('change', (e) => {
             state.engineMode = e.target.value;
@@ -727,14 +836,16 @@ function updateDesignBriefSummary() {
     const host = elements.hostSelect?.selectedOptions?.[0]?.textContent?.trim() || 'N. benthamiana';
     const selectedObjective = Array.from(elements.objectiveRadios).find(radio => radio.checked)?.value || state.objective;
     const methodLabels = {
-        feasibility_best: 'recommended feasibility design',
-        dp_v2_1_1: 'local-guard DP v2.1.1 development candidate',
-        high_cai: 'CAI-focused comparison',
-        gc_target: 'GC-focused comparison',
-        assembly_friendly: 'assembly-oriented comparison'
+        dp_v2_1_1: 'DP v2.1.1 (3-axis initiation)',
+        feasibility_best: 'DP v2.0.1 (global feasibility)',
+        high_cai: 'Rule · High CAI',
+        gc_target: 'Rule · GC Target',
+        assembly_friendly: 'Rule · Assembly Friendly'
     };
     const requirements = [];
     if (elements.useTemplateCheck?.checked) requirements.push('MoClo');
+    if (state.watermark) requirements.push('watermark twin');
+    if (state.codonPolicy === 'plantform_balanced_codon_v1') requirements.push('PlantForm codon policy');
     const enzymes = Array.from(elements.typeIisEnzymes || [])
         .filter(input => input.checked)
         .map(input => input.value);
@@ -743,9 +854,7 @@ function updateDesignBriefSummary() {
     if (elements.kozakToggle?.checked) requirements.push('Kozak handling');
     if (elements.dinucToggle?.checked) requirements.push('TpA reduction');
     const requirementText = requirements.length ? ` · ${requirements.join(' · ')}` : '';
-    const method = state.host === 'by2' && selectedObjective === 'feasibility_best'
-        ? 'stable profile design'
-        : methodLabels[selectedObjective] || 'deterministic design';
+    const method = methodLabels[selectedObjective] || 'deterministic design';
     elements.appliedPolicySummary.textContent = `${host} · ${method}${requirementText}`;
 }
 
@@ -1248,6 +1357,13 @@ function updateCodonInspector(accounting, index) {
 
 function renderCodonTracks(accounting) {
     const codons = accounting.available ? accounting.codons : [];
+    if (codons.length > 0) {
+        elements.canvasOriginalTrack?.classList.add('has-track');
+        elements.canvasOptimizedTrack?.classList.add('has-track');
+    } else {
+        elements.canvasOriginalTrack?.classList.remove('has-track');
+        elements.canvasOptimizedTrack?.classList.remove('has-track');
+    }
     const draw = index => { drawCodonTrack(elements.canvasOriginalTrack, codons, 'origFreq', index); drawCodonTrack(elements.canvasOptimizedTrack, codons, 'optFreq', index); };
     draw(null);
     if (!elements.interactiveTrackContainer.dataset.bound) {
@@ -2711,8 +2827,9 @@ function clearAll() {
     if (elements.mfeWarningBanner) elements.mfeWarningBanner.classList.add('hidden');
     elements.emptyState.classList.remove('hidden');
     elements.validationStatus.classList.add('hidden');
+    elements.canvasOriginalTrack?.classList.remove('has-track');
+    elements.canvasOptimizedTrack?.classList.remove('has-track');
     updateDesignBriefSummary();
-
 
     showToast('Input cleared', 'info');
 }
