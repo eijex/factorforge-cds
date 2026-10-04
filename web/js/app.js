@@ -665,22 +665,85 @@ function trackEvent(name, data) {
 document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     applyStaticLabelPatches();
-    await loadApiMetadata();
     applySopToUi(state.activeSop, { persist: false });
     initEventListeners();
+    setupDesignPanel();
+    handleSequenceChange({ target: elements.sequenceInput });
+    await loadApiMetadata();
+    applySopToUi(state.activeSop, { persist: false });
     updateDesignBriefSummary();
 
 
     renderHistory();
-    console.log('FactorForge v3.5.4 Engaged');
+    console.log('FactorForge ready');
 });
+
+// Move existing controls, rather than recreating them: values and event handlers
+// stay intact, including custom profiles retained in this browser.
+function setupDesignPanel() {
+    const advanced = document.querySelector('#manualSopOverrides > div');
+    advanced.prepend(document.getElementById('designObjectivePolicy'));
+    document.querySelector('#manualSopOverrides > summary').textContent = 'Advanced settings';
+    const experimental = document.createElement('details');
+    experimental.id = 'experimentalSettings';
+    experimental.className = 'disclosure-card mb-6 rounded-xl border border-slate-200 dark:border-slate-800 p-4';
+    const summary = document.createElement('summary');
+    summary.textContent = 'Experimental features';
+    summary.className = 'cursor-pointer text-xs font-bold';
+    experimental.append(summary);
+    experimental.append(document.getElementById('engineSelector'));
+    experimental.append(document.getElementById('experimentalObjectives'));
+    experimental.append(document.getElementById('toggleWatermark').closest('label'));
+    advanced.append(document.getElementById('useTemplate').closest('label'));
+    document.getElementById('manualSopOverrides').after(experimental);
+    const exampleLabels = ['A · Baseline example (default)', 'B · Protein design example',
+        'C · Modular cloning example', 'D · Expression workflow example', 'E · Synthesis review example'];
+    Array.from(elements.sopPresetSelect.options).forEach((option, index) => {
+        if (exampleLabels[index]) option.textContent = exampleLabels[index];
+    });
+    const customOption = document.createElement('option');
+    customOption.value = 'custom';
+    customOption.textContent = 'Uploaded custom profile';
+    customOption.disabled = true;
+    elements.sopPresetSelect.append(customOption);
+    updatePresetUiFromProfile(state.activeSop);
+    const card = document.getElementById('sopProfileCard');
+    const management = document.createElement('details');
+    management.id = 'profileManagement';
+    management.className = 'disclosure-card text-xs';
+    const managementSummary = document.createElement('summary');
+    managementSummary.className = 'cursor-pointer font-bold py-2';
+    managementSummary.textContent = 'Upload, download or edit profile';
+    management.append(managementSummary);
+    management.append(elements.uploadSopButton.parentElement);
+    management.append(document.getElementById('defaultSopSummary'));
+    management.append(card.querySelector('a[target="_blank"]').parentElement);
+    card.append(management);
+    document.querySelectorAll('#designBriefPanel .info-icon').forEach(icon => {
+        icon.tabIndex = 0;
+        icon.setAttribute('aria-label', icon.nextElementSibling?.textContent.trim() || 'Setting details');
+    });
+    elements.uploadSopButton.parentElement.classList.add('flex-wrap');
+    elements.downloadSopExample.title = 'Download an editable example configuration, not a validated laboratory SOP.';
+    document.getElementById('sopProfileHeading').textContent = 'Sequence design profile';
+    const note = document.createElement('p');
+    note.className = 'text-xs text-slate-500 dark:text-slate-400';
+    note.textContent = 'Example settings, not an approved laboratory SOP. Adapt to your workflow; computational checks do not establish biological performance.';
+    card.insertBefore(note, card.children[1]);
+    elements.sopPresetSelect.setAttribute('aria-label', 'Design policy example');
+    const resultNotice = document.createElement('p');
+    resultNotice.id = 'settingsChangeNotice';
+    resultNotice.className = 'hidden text-xs text-amber-700 dark:text-amber-300 mb-4';
+    resultNotice.textContent = 'Settings changed. Existing results retain their original settings; generate again to apply the current profile.';
+    document.getElementById('optimizeBtn').before(resultNotice);
+}
 
 // Loads server-owned GC ranges and validation labels. Supported hosts remain
 // available to API/CLI clients, while the public web workflow stays focused on
 // the production N. benthamiana path.
 async function loadApiMetadata() {
     try {
-        const response = await fetch(API_ENDPOINT, { method: 'GET' });
+        const response = await fetch(API_ENDPOINT, { method: 'GET', signal: AbortSignal.timeout(8000) });
         if (response.ok) {
             const data = await response.json();
             if (data.host_metadata && typeof data.host_metadata === 'object') {
@@ -784,13 +847,21 @@ function updatePresetUiFromProfile(profile) {
             elements.sopPresetTag.className = 'px-2 py-0.5 rounded text-[9px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700';
         }
         if (elements.sopPresetDescription) {
-            elements.sopPresetDescription.textContent = preset.description;
+            const descriptions = {
+                preset_a: 'Default example: initiation GC constraints, homopolymer limits and configured Type IIS avoidance.',
+                preset_b: 'Example with balanced codon distribution, Kozak settings and TpA suppression.',
+                preset_c: 'Example with configured Type IIS constraints and MoClo assembly settings.',
+                preset_d: 'Example with CAI-focused codon selection, Kozak settings and TpA suppression. Yield is not predicted.',
+                preset_e: 'Example with codon-frequency distribution and synthesis-related checks. Vendor acceptance is not guaranteed.'
+            };
+            elements.sopPresetDescription.textContent = descriptions[matchedKey];
         }
         if (elements.downloadSopExample) {
             elements.downloadSopExample.href = preset.file;
             elements.downloadSopExample.download = '';
         }
     } else {
+        elements.sopPresetSelect.value = 'custom';
         if (elements.sopPresetTag) {
             elements.sopPresetTag.textContent = 'Custom Policy';
             elements.sopPresetTag.className = 'px-2 py-0.5 rounded text-[9px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700';
@@ -856,7 +927,13 @@ function applySopToUi(profile, { persist = true } = {}) {
     Object.entries(modeMap).forEach(([key, select]) => { select.value = String(policy[key]).toLowerCase(); });
     state.activeSop = validated;
     if (persist) localStorage.setItem(SOP_STORAGE_KEY, JSON.stringify(validated));
-    elements.sopProfileName.textContent = validated.sop_name;
+    const displayNames = {
+        preset_b_therapeutic_biologics: 'B · Protein design example',
+        preset_c_moclo_goldenbraid: 'C · Modular cloning example',
+        preset_d_high_yield_agro: 'D · Expression workflow example',
+        preset_e_synthesis_feasibility: 'E · Synthesis review example'
+    };
+    elements.sopProfileName.textContent = displayNames[validated.profile_id] || validated.sop_name;
     elements.sopProfileMeta.textContent = `${validated.status === 'STANDARD_TEMPLATE' ? 'Default template' : (validated.status === 'PRESET_TEMPLATE' ? 'SOP Preset' : 'Custom SOP')} · v${validated.version} · stored only in this browser`;
     elements.sopProfileBadge.textContent = validated.status === 'STANDARD_TEMPLATE' ? 'Active' : (validated.status === 'PRESET_TEMPLATE' ? 'Preset' : 'Custom');
     updatePresetUiFromProfile(validated);
@@ -955,7 +1032,7 @@ function initEventListeners() {
             const targetPreset = SOP_PRESETS[presetKey];
             if (targetPreset) {
                 applySopToUi(cloneJson(targetPreset.profile), { persist: true });
-                showToast(`Applied ${targetPreset.name}`, 'info');
+                showToast(`Applied ${e.target.selectedOptions[0].textContent}`, 'info');
             }
         });
     }
@@ -1128,6 +1205,9 @@ function updateDesignBriefSummary() {
     if (elements.useTemplateCheck?.checked) requirements.push('MoClo');
     if (state.watermark) requirements.push('watermark twin');
     if (state.codonPolicy === 'plantform_balanced_codon_v1') requirements.push('Balanced non-CpG');
+    else if (state.codonPolicy === 'host_frequency') requirements.push('Host-frequency codons');
+    else if (state.codonPolicy === 'max_cai') requirements.push('CAI-focused codons');
+    if (elements.optimizationSeed?.value.trim() !== '') requirements.push(`seed ${elements.optimizationSeed.value.trim()}`);
     const enzymes = Array.from(elements.typeIisEnzymes || [])
         .filter(input => input.checked)
         .map(input => input.value);
@@ -1138,6 +1218,8 @@ function updateDesignBriefSummary() {
     const requirementText = requirements.length ? ` · ${requirements.join(' · ')}` : '';
     const method = methodLabels[selectedObjective] || 'deterministic design';
     elements.appliedPolicySummary.textContent = `${host} · ${method}${requirementText}`;
+    const notice = document.getElementById('settingsChangeNotice');
+    if (notice && state.results && !state.isOptimizing) notice.classList.remove('hidden');
 }
 
 function isProteinInputResult(res) {
@@ -1408,6 +1490,8 @@ async function runOptimization() {
             renderResults();
             showToast('Showing simulated results', 'success');
         } else {
+            document.getElementById('manualSopOverrides').open = true;
+            document.getElementById('profileManagement').open = true;
             showToast(`Optimization failed: ${error.message}`, 'error');
         }
     } finally {
@@ -1419,6 +1503,8 @@ async function runOptimization() {
 function setLoading(loading) {
     state.isOptimizing = loading;
     elements.optimizeBtn.disabled = loading;
+    if (loading) document.getElementById('settingsChangeNotice')?.classList.add('hidden');
+    else handleSequenceChange({ target: elements.sequenceInput });
 
     if (loading) {
         elements.btnText.classList.add('opacity-0');

@@ -5,6 +5,7 @@ test('policy edit action opens existing controls without missing modal errors', 
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
   await expect(page.locator('#sopProfileName')).toHaveText(/Preset A · Conservative Baseline|Conservative Plant Expression Review Template/);
+  await page.locator('#profileManagement > summary').click();
   await page.locator('#buildSopButton').click();
   await expect(page.locator('#manualSopOverrides')).toHaveAttribute('open', '');
   await expect(page.locator('#optimizationSeed')).toBeVisible();
@@ -40,6 +41,7 @@ test('default SOP is applied and a custom upload persists locally', async ({ pag
   await expect(page.locator('#toggleKozak')).toBeChecked();
   await page.reload();
   await expect(page.locator('#sopProfileName')).toHaveText('Local Lab Review SOP');
+  await page.locator('#profileManagement > summary').click();
   await page.locator('#resetSopProfile').click();
   await expect(page.locator('#sopProfileName')).toHaveText(/Preset A · Conservative Baseline|Conservative Plant Expression Review Template/);
 });
@@ -92,6 +94,7 @@ test('invalid SOP upload is rejected without replacing the active profile', asyn
 
 test('default SOP summary is available without expanding manual controls', async ({ page }) => {
   await page.goto('/');
+  await page.locator('#profileManagement > summary').click();
   await page.locator('#defaultSopSummary summary').click();
   await expect(page.locator('#defaultSopSummary')).toContainText('BsaI, BpiI, and BsmBI');
   await expect(page.locator('#manualSopOverrides')).not.toHaveAttribute('open', '');
@@ -99,6 +102,7 @@ test('default SOP summary is available without expanding manual controls', async
 
 test('active SOP downloads as human-readable YAML', async ({ page }) => {
   await page.goto('/');
+  await page.locator('#profileManagement > summary').click();
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#downloadSopTemplate').click();
   const download = await downloadPromise;
@@ -112,10 +116,11 @@ test('active SOP downloads as human-readable YAML', async ({ page }) => {
 
 test('bundled example SOP is directly downloadable and sharing stays explicit', async ({ page }) => {
   await page.goto('/');
+  await page.locator('#profileManagement > summary').click();
   const example = page.locator('#downloadSopExample');
   await expect(example).toHaveAttribute('href', '/examples/factorforge-conservative-sop.yaml');
   await expect(example).toHaveAttribute('download', '');
-  await expect(example).toHaveAttribute('title', /commented FactorForge conservative example/);
+  await expect(example).toHaveAttribute('title', /editable example configuration/);
   await expect(page.locator('#downloadSopTemplate')).toHaveAttribute('title', /currently active/);
   await expect(page.locator('#uploadSopButton')).toHaveAttribute('title', /YAML or JSON/);
   await expect(page.getByRole('link', { name: /Share a public-safe SOP suggestion/ })).toHaveAttribute('href', /template=feature_request\.yml.*SOP%20template/);

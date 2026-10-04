@@ -203,7 +203,7 @@
                     class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
                     <h2 class="text-lg font-extrabold mb-6 flex items-center text-slate-900">
                         <span class="bg-indigo-50 p-2 rounded-lg mr-3 text-indigo-600">⚙️</span>
-                         Design Brief
+                         Design Setup
                     </h2>
 
                     <div class="grid grid-cols-1 gap-4 mb-6">
@@ -370,8 +370,8 @@
                                     <option value="preset_a" selected>Preset A · Conservative Baseline (Default Safety)</option>
                                     <option value="preset_b">Preset B · Therapeutic Biologics (Antibodies &amp; Proteins)</option>
                                     <option value="preset_c">Preset C · Modular Cloning (MoClo / GoldenBraid)</option>
-                                    <option value="preset_d">Preset D · High-Yield Agroinfiltration (Overexpression)</option>
-                                    <option value="preset_e">Preset E · Synthesis House Feasibility (Twist / IDT Pass)</option>
+                                    <option value="preset_d">Preset D · Expression workflow example</option>
+                                    <option value="preset_e">Preset E · Synthesis review example</option>
                                 </select>
                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -391,7 +391,7 @@
                                 <span>💾 Export</span>
                             </button>
                             <a id="downloadSopExample" href="/examples/factorforge-conservative-sop.yaml" download class="py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 transition-colors flex items-center justify-center gap-0.5 shadow-sm" title="commented FactorForge conservative example">
-                                <span>YAML ↗</span>
+                                <span>Example profile (.yaml)</span>
                             </a>
                             <button id="buildSopButton" type="button" class="py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 transition-colors flex items-center justify-center gap-0.5 shadow-sm" title="Edit manual rule overrides">
                                 <span>⚙️ Overrides</span>
@@ -526,7 +526,7 @@
                                 <label class="flex items-start space-x-2.5 p-2.5 rounded-xl border border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20 dark:border-emerald-600 cursor-pointer">
                                     <input type="radio" name="codonPolicy" value="plantform_balanced_codon_v1" checked class="mt-0.5 text-emerald-600 focus:ring-emerald-500">
                                     <div>
-                                        <span class="font-bold text-slate-900 dark:text-slate-100">Balanced Non-CpG (Methylation-Safe)</span>
+                                        <span class="font-bold text-slate-900 dark:text-slate-100">Balanced non-CpG codon distribution</span>
                                         <span class="block text-[10px] text-slate-600 dark:text-slate-400 mt-0.5">Arg: AGA 50% / AGG 50% · Ser: 5-way non-CpG codons 20% each</span>
                                     </div>
                                 </label>
@@ -560,11 +560,11 @@
                                     Codon Watermark Twin (W0 / W1 Matched Pair)
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Generates paired Baseline (W0) and Watermarked (W1) candidates with zero CAI/GC drift for empirical synthesis tracking and IP attribution.</span>
+                                        <span class="tooltip-text">Generates experimental W0/W1 candidates. Inspect reported sequence differences and metrics; a watermark does not establish biological equivalence or ownership.</span>
                                     </span>
                                 </span>
                                 <span
-                                    class="block text-[11px] text-slate-600 dark:text-slate-400 font-medium">Matched pair design for experimental tracking &amp; IP attribution</span>
+                                    class="block text-[11px] text-slate-600 dark:text-slate-400 font-medium">Experimental matched-pair sequence comparison</span>
                             </div>
                         </label>
 
@@ -574,7 +574,7 @@
                                 class="w-5 h-5 text-emerald-600 rounded-md border-slate-300 dark:border-slate-600 focus:ring-emerald-500 transition-all">
                             <div>
                                 <span class="flex items-center text-sm font-bold text-slate-800 dark:text-slate-100">
-                                    Standard Expression
+                                    Add MoClo assembly elements
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
                                         <span class="tooltip-text">Construct Builder: Enforces MoClo L0 overhangs (5':

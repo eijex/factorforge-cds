@@ -533,6 +533,7 @@ section>div:hover {
 }
 
 .tooltip-text {
+    display: none;
     visibility: hidden;
     width: 200px;
     background-color: #1e293b;
@@ -566,7 +567,9 @@ section>div:hover {
     border-color: #1e293b transparent transparent transparent;
 }
 
-.info-icon:hover+.tooltip-text {
+.info-icon:hover+.tooltip-text,
+.info-icon:focus+.tooltip-text {
+    display: block;
     visibility: visible;
     opacity: 1;
 }
@@ -636,6 +639,9 @@ section>div:hover {
 .codon-inspector strong,.codon-inspector p { display: block; margin-top: .3rem; font-size: .67rem; line-height: 1.45; overflow-wrap: anywhere; }
 
 @media (max-width: 640px) {
+    #designBriefPanel { min-width: 0; }
+    #designBriefPanel select { min-width: 0; max-width: 100%; }
+    #designBriefPanel .tooltip-text { left: auto; right: 0; margin-left: 0; }
     header h1 {
         font-size: 1.25rem;
     }
