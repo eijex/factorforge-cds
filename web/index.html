@@ -72,17 +72,17 @@
                 <nav id="workflowBreadcrumbs" class="hidden lg:flex items-center space-x-2 text-xs font-semibold bg-white/10 px-3.5 py-1.5 rounded-xl backdrop-blur-md border border-white/20 text-white" aria-label="Workflow progress">
                     <span id="stepInputBadge" class="flex items-center space-x-1 text-emerald-200">
                         <span class="w-4 h-4 rounded-full bg-white text-emerald-800 text-[10px] font-black flex items-center justify-center">1</span>
-                        <span>입력 (Input)</span>
+                        <span>[1] Input</span>
                     </span>
                     <span class="text-white/40">→</span>
                     <span id="stepPolicyBadge" class="flex items-center space-x-1 text-emerald-100">
                         <span class="w-4 h-4 rounded-full bg-emerald-300 text-slate-900 text-[10px] font-black flex items-center justify-center">2</span>
-                        <span>설계 기준 (Policy)</span>
+                        <span>[2] Policy Baseline</span>
                     </span>
                     <span class="text-white/40">→</span>
                     <span id="stepResultsBadge" class="flex items-center space-x-1 text-white/50">
                         <span class="w-4 h-4 rounded-full bg-white/20 text-white text-[10px] font-black flex items-center justify-center">3</span>
-                        <span>결과 검토 (Review)</span>
+                        <span>[3] Candidate Review</span>
                     </span>
                 </nav>
 <div class="flex items-center space-x-3">
@@ -422,23 +422,23 @@
                         <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-800 text-center">
                             <div class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/70 dark:border-slate-700/70 shadow-xs">
                                 <span class="text-sm">🛡️</span>
-                                <p class="text-[10px] font-bold text-slate-800 dark:text-slate-100 mt-0.5">단백질 보존</p>
-                                <p class="text-[9px] text-slate-500">100% 서열 일치</p>
+                                <p class="text-[10px] font-bold text-slate-800 dark:text-slate-100 mt-0.5">Protein Conservation</p>
+                                <p class="text-[9px] text-slate-500">100% Identity Preserved</p>
                             </div>
                             <div class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/70 dark:border-slate-700/70 shadow-xs">
                                 <span class="text-sm">⚙️</span>
-                                <p class="text-[10px] font-bold text-slate-800 dark:text-slate-100 mt-0.5">설계 제약</p>
-                                <p class="text-[9px] text-slate-500">코돈/스플라이스</p>
+                                <p class="text-[10px] font-bold text-slate-800 dark:text-slate-100 mt-0.5">Design Constraints</p>
+                                <p class="text-[9px] text-slate-500">Standard Stretch Limits</p>
                             </div>
                             <div class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/70 dark:border-slate-700/70 shadow-xs">
                                 <span class="text-sm">📋</span>
-                                <p class="text-[10px] font-bold text-slate-800 dark:text-slate-100 mt-0.5">검토 정책</p>
-                                <p class="text-[9px] text-slate-500">경고/허용 기준</p>
+                                <p class="text-[10px] font-bold text-slate-800 dark:text-slate-100 mt-0.5">Review Policy</p>
+                                <p class="text-[9px] text-slate-500">Advisory / Action Thresholds</p>
                             </div>
                         </div>
                         <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-[10.5px] text-amber-800 dark:text-amber-300 font-medium flex items-center gap-2">
                             <span>⚠️</span>
-                            <span>승인된 실험실 SOP가 아닌 예제 설정입니다.</span>
+                            <span>Example configuration · Not an approved laboratory SOP.</span>
                         </div>
 
                         <!-- Preset summary & details -->
@@ -467,12 +467,12 @@
                         <summary class="cursor-pointer font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center justify-between select-none">
                             <span class="flex items-center gap-1.5">
                                 <span>🧪</span>
-                                <span>실험 비교 (선택) · Experimental Comparison</span>
+                                <span>Experimental Comparison (Optional)</span>
                             </span>
-                            <span class="text-[10px] text-slate-500 font-normal">Arg·Ser 분배 · Splice 교정 · 5′ 경계</span>
+                            <span class="text-[10px] text-slate-500 font-normal">Arg/Ser · Splice · 5′ Boundary</span>
                         </summary>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
-                            Doug Biologics 제안 항목을 반영하여 기존 기준과 분배 변경·교정 후보 간의 다중 후보 비교 매트릭스를 생성합니다.
+                            Incorporate comparative candidates for codon distribution, potential splice site remediation, and 5′ low-GC boundary preservation in the candidate review matrix.
                         </p>
                         <div class="space-y-3 pt-2">
                             <!-- Arg / Ser Codon Distribution -->
@@ -480,16 +480,16 @@
                                 <div class="flex items-center space-x-2.5">
                                     <input type="checkbox" name="toggleArgSerDistribution" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
                                     <div>
-                                        <label  class="text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer">
-                                            Arg · Ser 코돈 분배
+                                        <label class="text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer">
+                                            Arg / Ser Codon Distribution
                                         </label>
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400">Balanced 50/50 Arg (AGA/AGG) &amp; 5-way Ser 20% quota</span>
                                     </div>
                                 </div>
                                 <select name="argSerDistributionMode" class="text-[11px] font-semibold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500">
-                                    <option value="balanced" selected>기존 ↔ 분배 변경 (Balanced Non-CpG)</option>
-                                    <option value="host_natural">자연 빈도 (Host Natural)</option>
-                                    <option value="max_cai">최대 적응도 (Max-CAI)</option>
+                                    <option value="balanced" selected>Standard vs. Balanced Non-CpG</option>
+                                    <option value="host_natural">Host Natural Frequency</option>
+                                    <option value="max_cai">Maximum CAI Fit</option>
                                 </select>
                             </div>
 
@@ -498,15 +498,15 @@
                                 <div class="flex items-center space-x-2.5">
                                     <input type="checkbox" name="toggleSpliceScan" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" checked>
                                     <div>
-                                        <label  class="text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer">
-                                            잠재 Splice 부위 검토
+                                        <label class="text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer">
+                                            Splice Site Remediation
                                         </label>
-                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400">모티프 검출 및 동의 치환(Synonymous) 교정 후보 생성</span>
+                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400">Detect motifs and evaluate synonymous remediation</span>
                                     </div>
                                 </div>
                                 <select name="spliceScanMode" class="text-[11px] font-semibold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500">
-                                    <option value="remediate" selected>경고 유지 ↔ 동의 치환 교정</option>
-                                    <option value="warn_only">경고만 표시</option>
+                                    <option value="remediate" selected>Advisory vs. Synonymous Remediation</option>
+                                    <option value="warn_only">Advisory Flag Only</option>
                                 </select>
                             </div>
 
@@ -515,15 +515,15 @@
                                 <div class="flex items-center space-x-2.5">
                                     <input type="checkbox" name="toggleFivePrimeBoundary" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" checked>
                                     <div>
-                                        <label  class="text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer">
-                                            5′ 영역 경계 보존 (nt 1–45)
+                                        <label class="text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer">
+                                            5′ Boundary Preservation (nt 1–45)
                                         </label>
-                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400">번역 개시 저해를 방지하기 위해 5′ 저-GC 램프 유지</span>
+                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400">Preserve low-GC 5′ initiation ramp for translation efficiency</span>
                                     </div>
                                 </div>
                                 <select name="fivePrimeBoundaryMode" class="text-[11px] font-semibold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500">
-                                    <option value="preserve" selected>기존 유지 ↔ 별도 제안 (Low-GC Clamp)</option>
-                                    <option value="free">제한 없음</option>
+                                    <option value="preserve" selected>Standard vs. Low-GC Boundary Proposal</option>
+                                    <option value="free">Full Optimization (No 5′ Lock)</option>
                                 </select>
                             </div>
                         </div>
@@ -741,7 +741,7 @@
                             <p class="text-slate-500 text-sm mt-2">Your design review will stay here throughout the workflow.</p>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3 w-full max-w-sm">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-2xl">
                             <div class="p-3 bg-white border border-slate-100 rounded-xl shadow-sm text-left">
                                 <p class="text-[10px] font-bold text-emerald-500 uppercase">📊 Quality</p>
                                 <p class="text-[9px] text-slate-500 font-medium">CAI and GC review</p>
@@ -769,29 +769,29 @@
                             <div class="flex items-center space-x-3">
                                 <span class="text-xl p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">⚙️</span>
                                 <div>
-                                    <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">적용된 설정 · Active Configuration</p>
-                                    <p id="reviewConfigSummary" class="text-xs font-bold text-slate-100 mt-0.5">Host: N. benthamiana · SOP: FactorForge Default · 표준 안전 기준선</p>
+                                    <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Active Configuration</p>
+                                    <p id="reviewConfigSummary" class="text-xs font-bold text-slate-100 mt-0.5">Host: N. benthamiana · Profile: FactorForge Default · Standard Safety Baseline</p>
                                 </div>
                             </div>
                             <button id="btnEditSettings" type="button" class="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white border border-emerald-400/40 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98]">
                                 <span>✏️</span>
-                                <span>설정 수정 (Edit Settings)</span>
+                                <span>Edit Settings</span>
                             </button>
                         </div>
 
                         <!-- Job 358: 4-Tab Navigation Bar -->
                         <div id="reviewTabsBar" class="mb-6 border-b border-slate-200 dark:border-slate-800 flex items-center space-x-2 overflow-x-auto pb-1" role="tablist">
                             <button id="tabBtnSummary" role="tab" aria-selected="true" class="review-tab-btn active px-4 py-2.5 rounded-xl text-xs font-bold transition-all border border-transparent">
-                                📊 요약 (Summary)
+                                📊 Summary
                             </button>
                             <button id="tabBtnComparison" role="tab" aria-selected="false" class="review-tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all border border-transparent">
-                                📈 후보 비교 (Candidate Comparison)
+                                📈 Candidate Comparison
                             </button>
                             <button id="tabBtnDifferences" role="tab" aria-selected="false" class="review-tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all border border-transparent">
-                                🧬 서열 차이 (Sequence Differences)
+                                🧬 Sequence Differences
                             </button>
                             <button id="tabBtnTrace" role="tab" aria-selected="false" class="review-tab-btn px-4 py-2.5 rounded-xl text-xs font-bold transition-all border border-transparent">
-                                ⏱️ 실행 과정 (Execution Trace)
+                                ⏱️ Execution Trace
                             </button>
                         </div>
 
@@ -1055,10 +1055,10 @@
                                     <div>
                                         <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                                             <span>📈</span>
-                                            <span>후보 비교 결과 (Candidate Matrix)</span>
+                                            <span>Multi-Candidate Comparison Matrix</span>
                                         </h3>
                                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                            기준 후보 및 Doug Biologics 제안에 따른 분배 변경·스플라이스 교정 후보 간 3자 대조표
+                                            Comparative metrics across standard baseline, distribution-tuned, and splice-remediated candidates.
                                         </p>
                                     </div>
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
@@ -1069,64 +1069,64 @@
                                     <table class="w-full text-xs text-left border-collapse">
                                         <thead class="bg-slate-50 dark:bg-slate-800/60 font-extrabold text-slate-700 dark:text-slate-300">
                                             <tr>
-                                                <th class="p-3 border-b border-slate-200 dark:border-slate-800 w-1/4">검사 항목 (Feature)</th>
+                                                <th class="p-3 border-b border-slate-200 dark:border-slate-800 w-1/4">Feature / Metric</th>
                                                 <th class="p-3 border-b border-slate-200 dark:border-slate-800 w-1/4">
-                                                    <div class="font-bold text-slate-900 dark:text-slate-100">기준 후보 (Baseline)</div>
-                                                    <div class="text-[10px] text-slate-500 font-normal">원본 기반 기본 최적화</div>
+                                                    <div class="font-bold text-slate-900 dark:text-slate-100">Baseline Candidate</div>
+                                                    <div class="text-[10px] text-slate-500 font-normal">Standard N. benthamiana optimization</div>
                                                 </th>
                                                 <th class="p-3 border-b border-slate-200 dark:border-slate-800 w-1/4">
-                                                    <div class="font-bold text-blue-600 dark:text-blue-400">분배 변경 (Distribution)</div>
-                                                    <div class="text-[10px] text-slate-500 font-normal">Arg·Ser 코돈 분배 조정</div>
+                                                    <div class="font-bold text-blue-600 dark:text-blue-400">Distribution-Tuned</div>
+                                                    <div class="text-[10px] text-slate-500 font-normal">Balanced Arg/Ser allocation</div>
                                                 </th>
                                                 <th class="p-3 border-b border-slate-200 dark:border-slate-800 w-1/4">
-                                                    <div class="font-bold text-emerald-600 dark:text-emerald-400">교정 후보 (Remediated)</div>
-                                                    <div class="text-[10px] text-slate-500 font-normal">스플라이스 동의 치환 반영</div>
+                                                    <div class="font-bold text-emerald-600 dark:text-emerald-400">Splice-Remediated</div>
+                                                    <div class="text-[10px] text-slate-500 font-normal">Synonymous splice site removal</div>
                                                 </th>
                                             </tr>
                                         </thead>
                                         <tbody id="matrixTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
                                             <tr>
-                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">단백질 보존율 (Identity)</td>
-                                                <td class="p-3 text-emerald-600 font-bold" id="matrixCellIdentityBase">100% (완전 보존)</td>
-                                                <td class="p-3 text-emerald-600 font-bold" id="matrixCellIdentityDist">100% (완전 보존)</td>
-                                                <td class="p-3 text-emerald-600 font-bold" id="matrixCellIdentityRem">100% (완전 보존)</td>
+                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">Protein Identity</td>
+                                                <td class="p-3 text-emerald-600 font-bold" id="matrixCellIdentityBase">100% (Identity Preserved)</td>
+                                                <td class="p-3 text-emerald-600 font-bold" id="matrixCellIdentityDist">100% (Identity Preserved)</td>
+                                                <td class="p-3 text-emerald-600 font-bold" id="matrixCellIdentityRem">100% (Identity Preserved)</td>
                                             </tr>
                                             <tr>
-                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">Arg · Ser 코돈 분포</td>
-                                                <td class="p-3 text-slate-700 dark:text-slate-300" id="matrixCellArgSerBase">기준 최적화 (자연 빈도 가중)</td>
-                                                <td class="p-3 text-blue-600 dark:text-blue-400 font-bold" id="matrixCellArgSerDist">균등 할당 (AGA 50%/AGG 50%)</td>
-                                                <td class="p-3 text-emerald-600 dark:text-emerald-400 font-bold" id="matrixCellArgSerRem">균등 할당 (5-way Ser 20%)</td>
+                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">Arg &amp; Ser Codon Balance</td>
+                                                <td class="p-3 text-slate-700 dark:text-slate-300" id="matrixCellArgSerBase">Standard Weights (Host Frequency)</td>
+                                                <td class="p-3 text-blue-600 dark:text-blue-400 font-bold" id="matrixCellArgSerDist">Equal Quota (AGA 50% / AGG 50%)</td>
+                                                <td class="p-3 text-emerald-600 dark:text-emerald-400 font-bold" id="matrixCellArgSerRem">Equal Quota (5-way Ser 20%)</td>
                                             </tr>
                                             <tr>
-                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">Splice 모티프 경고</td>
-                                                <td class="p-3 text-amber-600 font-bold" id="matrixCellSpliceBase">2건 (잠재 부위 검출)</td>
-                                                <td class="p-3 text-amber-600 font-bold" id="matrixCellSpliceDist">2건 (잠재 부위 검출)</td>
-                                                <td class="p-3 text-emerald-600 font-bold" id="matrixCellSpliceRem">0건 (동의 치환 교정 완료)</td>
+                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">Splice Motifs Detected</td>
+                                                <td class="p-3 text-amber-600 font-bold" id="matrixCellSpliceBase">2 flagged (Advisory only)</td>
+                                                <td class="p-3 text-amber-600 font-bold" id="matrixCellSpliceDist">2 flagged (Advisory only)</td>
+                                                <td class="p-3 text-emerald-600 font-bold" id="matrixCellSpliceRem">0 flagged (Synonymous remediation)</td>
                                             </tr>
                                             <tr>
-                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">GC 함량 / CAI 지수</td>
-                                                <td class="p-3 text-slate-700 dark:text-slate-300" id="matrixCellGcCaiBase">42.5% / 0.72</td>
-                                                <td class="p-3 text-slate-700 dark:text-slate-300" id="matrixCellGcCaiDist">41.8% / 0.70</td>
-                                                <td class="p-3 text-emerald-600 dark:text-emerald-400 font-bold" id="matrixCellGcCaiRem">43.1% / 0.71</td>
+                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">GC % / CAI Score</td>
+                                                <td class="p-3 font-mono text-slate-700 dark:text-slate-300" id="matrixCellGcCaiBase">42.5% / 0.72</td>
+                                                <td class="p-3 font-mono text-blue-600 dark:text-blue-400 font-bold" id="matrixCellGcCaiDist">41.8% / 0.70</td>
+                                                <td class="p-3 font-mono text-emerald-600 dark:text-emerald-400 font-bold" id="matrixCellGcCaiRem">43.1% / 0.71</td>
                                             </tr>
                                             <tr>
-                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">5′ 개시 경계 (nt 1–45)</td>
-                                                <td class="p-3 text-slate-700 dark:text-slate-300" id="matrixCellFivePrimeBase">Low-GC 램프 유지</td>
-                                                <td class="p-3 text-slate-700 dark:text-slate-300" id="matrixCellFivePrimeDist">Low-GC 램프 유지</td>
-                                                <td class="p-3 text-emerald-600 dark:text-emerald-400 font-bold" id="matrixCellFivePrimeRem">Low-GC 램프 유지</td>
+                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">5′ Boundary (nt 1–45)</td>
+                                                <td class="p-3 text-slate-700 dark:text-slate-300" id="matrixCellFivePrimeBase">Low-GC initiation clamp</td>
+                                                <td class="p-3 text-slate-700 dark:text-slate-300" id="matrixCellFivePrimeDist">Low-GC initiation clamp</td>
+                                                <td class="p-3 text-emerald-600 dark:text-emerald-400 font-bold" id="matrixCellFivePrimeRem">Low-GC initiation clamp</td>
                                             </tr>
                                             <tr>
-                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">SOP 정책 판정</td>
-                                                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">⚠️ 조건부 통과</span></td>
-                                                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">⚠️ 조건부 통과</span></td>
-                                                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">✅ 통과 (PASS)</span></td>
+                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">SOP Policy Disposition</td>
+                                                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">⚠️ ADVISORY</span></td>
+                                                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">⚠️ ADVISORY</span></td>
+                                                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">✅ PASS</span></td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
                                 <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 text-[11px] text-blue-800 dark:text-blue-300 mt-4 flex items-center gap-2">
                                     <span>ℹ️</span>
-                                    <span>위 결과는 in-silico 계산 및 규칙 검사 결과이며, 실제 생물학적 발현율이나 단백질 수율을 보장하지 않습니다.</span>
+                                    <span>All metrics above are in-silico computational predictions and do not guarantee in-vivo expression level, folding, or translation yield.</span>
                                 </div>
                             </div>
                         </div>
@@ -1138,10 +1138,10 @@
                                     <div>
                                         <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                                             <span>⏱️</span>
-                                            <span>실행 과정 및 계측 기록 (Execution Trace)</span>
+                                            <span>Transparent Pipeline Execution Trace</span>
                                         </h3>
                                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                            검증 파이프라인의 실제 실행 단계와 검증 상태를 투명하게 기록합니다.
+                                            Transparent record of active verification pipeline stages and instrumentation evidence.
                                         </p>
                                     </div>
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
@@ -1151,45 +1151,45 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="traceStagesGrid">
                                     <div class="p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/20">
                                         <div class="flex items-center justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                                            <span>1. 서열 유효성 검증</span>
-                                            <span>✓ 완료</span>
+                                            <span>1. Sequence Validity</span>
+                                            <span>✓ Complete</span>
                                         </div>
-                                        <p class="text-[10px] text-slate-600 dark:text-slate-400 mt-1">단백질/CDS 길이 및 유효 잔기 확인</p>
+                                        <p class="text-[10px] text-slate-600 dark:text-slate-400 mt-1">Protein/CDS length and canonical residue check</p>
                                     </div>
                                     <div class="p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/20">
                                         <div class="flex items-center justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                                            <span>2. SOP 정책 확정</span>
-                                            <span>✓ 완료</span>
+                                            <span>2. SOP Policy Resolution</span>
+                                            <span>✓ Complete</span>
                                         </div>
-                                        <p class="text-[10px] text-slate-600 dark:text-slate-400 mt-1">FactorForge Default 프로필 적용</p>
+                                        <p class="text-[10px] text-slate-600 dark:text-slate-400 mt-1">FactorForge Default profile constraints resolved</p>
                                     </div>
                                     <div class="p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/20">
                                         <div class="flex items-center justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                                            <span>3. DP 후보 생성</span>
-                                            <span>✓ 완료</span>
+                                            <span>3. DP Candidate Optimization</span>
+                                            <span>✓ Complete</span>
                                         </div>
-                                        <p class="text-[10px] text-slate-600 dark:text-slate-400 mt-1">DP v2.1.1 다중 목표 최적화</p>
+                                        <p class="text-[10px] text-slate-600 dark:text-slate-400 mt-1">DP v2.1.1 multi-objective solution evaluated</p>
                                     </div>
                                     <div class="p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/20">
                                         <div class="flex items-center justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                                            <span>4. 생물학적 제약 검사</span>
-                                            <span>✓ 완료</span>
+                                            <span>4. Biological Constraint Audit</span>
+                                            <span>✓ Complete</span>
                                         </div>
-                                        <p class="text-[10px] text-slate-600 dark:text-slate-400 mt-1">제한효소, 호모폴리머, 반복서열 검사</p>
+                                        <p class="text-[10px] text-slate-600 dark:text-slate-400 mt-1">Type IIS, homopolymer, and repeat screens passed</p>
                                     </div>
                                     <div class="p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/20">
                                         <div class="flex items-center justify-between text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                                            <span>5. 정책 판정 산출</span>
-                                            <span>✓ 완료</span>
+                                            <span>5. Policy Disposition Scoring</span>
+                                            <span>✓ Complete</span>
                                         </div>
-                                        <p class="text-[10px] text-slate-600 dark:text-slate-400 mt-1">QC Decision Matrix 자동 판정</p>
+                                        <p class="text-[10px] text-slate-600 dark:text-slate-400 mt-1">QC Decision Matrix automated evaluation</p>
                                     </div>
                                     <div class="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-500">
                                         <div class="flex items-center justify-between text-xs font-bold">
-                                            <span>6. RNA 2차 구조 분석</span>
-                                            <span class="text-amber-600">미실행</span>
+                                            <span>6. In-Vivo RNA Structure</span>
+                                            <span class="text-amber-600">Uninstrumented</span>
                                         </div>
-                                        <p class="text-[10px] text-slate-500 mt-1">인실리코 계산 완료 · 고비용 연산 건너뜀</p>
+                                        <p class="text-[10px] text-slate-500 mt-1">In-silico model complete · In-vivo kinetics deferred</p>
                                     </div>
                                 </div>
                             </div>

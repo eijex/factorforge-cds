@@ -3453,7 +3453,7 @@ function setWorkspaceState(viewState) {
     if (viewState === 'review' && elements.reviewConfigSummary) {
         const hostName = elements.hostSelect ? elements.hostSelect.options[elements.hostSelect.selectedIndex].text.split('(')[0].trim() : 'N. benthamiana';
         const presetName = elements.sopPresetSelect ? elements.sopPresetSelect.options[elements.sopPresetSelect.selectedIndex].text.split('(')[0].trim() : 'FactorForge Default';
-        elements.reviewConfigSummary.textContent = `Host: ${hostName} · SOP: ${presetName} · 표준 안전 기준선 적용`;
+        elements.reviewConfigSummary.textContent = `Host: ${hostName} · Profile: ${presetName} · Standard Safety Baseline`;
     }
 }
 
