@@ -589,6 +589,23 @@ const elements = {
     gcZoneLabel: document.getElementById('gcZoneLabel'),
     historyList: document.getElementById('historyList'),
     clearHistory: document.getElementById('clearHistory'),
+    // Job 358 elements
+    designWorkspace: document.getElementById('designWorkspace'),
+    btnEditSettings: document.getElementById('btnEditSettings'),
+    reviewConfigSummary: document.getElementById('reviewConfigSummary'),
+    tabBtnSummary: document.getElementById('tabBtnSummary'),
+    tabBtnComparison: document.getElementById('tabBtnComparison'),
+    tabBtnDifferences: document.getElementById('tabBtnDifferences'),
+    tabBtnTrace: document.getElementById('tabBtnTrace'),
+    tabPaneComparison: document.getElementById('tabPaneComparison'),
+    tabPaneTrace: document.getElementById('tabPaneTrace'),
+    stepInputBadge: document.getElementById('stepInputBadge'),
+    stepPolicyBadge: document.getElementById('stepPolicyBadge'),
+    stepResultsBadge: document.getElementById('stepResultsBadge'),
+    toggleArgSerDistribution: document.querySelector('input[name="toggleArgSerDistribution"]'),
+    toggleSpliceScan: document.querySelector('input[name="toggleSpliceScan"]'),
+    toggleFivePrimeBoundary: document.querySelector('input[name="toggleFivePrimeBoundary"]'),
+
     changelogBtn: document.getElementById('changelogBtn'),
     changelogModal: document.getElementById('changelogModal'),
     closeModal: document.getElementById('closeModal'),
@@ -1163,6 +1180,7 @@ function initEventListeners() {
     elements.toggleDetails.addEventListener('click', toggleDetailsPanel);
     elements.themeToggle.addEventListener('click', toggleTheme);
     elements.changelogBtn.addEventListener('click', toggleChangelog);
+    initJob358Tabs();
     elements.closeModal.addEventListener('click', toggleChangelog);
     elements.modalOverlay.addEventListener('click', toggleChangelog);
     elements.logoIcon.addEventListener('click', reloadPage);
@@ -1764,6 +1782,7 @@ function renderResults() {
 
     elements.emptyState.classList.add('hidden');
     elements.resultsContainer.classList.remove('hidden');
+    setWorkspaceState('review');
     if (elements.resultContextSummary) {
         const host = formatHostProfile(getResultHostProfile(res));
         elements.resultContextSummary.textContent = `${host} · Review the computational checks before synthesis or experimental use.`;
@@ -3403,3 +3422,112 @@ document.addEventListener('DOMContentLoaded', () => {
         settings.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 });
+
+
+// ========================================================
+// Job 358: Guided 2-State Workspace Controller & Tab Logic
+// ========================================================
+
+function setWorkspaceState(viewState) {
+    if (!elements.designWorkspace) return;
+    elements.designWorkspace.setAttribute('data-view-state', viewState);
+
+    if (elements.stepInputBadge && elements.stepPolicyBadge && elements.stepResultsBadge) {
+        if (viewState === 'review') {
+            elements.stepInputBadge.classList.remove('text-emerald-200');
+            elements.stepInputBadge.classList.add('text-white/50');
+            elements.stepPolicyBadge.classList.remove('text-emerald-100');
+            elements.stepPolicyBadge.classList.add('text-white/50');
+            elements.stepResultsBadge.classList.remove('text-white/50');
+            elements.stepResultsBadge.classList.add('text-emerald-200', 'font-bold');
+        } else {
+            elements.stepInputBadge.classList.remove('text-white/50');
+            elements.stepInputBadge.classList.add('text-emerald-200');
+            elements.stepPolicyBadge.classList.remove('text-white/50');
+            elements.stepPolicyBadge.classList.add('text-emerald-100');
+            elements.stepResultsBadge.classList.remove('text-emerald-200', 'font-bold');
+            elements.stepResultsBadge.classList.add('text-white/50');
+        }
+    }
+
+    if (viewState === 'review' && elements.reviewConfigSummary) {
+        const hostName = elements.hostSelect ? elements.hostSelect.options[elements.hostSelect.selectedIndex].text.split('(')[0].trim() : 'N. benthamiana';
+        const presetName = elements.sopPresetSelect ? elements.sopPresetSelect.options[elements.sopPresetSelect.selectedIndex].text.split('(')[0].trim() : 'FactorForge Default';
+        elements.reviewConfigSummary.textContent = `Host: ${hostName} · SOP: ${presetName} · 표준 안전 기준선 적용`;
+    }
+}
+
+function initJob358Tabs() {
+    const tabs = [
+        { btn: elements.tabBtnSummary, id: 'summary' },
+        { btn: elements.tabBtnComparison, id: 'comparison' },
+        { btn: elements.tabBtnDifferences, id: 'differences' },
+        { btn: elements.tabBtnTrace, id: 'trace' }
+    ];
+
+    function activateTab(tabId) {
+        tabs.forEach(t => {
+            if (t.btn) {
+                if (t.id === tabId) {
+                    t.btn.classList.add('active');
+                    t.btn.setAttribute('aria-selected', 'true');
+                } else {
+                    t.btn.classList.remove('active');
+                    t.btn.setAttribute('aria-selected', 'false');
+                }
+            }
+        });
+
+        // Toggle panes
+        const summarySections = [
+            elements.sameProteinBanner,
+            elements.codonAccounting,
+            elements.mfeWarningBanner,
+            elements.designContractSummary,
+            elements.automatedDecisionCard,
+            elements.validationStatus,
+            elements.qcDecisionMatrix,
+            document.querySelector('#resultsContainer table.w-full'),
+            elements.customRestrictionResults,
+            document.querySelector('#resultsContainer .grid.grid-cols-2'),
+            elements.resultsReport
+        ];
+
+        if (tabId === 'summary') {
+            summarySections.forEach(s => s && s.classList.remove('hidden'));
+            if (elements.tabPaneComparison) elements.tabPaneComparison.classList.add('hidden');
+            if (elements.comparisonDashboard) elements.comparisonDashboard.classList.add('hidden');
+            if (elements.tabPaneTrace) elements.tabPaneTrace.classList.add('hidden');
+        } else if (tabId === 'comparison') {
+            summarySections.forEach(s => s && s.classList.add('hidden'));
+            if (elements.tabPaneComparison) elements.tabPaneComparison.classList.remove('hidden');
+            if (elements.comparisonDashboard) elements.comparisonDashboard.classList.add('hidden');
+            if (elements.tabPaneTrace) elements.tabPaneTrace.classList.add('hidden');
+        } else if (tabId === 'differences') {
+            summarySections.forEach(s => s && s.classList.add('hidden'));
+            if (elements.tabPaneComparison) elements.tabPaneComparison.classList.add('hidden');
+            if (elements.comparisonDashboard) elements.comparisonDashboard.classList.remove('hidden');
+            if (elements.tabPaneTrace) elements.tabPaneTrace.classList.add('hidden');
+        } else if (tabId === 'trace') {
+            summarySections.forEach(s => s && s.classList.add('hidden'));
+            if (elements.tabPaneComparison) elements.tabPaneComparison.classList.add('hidden');
+            if (elements.comparisonDashboard) elements.comparisonDashboard.classList.add('hidden');
+            if (elements.tabPaneTrace) elements.tabPaneTrace.classList.remove('hidden');
+        }
+    }
+
+    tabs.forEach(t => {
+        if (t.btn) {
+            t.btn.addEventListener('click', () => activateTab(t.id));
+        }
+    });
+
+    if (elements.btnEditSettings) {
+        elements.btnEditSettings.addEventListener('click', () => {
+            setWorkspaceState('configure');
+            if (elements.sequenceInput) {
+                elements.sequenceInput.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+}

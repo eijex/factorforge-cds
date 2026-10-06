@@ -657,3 +657,55 @@ section>div:hover {
     .track-heading { display: block; }
     .track-heading > span { display: inline-block; margin-top: .5rem; }
 }
+
+
+/* ========================================================
+   Job 358: Guided 2-State Workspace & Evidence Review UI
+   ======================================================== */
+
+#designWorkspace[data-view-state="review"] {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#designWorkspace[data-view-state="review"] #resultsPanel {
+    order: 1;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+#designWorkspace[data-view-state="review"] #sequencePanel {
+    order: 2;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 1.5rem;
+}
+
+#designWorkspace[data-view-state="review"] #sequencePanel > div:first-child,
+#designWorkspace[data-view-state="review"] #designBriefPanel {
+    display: none !important;
+}
+
+.review-tab-btn {
+    color: var(--text-muted);
+    background-color: transparent;
+    cursor: pointer;
+    border-radius: 0.75rem;
+}
+
+.review-tab-btn:hover {
+    color: var(--text-main);
+    background-color: rgba(148, 163, 184, 0.1);
+}
+
+.review-tab-btn.active {
+    color: #10B981 !important;
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.dark .review-tab-btn.active {
+    color: #34d399 !important;
+    background-color: rgba(52, 211, 153, 0.15) !important;
+    border-color: rgba(52, 211, 153, 0.3) !important;
+}
