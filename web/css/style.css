@@ -682,15 +682,10 @@ section>div:hover {
     #designWorkspace[data-view-state="configure"] #designBriefPanel {
         grid-column: 2 !important;
     }
-
-    #designWorkspace[data-view-state="configure"] #resultsPanel {
-        grid-column: 1 / -1 !important;
-        margin-top: 0.5rem;
-    }
 }
 
-#designWorkspace[data-view-state="configure"] #resultsPanel > div {
-    min-height: auto;
+#designWorkspace[data-view-state="configure"] #resultsPanel {
+    display: none !important;
 }
 
 /* State 2: Review (02 Candidate Review & Execution Trace) */

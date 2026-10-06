@@ -3531,3 +3531,8 @@ function initJob358Tabs() {
         });
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    initJob358Tabs();
+    setWorkspaceState('configure');
+});
