@@ -663,6 +663,37 @@ section>div:hover {
    Job 358: Guided 2-State Workspace & Evidence Review UI
    ======================================================== */
 
+/* State 1: Configure (01 Configure & Setup) */
+#designWorkspace[data-view-state="configure"] {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+}
+
+@media (min-width: 1024px) {
+    #designWorkspace[data-view-state="configure"] {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    #designWorkspace[data-view-state="configure"] #sequencePanel {
+        grid-column: 1 !important;
+    }
+
+    #designWorkspace[data-view-state="configure"] #designBriefPanel {
+        grid-column: 2 !important;
+    }
+
+    #designWorkspace[data-view-state="configure"] #resultsPanel {
+        grid-column: 1 / -1 !important;
+        margin-top: 0.5rem;
+    }
+}
+
+#designWorkspace[data-view-state="configure"] #resultsPanel > div {
+    min-height: auto;
+}
+
+/* State 2: Review (02 Candidate Review & Execution Trace) */
 #designWorkspace[data-view-state="review"] {
     display: flex !important;
     flex-direction: column !important;
