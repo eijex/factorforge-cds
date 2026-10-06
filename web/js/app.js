@@ -589,7 +589,7 @@ const elements = {
     gcZoneLabel: document.getElementById('gcZoneLabel'),
     historyList: document.getElementById('historyList'),
     clearHistory: document.getElementById('clearHistory'),
-    // Job 358 elements
+    // Guided workspace elements
     designWorkspace: document.getElementById('designWorkspace'),
     btnEditSettings: document.getElementById('btnEditSettings'),
     reviewConfigSummary: document.getElementById('reviewConfigSummary'),
@@ -1180,7 +1180,7 @@ function initEventListeners() {
     elements.toggleDetails.addEventListener('click', toggleDetailsPanel);
     elements.themeToggle.addEventListener('click', toggleTheme);
     elements.changelogBtn.addEventListener('click', toggleChangelog);
-    initJob358Tabs();
+    initWorkspaceTabs();
     elements.closeModal.addEventListener('click', toggleChangelog);
     elements.modalOverlay.addEventListener('click', toggleChangelog);
     elements.logoIcon.addEventListener('click', reloadPage);
@@ -3425,7 +3425,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ========================================================
-// Job 358: Guided 2-State Workspace Controller & Tab Logic
+// Guided 2-State Workspace Controller & Tab Logic
 // ========================================================
 
 function setWorkspaceState(viewState) {
@@ -3457,7 +3457,7 @@ function setWorkspaceState(viewState) {
     }
 }
 
-function initJob358Tabs() {
+function initWorkspaceTabs() {
     const tabs = [
         { btn: elements.tabBtnSummary, id: 'summary' },
         { btn: elements.tabBtnComparison, id: 'comparison' },
@@ -3530,9 +3530,37 @@ function initJob358Tabs() {
             }
         });
     }
+
+    if (elements.stepInputBadge) {
+        elements.stepInputBadge.addEventListener('click', () => {
+            setWorkspaceState('configure');
+            if (elements.sequenceInput) {
+                elements.sequenceInput.focus();
+                elements.sequenceInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    }
+    if (elements.stepPolicyBadge) {
+        elements.stepPolicyBadge.addEventListener('click', () => {
+            setWorkspaceState('configure');
+            if (elements.designBriefPanel) {
+                elements.designBriefPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+    if (elements.stepResultsBadge) {
+        elements.stepResultsBadge.addEventListener('click', () => {
+            if (state.lastResult) {
+                setWorkspaceState('review');
+                if (elements.resultsPanel) {
+                    elements.resultsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    initJob358Tabs();
+    initWorkspaceTabs();
     setWorkspaceState('configure');
 });

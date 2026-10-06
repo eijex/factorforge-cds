@@ -68,22 +68,22 @@
                         <p class="text-emerald-50 text-xs font-medium opacity-90">Reproducible plant CDS design and sequence review</p>
                     </div>
                 </div>
-                                <!-- Job 358: Workflow Breadcrumbs -->
+                                <!-- Workflow Breadcrumbs -->
                 <nav id="workflowBreadcrumbs" class="hidden lg:flex items-center space-x-2 text-xs font-semibold bg-white/10 px-3.5 py-1.5 rounded-xl backdrop-blur-md border border-white/20 text-white" aria-label="Workflow progress">
-                    <span id="stepInputBadge" class="flex items-center space-x-1.5 text-emerald-200">
+                    <button type="button" id="stepInputBadge" class="flex items-center space-x-1.5 text-emerald-200 cursor-pointer hover:underline hover:opacity-100 transition-all focus:outline-none" title="Go to Input">
                         <span class="w-4 h-4 rounded-full bg-white text-emerald-800 text-[10px] font-black flex items-center justify-center">1</span>
                         <span>Input</span>
-                    </span>
+                    </button>
                     <span class="text-white/40">→</span>
-                    <span id="stepPolicyBadge" class="flex items-center space-x-1.5 text-emerald-100">
+                    <button type="button" id="stepPolicyBadge" class="flex items-center space-x-1.5 text-emerald-100 cursor-pointer hover:underline hover:opacity-100 transition-all focus:outline-none" title="Go to Policy Baseline">
                         <span class="w-4 h-4 rounded-full bg-emerald-300 text-slate-900 text-[10px] font-black flex items-center justify-center">2</span>
                         <span>Policy Baseline</span>
-                    </span>
+                    </button>
                     <span class="text-white/40">→</span>
-                    <span id="stepResultsBadge" class="flex items-center space-x-1.5 text-white/50">
+                    <button type="button" id="stepResultsBadge" class="flex items-center space-x-1.5 text-white/50 cursor-pointer hover:underline hover:opacity-100 transition-all focus:outline-none" title="Go to Results">
                         <span class="w-4 h-4 rounded-full bg-white/20 text-white text-[10px] font-black flex items-center justify-center">3</span>
                         <span>Results</span>
-                    </span>
+                    </button>
                 </nav>
 <div class="flex items-center space-x-3">
                     <div class="hidden sm:flex items-center space-x-2">
@@ -418,7 +418,7 @@
                             </button>
                         </div>
 
-                                                <!-- Job 358: Policy Baseline Summary Cards -->
+                                                <!-- Policy Baseline Summary Cards -->
                         <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-800 text-center">
                             <div class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/70 dark:border-slate-700/70 shadow-xs">
                                 <span class="text-sm">🛡️</span>
@@ -462,7 +462,7 @@
                     </section>
 
 
-                                        <!-- Job 358: Experimental Comparison Controls (Doug Biologics Feedback) -->
+                                        <!-- Experimental Comparison Controls -->
                     <details id="experimentalComparisonCard" open class="disclosure-card mb-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 p-4 space-y-3">
                         <summary class="cursor-pointer font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center justify-between select-none">
                             <span class="flex items-center gap-1.5">
@@ -764,7 +764,7 @@
                     <!-- Success State -->
                     <div id="resultsContainer"
                         class="hidden flex-grow flex flex-col animate-in fade-in zoom-in-95 duration-500">
-                        <!-- Job 358: Review Top Banner with Edit Settings button -->
+                        <!-- Review Top Banner with Edit Settings button -->
                         <div id="reviewTopBar" class="mb-6 p-4 rounded-2xl bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg border border-slate-800 animate-in fade-in duration-300">
                             <div class="flex items-center space-x-3">
                                 <span class="text-xl p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">⚙️</span>
@@ -779,7 +779,7 @@
                             </button>
                         </div>
 
-                        <!-- Job 358: 4-Tab Navigation Bar -->
+                        <!-- 4-Tab Navigation Bar -->
                         <div id="reviewTabsBar" class="mb-6 border-b border-slate-200 dark:border-slate-800 flex items-center space-x-2 overflow-x-auto pb-1" role="tablist">
                             <button id="tabBtnSummary" role="tab" aria-selected="true" class="review-tab-btn active px-4 py-2.5 rounded-xl text-xs font-bold transition-all border border-transparent">
                                 📊 Summary
@@ -1048,7 +1048,7 @@
                             </div>
                         </div>
 
-                                                <!-- Job 358: Tab 2 Candidate Comparison Matrix Pane -->
+                                                <!-- Tab 2 Candidate Comparison Matrix Pane -->
                         <div id="tabPaneComparison" class="tab-pane hidden space-y-6 animate-in fade-in duration-200">
                             <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs">
                                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -1131,7 +1131,7 @@
                             </div>
                         </div>
 
-                        <!-- Job 358: Tab 4 Execution Trace Pane -->
+                        <!-- Tab 4 Execution Trace Pane -->
                         <div id="tabPaneTrace" class="tab-pane hidden space-y-6 animate-in fade-in duration-200">
                             <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs">
                                 <div class="flex items-center justify-between mb-4">
