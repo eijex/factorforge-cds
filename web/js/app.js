@@ -1530,6 +1530,11 @@ function setLoading(loading) {
     if (loading) document.getElementById('settingsChangeNotice')?.classList.add('hidden');
     else handleSequenceChange({ target: elements.sequenceInput });
 
+    if (typeof updateWorkflowStepper === 'function') {
+        const currentView = elements.designWorkspace ? elements.designWorkspace.getAttribute('data-view-state') : 'configure';
+        updateWorkflowStepper(loading ? 'review' : currentView, loading);
+    }
+
     if (loading) {
         elements.btnText.classList.add('opacity-0');
         elements.loadingIndicator.classList.remove('hidden');
@@ -3428,27 +3433,83 @@ document.addEventListener('DOMContentLoaded', () => {
 // Guided 2-State Workspace Controller & Tab Logic
 // ========================================================
 
+function updateWorkflowStepper(viewState, isRunning = false) {
+    const b1 = elements.stepInputBadge;
+    const b2 = elements.stepPolicyBadge;
+    const b3 = elements.stepResultsBadge;
+    if (!b1 || !b2 || !b3) return;
+
+    const c1 = document.getElementById('stepInputCircle') || b1.querySelector('span:first-child');
+    const c2 = document.getElementById('stepPolicyCircle') || b2.querySelector('span:first-child');
+    const c3 = document.getElementById('stepResultsCircle') || b3.querySelector('span:first-child');
+
+    const t1 = document.getElementById('stepInputText');
+    const t2 = document.getElementById('stepPolicyText');
+    const t3 = document.getElementById('stepResultsText');
+
+    [b1, b2, b3].forEach(b => {
+        b.className = 'flex items-center space-x-1.5 px-2.5 py-1 rounded-lg transition-all focus:outline-none cursor-pointer';
+    });
+
+    if (isRunning) {
+        b1.className += ' bg-emerald-900/50 text-emerald-300 border border-emerald-500/40 opacity-80';
+        if (c1) {
+            c1.className = 'w-4 h-4 rounded-full bg-emerald-400 text-slate-900 text-[10px] font-black flex items-center justify-center';
+            c1.textContent = '✓';
+        }
+        b2.className += ' bg-emerald-900/50 text-emerald-300 border border-emerald-500/40 opacity-80';
+        if (c2) {
+            c2.className = 'w-4 h-4 rounded-full bg-emerald-400 text-slate-900 text-[10px] font-black flex items-center justify-center';
+            c2.textContent = '✓';
+        }
+        b3.className += ' bg-rose-600 text-white font-black shadow-lg ring-2 ring-rose-400 animate-pulse';
+        if (c3) {
+            c3.className = 'w-4 h-4 rounded-full bg-white text-rose-700 text-[10px] font-black flex items-center justify-center shadow-sm';
+            c3.textContent = '⚡';
+        }
+        if (t3) t3.textContent = 'Optimizing...';
+    } else if (viewState === 'review') {
+        b1.className += ' bg-emerald-900/60 text-emerald-200 border border-emerald-500/30 hover:bg-emerald-800/60';
+        if (c1) {
+            c1.className = 'w-4 h-4 rounded-full bg-emerald-400 text-slate-900 text-[10px] font-black flex items-center justify-center shadow-sm';
+            c1.textContent = '✓';
+        }
+        b2.className += ' bg-emerald-900/60 text-emerald-200 border border-emerald-500/30 hover:bg-emerald-800/60';
+        if (c2) {
+            c2.className = 'w-4 h-4 rounded-full bg-emerald-400 text-slate-900 text-[10px] font-black flex items-center justify-center shadow-sm';
+            c2.textContent = '✓';
+        }
+        b3.className += ' bg-rose-600 text-white font-black shadow-lg ring-2 ring-rose-400 scale-105';
+        if (c3) {
+            c3.className = 'w-4 h-4 rounded-full bg-white text-rose-700 text-[10px] font-black flex items-center justify-center shadow-sm';
+            c3.textContent = '3';
+        }
+        if (t3) t3.textContent = 'Results';
+    } else {
+        b1.className += ' bg-rose-600 text-white font-black shadow-md ring-2 ring-rose-400';
+        if (c1) {
+            c1.className = 'w-4 h-4 rounded-full bg-white text-rose-700 text-[10px] font-black flex items-center justify-center shadow-sm';
+            c1.textContent = '1';
+        }
+        b2.className += ' bg-white/15 text-white/90 hover:bg-white/25 hover:text-white font-semibold';
+        if (c2) {
+            c2.className = 'w-4 h-4 rounded-full bg-emerald-300 text-slate-900 text-[10px] font-black flex items-center justify-center shadow-sm';
+            c2.textContent = '2';
+        }
+        b3.className += ' text-white/40 hover:text-white/70 hover:bg-white/10';
+        if (c3) {
+            c3.className = 'w-4 h-4 rounded-full bg-white/20 text-white/60 text-[10px] font-bold flex items-center justify-center';
+            c3.textContent = '3';
+        }
+        if (t3) t3.textContent = 'Results';
+    }
+}
+
 function setWorkspaceState(viewState) {
     if (!elements.designWorkspace) return;
     elements.designWorkspace.setAttribute('data-view-state', viewState);
 
-    if (elements.stepInputBadge && elements.stepPolicyBadge && elements.stepResultsBadge) {
-        if (viewState === 'review') {
-            elements.stepInputBadge.classList.remove('text-emerald-200');
-            elements.stepInputBadge.classList.add('text-white/50');
-            elements.stepPolicyBadge.classList.remove('text-emerald-100');
-            elements.stepPolicyBadge.classList.add('text-white/50');
-            elements.stepResultsBadge.classList.remove('text-white/50');
-            elements.stepResultsBadge.classList.add('text-emerald-200', 'font-bold');
-        } else {
-            elements.stepInputBadge.classList.remove('text-white/50');
-            elements.stepInputBadge.classList.add('text-emerald-200');
-            elements.stepPolicyBadge.classList.remove('text-white/50');
-            elements.stepPolicyBadge.classList.add('text-emerald-100');
-            elements.stepResultsBadge.classList.remove('text-emerald-200', 'font-bold');
-            elements.stepResultsBadge.classList.add('text-white/50');
-        }
-    }
+    updateWorkflowStepper(viewState, state.isOptimizing);
 
     if (viewState === 'review' && elements.reviewConfigSummary) {
         const hostName = elements.hostSelect ? elements.hostSelect.options[elements.hostSelect.selectedIndex].text.split('(')[0].trim() : 'N. benthamiana';

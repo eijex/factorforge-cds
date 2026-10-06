@@ -69,20 +69,20 @@
                     </div>
                 </div>
                                 <!-- Workflow Breadcrumbs -->
-                <nav id="workflowBreadcrumbs" class="hidden lg:flex items-center space-x-2 text-xs font-semibold bg-white/10 px-3.5 py-1.5 rounded-xl backdrop-blur-md border border-white/20 text-white" aria-label="Workflow progress">
-                    <button type="button" id="stepInputBadge" class="flex items-center space-x-1.5 text-emerald-200 cursor-pointer hover:underline hover:opacity-100 transition-all focus:outline-none" title="Go to Input">
-                        <span class="w-4 h-4 rounded-full bg-white text-emerald-800 text-[10px] font-black flex items-center justify-center">1</span>
-                        <span>Input</span>
+                <nav id="workflowBreadcrumbs" class="hidden lg:flex items-center space-x-1.5 text-xs font-semibold bg-slate-950/50 px-3 py-1.5 rounded-xl backdrop-blur-md border border-white/20 text-white shadow-inner" aria-label="Workflow progress">
+                    <button type="button" id="stepInputBadge" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg transition-all focus:outline-none cursor-pointer" title="Go to Input">
+                        <span id="stepInputCircle" class="w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center">1</span>
+                        <span id="stepInputText">Input</span>
                     </button>
-                    <span class="text-white/40">→</span>
-                    <button type="button" id="stepPolicyBadge" class="flex items-center space-x-1.5 text-emerald-100 cursor-pointer hover:underline hover:opacity-100 transition-all focus:outline-none" title="Go to Policy Baseline">
-                        <span class="w-4 h-4 rounded-full bg-emerald-300 text-slate-900 text-[10px] font-black flex items-center justify-center">2</span>
-                        <span>Policy Baseline</span>
+                    <span class="text-white/30 text-[10px]">▶</span>
+                    <button type="button" id="stepPolicyBadge" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg transition-all focus:outline-none cursor-pointer" title="Go to Policy Baseline">
+                        <span id="stepPolicyCircle" class="w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center">2</span>
+                        <span id="stepPolicyText">Policy Baseline</span>
                     </button>
-                    <span class="text-white/40">→</span>
-                    <button type="button" id="stepResultsBadge" class="flex items-center space-x-1.5 text-white/50 cursor-pointer hover:underline hover:opacity-100 transition-all focus:outline-none" title="Go to Results">
-                        <span class="w-4 h-4 rounded-full bg-white/20 text-white text-[10px] font-black flex items-center justify-center">3</span>
-                        <span>Results</span>
+                    <span class="text-white/30 text-[10px]">▶</span>
+                    <button type="button" id="stepResultsBadge" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg transition-all focus:outline-none cursor-pointer" title="Go to Results">
+                        <span id="stepResultsCircle" class="w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center">3</span>
+                        <span id="stepResultsText">Results</span>
                     </button>
                 </nav>
 <div class="flex items-center space-x-3">
