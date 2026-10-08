@@ -1784,6 +1784,7 @@ function renderResults() {
     const res = state.results;
     if (!res) return;
     const primary = getPrimaryResult(res);
+    renderExecutionEvidence(res);
 
     elements.emptyState.classList.add('hidden');
     elements.resultsContainer.classList.remove('hidden');
@@ -1905,6 +1906,23 @@ function renderResults() {
 
     // JSON Details
     elements.jsonDetails.textContent = JSON.stringify(res, null, 2);
+}
+
+// Report only response-backed evidence, never a fixed successful pipeline.
+function renderExecutionEvidence(res) {
+    const grid = document.getElementById('traceStagesGrid');
+    if (!grid) return;
+    const contract = res.design_contract;
+    const profile = res.sop_profile;
+    const stages = [
+        ['Design response', 'Received', 'A response was returned; this is not biological validation.'],
+        ['Sequence policy', profile?.profile_hash ? 'Reported' : 'Not reported', profile?.profile_hash ? `${profile.profile_name || profile.profile_id || 'Profile'} · ${profile.profile_version || 'version not reported'}. See response JSON for the profile hash.` : 'Applied profile provenance is unavailable in this response.'],
+        ['Design engine', contract?.engine_id ? 'Reported' : 'Not reported', contract?.engine_id ? `${contract.engine_id} · ${contract.engine_version || 'version not reported'}` : 'Engine provenance is unavailable in this response.'],
+        ['Sequence checks', 'Inspect results', 'See individual sequence checks; execution does not imply that all checks passed.'],
+        ['Policy disposition', 'Inspect results', 'See the QC decision matrix for the actual candidate disposition.'],
+        ['Platform persistence / RNA analysis', 'Not verified here', 'This panel does not verify storage, agent execution, or RNA analysis.']
+    ];
+    grid.innerHTML = stages.map(([title, status, detail]) => `<div class="p-3 rounded-xl border border-slate-200 dark:border-slate-800"><div class="flex justify-between text-xs font-bold"><span>${escapeHtml(title)}</span><span>${escapeHtml(status)}</span></div><p class="text-[10px] text-slate-500 mt-1">${escapeHtml(detail)}</p></div>`).join('');
 }
 
 const ALIGNMENT_PAGE_SIZE = 60;

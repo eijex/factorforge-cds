@@ -1,4 +1,11 @@
 .git/**
+.env*
+collaborators/**
+data/raw/**
+data/embeddings/**
+data/models/**
+data/db/**
+experiments/**
 .github/**
 .claude/**
 .mypy_cache/**

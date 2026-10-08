@@ -2,6 +2,10 @@
 
 Focused CDS design and pre-synthesis review for N. benthamiana workflows.
 
+Execution Trace shows response-backed engine/profile evidence when available.
+It does not certify that every check passed, that platform services ran, or that
+artifacts were persisted. Inspect the individual checks and QC matrix.
+
 Sequence policy files can be downloaded as examples, edited, and uploaded. The
 active profile persists only in this browser. Optional advanced settings remain
 collapsed; the edit button expands them. A separate registry-backed modal builder

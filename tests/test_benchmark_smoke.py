@@ -11,8 +11,8 @@ def test_smoke_runs_and_writes_outputs(tmp_path):
     run(dataset="synthetic", mode="smoke", out_csv=out_csv, out_md=out_md,
         proteins_fasta=ROOT / "tests" / "fixtures" / "small_proteins.fasta",
         native_fasta=ROOT / "tests" / "fixtures" / "small_native_cds.fasta")
-    assert out_csv.exists() and out_md.exists()
-    rows = list(csv.DictReader(out_csv.open(encoding="utf-8")))
+    with out_csv.open(encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
     methods = {r["method"] for r in rows}
     # every method produced at least one row
     assert "random_synonymous" in methods

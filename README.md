@@ -112,7 +112,10 @@ FactorForge design, CLI, Python API, and file export do not require a database.
 PostgreSQL persistence is an explicit Eijex integration path for retaining shared
 campaign and candidate identities; it is not enabled by default.
 
-Install `pip install "factorforge-cds[postgres]"` only when using that integration.
+The extra pins `eijex-db-core==0.1.2`. Supply its approved wheel bundle using
+`pip install --find-links PATH_TO_BUNDLE "factorforge-cds[postgres]"`; the shared
+package is not assumed to have been published on PyPI. Standalone installation
+does not require it.
 The deployment must also provide a compatible `eijex-db-core` package and set
 `FACTORFORGE_DATABASE_URL`. FactorForge contains no default database credentials and
 does not silently fall back to another backend. See [Persistence](docs/persistence.md).
