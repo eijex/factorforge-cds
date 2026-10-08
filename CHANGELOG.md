@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Pin the optional PostgreSQL integration to the portable eijex-db-core 0.1.2 wheel contract; standalone design/scoring are unchanged.
+
+- Replace fixed successful execution-trace rendering with response-backed engine
+  and profile evidence and explicit unverified analysis/storage status.
+
 All notable changes to FactorForge are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
@@ -30,6 +37,8 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 ---
 
 ## [Unreleased]
+
+- Pin the optional PostgreSQL integration to the portable eijex-db-core 0.1.2 wheel contract. Standalone design and scoring are unchanged.
 
 ### Web maintenance
 

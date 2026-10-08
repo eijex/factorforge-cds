@@ -65,7 +65,8 @@ def benchmark_outputs(tmp_path_factory: pytest.TempPathFactory) -> tuple[list[di
         proteins_fasta=ROOT / "tests/fixtures/small_proteins.fasta",
         native_fasta=ROOT / "tests/fixtures/small_native_cds.fasta",
     )
-    rows = list(csv.DictReader(out_csv.open(encoding="utf-8")))
+    with out_csv.open(encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
     summary = json.loads((output_dir / "benchmark_summary.json").read_text(encoding="utf-8"))
     return rows, summary, out_md.read_text(encoding="utf-8")
 

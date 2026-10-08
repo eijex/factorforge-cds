@@ -30,6 +30,7 @@ dependencies = [
 postgres = [
     "psycopg2-binary>=2.9",
     "sqlalchemy>=2.0",
+    "eijex-db-core==0.1.2",
 ]
 dev = [
     "jsonschema>=4.0",
