@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <meta name="eijex-web-build" content="job397-v3.5.6-2026-10-13">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FactorForge | N. benthamiana CDS Design</title>
@@ -89,7 +90,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.5.5 Release Notes
+                            v3.5.6 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -232,13 +233,52 @@
                         <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-800/50 dark:bg-emerald-900/20">
                             <div class="flex items-center justify-between gap-3">
                                 <div>
-                                    <p class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">Applied automatically</p>
+                                    <p class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-700 dark:text-emerald-300">Selected workflow settings</p>
                                     <p id="appliedPolicySummary" class="mt-1 text-xs font-semibold text-slate-700 dark:text-slate-200">Preserve protein identity · host GC policy · pre-synthesis sequence checks</p>
                                 </div>
                                 <span class="shrink-0 rounded-full bg-emerald-600 px-2 py-1 text-[9px] font-extrabold uppercase text-white">Standard</span>
                             </div>
                         </div>
                     </div>
+
+                    <section id="researchTestingStatus" class="mb-6 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/30 p-4 text-xs leading-relaxed">
+                        <h3 class="font-bold text-teal-900 dark:text-teal-200">Testing: baseline and structure-conditioned design</h3>
+                        <p>Both modes use this form. 3DP requires uploaded coordinates and explicit position review.</p>
+                        <fieldset class="mt-3 flex flex-wrap gap-4"><legend class="sr-only">Select design workflow</legend>
+                            <label class="font-semibold"><input type="radio" name="researchDesignMode" value="baseline_1dp" checked> 1DP · Baseline Design (Production)</label>
+                            <label class="flex items-center gap-1.5"><input type="radio" name="researchDesignMode" value="paired_3dp"> <span>3DP · Structure-Aware Design</span> <span class="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-[10px] font-bold uppercase">In Development</span></label>
+                        </fieldset>
+                        <div id="structureWebInputs" class="hidden mt-4 space-y-3">
+                            <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50/80 dark:bg-amber-950/40 p-3 text-amber-900 dark:text-amber-200">
+                                <p class="font-bold flex items-center gap-1"><span>🔬</span> 3DP Cloud Pipeline: In Active Development</p>
+                                <p class="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Automated AlphaFold cloud GPU folding is currently in active development. For research partners and experimental pilot testing, manual exact-match PDB/mmCIF structure upload is supported below.</p>
+                            </div>
+                            <details open class="rounded-lg border border-slate-200 dark:border-slate-700 p-2.5">
+                                <summary class="cursor-pointer font-semibold text-slate-700 dark:text-slate-300">Optional: PDB / mmCIF structure upload and position review</summary>
+                                <div class="mt-3 space-y-3">
+                                    <label class="block font-semibold">Structure file (PDB or mmCIF, max 250 KB, required)<input id="structureWebFile" type="file" accept=".pdb,.cif,.mmcif" class="mt-1 block w-full"></label>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <label>Chain ID<input id="structureWebChain" value="A" maxlength="8" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-2"></label>
+                                        <label>Model (one-based file order)<input id="structureWebModel" type="number" min="1" value="1" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-2"></label>
+                                    </div>
+                                    <label class="block">Confidence source (for optional recommendations)
+                                        <select id="structureWebSource" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-2">
+                                            <option value="unknown">Unknown / manual positions</option><option value="alphafold">Declared AlphaFold per-residue pLDDT</option><option value="experimental">Declared experimental B-factor observations</option>
+                                        </select>
+                                    </label>
+                                    <div class="flex flex-wrap gap-2"><button id="recommendStructurePositions" type="button" class="rounded border border-teal-400 p-2 font-semibold">Suggest positions for review</button><button id="acceptStructurePositions" type="button" disabled class="rounded border border-teal-400 p-2 font-semibold disabled:opacity-50">Use suggested positions</button></div>
+                                    <p id="structureRecommendationStatus" role="status">Upload a structure, request suggestions if available, and review your selected positions.</p>
+                                    <label class="block">Reviewed protein positions (one-based, comma-separated, required)<input id="structureWebPositions" placeholder="e.g. 12,13,14 · review suggestions or enter manually" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-2"></label>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <label>Target adaptiveness<input id="structureWebTarget" type="number" min="0.01" max="1" step="0.01" value="0.40" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-2"></label>
+                                        <label>Penalty weight<input id="structureWebPenalty" type="number" min="0" max="100" step="0.1" value="2.0" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-2"></label>
+                                    </div>
+                                    <label class="block"><input id="structureWebReviewed" type="checkbox"> I reviewed these positions against the selected structure and protein.</label>
+                                </div>
+                            </details>
+                        </div>
+                        <p id="selectedWorkflowNote" class="mt-2 font-semibold">1DP selected: standard production sequence design.</p>
+                    </section>
 
                     <div class="hidden mb-8" id="engineSelector">
                         <div class="flex items-center justify-between gap-3 mb-3">
@@ -399,16 +439,17 @@
                             </p>
                         </div>
 
+                        <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">Choose options in the form, then save current settings. The example download is a starting template. Uploading YAML/JSON applies its mode, design settings and review levels to this screen and saves them in this browser. It does not run a calculation or approve a laboratory SOP. For 3DP, upload the structure and review positions again.</p>
                         <!-- Compact Actions Bar -->
                         <div class="flex items-center gap-1.5 pt-2 border-t border-slate-200/80 dark:border-slate-800">
                             <button id="uploadSopButton" type="button" class="flex-1 py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-400 hover:text-emerald-600 transition-colors flex items-center justify-center gap-1 shadow-sm" title="Upload custom SOP (YAML or JSON)">
                                 <span>📤 Upload</span>
                             </button>
                             <button id="downloadSopTemplate" type="button" class="flex-1 py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-400 hover:text-emerald-600 transition-colors flex items-center justify-center gap-1 shadow-sm" title="currently active FactorForge SOP">
-                                <span>💾 Export</span>
+                                <span>💾 Save current settings</span>
                             </button>
                             <a id="downloadSopExample" href="/examples/factorforge-conservative-sop.yaml" download class="py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 transition-colors flex items-center justify-center gap-0.5 shadow-sm" title="commented FactorForge conservative example">
-                                <span>Example profile (.yaml)</span>
+                                <span>Example template (.yaml)</span>
                             </a>
                             <button id="buildSopButton" type="button" class="py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-emerald-600 transition-colors flex items-center justify-center gap-0.5 shadow-sm" title="Edit manual rule overrides">
                                 <span>⚙️ Overrides</span>
@@ -463,22 +504,22 @@
 
 
                                         <!-- Experimental Comparison Controls -->
-                    <details id="experimentalComparisonCard" open class="disclosure-card mb-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 p-4 space-y-3">
+                    <details id="experimentalComparisonCard" class="disclosure-card mb-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 p-4 space-y-3">
                         <summary class="cursor-pointer font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center justify-between select-none">
                             <span class="flex items-center gap-1.5">
                                 <span>🧪</span>
-                                <span>Experimental Comparison (Optional)</span>
+                                <span>Experimental Comparisons (Unavailable)</span>
                             </span>
                             <span class="text-[10px] text-slate-500 font-normal">Arg/Ser · Splice · 5′ Boundary</span>
                         </summary>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
-                            Incorporate comparative candidates for codon distribution, potential splice site remediation, and 5′ low-GC boundary preservation in the candidate review matrix.
+                            These comparison controls are not connected to web execution. They remain disabled and do not change the generated CDS. Existing engine constraints and advisory checks are separate.
                         </p>
                         <div class="space-y-3 pt-2">
                             <!-- Arg / Ser Codon Distribution -->
                             <div class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
                                 <div class="flex items-center space-x-2.5">
-                                    <input type="checkbox" name="toggleArgSerDistribution" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
+                                    <input type="checkbox" name="toggleArgSerDistribution" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" disabled>
                                     <div>
                                         <label class="text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer">
                                             Arg / Ser Codon Distribution
@@ -486,7 +527,7 @@
                                         <span class="block text-[10px] text-slate-500 dark:text-slate-400">Balanced 50/50 Arg (AGA/AGG) &amp; 5-way Ser 20% quota</span>
                                     </div>
                                 </div>
-                                <select name="argSerDistributionMode" class="text-[11px] font-semibold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500">
+                                <select name="argSerDistributionMode" disabled class="text-[11px] font-semibold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500">
                                     <option value="balanced" selected>Standard vs. Balanced Non-CpG</option>
                                     <option value="host_natural">Host Natural Frequency</option>
                                     <option value="max_cai">Maximum CAI Fit</option>
@@ -496,34 +537,34 @@
                             <!-- Cryptic Splice Site Remediation -->
                             <div class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
                                 <div class="flex items-center space-x-2.5">
-                                    <input type="checkbox" name="toggleSpliceScan" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" checked>
+                                    <input type="checkbox" name="toggleSpliceScan" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" disabled>
                                     <div>
                                         <label class="text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer">
                                             Splice Site Remediation
                                         </label>
-                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400">Detect motifs and evaluate synonymous remediation</span>
+                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400">Comparison unavailable; motif findings are advisory, not confirmed splicing</span>
                                     </div>
                                 </div>
-                                <select name="spliceScanMode" class="text-[11px] font-semibold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500">
-                                    <option value="remediate" selected>Advisory vs. Synonymous Remediation</option>
-                                    <option value="warn_only">Advisory Flag Only</option>
+                                <select name="spliceScanMode" disabled class="text-[11px] font-semibold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500">
+                                    <option value="remediate">Advisory vs. Synonymous Remediation</option>
+                                    <option value="warn_only" selected>Advisory Flag Only (Unavailable)</option>
                                 </select>
                             </div>
 
                             <!-- 5' Boundary Preservation -->
                             <div class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
                                 <div class="flex items-center space-x-2.5">
-                                    <input type="checkbox" name="toggleFivePrimeBoundary" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" checked>
+                                    <input type="checkbox" name="toggleFivePrimeBoundary" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" disabled>
                                     <div>
                                         <label class="text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer">
                                             5′ Boundary Preservation (nt 1–45)
                                         </label>
-                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400">Preserve low-GC 5′ initiation ramp for translation efficiency</span>
+                                        <span class="block text-[10px] text-slate-500 dark:text-slate-400">Comparison unavailable; no reference-CDS boundary lock is applied by this control</span>
                                     </div>
                                 </div>
-                                <select name="fivePrimeBoundaryMode" class="text-[11px] font-semibold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500">
-                                    <option value="preserve" selected>Standard vs. Low-GC Boundary Proposal</option>
-                                    <option value="free">Full Optimization (No 5′ Lock)</option>
+                                <select name="fivePrimeBoundaryMode" disabled class="text-[11px] font-semibold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500">
+                                    <option value="preserve">Standard vs. Low-GC Boundary Proposal</option>
+                                    <option value="free" selected>No Comparison-Specific 5′ Lock (Unavailable)</option>
                                 </select>
                             </div>
                         </div>
@@ -656,22 +697,24 @@
                         </div>
                     </details>
 
+
+
                     <!-- Checkbox Options -->
                     <div class="space-y-3 mb-6">
                         <label
                             class="flex items-center space-x-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors">
-                            <input type="checkbox" id="toggleWatermark"
+                            <input type="checkbox" id="toggleWatermark" disabled aria-describedby="watermarkStatus"
                                 class="w-5 h-5 text-indigo-600 rounded-md border-slate-300 dark:border-slate-600 focus:ring-indigo-500 transition-all">
                             <div>
                                 <span class="flex items-center text-sm font-bold text-slate-800 dark:text-slate-100">
-                                    Codon Watermark Twin (W0 / W1 Matched Pair)
+                                    Watermark — Disabled
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Generates experimental W0/W1 candidates. Inspect reported sequence differences and metrics; a watermark does not establish biological equivalence or ownership.</span>
+                                        <span class="tooltip-text">Watermark generation is paused for this test version.</span>
                                     </span>
                                 </span>
                                 <span
-                                    class="block text-[11px] text-slate-600 dark:text-slate-400 font-medium">Experimental matched-pair sequence comparison</span>
+                                    id="watermarkStatus" class="block text-[11px] text-slate-600 dark:text-slate-400 font-medium">Watermark is inactive for current testing.</span>
                             </div>
                         </label>
 
@@ -920,6 +963,8 @@
                                 <div><small>Hard constraint checks</small><strong id="inspectorConstraints">—</strong></div>
                             </div>
                         </section>
+
+                        <section id="structure3dViewerContainer" class="codon-track-card mb-8 hidden" aria-label="3D Codon Structure Viewer"></section>
 
                         <div id="candidateComparisonContainer" class="mb-8 hidden">
                             <h3 class="text-lg font-semibold mb-3">Candidate Comparison</h3>
@@ -1243,10 +1288,15 @@
                             <p id="reviewerDispositionStatus" class="text-xs text-amber-800 dark:text-amber-200 mt-2"></p>
                         </div>
 
-                        <!-- Optional external structure tools -->
+                        <!-- Structure tools -->
                         <div class="mt-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                            <p class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Optional external structure tools</p>
-                            <div class="flex gap-2">
+                            <p class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">3D Structure &amp; External Tools</p>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" id="openLocal3dViewerBtn"
+                                    class="flex-1 py-2 px-3 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all text-xs">
+                                    <span>🧬</span>
+                                    <span>NB-Fold 3D Structure Viewer</span>
+                                </button>
                                 <a id="alphafoldLink" href="#" target="_blank" rel="noopener noreferrer"
                                     class="flex-1 py-2 px-3 bg-white dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/30 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-xl flex items-center justify-center gap-2 transition-all text-xs">
                                     <span>🔵</span>
@@ -1258,7 +1308,7 @@
                                     <span>ESM Atlas</span>
                                 </a>
                             </div>
-                            <p class="text-[9px] text-slate-400 mt-2">Opens external structure prediction services. Your sequence will be passed to the external service via URL.</p>
+                            <p class="text-[9px] text-slate-400 mt-2">NB-Fold 3D viewer runs directly inside your browser. AlphaFold DB / ESM Atlas open in external tabs.</p>
                         </div>
 
                         <!-- Details Section -->
@@ -1332,7 +1382,7 @@
                     class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
             </div>
             <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
-                <!-- Version 3.5.5 -->
+                <!-- Version 3.5.6 -->
                 <div class="relative pl-8 border-l-2 border-emerald-500">
                     <div
                         class="absolute -left-[9px] top-0 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
@@ -1340,6 +1390,21 @@
                     <div class="flex items-center space-x-2 mb-2">
                         <span
                             class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.5.6</h3>
+                        <span class="text-slate-400 text-[10px]">2026-10-13</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Reviewed structure inputs:</b> Experimental 3DP requires an exact-match structure upload and explicit position review.</li>
+                        <li><b>Local structure handling:</b> Automatic external folding, artificial coordinates and automatic review are disabled.</li>
+                        <li><b>Transparent observations:</b> Candidate RNA/MFE checks and evidence exports retain unavailable states and computational limitations.</li>
+                    </ul>
+                </div>
+                <!-- Version 3.5.5 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-300 dark:bg-slate-600 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
                         <h3 class="font-bold text-slate-800 dark:text-white">v3.5.5</h3>
                         <span class="text-slate-400 text-[10px]">2026-10-06</span>
                     </div>
@@ -2127,6 +2192,7 @@
         </div>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.4.2/3Dmol-min.js"></script>
     <script src="js/app.js"></script>
 </body>
 

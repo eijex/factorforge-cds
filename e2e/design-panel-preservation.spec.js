@@ -1,4 +1,10 @@
 const { test, expect } = require('@playwright/test');
+
+// Retained custom SOP code is tested behind its disabled production feature flag.
+test.beforeEach(async ({page}) => {
+    const source = require('node:fs').readFileSync(require('node:path').join(__dirname, '../web/js/app.js'), 'utf8');
+    await page.route('**/js/app.js', route => route.fulfill({contentType:'text/javascript', body:source.replace('const ENABLE_CUSTOM_SOP = false;', 'const ENABLE_CUSTOM_SOP = true;')}));
+});
 const { execFileSync } = require('node:child_process');
 
 const baselineJs = execFileSync('git', ['show', 'caa405c:web/js/app.js'], { encoding: 'utf8' });
@@ -7,6 +13,10 @@ const baselineHtml = execFileSync('git', ['show', 'caa405c:web/index.html'], { e
 async function capture(context, baseline, preset, overrides) {
   const page = await context.newPage();
   let payload;
+  if (!baseline) {
+    const current = require('node:fs').readFileSync(require('node:path').join(__dirname, '../web/js/app.js'), 'utf8');
+    await page.route('**/js/app.js', r => r.fulfill({contentType:'text/javascript',body:current.replace('const ENABLE_CUSTOM_SOP = false;', 'const ENABLE_CUSTOM_SOP = true;')}));
+  }
   if (baseline) {
     await page.route('**/js/app.js', route => route.fulfill({ contentType: 'text/javascript', body: baselineJs }));
     await page.route('http://127.0.0.1:8010/', route => route.fulfill({ contentType: 'text/html', body: baselineHtml }));
@@ -29,7 +39,7 @@ async function capture(context, baseline, preset, overrides) {
     await page.locator('#criterionCaiMode').selectOption('required');
     await page.locator('input[name="typeIisEnzyme"][value="SapI"]').check();
   }
-  const inventory = await page.locator('input[id], select[id], textarea[id]').evaluateAll(nodes => nodes.map(n => n.id).sort());
+  const inventory = await page.locator('input[id], select[id], textarea[id]').evaluateAll(nodes => nodes.map(n => n.id).filter(id => !id.startsWith('structureWeb')).sort());
   await page.locator('#sequenceInput').fill('MASTWQHLEKDPVNRSGYF');
   await expect(page.locator('#optimizeBtn')).toBeEnabled();
   await page.locator('#optimizeBtn').click();

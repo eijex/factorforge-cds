@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.5.4
+Product Version: 3.5.6
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -248,7 +248,7 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": product_version() if FACTORFORGE_AVAILABLE else "3.5.4",
+    "product": product_version() if FACTORFORGE_AVAILABLE else "3.5.6",
     "rule_engine": engine_version("profile") if FACTORFORGE_AVAILABLE else "1.0.0",
     "dp_engine": engine_version("dp") if FACTORFORGE_AVAILABLE else "2.0.1",
     "dp_v2_1_engine": (engine_version("dp_v2_1") if FACTORFORGE_AVAILABLE else "2.1.0-dev"),
@@ -276,10 +276,16 @@ class handler(BaseHTTPRequestHandler):
         try:
             # Parse request body
             content_length = int(self.headers.get("Content-Length", 0))
+            if not 0 <= content_length <= 1_000_000:
+                self.send_error_response(413, "Request body exceeds the 1 MB limit")
+                return
             body = self.rfile.read(content_length).decode("utf-8")
             data = json.loads(body)
             if not isinstance(data, dict):
                 self.send_error_response(400, "Request body must be a JSON object")
+                return
+            if not isinstance(data.get("sequence", ""), str):
+                self.send_error_response(400, "Sequence must be a string")
                 return
 
             reference_override_error = _reject_reference_override_fields(data)
@@ -310,6 +316,45 @@ class handler(BaseHTTPRequestHandler):
                 status_code, result = self.handle_slate_request(data)
                 self.send_json_response(status_code, result)
                 return
+
+            if data.get("action") == "recommend_structure":
+                from factorforge.structure.auto_annotator import recommend_structure_pause_regions
+                context = parse_sequence_input(data.get("sequence", ""))
+                if not context["generation_allowed"]:
+                    raise ValueError("Invalid sequence input for structure recommendation")
+                structure = data.get("structure_context")
+                if not isinstance(structure,dict):
+                    raise ValueError("structure_context is required")
+                recommendation = recommend_structure_pause_regions(context["optimization_sequence"],structure.get("content"),format=structure.get("format","pdb"),chain_id=structure.get("chain","A"),model_number=structure.get("model",1),is_alphafold=structure.get("is_alphafold"))
+                self.send_json_response(200,{"success":True,"action":"recommend_structure","recommendation":recommendation.to_dict(),"approval_status":"not_collected"})
+                return
+            if data.get("action") == "auto_resolve_structure":
+                from factorforge.structure.auto_resolver import auto_resolve_structure_for_protein
+                context = parse_sequence_input(data.get("sequence", ""))
+                if not context["generation_allowed"]:
+                    raise ValueError("Invalid sequence input for automatic structure resolution")
+                structure = data.get("structure_context") if isinstance(data.get("structure_context"), dict) else {}
+                resolved = auto_resolve_structure_for_protein(
+                    context["optimization_sequence"],
+                    uploaded_content=structure.get("content"),
+                    uploaded_format=structure.get("format"),
+                    chain_id=structure.get("chain", "A") or "A",
+                    model_number=int(structure.get("model", 1) or 1),
+                )
+                self.send_json_response(200, {"success": True, "action": "auto_resolve_structure", "resolved": resolved})
+                return
+            if data.get("action") is not None:
+                raise ValueError("Unsupported API action")
+            if data.get("design_mode") == "paired_3dp":
+                result = self.optimize_structure_web(data)
+                if result.get("policy_status")=="INCOMPLETE":
+                    self.send_json_response(422,{"success":False,"error_code":"REQUIRED_CHECK_UNAVAILABLE","error":"Required observations are unavailable; no approved result returned"})
+                    return
+                result = self.attach_policy_verdict(result, data.get("reviewer_disposition"))
+                self.send_json_response(200, result)
+                return
+            if data.get("design_mode") not in {None, "baseline_1dp"}:
+                raise ValueError("design_mode must be baseline_1dp or paired_3dp")
 
             # Extract parameters
             sequence = data.get("sequence", "")
@@ -518,6 +563,7 @@ class handler(BaseHTTPRequestHandler):
                     sop_evaluation = sop_registry.evaluate_sequence(
                         self.primary_dna_sequence(result),
                         host=HOST_METADATA[host]["display_name"],
+                        context=self.scientific_rule_context(result),
                     )
                     
                     # Job 305: Implement REGENERATE loop if required by policy
@@ -542,6 +588,7 @@ class handler(BaseHTTPRequestHandler):
                         sop_evaluation = sop_registry.evaluate_sequence(
                             self.primary_dna_sequence(result),
                             host=HOST_METADATA[host]["display_name"],
+                            context=self.scientific_rule_context(result),
                         )
                         result["regenerated_from"] = original_candidate.get("construct_id")
                         result["regenerate_action"] = True
@@ -579,7 +626,11 @@ class handler(BaseHTTPRequestHandler):
             if implicit_strategy_disclosure and isinstance(result, dict):
                 result.update(implicit_strategy_disclosure)
 
+            if result.get("sop_evaluation",{}).get("required_unavailable_count"):
+                self.send_json_response(422,{"success":False,"error_code":"REQUIRED_CHECK_UNAVAILABLE","error":"Required observations are unavailable; no approved result returned"})
+                return
             logger.info("Optimization completed successfully")
+            result = self.attach_policy_verdict(result, data.get("reviewer_disposition"))
             self.send_json_response(200, result)
 
         except json.JSONDecodeError as e:
@@ -591,6 +642,172 @@ class handler(BaseHTTPRequestHandler):
         except Exception as e:
             logger.error(f"Unexpected error: {e}", exc_info=True)
             self.send_error_response(500, f"Internal server error: {type(e).__name__}: {str(e)}")
+
+    def optimize_structure_web(self, data):
+        """Direct, stateless testing; no ResearchOS approval/evidence is implied."""
+        from factorforge.engines.structure_web import run_structure_web
+        from factorforge.constraints.type_iis import get_canonical_forbidden_motifs
+
+        if (
+            self.validate_host(data.get("host", DEFAULT_HOST_PROFILE))
+            != DEFAULT_HOST_PROFILE
+        ):
+            raise ValueError("Direct 3DP supports only N. benthamiana")
+        if (
+            data.get("mode", "profile") != "profile"
+            or data.get("save_db")
+            or any(data.get(k) for k in ("kozak", "dinuc", "use_template"))
+        ):
+            raise ValueError(
+                "Direct 3DP does not support ML mode, database save, Kozak, TpA or template transformations"
+            )
+        sequence = data.get("sequence", "")
+        if not isinstance(sequence, str):
+            raise ValueError("sequence must be a string")
+        context = parse_sequence_input(sequence)
+        if not context["generation_allowed"]:
+            raise ValueError("Invalid sequence input for direct 3DP")
+        protein = context["optimization_sequence"]
+        constraints = self.parse_constraints(data.get("constraints"))
+        table = load_codon_usage_table()
+        custom = self.parse_custom_restriction_sites(data.get("custom_restriction_sites"))
+        # Keep canonical hard exclusions and honor user additions for both candidates.
+        motifs = get_canonical_forbidden_motifs() + [site["sequence"] for site in custom]
+        struct_ctx = data.get("structure_context")
+        if not isinstance(struct_ctx, dict) or not struct_ctx.get("content"):
+            raise ValueError("Structure NOT_AVAILABLE: an uploaded exact-match structure and explicit reviewed positions are required.")
+        comparison, mapping = run_structure_web(
+            protein,
+            struct_ctx,
+            table.codon_weights,
+            constraints["gc_min"] / 100,
+            constraints["gc_max"] / 100,
+            motifs,
+        )
+        candidates = []
+        for cid, label, cds in (
+            ("baseline_1dp", "1DP comparator", comparison.cds_1dp),
+            ("structure_3dp", "3DP experimental candidate", comparison.cds_3dp),
+        ):
+            if context["input_type"] == "cds":
+                cds = restore_cds_stop_policy(cds, context)
+                assert_pathway_invariants(sequence, cds, context)
+            import math
+
+            gc_count = cds.count("G") + cds.count("C")
+            complement = str.maketrans("ACGT", "TGCA")
+            if not math.ceil(
+                constraints["gc_min"] / 100 * len(cds)
+            ) <= gc_count <= math.floor(constraints["gc_max"] / 100 * len(cds)) or any(
+                m in cds or m.translate(complement)[::-1] in cds for m in motifs
+            ):
+                raise ValueError(
+                    "Final candidate failed full-CDS GC/motif checks; no candidate was returned"
+                )
+            candidate = self.build_candidate(
+                candidate_id=cid,
+                label=label,
+                dna_sequence=cds,
+                codon_weights=table.codon_weights,
+                recommendation_reason="User-selected workflow; no automatic biological winner selection",
+                constraints=constraints,
+            )
+            candidates.append(candidate)
+        primary = candidates[1]
+        response = {
+            "success": True,
+            "design_mode": "paired_3dp",
+            "optimized_sequence": primary["dna_sequence"],
+            "original_length": len(sequence),
+            "optimized_length": len(primary["dna_sequence"]),
+            "recommended_candidate": primary,
+            "candidates": candidates,
+            "metrics": {
+                "cai": primary["cai"],
+                "gc_percent": primary["gc_percent"],
+                "length": len(primary["dna_sequence"]),
+            },
+            "validation": {
+                "input_type": context["input_type"],
+                "host_profile": DEFAULT_HOST_PROFILE,
+            },
+            "engine_versions": ENGINE_VERSIONS,
+            "metadata": {
+                "engine": "structural_pause",
+                "product_version": product_version(),
+                "experimental": True,
+                "execution_path": "direct_stateless_web",
+                "approval_status": "not_collected",
+                "evidence_recording": "not_connected",
+                "structure_mapping": mapping,
+                "selection_reason": "explicit_user_3dp_mode",
+                "watermark": False,
+            },
+            "structure_comparison": comparison.to_dict(),
+            "validation_report": build_validation_report(
+                primary["dna_sequence"],
+                gc_percent=calculate_gc(primary["dna_sequence"]),
+                constraints=constraints,
+                rule_engine=RuleEngine(host=DEFAULT_HOST_PROFILE),
+            ),
+        }
+        response["cds_design"] = {
+            "engine": "structural_pause",
+            "objective": "log_adaptiveness_minus_position_penalty",
+            "engine_version": "not_independently_versioned",
+            "product_version": product_version(),
+        }
+        response["profile"] = "structure_3dp"
+        response["constraint_report"] = {
+            "aa_identity": 1.0,
+            "passed": True,
+            "errors": [],
+            "scope": "both_candidates_independent_full_cds_checks",
+        }
+        response["reference_policy"] = _public_reference_policy_metadata()
+        response["product_version"] = product_version()
+        response["metrics"].update(
+            mfe_status="not_computed",
+            mfe_status_reason="not_requested_for_direct_3dp",
+            mfe_used=False,
+        )
+        # Avoid accidentally serializing CDS strings embedded in the comparison dashboard.
+        response["structure_comparison"].pop("dashboard_table", None)
+        criteria = normalize_acceptance_criteria(
+            data.get("acceptance_criteria"),
+            gc_min=constraints["gc_min"],
+            gc_max=constraints["gc_max"],
+        )
+        response = self.attach_design_review(
+            response,
+            input_sequence=sequence,
+            acceptance_criteria=criteria,
+            reviewer_disposition=data.get("reviewer_disposition"),
+        )
+        if data.get("sop_profile") is not None:
+            if (
+                not isinstance(data["sop_profile"], dict)
+                or len(json.dumps(data["sop_profile"])) > 131072
+            ):
+                raise ValueError("sop_profile must be an object within 128 KB")
+            sop = SopProfile.from_dict(
+                data["sop_profile"],
+                known_rule_ids=[r.rule_id for r in RuleRegistry().list_rules()],
+            )
+            registry = RuleRegistry(sop_profile=sop)
+            for candidate in candidates:
+                candidate["sop_evaluation"] = registry.evaluate_sequence(
+                    candidate["dna_sequence"],
+                    host=HOST_METADATA[DEFAULT_HOST_PROFILE]["display_name"],
+                    context=self.scientific_rule_context(candidate),
+                )
+            response["sop_evaluation"] = primary["sop_evaluation"]
+            response["policy_decision"] = "BLOCK" if any(not c["sop_evaluation"]["all_passed"] for c in candidates) else "PASS"
+            response["policy_status"] = "INCOMPLETE" if any(c["sop_evaluation"].get("required_unavailable_count") for c in candidates) else response["policy_decision"]
+            response["metadata"]["sop_regeneration"] = (
+                "manual_review_only_no_automatic_mode_switch"
+            )
+        return response
 
     def do_GET(self):
         """Handle GET requests (health check)"""
@@ -621,6 +838,7 @@ class handler(BaseHTTPRequestHandler):
         health_info = {
             "status": "healthy",
             "service": "FactorForge API",
+            "web_deployment_revision": "job397-v3.5.6-2026-10-13",
             "version": ENGINE_VERSIONS["product"],
             "factorforge_available": FACTORFORGE_AVAILABLE,
             "endpoints": {
@@ -636,6 +854,9 @@ class handler(BaseHTTPRequestHandler):
             "host_metadata": host_metadata_with_gc,
             "supported_objectives": VALID_OBJECTIVES,
             "capabilities": {
+                "structure_recommendation": {"available": True, "requires_review": True},
+                "scientific_review": {"schema_version":"1.0","rna_scan":True,"mfe":"optional_local_tool"},
+                "direct_structure": {"available": bool(FACTORFORGE_AVAILABLE), "status": "experimental", "max_protein_aa": 300, "max_structure_bytes": 250000, "approval_status": "not_collected", "evidence_recording": "not_connected"},
                 "execution_modes": (VALID_EXECUTION_MODES if ML_PREVIEW_ENABLED else ["profile"]),
                 "ml_preview": {
                     "available": bool(FACTORFORGE_AVAILABLE and ML_PREVIEW_ENABLED),
@@ -646,8 +867,11 @@ class handler(BaseHTTPRequestHandler):
                 "db_save": {"available": WEB_DB_SAVE_ENABLED},
                 "sop_profiles": {
                     "schema": "factorforge-sop-v1",
-                    "upload": True,
-                    "browser_persistence": True,
+                    "upload": False,
+                    "browser_persistence": False,
+                    "api_profile_evaluation": True,
+                    "public_ui_status": "paused_default_only",
+                    "retained_browser_settings": "ignored_not_deleted",
                     "server_storage": False,
                 },
             },
@@ -658,8 +882,8 @@ class handler(BaseHTTPRequestHandler):
                 if FACTORFORGE_AVAILABLE
                 else {
                     "product": {
-                        "version": "3.5.4",
-                        "release_status": "published",
+                        "version": "3.5.6",
+                        "release_status": "web_deployed_package_pending",
                     }
                 }
             ),
@@ -1270,6 +1494,55 @@ class handler(BaseHTTPRequestHandler):
                 "error": f"Internal server error: {type(e).__name__}: {str(e)}",
             }
 
+    def attach_policy_verdict(self, response, reviewer_disposition=None):
+        """A blocking policy must not coexist with a displayed automated PASS."""
+        if response.get("policy_decision") != "BLOCK":
+            return response
+        evaluations = [response.get("sop_evaluation") or {}]
+        for candidate in response.get("candidates", []):
+            evaluation = candidate.get("sop_evaluation") or {}
+            evaluations.append(evaluation)
+            if not evaluation.get("all_passed", True):
+                candidate["automated_decision"] = "FAIL"
+        failures = {e["rule_id"]: e for evaluation in evaluations for e in evaluation.get("hard_fails", [])}
+        response["automated_decision"] = "FAIL"
+        summary = response.setdefault("decision_summary", {})
+        summary["required_failure_count"] = summary.get("required_failure_count", 0) + len(failures)
+        summary["explanation"] = "Required policy checks block this result; computational design is not policy approval."
+        for rule_id, entry in failures.items():
+            response.setdefault("qc_decision_matrix", []).append({"criterion": rule_id, "mode": "required", "observed": entry["result"].get("value"), "result": "FAIL"})
+        response["reviewer_disposition"] = apply_reviewer_disposition("FAIL", reviewer_disposition)
+        return response
+
+    def attach_scientific_observations(self, response, *, expected_protein):
+        response.setdefault("product_version", product_version())
+        from factorforge.guards.plant_rna_guards import scan_plant_rna_risks
+        from factorforge.guards.initiation_mfe import evaluate_initiation_mfe
+        from Bio.Seq import Seq
+        def observe(dna):
+            # A full construct can include promoter/vector flanks: do not label
+            # those bases as sense CDS or an initiation window without mapping.
+            is_cds = len(dna) % 3 == 0 and str(Seq(dna).translate()).removesuffix("*") == expected_protein.rstrip("*")
+            if not is_cds:
+                reason = "Output CDS scope is not established; flanked constructs require an explicit transcript/CDS mapping"
+                return {"schema_version":"1.0","scope":"not_established","rna_risks":{"summary_status":"NOT_AVAILABLE","evidence_class":"SEQUENCE_SCAN","reason":reason},"initiation_mfe":{"status":"NOT_AVAILABLE","mfe_kcal_mol":None,"reason":reason}}
+            return {"schema_version":"1.0","rna_risks":scan_plant_rna_risks(dna).to_dict(),"initiation_mfe":evaluate_initiation_mfe(dna).to_dict(),"scope":"sense_cds_computational_observation"}
+        candidates = response.get("candidates", [])
+        for candidate in candidates:
+            dna = candidate.get("dna_sequence", "")
+            if dna:
+                candidate["scientific_review"] = observe(dna)
+        primary = self.primary_dna_sequence(response)
+        primary_review = next((c["scientific_review"] for c in candidates if c.get("dna_sequence")==primary and c.get("scientific_review")),None)
+        if primary:
+            response["scientific_review"] = primary_review or observe(primary)
+        return response
+
+    @staticmethod
+    def scientific_rule_context(result):
+        measurement = (result.get("scientific_review") or {}).get("initiation_mfe") or {}
+        return {"initiation_mfe":measurement["mfe_kcal_mol"]} if measurement.get("status")=="AVAILABLE" else {}
+
     def attach_design_review(
         self,
         response,
@@ -1282,6 +1555,7 @@ class handler(BaseHTTPRequestHandler):
         from factorforge.design_review import build_result_identifier
 
         context = parse_sequence_input(input_sequence)
+        response = self.attach_scientific_observations(response, expected_protein=context["optimization_sequence"])
         criteria = normalize_acceptance_criteria(
             acceptance_criteria,
             gc_min=float(acceptance_criteria.get("overall_gc", {}).get("minimum", 40.0)),

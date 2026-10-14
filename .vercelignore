@@ -34,3 +34,9 @@ scratch/**
 scripts/**
 test-results/**
 tests/**
+site/**
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+gemini.md
+fix_reg.py
