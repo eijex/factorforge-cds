@@ -94,3 +94,7 @@ factorforge optimize input.fasta --scan-mode fast -o output.fasta
 # Expert/research reference replay or comparison
 factorforge optimize input.fasta --reference-id nbenthamiana_qld183_v103
 ```
+
+### Direct experimental 3DP web API (unreleased)
+
+POST `/api/optimize` with `design_mode=paired_3dp` and a reviewed `structure_context` object. See [experimental structure documentation](experimental-structure.md) for limits and mapping requirements. This stateless path returns a 1DP/3DP pair without ResearchOS approval or evidence recording. No new CLI command or MCP tool is implied.

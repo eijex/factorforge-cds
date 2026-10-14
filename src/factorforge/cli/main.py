@@ -7,18 +7,18 @@ Usage:
   factorforge list-engines
 """
 
-from pathlib import Path
 import hashlib
 import json
 import sys
+from pathlib import Path
 
 import click
 
 from factorforge import __version__
 from factorforge.analysis.feasibility import DEFAULT_CAI_TARGET
 from factorforge.engines import register_builtin_engines
-from factorforge.engines.registry import EngineRegistry
 from factorforge.engines.profile.utils import parse_fasta_records
+from factorforge.engines.registry import EngineRegistry
 
 register_builtin_engines()
 
@@ -710,7 +710,10 @@ def evaluate_model(model_id, train_snapshot, eval_snapshot, input_sequence):
     mock_train_seqs = ["ATGGCTAAATGGTAA", "ATGCGTACGTGCTAG"]
     mock_eval_seqs = ["ATGCCCGGGAAATTT"]
     
-    from factorforge.review.evaluation_integrity import DatasetLeakageAuditor, GenerationMemorizationAuditor
+    from factorforge.review.evaluation_integrity import (
+        DatasetLeakageAuditor,
+        GenerationMemorizationAuditor,
+    )
     
     # 2. Dataset Leakage Audit
     ds_auditor = DatasetLeakageAuditor(mock_train_seqs, mock_eval_seqs)
@@ -914,17 +917,22 @@ def audit(sequence_fasta, reference_codon_profile, exclude_region, output):
     Run generic sequence audit to report codon usage, CAI, GC, and AA distribution.
     """
     _configure_stdio()
-    from factorforge.engines.profile.utils import parse_fasta_records
-    from factorforge.analysis.metrics import (
-        load_codon_usage_table, calculate_cai, calculate_gc, codon_usage_profile, 
-        translate_dna, calculate_synonymous_entropy, calculate_max_synonymous_share,
-        calculate_reference_distance
-    )
-    from factorforge.engines.balanced_optimizer import STANDARD_GENETIC_CODE
-    
     import hashlib
     import json
     from pathlib import Path
+
+    from factorforge.analysis.metrics import (
+        calculate_cai,
+        calculate_gc,
+        calculate_max_synonymous_share,
+        calculate_reference_distance,
+        calculate_synonymous_entropy,
+        codon_usage_profile,
+        load_codon_usage_table,
+        translate_dna,
+    )
+    from factorforge.engines.balanced_optimizer import STANDARD_GENETIC_CODE
+    from factorforge.engines.profile.utils import parse_fasta_records
     
     fasta_records = parse_fasta_records(Path(sequence_fasta).read_text(encoding='utf-8'))
     if not fasta_records:
@@ -988,6 +996,13 @@ def audit(sequence_fasta, reference_codon_profile, exclude_region, output):
     else:
         click.echo(json.dumps(results, indent=2))
 
+
+from factorforge.nbfold.cli import nbfold_cli
+
+cli.add_command(nbfold_cli)
+
+
 if __name__ == "__main__":
     cli()
+
 

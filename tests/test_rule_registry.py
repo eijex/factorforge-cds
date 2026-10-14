@@ -109,3 +109,35 @@ def test_ruleset_digest_stability() -> None:
     
     assert digest1.startswith("sha256:")
     assert digest1 == digest2
+
+
+def test_initiation_mfe_truthfulness() -> None:
+    registry = RuleRegistry()
+    seq = "ATGGCATCAACTCAATCTTCTACTGCATGA"
+
+    # 1. Missing initiation_mfe in context: must be not_available, passed=None, not counted as PASS
+    res_missing = registry.evaluate_sequence(seq)
+    na_rules = [r for r in res_missing.get("not_available", []) if r["rule_id"] == "policy.initiation_mfe.v1"]
+    assert len(na_rules) == 1
+    na_res = na_rules[0]["result"]
+    assert na_res["status"] == "not_available"
+    assert na_res["evaluated"] is False
+    assert na_res["passed"] is None
+    assert na_res["value"] is None
+
+    # 2. Present initiation_mfe meeting threshold (>= -3.0): evaluated=True, passed=True
+    res_pass = registry.evaluate_sequence(seq, context={"initiation_mfe": -2.1})
+    mfe_rule = registry.get_rule("policy.initiation_mfe.v1")
+    eval_pass = mfe_rule.evaluate(seq, {"initiation_mfe": -2.1})
+    assert eval_pass["status"] == "evaluated"
+    assert eval_pass["evaluated"] is True
+    assert eval_pass["passed"] is True
+    assert eval_pass["value"] == -2.1
+
+    # 3. Present initiation_mfe below threshold (< -3.0): evaluated=True, passed=False
+    res_fail = registry.evaluate_sequence(seq, context={"initiation_mfe": -5.4})
+    info_rules = [r for r in res_fail.get("informational", []) if r["rule_id"] == "policy.initiation_mfe.v1"]
+    assert len(info_rules) == 1
+    assert info_rules[0]["result"]["status"] == "evaluated"
+    assert info_rules[0]["result"]["passed"] is False
+    assert info_rules[0]["result"]["value"] == -5.4

@@ -134,12 +134,29 @@ def _check_initiation_mfe_policy(sequence: str, context: Dict[str, Any]) -> Dict
     """Advisory check on 5' translation initiation window structural risk."""
     initiation_mfe = context.get("initiation_mfe")
     if initiation_mfe is None:
-        return {"passed": True, "details": "initiation_mfe metric not provided in context"}
-    # Advisory threshold: MFE should ideally be >= -3.0 kcal/mol
-    passed = float(initiation_mfe) >= -3.0
+        return {
+            "status": "not_available",
+            "evaluated": False,
+            "passed": None,
+            "value": None,
+            "details": "initiation_mfe metric not provided in context",
+            "reason": "Missing initiation_mfe metric in evaluation context",
+            "threshold": -3.0,
+        }
+    import math
+    try:
+        if isinstance(initiation_mfe,bool) or not math.isfinite(float(initiation_mfe)):
+            raise ValueError()
+        value = float(initiation_mfe)
+    except (TypeError,ValueError,OverflowError):
+        return {"status":"not_available","evaluated":False,"passed":None,"value":None,"reason":"Invalid initiation_mfe observation","threshold":-3.0}
+    passed = value >= -3.0
     return {
+        "status": "evaluated",
+        "evaluated": True,
         "passed": passed,
-        "initiation_mfe": initiation_mfe,
+        "value": float(initiation_mfe),
+        "initiation_mfe": float(initiation_mfe),
         "threshold": -3.0,
     }
 
@@ -470,11 +487,13 @@ class RuleRegistry:
         hard_fails = []
         warnings = []
         info_items = []
+        not_available = []
         all_passed = True
 
         for rule in active_rules:
             res = rule.evaluate(sequence, ctx)
-            passed = res.get("passed", True)
+            passed = res.get("passed")
+            is_evaluated = res.get("evaluated", passed is not None)
             resolved_enforcement = self.resolved_enforcement(rule)
             resolved_action = self.resolved_authorized_action(rule)
             entry = {
@@ -485,6 +504,16 @@ class RuleRegistry:
                 "authority": rule.authority.authority_type.value,
                 "result": res,
             }
+
+            if not is_evaluated or passed is None:
+                entry["status"] = "not_available"
+                not_available.append(entry)
+                if resolved_enforcement == EnforcementLevel.HARD_FAIL:
+                    entry["authorized_action"] = AuthorizedAction.BLOCK.value
+                    entry["required_unavailable"] = True
+                    hard_fails.append(entry)
+                    all_passed = False
+                continue
 
             if not passed:
                 if resolved_enforcement == EnforcementLevel.HARD_FAIL:
@@ -501,9 +530,13 @@ class RuleRegistry:
             "all_passed": all_passed,
             "hard_fail_count": len(hard_fails),
             "warning_count": len(warnings),
+            "not_available_count": len(not_available),
+            "required_unavailable_count": sum(bool(e.get("required_unavailable")) for e in not_available),
+            "evaluation_status": ("INCOMPLETE" if any(e.get("required_unavailable") for e in not_available) else "FAILED" if hard_fails else "COMPLETE_WITH_OPTIONAL_UNAVAILABLE" if not_available else "COMPLETE"),
             "hard_fails": hard_fails,
             "warnings": warnings,
             "informational": info_items,
+            "not_available": not_available,
         }
 
     def compute_digest(self) -> str:

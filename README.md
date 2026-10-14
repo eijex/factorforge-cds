@@ -14,7 +14,7 @@
 
 FactorForge performs deterministic CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. It is positioned as a pre-synthesis review harness: it helps teams generate reproducible CDS candidates, inspect assembly-relevant sequence constraints, and package design metadata before downstream synthesis, cloning, or experimental review. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
 
-FactorForge v3.5.4 uses independently versioned engines:
+FactorForge v3.5.6 uses independently versioned engines:
 
 | Generation | Engine | Version | Availability |
 |---|---|---:|---|
@@ -96,7 +96,7 @@ FactorForge outputs are **in-silico only** and have not been experimentally vali
 ## Citing
 
 ```
-FactorForge v3.5.4 (2026). Open-source constraint-based CDS design and sequence review.
+FactorForge v3.5.6 (2026). Open-source constraint-based CDS design and sequence review.
 Eijex. https://github.com/eijex/factorforge-cds
 ```
 
@@ -148,3 +148,29 @@ GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).
 - **Eijex MCP** — [mcp.eijex.com](https://mcp.eijex.com)
 - **Lab** — [www.eijex.com](https://www.eijex.com)
 
+
+## Testing status
+
+The web UI now labels watermark as disabled and distinguishes the sequence-only baseline from experimental structure-conditioned testing. The local approved workflow supports explicit 1DP-only or paired 3DP mode. 3DP availability is local research testing; it is not a new public optimization endpoint or a biological-performance claim. See [web UI boundaries](web/README.md).
+
+## Direct 3DP browser testing (unreleased; Job 389)
+
+The FactorForge form supports explicit 1DP/3DP selection. 3DP uploads a PDB/mmCIF file, selects chain and one-based file model order, and requires reviewed one-based protein positions. The selected observed chain must exactly match the complete protein; partial or homologous structures require the retained local reviewed mapping workflow. Direct requests use `/api/optimize` with `design_mode=paired_3dp` and `structure_context={content,format,chain,model,positions,positions_reviewed,target_adaptiveness,penalty_weight}`.
+
+Limits: 3–300 amino acids, structure content 250 KB, HTTP JSON body 1 MB. Both candidates use the configured codon reference, requested GC and canonical motif exclusions plus custom additions. Invalid inputs and infeasible candidates fail without a baseline fallback. Existing sequence-only settings and API requests remain supported. 3DP uses its explicit DP settings and does not apply Kozak, TpA, template or seed transformations. SOP checks are reported for both candidates; regeneration is manual and never silently changes mode. Watermark stays disabled.
+
+This is stateless computational testing, with no ResearchOS approval or ValidationHub evidence recording. Those existing integrations remain available for later operational use. The structure file is not retained in the response or browser history; normal design results may be retained in local browser history. Submit only public-safe inputs. Structural conformity metrics are codon-weight proxies, not folding/expression measurements. These source changes are not deployed or a new package release.
+
+## Current public policy UI (Job 390, 2026-10-12)
+
+Custom SOP management is paused. The built-in FactorForge default policy is applied; upload/export/preset/editing controls are hidden and disabled. Their code and previous browser configuration remain available for later reactivation through ENABLE_CUSTOM_SOP. Saved custom SOPs are ignored without deletion. 1DP/3DP mode selection and explicit structure inputs remain active. This supersedes the earlier public SOP upload/export instructions. Public API contracts are retained.
+
+### Scientific web observations (Job 397)
+
+Direct 1DP/3DP browser testing reports sense-CDS RNA motif scans and available initiation-window MFE in results, downloadable reports and local history. Structure confidence observations can suggest positions for explicit acceptance and review; unsupported inputs do not invent positions. These checks do not establish expression, yield or folding benefits. The default policy remains active and custom SOP management remains paused. See `docs/experimental-structure.md` for the API and measurement boundary.
+
+### Local reviewed structure file workflow
+
+`factorforge nbfold annotate` and `factorforge nbfold optimize` provide the experimental local Phase A/B workflow for exact-match structure files and an explicit user review manifest. See [NB-Fold documentation](docs/experimental-structure.md#local-nb-fold-reviewed-cli-pipeline-job-398-phase-ab).
+
+Web structure handling now requires exact-match uploaded PDB/mmCIF coordinates and explicit reviewed positions. Automatic external folding, artificial structure/confidence fallback, and auto-approval are disabled. Job400 metrics are synthetic reconstruction checks; independent public-structure/DSSP validation remains open.

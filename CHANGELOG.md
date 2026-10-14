@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+## 3.5.6 — 2026-10-13 (web/API patch; package publication pending)
+
+- Web structure handling now requires exact-match uploaded PDB/mmCIF coordinates and explicit reviewed positions. Automatic external folding, artificial structure/confidence fallback, and auto-approval are disabled. Job400 metrics are synthetic reconstruction checks; independent public-structure/DSSP validation remains open.
+
+- Job 399: add offline structural annotation context and explicit conflict review; reject malformed sidecar binding and nonfinite scores, recompute merged-domain PAE, and report degenerate backbone geometry as unassigned.
+
+- Job 398: add local reviewed NB-Fold annotate/optimize commands; reject changed confidence provenance/export metadata and unexplained manual positions. No folding or yield validation is implied.
+
+- Job 397: repair client ZIP folder creation, include both available candidates, and derive dossier version/checks from returned evidence without fabricated certification/integrity claims.
+
+- Job 397: integrate RNA motif scans, per-call validated initiation MFE and evidence-based structure position suggestions into direct browser results/reports/history; require human acceptance and review, block required unavailable policy checks, and preserve default-only SOP and generation objectives.
+
+- Job 390: pause custom SOP management in the public UI; retain implementation and saved settings while applying the built-in default policy. Keep direct 1DP/3DP testing.
+
+- Disable unconnected Arg/Ser, splice-remediation and 5-prime boundary comparison
+  controls; remove prechecked states and unsupported translation-efficiency wording.
+  Existing engine/API optimization settings are unchanged.
+
+- Job 389: direct experimental 3DP form/API execution using uploaded exact-match PDB/mmCIF structure and reviewed positions; paired baseline results; ResearchOS governance deferred for this stateless test path. No deployment.
+
+- Pause watermark in the web UI, retain disabled state after profile import, and expose baseline/local experimental 3DP workflow selection without transferring sequence input.
+
+- Add an opt-in, position-conditioned DP research module with explicit structure
+  annotations and uncalibrated adaptiveness penalties. Report CAI separately
+  from its penalized objective and reject infeasible GC bands. Public routes and
+  default production objectives are unchanged; no folding/yield benefit is established.
+
 - Pin the optional PostgreSQL integration to the portable eijex-db-core 0.1.2 wheel contract; standalone design/scoring are unchanged.
 
 - Replace fixed successful execution-trace rendering with response-backed engine
@@ -946,4 +973,3 @@ First official release of FactorForge.
 [3.1.1]: https://github.com/eijex/factorforge-cds/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/eijex/factorforge-cds/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/eijex/factorforge-cds/releases/tag/v3.0.0
-

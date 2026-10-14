@@ -1,8 +1,12 @@
+# Selected settings example, not an options menu or an approved laboratory SOP.
+# design_mode: baseline_1dp | paired_3dp (3DP needs structure_settings and an uploaded file).
+# rules: HARD_FAIL | WARNING | INFORMATIONAL | IGNORE
+# review_policy: REQUIRED | PREFERRED | IGNORE
 # FactorForge SOP Preset A: Conservative Baseline (Default)
 # ==============================================================================
 # FactorForge's default sequence policy is configured as an intentionally
-# conservative pre-synthesis baseline to minimize synthesis rejects and sequence
-# toxicity. We recommend customizing these settings or uploading your lab's own
+# conservative pre-synthesis baseline to flag sequence features for computational review.
+# These checks do not establish synthesis acceptance or biological safety. We recommend customizing these settings or uploading your lab's own
 # SOP (.yaml) to match your specific assembly and expression protocols.
 # ==============================================================================
 $schema: factorforge-sop-v1

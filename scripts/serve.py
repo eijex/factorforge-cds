@@ -13,7 +13,8 @@ import sys
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 
-ROOT = Path(__file__).parent
+_HERE = Path(__file__).resolve().parent
+ROOT = _HERE.parent if _HERE.name == "scripts" else _HERE
 sys.path.insert(0, str(ROOT / "src"))
 os.chdir(ROOT / "web")
 

@@ -50,6 +50,8 @@ function getGcRange(hostId) {
 
 let validationRegistry = [];
 const HISTORY_SCHEMA_VERSION = 3;
+// Custom SOP management is intentionally paused. Retained code can be re-enabled later.
+const ENABLE_CUSTOM_SOP = false;
 const SOP_STORAGE_KEY = 'factorforge_active_sop_v2';
 const SOP_SCHEMA = 'factorforge-sop-v1';
 const SOP_MODES = Object.freeze(['required', 'preferred', 'ignored']);
@@ -405,6 +407,14 @@ function validateSopProfile(profile) {
     if (!workflow || typeof workflow !== 'object') throw new Error('SOP workflow is required.');
     const validMethods = new Set(['feasibility_best', 'dp_v2_1_1', 'high_cai', 'gc_target', 'assembly_friendly']);
     if (!validMethods.has(workflow.design_method)) throw new Error('Unsupported SOP design_method.');
+    if (workflow.design_mode !== undefined && !['baseline_1dp', 'paired_3dp'].includes(workflow.design_mode)) throw new Error('Unsupported SOP design_mode.');
+    if (workflow.structure_settings !== undefined) {
+        const settings = workflow.structure_settings;
+        if (!settings || typeof settings !== 'object' || Array.isArray(settings)) throw new Error('Invalid structure_settings.');
+        if (typeof settings.chain !== 'string' || !settings.chain.trim() || settings.chain.length > 8 || !Number.isInteger(settings.model) || settings.model < 1) throw new Error('Invalid structure chain/model settings.');
+        if (!Array.isArray(settings.positions) || settings.positions.some(p => !Number.isSafeInteger(p) || p < 1) || new Set(settings.positions).size !== settings.positions.length) throw new Error('Invalid structure positions.');
+        if (!Number.isFinite(settings.target_adaptiveness) || settings.target_adaptiveness <= 0 || settings.target_adaptiveness > 1 || !Number.isFinite(settings.penalty_weight) || settings.penalty_weight < 0 || settings.penalty_weight > 100) throw new Error('Invalid structure target/penalty settings.');
+    }
     const requirements = workflow.sequence_requirements;
     if (!requirements || typeof requirements !== 'object') throw new Error('SOP sequence_requirements are required.');
     if (!Array.isArray(requirements.type_iis_enzymes) || requirements.type_iis_enzymes.some(name => !TYPE_IIS_PRESETS[name])) throw new Error('SOP contains an unsupported Type IIS enzyme.');
@@ -418,6 +428,7 @@ function validateSopProfile(profile) {
 }
 
 function loadSopProfile() {
+    if (!ENABLE_CUSTOM_SOP) return cloneJson(DEFAULT_SOP_PROFILE);
     try {
         localStorage.removeItem('factorforge_active_sop_v1'); // Purge legacy cache with obsolete naming
         const saved = localStorage.getItem(SOP_STORAGE_KEY);
@@ -698,6 +709,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Move existing controls, rather than recreating them: values and event handlers
 // stay intact, including custom profiles retained in this browser.
 function setupDesignPanel() {
+    // Preserve the legacy DOM/hooks; hide custom-policy management after setup.
+
     const advanced = document.querySelector('#manualSopOverrides > div');
     advanced.prepend(document.getElementById('designObjectivePolicy'));
     document.querySelector('#manualSopOverrides > summary').textContent = 'Advanced settings';
@@ -758,6 +771,20 @@ function setupDesignPanel() {
     resultNotice.className = 'hidden text-xs text-amber-700 dark:text-amber-300 mb-4';
     resultNotice.textContent = 'Settings changed. Existing results retain their original settings; generate again to apply the current profile.';
     document.getElementById('optimizeBtn').before(resultNotice);
+    if (!ENABLE_CUSTOM_SOP) {
+        management.hidden = true;
+        elements.sopPresetSelect.parentElement.hidden = true;
+        document.getElementById('manualSopOverrides').hidden = true;
+        elements.sopFileUpload.disabled = true;
+        elements.uploadSopButton.disabled = true;
+        elements.downloadSopTemplate.disabled = true;
+        document.getElementById('buildSopButton').disabled = true;
+        elements.sopProfileName.textContent = 'FactorForge default policy';
+        elements.sopProfileBadge.textContent = 'Default';
+        note.textContent = 'Built-in FactorForge policy is applied automatically. Custom SOP upload, export and editing are paused.';
+        document.getElementById('sopProfileHeading').textContent = 'Built-in sequence policy';
+    }
+
 }
 
 // Loads server-owned GC ranges and validation labels. Supported hosts remain
@@ -900,6 +927,7 @@ function updatePresetUiFromProfile(profile) {
 
 function applySopToUi(profile, { persist = true } = {}) {
     const validated = validateSopProfile(profile);
+    validated.workflow.watermark = false;
     const workflow = validated.workflow;
     const requirements = workflow.sequence_requirements;
     const policy = workflow.review_policy;
@@ -927,8 +955,9 @@ function applySopToUi(profile, { persist = true } = {}) {
         }
     }
     if (workflow.watermark !== undefined && elements.toggleWatermark) {
-        elements.toggleWatermark.checked = Boolean(workflow.watermark);
-        state.watermark = Boolean(workflow.watermark);
+        elements.toggleWatermark.checked = false;
+        elements.toggleWatermark.disabled = true;
+        state.watermark = false;
     }
     elements.optimizationSeed.value = requirements.reproducibility_seed ?? '';
     elements.kozakToggle.checked = Boolean(requirements.kozak_optimization);
@@ -959,16 +988,59 @@ function applySopToUi(profile, { persist = true } = {}) {
     elements.sopProfileName.textContent = displayNames[validated.profile_id] || validated.sop_name;
     elements.sopProfileMeta.textContent = `${validated.status === 'STANDARD_TEMPLATE' ? 'Default template' : (validated.status === 'PRESET_TEMPLATE' ? 'SOP Preset' : 'Custom SOP')} · v${validated.version} · stored only in this browser`;
     elements.sopProfileBadge.textContent = validated.status === 'STANDARD_TEMPLATE' ? 'Active' : (validated.status === 'PRESET_TEMPLATE' ? 'Preset' : 'Custom');
+    if (!ENABLE_CUSTOM_SOP) {
+        elements.sopProfileName.textContent = 'FactorForge default policy';
+        elements.sopProfileBadge.textContent = 'Default';
+    }
     updatePresetUiFromProfile(validated);
+    if (!ENABLE_CUSTOM_SOP) {
+        elements.sopProfileName.textContent = 'FactorForge default policy';
+        elements.sopProfileBadge.textContent = 'Default';
+    }
+    const designMode = workflow.design_mode || 'baseline_1dp';
+    state.researchDesignMode = designMode;
+    document.querySelectorAll('input[name="researchDesignMode"]').forEach(input => { input.checked = input.value === designMode; });
+    const structured = designMode === 'paired_3dp';
+    document.getElementById('structureWebInputs').classList.toggle('hidden', !structured);
+    document.getElementById('structureWebReviewed').checked = false;
+    document.getElementById('structureWebFile').value = '';
+    const settings = workflow.structure_settings || {chain:'A',model:1,positions:[],target_adaptiveness:0.4,penalty_weight:2.0};
+    document.getElementById('structureWebChain').value = settings.chain;
+    document.getElementById('structureWebModel').value = settings.model;
+    document.getElementById('structureWebPositions').value = settings.positions.join(',');
+    document.getElementById('structureWebTarget').value = settings.target_adaptiveness;
+    document.getElementById('structureWebPenalty').value = settings.penalty_weight;
+    elements.btnText.textContent = structured ? 'Generate 1DP / 3DP comparison' : 'Generate';
+    document.getElementById('selectedWorkflowNote').textContent = structured ? '3DP settings loaded. Upload the matching structure and review positions before running.' : '1DP selected: sequence-only design in this form.';
     updateDesignBriefSummary();
+    handleSequenceChange({target:elements.sequenceInput});
 }
 
 function captureSopFromUi() {
+    if (!ENABLE_CUSTOM_SOP) {
+        const profile = cloneJson(DEFAULT_SOP_PROFILE);
+        profile.workflow.watermark = false;
+        profile.workflow.design_method = state.researchDesignMode === 'paired_3dp' ? 'feasibility_best' : state.objective;
+        if (state.researchDesignMode === 'paired_3dp') profile.workflow.design_mode = 'paired_3dp';
+        state.activeSop = profile;
+        return;
+    }
+
     const profile = cloneJson(state.activeSop || DEFAULT_SOP_PROFILE);
     profile.status = profile.profile_id === DEFAULT_SOP_PROFILE.profile_id ? 'CUSTOMIZED_LOCAL' : profile.status;
     profile.workflow.design_method = state.objective;
     profile.workflow.codon_policy = state.codonPolicy;
-    profile.workflow.watermark = Boolean(state.watermark);
+    profile.workflow.watermark = false;
+    if (state.researchDesignMode === 'paired_3dp') {
+        profile.workflow.design_mode = 'paired_3dp';
+        const raw = document.getElementById('structureWebPositions').value.trim();
+        if (raw && raw.split(',').some(p => !/^\d+$/.test(p.trim()))) throw new Error('Structure positions must be comma-separated positive integers');
+        profile.workflow.structure_settings = {chain:document.getElementById('structureWebChain').value.trim(),model:Number(document.getElementById('structureWebModel').value),positions:raw ? raw.split(',').map(Number) : [],target_adaptiveness:Number(document.getElementById('structureWebTarget').value),penalty_weight:Number(document.getElementById('structureWebPenalty').value)};
+    } else {
+        delete profile.workflow.design_mode;
+        delete profile.workflow.structure_settings;
+    }
+
     profile.workflow.sequence_requirements = {
         reproducibility_seed: elements.optimizationSeed.value.trim() === '' ? null : Number(elements.optimizationSeed.value),
         kozak_optimization: elements.kozakToggle.checked,
@@ -991,12 +1063,17 @@ function captureSopFromUi() {
 }
 
 function downloadActiveSop() {
+    if (!ENABLE_CUSTOM_SOP) return;
     captureSopFromUi();
     const safeId = state.activeSop.profile_id.replace(/[^a-z0-9_-]+/gi, '_');
-    downloadTextArtifact(`${serializeSopYaml(state.activeSop)}\n`, 'application/yaml', `FactorForge_SOP_${safeId}_v${state.activeSop.version}.yaml`);
+    const exported = cloneJson(state.activeSop);
+    exported.workflow.design_mode = state.researchDesignMode || 'baseline_1dp';
+    const help = '# Selected settings snapshot. Edit values or change options in the UI, then upload again.\n# design_mode: baseline_1dp | paired_3dp\n# design_method (1DP): feasibility_best | dp_v2_1_1 | high_cai | gc_target | assembly_friendly\n# rules: HARD_FAIL (block) | WARNING (report) | INFORMATIONAL | IGNORE\n# review_policy: REQUIRED | PREFERRED | IGNORE\n# booleans: true | false; watermark is currently forced false.\n# 3DP structure file and review confirmation are never saved here; upload/review again.\n';
+    downloadTextArtifact(`${help}${serializeSopYaml(exported)}\n`, 'application/yaml', `FactorForge_SOP_${safeId}_v${state.activeSop.version}.yaml`);
 }
 
 function applySopFile(file, input = null) {
+    if (!ENABLE_CUSTOM_SOP) return;
     if (!file) return;
     if (file.size > 128 * 1024) {
         showToast('SOP file must be 128 KB or smaller.', 'error');
@@ -1051,6 +1128,7 @@ function initEventListeners() {
     // Multi-SOP Presets Selector
     if (elements.sopPresetSelect) {
         elements.sopPresetSelect.addEventListener('change', (e) => {
+            if (!ENABLE_CUSTOM_SOP) return;
             const presetKey = e.target.value;
             const targetPreset = SOP_PRESETS[presetKey];
             if (targetPreset) {
@@ -1087,7 +1165,8 @@ function initEventListeners() {
 
     if (elements.toggleWatermark) {
         elements.toggleWatermark.addEventListener('change', (e) => {
-            state.watermark = e.target.checked;
+            e.target.checked = false;
+            state.watermark = false;
             captureSopFromUi();
             updateDesignBriefSummary();
         });
@@ -1165,6 +1244,67 @@ function initEventListeners() {
     // Action
     elements.optimizeBtn.addEventListener('click', runOptimization);
 
+    document.getElementById('structureWebFile')?.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        state.sampleStructureText = null;
+        if (file.size > 250000) {
+            document.getElementById('structureRecommendationStatus').textContent = 'File too large (> 250 KB). Please select a file under 250 KB.';
+            return;
+        }
+        document.getElementById('structureRecommendationStatus').textContent = 'Analyzing structure coordinates and pause positions...';
+        try {
+            await recommendStructurePositions();
+            if (structureSuggestion?.suggestion?.recommended_positions?.length) {
+                document.getElementById('structureWebPositions').value = structureSuggestion.suggestion.recommended_positions.join(',');
+                document.getElementById('structureWebReviewed').checked = true;
+                document.getElementById('structureRecommendationStatus').textContent = `✅ Structure loaded. Recommended pause positions (${structureSuggestion.suggestion.recommended_positions.join(', ')}) auto-applied.`;
+            }
+        } catch (err) {
+            console.warn('Auto recommend on upload error:', err);
+        }
+    });
+
+    document.getElementById('recommendStructurePositions').addEventListener('click', recommendStructurePositions);
+    document.getElementById('acceptStructurePositions').addEventListener('click',()=>{
+        if (!structureSuggestion || structureSuggestion.revision!==structureRecommendationRevision) return;
+        document.getElementById('structureWebPositions').value=structureSuggestion.suggestion.recommended_positions.join(',');
+        document.getElementById('structureWebReviewed').checked=true;
+        document.getElementById('structureRecommendationStatus').textContent='Suggested positions copied and ready for 3DP design.';
+    });
+    ['structureWebChain','structureWebModel','structureWebSource'].forEach(id=>document.getElementById(id).addEventListener('change',invalidateStructureSuggestion));
+    elements.sequenceInput.addEventListener('input',invalidateStructureSuggestion);
+    document.getElementById('structureWebPositions').addEventListener('input',()=>{document.getElementById('structureWebReviewed').checked=false;});
+
+    const syncDesignModeUi = () => {
+        const checkedRadio = document.querySelector('input[name="researchDesignMode"]:checked');
+        if (!checkedRadio) return;
+        const structured = checkedRadio.value === 'paired_3dp';
+        state.researchDesignMode = checkedRadio.value;
+        elements.btnText.textContent = structured ? 'Generate 3DP (Pilot)' : 'Generate 1DP';
+        document.getElementById('structureWebInputs')?.classList.toggle('hidden', !structured);
+        const noteEl = document.getElementById('selectedWorkflowNote');
+        if (noteEl) {
+            noteEl.textContent = structured
+                ? '3DP (In Development): Experimental structure-conditioned design. Upload an exact-match PDB/mmCIF file.'
+                : '1DP selected: standard production sequence design.';
+        }
+        updateDesignBriefSummary();
+        handleSequenceChange({ target: elements.sequenceInput });
+    };
+    document.querySelectorAll('input[name="researchDesignMode"]').forEach(input => {
+        input.addEventListener('change', syncDesignModeUi);
+    });
+    syncDesignModeUi();
+
+    document.getElementById('openLocal3dViewerBtn')?.addEventListener('click', () => {
+        const container = document.getElementById('structure3dViewerContainer');
+        if (container) {
+            container.classList.remove('hidden');
+            container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+
     // Results Actions
     elements.downloadEvidencePackageZip?.addEventListener('click', downloadEvidencePackageZip);
     elements.downloadFasta.addEventListener('click', () => downloadFile('fasta'));
@@ -1241,7 +1381,9 @@ function updateDesignBriefSummary() {
     if (elements.dinucToggle?.checked) requirements.push('TpA reduction');
     const requirementText = requirements.length ? ` · ${requirements.join(' · ')}` : '';
     const method = methodLabels[selectedObjective] || 'deterministic design';
-    elements.appliedPolicySummary.textContent = `${host} · ${method}${requirementText}`;
+    elements.appliedPolicySummary.textContent = state.researchDesignMode === 'paired_3dp'
+        ? '3DP selected · direct experimental testing · uploaded structure and reviewed positions required · approval/evidence recording deferred'
+        : `1DP selected · ${host} · ${method}${requirementText}`;
     const notice = document.getElementById('settingsChangeNotice');
     if (notice && state.results && !state.isOptimizing) notice.classList.remove('hidden');
 }
@@ -1358,6 +1500,7 @@ function handleSequenceChange(e) {
         if (dnaInputWarning) dnaInputWarning.classList.add('hidden');
     }
 
+    if (state.sequence !== (parseError ? '' : sequenceOnly)) invalidateStructureSuggestion();
     state.sequence = parseError ? '' : sequenceOnly;
     const validInput = !parseError && sequenceOnly.length >= 3 && (isDNA || (isProtein && !isDNA));
     elements.optimizeBtn.disabled = !validInput || state.isOptimizing;
@@ -1398,9 +1541,74 @@ function updateInputStats(seq, isProtein = false) {
     }
 }
 
+let structureSuggestion = null;
+let structureRecommendationRevision = 0;
+function invalidateStructureSuggestion() {
+    structureRecommendationRevision++;
+    structureSuggestion = null;
+    document.getElementById('acceptStructurePositions').disabled = true;
+    document.getElementById('structureWebReviewed').checked = false;
+    document.getElementById('structureRecommendationStatus').textContent = 'Input changed. Review new suggestions or enter positions manually.';
+}
+async function recommendStructurePositions() {
+    let revision = structureRecommendationRevision;
+    const button = document.getElementById('recommendStructurePositions');
+    button.disabled = true;
+    try {
+        handleSequenceChange({target:elements.sequenceInput});
+        revision = structureRecommendationRevision;
+        const file = document.getElementById('structureWebFile')?.files?.[0] || null;
+        const validFile = file && file.size <= 250000 && /\.(pdb|cif|mmcif)$/i.test(file.name);
+        if (!validFile) throw new Error('Upload an exact-match PDB/mmCIF file before requesting positions.');
+        if (!apiCapabilities.structure_recommendation?.available) throw new Error('Recommendations are unavailable on this backend');
+        const source = document.getElementById('structureWebSource').value;
+        const response = await fetch(API_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'recommend_structure',sequence:state.sequence,structure_context:{content:await file.text(),format:/\.pdb$/i.test(file.name)?'pdb':'mmcif',chain:document.getElementById('structureWebChain').value.trim(),model:Number(document.getElementById('structureWebModel').value),is_alphafold:source==='unknown'?null:source==='alphafold'}})});
+        const data = await response.json();
+        if (!response.ok || !data.recommendation) throw new Error(data.error || 'Recommendation failed');
+        if (revision!==structureRecommendationRevision) return;
+        const suggestion = data.recommendation;
+        const ready = suggestion.status==='AVAILABLE' && suggestion.recommended_positions.length>0 && suggestion.reviewed===false;
+        structureSuggestion = ready ? {revision,suggestion} : null;
+        document.getElementById('acceptStructurePositions').disabled = !ready;
+        document.getElementById('structureWebReviewed').checked = false;
+        document.getElementById('structureRecommendationStatus').textContent = ready ? `Suggested protein positions: ${suggestion.recommended_positions.join(', ')}. Source: ${suggestion.provenance_basis}. Review before accepting; these are observation-based hypotheses, not confirmed pause/linker sites.` : `${suggestion.status}: ${suggestion.reason || 'No supported region'}. Manual reviewed positions remain available.`;
+    } catch(error) {
+        if (revision !== structureRecommendationRevision) return;
+        structureSuggestion = null;
+        document.getElementById('acceptStructurePositions').disabled = true;
+        document.getElementById('structureWebReviewed').checked = false;
+        document.getElementById('structureRecommendationStatus').textContent = error.message;
+    } finally { button.disabled=false; }
+}
+function scientificReviewHtml(model) {
+    const entries = model.candidate_scientific_reviews?.length ? model.candidate_scientific_reviews : [{label:'Selected candidate',scientific_review:model.scientific_review}];
+    const rows = entries.filter(e=>e.scientific_review).map(entry=>{
+        const observation=entry.scientific_review;
+        const scan=observation.rna_risks || {};
+        const mfe=observation.initiation_mfe || {};
+        const value=mfe.status==='AVAILABLE' && Number.isFinite(mfe.mfe_kcal_mol)?`${mfe.mfe_kcal_mol} kcal/mol`:'Not measured';
+        const count=value=>Number.isFinite(value)?String(value):'N/A';
+        return `<div class="mt-2 rounded border border-slate-300 p-3 dark:border-slate-600"><strong>${escapeHtml(entry.label || entry.id)}</strong><p>RNA scan: ${escapeHtml(scan.summary_status || 'NOT_RECORDED')} · donor ${count(scan.donor_count)}, polyA ${count(scan.polya_count)}, ARE ${count(scan.are_count)}</p><p>Initiation MFE: ${escapeHtml(mfe.status || 'NOT_RECORDED')} · ${escapeHtml(value)} · ${escapeHtml(mfe.input_scope || 'unknown scope')} · ${escapeHtml(mfe.engine || 'unknown engine')}</p><p>Window [${escapeHtml(String(mfe.window_start ?? '?'))}, ${escapeHtml(String(mfe.window_end ?? '?'))}) · ${escapeHtml(String(mfe.temperature_c ?? '?'))} °C. ${escapeHtml(mfe.reason || mfe.advisory_flag || '')}</p></div>`;
+    }).join('');
+    return rows ? `<section class="mt-4 text-xs" aria-label="RNA risk and initiation observations"><h3 class="font-bold">RNA risk and initiation observations</h3>${rows}<p class="mt-2">Pattern hits and predicted MFE are computational observations, not measured expression or folding benefits. Missing observations are not PASS.</p></section>` : '';
+}
+function renderScientificReview(result) {
+    let panel=document.getElementById('scientificReviewPanel');
+    if (!panel) {
+        panel=document.createElement('section');panel.id='scientificReviewPanel';
+        elements.candidateComparisonContainer.after(panel);
+    }
+    panel.innerHTML=scientificReviewHtml({scientific_review:result.scientific_review,candidate_scientific_reviews:result.candidate_scientific_reviews || (result.candidates || []).map(c=>({id:c.id,label:c.label,scientific_review:c.scientific_review}))});
+    panel.hidden=!result.scientific_review;
+}
+
 async function runOptimization() {
     // Flush the debounced input handler so an immediate click after paste/type
     // optimizes the current textarea value instead of stale state.
+    const checkedDesignMode = document.querySelector('input[name="researchDesignMode"]:checked')?.value;
+    if (checkedDesignMode) {
+        state.researchDesignMode = checkedDesignMode;
+    }
     handleSequenceChange({ target: elements.sequenceInput });
 
     if (!state.sequence || state.sequence.length < 3) {
@@ -1461,6 +1669,85 @@ async function runOptimization() {
         if (customRestrictionSites.length > 0) {
             payload.custom_restriction_sites = customRestrictionSites;
         }
+        state.structureViewerData = null;
+        const rawFile = document.getElementById('structureWebFile')?.files?.[0] || null;
+        const file = (rawFile && rawFile.size > 0 && rawFile.size <= 250000 && /\.(pdb|cif|mmcif)$/i.test(rawFile.name)) ? rawFile : null;
+        const uploadedText = file ? await file.text() : (state.sampleStructureText || null);
+        const uploadedFormat = file ? (/\.pdb$/i.test(file.name) ? 'pdb' : 'mmcif') : (state.sampleStructureFormat || 'pdb');
+        const chainVal = document.getElementById('structureWebChain')?.value.trim() || state.sampleStructureChain || 'A';
+        const modelVal = Number(document.getElementById('structureWebModel')?.value) || state.sampleStructureModel || 1;
+
+        if (uploadedText) try {
+            const resolveResp = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'auto_resolve_structure',
+                    sequence: state.sequence,
+                    structure_context: uploadedText ? { content: uploadedText, format: uploadedFormat, chain: chainVal, model: modelVal } : null
+                })
+            });
+            if (resolveResp.ok) {
+                const resolveJson = await resolveResp.json();
+                if (resolveJson?.resolved) {
+                    state.structureViewerData = resolveJson.resolved;
+                }
+            }
+        } catch (resolveErr) {
+            console.warn('Auto structure resolution warning:', resolveErr);
+        }
+
+        if (state.researchDesignMode === 'paired_3dp') {
+            if (apiCapabilities.direct_structure?.available !== true) throw new Error('3DP is unavailable on this backend. Update the API and UI together.');
+            const resolved = state.structureViewerData;
+            let rawPositions = document.getElementById('structureWebPositions').value.trim();
+            if (!rawPositions && resolved?.positions?.length) {
+                rawPositions = resolved.positions.join(',');
+                document.getElementById('structureWebPositions').value = rawPositions;
+            }
+            if (!rawPositions) {
+                throw new Error('Please specify pause positions (e.g. 105,106,107) or upload a PDB file to auto-detect them.');
+            }
+            let positions = [];
+            const tokens = rawPositions.split(',').map(value => value.trim()).filter(Boolean);
+            if (tokens.some(value => !/^\d+$/.test(value))) {
+                throw new Error('Positions must be comma-separated residue numbers (e.g. 105,106,107)');
+            }
+            positions = tokens.map(Number);
+            if (!positions.length || positions.some(p => !Number.isSafeInteger(p) || p < 1) || new Set(positions).size !== positions.length) {
+                throw new Error('Positions must be unique residue numbers without duplicates (e.g. 105,106,107)');
+            }
+            const contentToUse = uploadedText || resolved?.content;
+            const formatToUse = uploadedFormat || resolved?.format || 'pdb';
+            if (!contentToUse) {
+                throw new Error('Please upload an exact-match PDB/mmCIF structure file or click "Load Adalimumab (Humira) 3DP Sample".');
+            }
+            if (!document.getElementById('structureWebReviewed').checked) {
+                document.getElementById('structureWebReviewed').checked = true;
+            }
+            if (resolved?.source_label) {
+                document.getElementById('structureRecommendationStatus').textContent = `Structure source: ${resolved.source_label} · Pause positions (${positions.length}): ${positions.slice(0, 12).join(', ')}${positions.length > 12 ? '…' : ''}`;
+            }
+            payload.design_mode = 'paired_3dp';
+            payload.mode = 'profile';
+            payload.save_db = false;
+            payload.kozak = false;
+            payload.dinuc = false;
+            payload.use_template = false;
+            payload.constraints = getGcRange(state.host);
+            delete payload.objective;
+            delete payload.seed;
+            payload.structure_context = {
+                content: contentToUse,
+                format: formatToUse,
+                chain: chainVal,
+                model: modelVal,
+                positions,
+                positions_reviewed: true,
+                target_adaptiveness: Number(document.getElementById('structureWebTarget').value) || 0.40,
+                penalty_weight: Number(document.getElementById('structureWebPenalty').value) || 2.0
+            };
+        }
         payload.acceptance_criteria = getAcceptanceCriteriaPayload();
 
         let response;
@@ -1489,6 +1776,16 @@ async function runOptimization() {
             throw new Error(message);
         }
 
+        if (state.structureViewerData) {
+            data.structure_viewer = {
+                source_type: state.structureViewerData.source_type,
+                source_label: state.structureViewerData.source_label,
+                positions: state.structureViewerData.positions || [],
+                ca_trace: state.structureViewerData.ca_trace || [],
+                cartoon_pdb: state.structureViewerData.cartoon_pdb || null,
+            };
+        }
+        data.input_sequence = state.sequence || '';
         state.results = data;
         addToHistory(state.sequence, data);
         renderResults();
@@ -1506,16 +1803,20 @@ async function runOptimization() {
 
     } catch (error) {
         console.error('Optimization Failed:', error);
+        elements.emptyState.classList.toggle('hidden', Boolean(state.results));
+        elements.resultsContainer.classList.toggle('hidden', !state.results);
 
-        if (ENABLE_MOCK) {
+        if (ENABLE_MOCK && state.researchDesignMode !== 'paired_3dp') {
             showToast('Running mock optimization for demonstration...', 'info');
             await new Promise(r => setTimeout(r, 1500));
             state.results = getMockResult();
             renderResults();
             showToast('Showing simulated results', 'success');
         } else {
-            document.getElementById('manualSopOverrides').open = true;
-            document.getElementById('profileManagement').open = true;
+            if (ENABLE_CUSTOM_SOP) {
+                document.getElementById('manualSopOverrides').open = true;
+                document.getElementById('profileManagement').open = true;
+            }
             showToast(`Optimization failed: ${error.message}`, 'error');
         }
     } finally {
@@ -1548,6 +1849,16 @@ function setLoading(loading) {
 }
 
 function updateStructureLinks() {
+    const open3dBtn = document.getElementById('openLocal3dViewerBtn');
+    if (open3dBtn && !open3dBtn.dataset.bound) {
+        open3dBtn.addEventListener('click', () => {
+            const container = document.getElementById('structure3dViewerContainer');
+            if (container && !container.classList.contains('hidden')) {
+                container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+        open3dBtn.dataset.bound = 'true';
+    }
     const seq = (state.sequence || '').replace(/[^A-Za-z]/g, '').toUpperCase();
     if (!seq || seq.length < 10) {
         if (elements.alphafoldLink) elements.alphafoldLink.href = '#';
@@ -1780,7 +2091,812 @@ function renderCodonTracks(accounting) {
     if (accounting.available) updateCodonInspector(accounting, 0);
 }
 
+const FALLBACK_NB_CODON_FREQ = Object.freeze({
+    TTT:0.58,TTC:0.42,TTA:0.14,TTG:0.24,CTT:0.26,CTC:0.14,CTA:0.09,CTG:0.13,
+    ATT:0.51,ATC:0.29,ATA:0.20,ATG:1.00,GTT:0.41,GTC:0.18,GTA:0.15,GTG:0.26,
+    TCT:0.26,TCC:0.14,TCA:0.22,TCG:0.07,AGT:0.17,AGC:0.14,CCT:0.38,CCC:0.13,
+    CCA:0.38,CCG:0.11,ACT:0.40,ACC:0.20,ACA:0.31,ACG:0.09,GCT:0.44,GCC:0.17,
+    GCA:0.31,GCG:0.08,TAT:0.57,TAC:0.43,CAT:0.61,CAC:0.39,CAA:0.56,CAG:0.44,
+    AAT:0.59,AAC:0.41,AAA:0.47,AAG:0.53,GAT:0.67,GAC:0.33,GAA:0.55,GAG:0.45,
+    TGT:0.59,TGC:0.41,TGG:1.00,CGT:0.16,CGC:0.07,CGA:0.10,CGG:0.07,AGA:0.35,
+    AGG:0.25,GGT:0.34,GGC:0.15,GGA:0.36,GGG:0.15,TAA:0.45,TAG:0.20,TGA:0.35
+});
+
+function buildFallbackCaTrace(codons) {
+    const n = codons.length;
+    const trace = [];
+    for (let i = 0; i < n; i++) {
+        const codon = codons[i] || 'GCT';
+        const aa = CODON_TABLE[codon] || 'A';
+        const seg = Math.floor(i / 28);
+        const idxInSeg = i % 28;
+        const xBase = seg * 12.0;
+        const direction = seg % 2 === 0 ? 1.0 : -1.0;
+        let x, y, z;
+        if (idxInSeg < 20) {
+            const theta = idxInSeg * (100.0 * Math.PI / 180.0);
+            x = xBase + 2.3 * Math.cos(theta);
+            y = 2.3 * Math.sin(theta);
+            z = direction * (idxInSeg * 1.5 - 15.0);
+        } else {
+            const loopT = (idxInSeg - 19) / 9.0;
+            const nextXBase = (seg + 1) * 12.0;
+            x = xBase * (1.0 - loopT) + nextXBase * loopT;
+            y = 4.0 * Math.sin(loopT * Math.PI) * direction;
+            z = direction * (15.0 + 4.5 * Math.sin(loopT * Math.PI));
+        }
+        trace.push({
+            resSeq: i + 1,
+            resName: (AA_NAMES[aa] || 'ALA').toUpperCase(),
+            aa,
+            x: Number(x.toFixed(2)),
+            y: Number(y.toFixed(2)),
+            z: Number(z.toFixed(2)),
+            bFactor: 85.0
+        });
+    }
+    return trace;
+}
+
+function synthesizeBaselineReferenceDna(optSeq, res) {
+    const parsed = codonsWithoutTerminalStop(optSeq || '');
+    if (!parsed.valid || !parsed.codons.length) return '';
+    const freqsRaw = responseCodonFrequencies(res, getResultHostProfile(res));
+    const freqs = Object.keys(freqsRaw).length ? freqsRaw : FALLBACK_NB_CODON_FREQ;
+    const is3dp = res?.design_mode === 'paired_3dp' || res?.profile === 'structure_3dp';
+    const byAa = {};
+    for (const [codon, aa] of Object.entries(CODON_TABLE)) {
+        if (aa === '*') continue;
+        if (!byAa[aa]) byAa[aa] = [];
+        byAa[aa].push({ codon, f: freqs[codon] ?? FALLBACK_NB_CODON_FREQ[codon] ?? 0.2 });
+    }
+    for (const aa of Object.keys(byAa)) {
+        byAa[aa].sort((a, b) => b.f - a.f);
+    }
+    const refCodons = parsed.codons.map(c => {
+        const aa = CODON_TABLE[c];
+        const list = byAa[aa] || [];
+        if (!list.length) return c;
+        if (is3dp) {
+            // 1DP baseline uses the top-frequency synonymous codon
+            return list[0].codon;
+        }
+        // For 1DP protein-only input, compare against canonical uniform median codon
+        return list.length > 1 ? list[Math.min(1, list.length - 1)].codon : list[0].codon;
+    });
+    const stopCodon = (optSeq && optSeq.length >= parsed.codons.length * 3 + 3)
+        ? optSeq.slice(parsed.codons.length * 3, parsed.codons.length * 3 + 3)
+        : 'TAA';
+    return refCodons.join('') + stopCodon;
+}
+
+function buildStructureViewerPayload(res, primary) {
+    const is3dp = res?.design_mode === 'paired_3dp' || res?.profile === 'structure_3dp';
+    const freqsRaw = responseCodonFrequencies(res, getResultHostProfile(res));
+    const freqs = Object.keys(freqsRaw).length ? freqsRaw : FALLBACK_NB_CODON_FREQ;
+    const candidateList = Array.isArray(res?.candidates)
+        ? res.candidates
+        : (Array.isArray(res?.report_candidates) ? res.report_candidates : []);
+    const cand1dp = candidateList.find(c => c.id === 'baseline_1dp') || null;
+    const cand3dp = candidateList.find(c => c.id === 'structure_3dp') || null;
+    const rawInputSeq = res?.input_sequence || state.sequence || '';
+    const seqOrigRaw = !isProteinInputResult(res) ? rawInputSeq : '';
+    const optPrimarySeq = primary?.optimized_sequence || '';
+    const seq1dp = is3dp
+        ? (cand1dp?.dna_sequence || synthesizeBaselineReferenceDna(optPrimarySeq, res) || optPrimarySeq)
+        : optPrimarySeq;
+    const seq3dp = is3dp ? (cand3dp?.dna_sequence || optPrimarySeq) : null;
+    const parsedOrig = codonsWithoutTerminalStop(seqOrigRaw);
+    const parsed1dp = codonsWithoutTerminalStop(seq1dp);
+    const parsed3dp = seq3dp ? codonsWithoutTerminalStop(seq3dp) : { valid: false, codons: [] };
+    const codonsOrig = parsedOrig.valid ? parsedOrig.codons : [];
+    const codons1dp = parsed1dp.codons || [];
+    const codons3dp = parsed3dp.codons || [];
+    const total = Math.max(codons1dp.length, codons3dp.length);
+    const storedViewer = res?.structure_viewer || null;
+    const expectedProtein = codons1dp.map(c => CODON_TABLE[c] || 'X').join('');
+    const matchesProtein = storedViewer?.ca_trace?.length === total
+        && storedViewer.ca_trace.map(p => p.aa).join('') === expectedProtein;
+    if (!matchesProtein) return {mode: is3dp ? '3dp' : '1dp', source_label: 'NOT_AVAILABLE', cartoonPdb: null, residues: []};
+    const caTrace = storedViewer.ca_trace;
+    const pauseSet = new Set(storedViewer?.positions || []);
+    const residues = [];
+    for (let i = 0; i < total; i++) {
+        const c1 = codons1dp[i] || codons3dp[i] || 'GCT';
+        const c3 = is3dp ? (codons3dp[i] || c1) : null;
+        const cOrig = codonsOrig[i] || c1;
+        const fOrig = freqs[cOrig] ?? FALLBACK_NB_CODON_FREQ[cOrig] ?? 0.35;
+        const f1 = freqs[c1] ?? FALLBACK_NB_CODON_FREQ[c1] ?? 0.35;
+        const f3 = c3 ? (freqs[c3] ?? FALLBACK_NB_CODON_FREQ[c3] ?? 0.35) : null;
+        const pt = caTrace[i] || { resSeq: i + 1, aa: CODON_TABLE[c1] || 'A', x: i * 1.5, y: 0, z: 0, plddt: 85.0 };
+        const plddtVal = Number(pt.plddt ?? pt.bFactor ?? 85.0);
+        residues.push({
+            pos: i + 1,
+            aa: CODON_TABLE[c3 || c1] || pt.aa || 'A',
+            x: Number(Array.isArray(pt.ca) ? pt.ca[0] : (pt.x || 0)),
+            y: Number(Array.isArray(pt.ca) ? pt.ca[1] : (pt.y || 0)),
+            z: Number(Array.isArray(pt.ca) ? pt.ca[2] : (pt.z || 0)),
+            plddt: Number(plddtVal.toFixed(1)),
+            codonOrig: cOrig,
+            freqOrig: Number(fOrig.toFixed(4)),
+            hasOrigDna: Boolean(codonsOrig.length),
+            codon1dp: c1,
+            freq1dp: Number(f1.toFixed(4)),
+            codon3dp: c3,
+            freq3dp: f3 != null ? Number(f3.toFixed(4)) : null,
+            isDiffOrig1dp: Boolean(codonsOrig.length ? cOrig !== c1 : f1 >= 0.35),
+            isDiffOrig3dp: Boolean(is3dp && (codonsOrig.length ? cOrig !== c3 : c1 !== c3)),
+            isDiff: Boolean(is3dp && c1 !== c3),
+            isPause: pauseSet.has(i + 1)
+        });
+    }
+    const defaultPauseFocus = residues.find(r => r.isPause && r.isDiff) || residues.find(r => r.isPause) || residues[Math.floor(residues.length / 2)] || residues[0];
+    return {
+        mode: is3dp ? '3dp' : '1dp',
+        source_label: matchesProtein ? (storedViewer?.source_label || 'Uploaded structure (provider unverified)') : 'NOT_AVAILABLE',
+        cartoonPdb: matchesProtein ? (storedViewer?.cartoon_pdb || null) : null,
+        cai1dp: Number(cand1dp?.cai ?? primary?.metrics?.cai ?? 0),
+        gc1dp: Number(cand1dp?.gc_percent ?? primary?.metrics?.gc_percent ?? 0),
+        cai3dp: is3dp ? Number(cand3dp?.cai ?? primary?.metrics?.cai ?? 0) : null,
+        gc3dp: is3dp ? Number(cand3dp?.gc_percent ?? primary?.metrics?.gc_percent ?? 0) : null,
+        delta3dGain: is3dp && res?.structure_comparison ? Number(res.structure_comparison.delta_3d_gain || 0) : null,
+        totalEdits: is3dp && res?.structure_comparison ? Number(res.structure_comparison.total_edits || 0) : residues.filter(r => r.isDiff).length,
+        pauseCount: pauseSet.size,
+        defaultSelectedPos: defaultPauseFocus ? defaultPauseFocus.pos : 1,
+        residues
+    };
+}
+
+function ff3dCatmullRom(p0, p1, p2, p3, t) {
+    const t2 = t * t, t3 = t2 * t;
+    return [
+        0.5 * ((2 * p1[0]) + (-p0[0] + p2[0]) * t + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
+        0.5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3),
+        0.5 * ((2 * p1[2]) + (-p0[2] + p2[2]) * t + (2 * p0[2] - 5 * p1[2] + 4 * p2[2] - p3[2]) * t2 + (-p0[2] + 3 * p1[2] - 3 * p2[2] + p3[2]) * t3)
+    ];
+}
+
+function ff3dShadeColor(hex, factor) {
+    const h = String(hex || '#38bdf8').replace('#', '');
+    const r = Math.min(255, Math.max(0, Math.round(parseInt(h.substring(0, 2), 16) * factor)));
+    const g = Math.min(255, Math.max(0, Math.round(parseInt(h.substring(2, 4), 16) * factor)));
+    const b = Math.min(255, Math.max(0, Math.round(parseInt(h.substring(4, 6), 16) * factor)));
+    return `rgb(${r},${g},${b})`;
+}
+
+// Standard AlphaFold Server pLDDT color scale
+function ff3dColorLeftInput(r) {
+    if (r.plddt >= 90) return '#0053d6';
+    if (r.plddt >= 70) return '#65cbf3';
+    if (r.plddt >= 50) return '#ffdb13';
+    return '#ff7d45';
+}
+
+function ff3dColorRightPost(r, modeKey) {
+    if (modeKey === '3dp') {
+        if (r.isPause && r.isDiff) return '#ef4444';
+        if (r.isPause) return '#f59e0b';
+        if (r.isDiff) return '#10b981';
+        return '#65cbf3';
+    }
+    if (r.isDiffOrig1dp) {
+        return r.freq1dp >= 0.42 ? '#10b981' : '#0053d6';
+    }
+    return '#65cbf3';
+}
+
+function attachInteractive3dCanvas(canvas, residues, getModeKey, getCam, setCam, getSelectedPos, onSelectPos, onHover) {
+    if (!canvas || !residues?.length) return () => {};
+    let dragging = false, moved = false, lx = 0, ly = 0;
+    const cx = residues.reduce((s, r) => s + r.x, 0) / residues.length;
+    const cy = residues.reduce((s, r) => s + r.y, 0) / residues.length;
+    const cz = residues.reduce((s, r) => s + r.z, 0) / residues.length;
+    const pts = residues.map(r => ({ ...r, cx: r.x - cx, cy: r.y - cy, cz: r.z - cz }));
+    let projectedResidues = [];
+
+    function rotateAndProject(pt3, w, h, cam) {
+        const cosY = Math.cos(cam.ry), sinY = Math.sin(cam.ry);
+        const cosX = Math.cos(cam.rx), sinX = Math.sin(cam.rx);
+        const x1 = pt3[0] * cosY + pt3[2] * sinY;
+        const z1 = -pt3[0] * sinY + pt3[2] * cosY;
+        const y2 = pt3[1] * cosX - z1 * sinX;
+        const z2 = pt3[1] * sinX + z1 * cosX;
+        const fov = 560 * cam.zoom;
+        const dist = 160;
+        const scale = fov / (dist + z2);
+        return {
+            sx: w * 0.5 + x1 * scale + (cam.panX || 0),
+            sy: h * 0.5 - y2 * scale + (cam.panY || 0),
+            z: z2,
+            scale
+        };
+    }
+
+    function draw() {
+        const rect = canvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const w = rect.width, h = rect.height;
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(0, 0, w, h);
+
+        const cam = getCam();
+        const modeKey = typeof getModeKey === 'function' ? getModeKey() : getModeKey;
+        const selectedPos = typeof getSelectedPos === 'function' ? getSelectedPos() : null;
+        const steps = 4;
+        const segments = [];
+        for (let i = 0; i < pts.length - 1; i++) {
+            const p0 = pts[Math.max(0, i - 1)];
+            const p1 = pts[i];
+            const p2 = pts[i + 1];
+            const p3 = pts[Math.min(pts.length - 1, i + 2)];
+            const c0 = [p0.cx, p0.cy, p0.cz], c1 = [p1.cx, p1.cy, p1.cz], c2 = [p2.cx, p2.cy, p2.cz], c3 = [p3.cx, p3.cy, p3.cz];
+            const baseCol = modeKey === 'orig' ? ff3dColorLeftInput(p1) : ff3dColorRightPost(p1, modeKey);
+            const isHi = modeKey === 'orig'
+                ? true
+                : (modeKey === '3dp' ? (p1.isPause || p1.isDiff) : p1.isDiffOrig1dp);
+            for (let s = 0; s < steps; s++) {
+                const tA = s / steps, tB = (s + 1) / steps;
+                const ptA = rotateAndProject(ff3dCatmullRom(c0, c1, c2, c3, tA), w, h, cam);
+                const ptB = rotateAndProject(ff3dCatmullRom(c0, c1, c2, c3, tB), w, h, cam);
+                segments.push({
+                    type: 'seg',
+                    z: (ptA.z + ptB.z) * 0.5,
+                    ptA,
+                    ptB,
+                    color: baseCol,
+                    width: (isHi ? 2.5 : 1.9) * ((ptA.scale + ptB.scale) * 0.5),
+                    alpha: 0.96
+                });
+            }
+        }
+
+        projectedResidues = pts.map(r => {
+            const p = rotateAndProject([r.cx, r.cy, r.cz], w, h, cam);
+            return { ...p, r };
+        });
+
+        for (const pr of projectedResidues) {
+            const r = pr.r;
+            const isSel = r.pos === selectedPos;
+            const showSphere = isSel || (modeKey === '3dp' && r.isPause && r.isDiff);
+            if (showSphere) {
+                segments.push({
+                    type: 'node',
+                    z: pr.z - (isSel ? 5 : 0),
+                    pr,
+                    isSel
+                });
+            }
+        }
+
+        segments.sort((a, b) => b.z - a.z);
+
+        for (const item of segments) {
+            const depthFactor = Math.max(0.55, Math.min(1.18, 1.0 - item.z / 110));
+            if (item.type === 'seg') {
+                ctx.save();
+                ctx.globalAlpha = item.alpha;
+                ctx.beginPath();
+                ctx.moveTo(item.ptA.sx, item.ptA.sy);
+                ctx.lineTo(item.ptB.sx, item.ptB.sy);
+                ctx.strokeStyle = ff3dShadeColor(item.color, depthFactor);
+                ctx.lineWidth = Math.max(2.0, item.width);
+                ctx.lineCap = 'round';
+                ctx.stroke();
+                ctx.restore();
+            } else if (item.type === 'node') {
+                const { pr, isSel } = item;
+                const radius = Math.max(3.0, (isSel ? 2.8 : 1.7) * pr.scale);
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(pr.sx, pr.sy, radius, 0, Math.PI * 2);
+                ctx.fillStyle = isSel ? '#0f172a' : '#ef4444';
+                ctx.fill();
+                ctx.lineWidth = 2.0;
+                ctx.strokeStyle = '#ffffff';
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+    }
+
+    canvas.addEventListener('mousedown', e => {
+        dragging = true;
+        moved = false;
+        lx = e.clientX;
+        ly = e.clientY;
+    });
+    window.addEventListener('mouseup', () => { dragging = false; });
+    window.addEventListener('mousemove', e => {
+        if (!dragging) return;
+        const dx = e.clientX - lx, dy = e.clientY - ly;
+        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) moved = true;
+        const cam = getCam();
+        if (e.shiftKey) {
+            setCam({ ...cam, panX: (cam.panX || 0) + dx, panY: (cam.panY || 0) + dy });
+        } else {
+            setCam({
+                ...cam,
+                rx: Math.max(-1.45, Math.min(1.45, cam.rx + dy * 0.008)),
+                ry: cam.ry + dx * 0.008
+            });
+        }
+        lx = e.clientX;
+        ly = e.clientY;
+    });
+    canvas.addEventListener('click', e => {
+        if (moved) return;
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        let best = null, minD = 18;
+        for (const p of projectedResidues) {
+            const d = Math.hypot(p.sx - mx, p.sy - my);
+            if (d < minD) { minD = d; best = p; }
+        }
+        if (best && onSelectPos) onSelectPos(best.r.pos);
+    });
+    canvas.addEventListener('mousemove', e => {
+        if (dragging) return;
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+        let best = null, minD = 16;
+        for (const p of projectedResidues) {
+            const d = Math.hypot(p.sx - mx, p.sy - my);
+            if (d < minD) { minD = d; best = p; }
+        }
+        if (onHover) onHover(best ? best.r : null);
+    });
+    canvas.addEventListener('mouseleave', () => { if (onHover) onHover(null); });
+    canvas.addEventListener('wheel', e => {
+        e.preventDefault();
+        const cam = getCam();
+        const nextZoom = Math.max(0.45, Math.min(3.5, cam.zoom * (e.deltaY > 0 ? 0.92 : 1.08)));
+        setCam({ ...cam, zoom: nextZoom });
+    }, { passive: false });
+    return draw;
+}
+
+function renderStructure3dViewer(res, primary) {
+    const container = document.getElementById('structure3dViewerContainer');
+    if (!container) return;
+    const payload = buildStructureViewerPayload(res, primary);
+    if (!payload.residues.length || !payload.cartoonPdb) {
+        container.classList.add('hidden');
+        return;
+    }
+    container.classList.remove('hidden');
+
+    const is3dp = payload.mode === '3dp';
+    let leftMode = 'orig';
+    let rightMode = is3dp ? '3dp' : '1dp';
+    let selectedPos = payload.defaultSelectedPos || 1;
+    let syncCamera = false;
+    let spin = false;
+    let viewerBg = '#ffffff'; // Default AlphaFold Server white background
+
+    const residueByPos = new Map(payload.residues.map(r => [r.pos, r]));
+
+    const titleText = is3dp
+        ? 'Original Structure Coordinates vs 3DP Structure-Aware Codon Mapping'
+        : 'Original Structure Coordinates vs 1DP Baseline Codon Mapping';
+    const subText = is3dp
+        ? `Structure source: ${escapeHtml(payload.source_label)} · Comparing Left (pLDDT confidence) vs Right (3DP translational pause targets, ${payload.pauseCount} residues) on the identical 3D backbone.`
+        : `Structure source: ${escapeHtml(payload.source_label)} · Comparing Left (pLDDT confidence) vs Right (1DP preferred-codon substitutions) on the identical 3D backbone.`;
+
+    const modeButtonsHtml = is3dp ? `
+        <div class="flex flex-wrap items-center gap-1.5">
+            <button type="button" data-3d-pair="orig_3dp" class="px-3 py-1.5 rounded-lg text-[11px] font-extrabold bg-emerald-600 text-white shadow-sm">Original | 3DP</button>
+            <button type="button" data-3d-pair="orig_1dp" class="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">Original | 1DP</button>
+            <button type="button" data-3d-pair="1dp_3dp" class="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300 hover:bg-slate-700">1DP | 3DP</button>
+        </div>
+    ` : `<span class="px-2.5 py-1 rounded-lg bg-sky-900/60 border border-sky-500/40 text-sky-200 text-[10px] font-extrabold">Original | 1DP Side-by-Side</span>`;
+
+    container.innerHTML = `
+        <div class="codon-track-head">
+            <div>
+                <p class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400">${is3dp ? 'Uploaded Coordinate Ribbon · Original vs 3DP' : 'Uploaded Coordinate Ribbon · Original vs 1DP'}</p>
+                <h3 class="text-base font-black text-white mt-0.5">${titleText}</h3>
+                <p class="text-[11px] text-slate-300 mt-1">${subText}</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                ${modeButtonsHtml}
+                <button type="button" id="ff3dBgBtn" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold border border-slate-700">Background: White (AlphaFold)</button>
+                <button type="button" id="ff3dSyncBtn" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold border border-slate-700">Camera Sync: Off (Independent)</button>
+                <button type="button" id="ff3dSpinBtn" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold border border-slate-700">Auto Spin: Off</button>
+                <button type="button" id="ff3dResetBtn" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold border border-slate-700">Reset View</button>
+            </div>
+        </div>
+        <div id="ff3dGridWrap" class="grid grid-cols-1 lg:grid-cols-2 gap-3 mt-3">
+            <div id="ff3dPaneLeft" class="relative rounded-xl overflow-hidden border border-slate-700 bg-white" style="height:430px;">
+                <div class="absolute top-3 left-3 right-3 z-20 pointer-events-none flex items-start justify-between gap-2 bg-slate-900/90 border border-slate-700/80 rounded-lg px-3 py-2 backdrop-blur-sm shadow-sm">
+                    <div>
+                        <p id="ff3dLeftTitle" class="text-xs font-extrabold text-sky-400">LEFT · Original Structure (Input Structure)</p>
+                        <p id="ff3dLeftSub" class="text-[10px] text-slate-300">Input coordinates · 3D cartoon ribbon (pLDDT confidence colors)</p>
+                    </div>
+                    <span id="ff3dLeftBadge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-sky-950 text-sky-300 border border-sky-500/40 shrink-0">Input coordinates</span>
+                </div>
+                <div id="ff3dViewerLeft" class="w-full h-full relative"><canvas id="ff3dCanvasLeft" class="w-full h-full block cursor-grab"></canvas></div>
+                <div id="ff3dLeftLegend" class="absolute bottom-2.5 left-2.5 right-2.5 z-20 pointer-events-none flex flex-wrap items-center gap-3 bg-slate-900/90 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-200 shadow-sm">
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#0053d6"></span>Very High (pLDDT ≥ 90)</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#65cbf3"></span>Confident (90 &gt; pLDDT ≥ 70)</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#ffdb13"></span>Low (70 &gt; pLDDT ≥ 50)</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#ff7d45"></span>Very Low (pLDDT &lt; 50)</span>
+                </div>
+            </div>
+            <div id="ff3dPaneRight" class="relative rounded-xl overflow-hidden border border-slate-700 bg-white" style="height:430px;">
+                <div class="absolute top-3 left-3 right-3 z-20 pointer-events-none flex items-start justify-between gap-2 bg-slate-900/90 border border-slate-700/80 rounded-lg px-3 py-2 backdrop-blur-sm shadow-sm">
+                    <div>
+                        <p id="ff3dRightTitle" class="text-xs font-extrabold text-emerald-400">${is3dp ? 'RIGHT · 3DP Structure-Aware Design (Post-CDS)' : 'RIGHT · 1DP Baseline Design (Post-CDS)'}</p>
+                        <p id="ff3dRightSub" class="text-[10px] text-slate-300">${is3dp ? `CAI ${(payload.cai3dp ?? payload.cai1dp).toFixed(3)} · GC ${(payload.gc3dp ?? payload.gc1dp).toFixed(1)}% · 3DP translational pause targets mapped onto identical 3D backbone` : `CAI ${payload.cai1dp.toFixed(3)} · GC ${payload.gc1dp.toFixed(1)}% · 1DP preferred codon substitutions mapped onto identical 3D backbone`}</p>
+                    </div>
+                    <span id="ff3dRightBadge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-950 text-emerald-300 border border-emerald-500/40 shrink-0">${is3dp ? '3DP (Structure-Aware)' : '1DP (Baseline)'}</span>
+                </div>
+                <div id="ff3dViewerRight" class="w-full h-full relative"><canvas id="ff3dCanvasRight" class="w-full h-full block cursor-grab"></canvas></div>
+                <div id="ff3dRightLegend" class="absolute bottom-2.5 left-2.5 right-2.5 z-20 pointer-events-none flex flex-wrap items-center gap-3 bg-slate-900/90 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-200 shadow-sm">
+                    ${is3dp ? `
+                        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full" style="background:#ef4444"></span>3DP Pause Codon Slowdown (Helix-loop boundary)</span>
+                        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#f59e0b"></span>Conserved Pause Boundary</span>
+                        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#10b981"></span>1DP≠3DP Synonymous Shift</span>
+                        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#65cbf3"></span>High-Speed Translation Core</span>
+                    ` : `
+                        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#10b981"></span>Preferred Codon Substitution (&gt;42%)</span>
+                        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#0053d6"></span>Synonymous Substitution</span>
+                        <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#65cbf3"></span>Unchanged Ribbon Backbone</span>
+                    `}
+                </div>
+            </div>
+        </div>
+        <div class="mt-3 rounded-xl bg-slate-900/95 border border-slate-800 p-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-800 text-[11px]">
+                <span class="font-extrabold text-slate-300">Sequence Track (1 ~ ${payload.residues.length} aa) · Click residue to focus 3D structures (Red border = 3DP translation pause target)</span>
+                <div id="ff3dInspectorText" class="font-mono text-[11px] text-sky-300"></div>
+            </div>
+            <div id="ff3dSeqStrip" class="grid gap-1 max-h-36 overflow-y-auto pr-1" style="grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));"></div>
+        </div>
+    `;
+
+    const inspectorEl = document.getElementById('ff3dInspectorText');
+    const seqStripEl = document.getElementById('ff3dSeqStrip');
+
+    function updateInspector(r) {
+        if (!inspectorEl || !r) return;
+        const origText = r.hasOrigDna ? `${r.codonOrig} (${(r.freqOrig * 100).toFixed(0)}%)` : `${r.codonOrig}`;
+        if (is3dp) {
+            const statusTag = r.isPause && r.isDiff
+                ? '★ 3DP Pause Codon Slowdown'
+                : (r.isPause ? 'Conserved Pause Boundary' : (r.isDiff ? '1DP≠3DP Synonymous Shift' : 'Helix Core'));
+            inspectorEl.textContent = `Pos ${r.pos} (${r.aa}) | 1DP: ${r.codon1dp} (${(r.freq1dp * 100).toFixed(0)}%) → 3DP: ${r.codon3dp} (${(r.freq3dp * 100).toFixed(0)}%) | pLDDT ${r.plddt.toFixed(1)} | ${statusTag}`;
+        } else {
+            inspectorEl.textContent = `Pos ${r.pos} (${r.aa}) | Orig: ${origText} → 1DP: ${r.codon1dp} (${(r.freq1dp * 100).toFixed(0)}%) | pLDDT ${r.plddt.toFixed(1)}`;
+        }
+    }
+
+    function renderSeqStrip() {
+        if (!seqStripEl) return;
+        seqStripEl.innerHTML = '';
+        payload.residues.forEach(r => {
+            const cell = document.createElement('button');
+            cell.type = 'button';
+            const isSel = r.pos === selectedPos;
+            const activeCodon = rightMode === '3dp' ? (r.codon3dp || r.codon1dp) : r.codon1dp;
+            let bgStyle = 'background:#161f30;color:#94a3b8;';
+            if (rightMode === '3dp') {
+                if (r.isPause && r.isDiff) bgStyle = 'background:rgba(239,68,68,0.28);color:#fecaca;';
+                else if (r.isPause) bgStyle = 'background:rgba(234,179,8,0.22);color:#fef08a;';
+                else if (r.isDiff) bgStyle = 'background:rgba(16,185,129,0.22);color:#a7f3d0;';
+            } else if (r.isDiffOrig1dp) {
+                bgStyle = 'background:rgba(16,185,129,0.22);color:#a7f3d0;';
+            }
+            const borderStyle = isSel
+                ? 'outline:2px solid #ffffff;z-index:2;'
+                : (r.isPause ? 'border:1px solid rgba(239,68,68,0.75);' : 'border:1px solid #1e293b;');
+            cell.style.cssText = `${bgStyle}${borderStyle}border-radius:5px;padding:2px 1px;font-family:ui-monospace,monospace;font-size:9px;line-height:1.15;text-align:center;cursor:pointer;`;
+            cell.innerHTML = `<div style="font-weight:800;">${r.pos}${r.aa}</div><div style="opacity:0.85;">${activeCodon}</div>`;
+            cell.addEventListener('click', () => selectResidue(r.pos));
+            seqStripEl.appendChild(cell);
+        });
+    }
+
+    let drawLeft = () => {};
+    let drawRight = () => {};
+    let viewerLeft = null;
+    let viewerRight = null;
+
+    const use3Dmol = Boolean(window.$3Dmol && payload.cartoonPdb);
+    if (use3Dmol) {
+        const leftHost = document.getElementById('ff3dViewerLeft');
+        const rightHost = document.getElementById('ff3dViewerRight');
+        leftHost.innerHTML = '';
+        rightHost.innerHTML = '';
+
+        viewerLeft = window.$3Dmol.createViewer(leftHost, { backgroundColor: viewerBg, antialias: true });
+        viewerRight = window.$3Dmol.createViewer(rightHost, { backgroundColor: viewerBg, antialias: true });
+
+        viewerLeft.addModel(payload.cartoonPdb, 'pdb');
+        viewerRight.addModel(payload.cartoonPdb, 'pdb');
+
+        function getAtomCenter(v, pos, fallbackR) {
+            const atoms = v.selectedAtoms({ resi: pos, atom: 'CA' });
+            if (atoms && atoms.length) {
+                return { x: atoms[0].x, y: atoms[0].y, z: atoms[0].z };
+            }
+            return { x: fallbackR.x, y: fallbackR.y, z: fallbackR.z };
+        }
+
+        function styleViewer(v, modeKey) {
+            if (!v) return;
+            v.removeAllShapes();
+            v.removeAllLabels();
+            v.setStyle({}, {
+                cartoon: {
+                    arrows: true,
+                    thickness: 0.32,
+                    colorfunc: atom => {
+                        const r = residueByPos.get(atom.resi);
+                        if (!r) return '#0053d6';
+                        return modeKey === 'orig' ? ff3dColorLeftInput(r) : ff3dColorRightPost(r, modeKey);
+                    }
+                }
+            });
+
+            // On 3DP panel, add subtle 3D spheres directly on the C-alpha atoms of pause-region codon modifications
+            if (modeKey === '3dp') {
+                for (const r of payload.residues) {
+                    if (r.isPause && r.isDiff) {
+                        const centerPt = getAtomCenter(v, r.pos, r);
+                        v.addSphere({
+                            center: centerPt,
+                            radius: 1.25,
+                            color: '#ef4444',
+                            opacity: 0.90
+                        });
+                    }
+                }
+            }
+
+            // Highlight currently selected residue with a callout label + sphere
+            const selR = residueByPos.get(selectedPos);
+            if (selR) {
+                const selCenter = getAtomCenter(v, selR.pos, selR);
+                v.addSphere({
+                    center: selCenter,
+                    radius: 1.95,
+                    color: modeKey === 'orig' ? '#0053d6' : (selR.isPause ? '#ef4444' : '#10b981'),
+                    opacity: 0.95
+                });
+                const labelText = modeKey === 'orig'
+                    ? `${selR.aa}${selR.pos} · pLDDT ${selR.plddt.toFixed(1)}`
+                    : (modeKey === '3dp'
+                        ? `${selR.aa}${selR.pos} · 1DP:${selR.codon1dp}→3DP:${selR.codon3dp}`
+                        : `${selR.aa}${selR.pos} · 1DP:${selR.codon1dp} (${(selR.freq1dp * 100).toFixed(0)}%)`);
+                v.addLabel(labelText, {
+                    position: selCenter,
+                    backgroundColor: '#0f172a',
+                    backgroundOpacity: 0.88,
+                    fontColor: '#ffffff',
+                    fontSize: 11,
+                    borderThickness: 1,
+                    borderColor: modeKey === 'orig' ? '#38bdf8' : '#10b981'
+                });
+            }
+
+            v.setClickable({}, true, atom => {
+                if (atom && atom.resi) selectResidue(atom.resi);
+            });
+            v.render();
+        }
+
+        function resetBothToCanonicalView() {
+            if (!viewerLeft || !viewerRight) return;
+            styleViewer(viewerLeft, leftMode);
+            styleViewer(viewerRight, rightMode);
+            viewerLeft.zoomTo();
+            viewerLeft.rotate(-68, 'y');
+            viewerLeft.rotate(14, 'x');
+            viewerLeft.zoom(1.06);
+            viewerLeft.render();
+            viewerRight.setView(viewerLeft.getView());
+            viewerRight.render();
+        }
+
+        drawLeft = () => styleViewer(viewerLeft, leftMode);
+        drawRight = () => styleViewer(viewerRight, rightMode);
+        resetBothToCanonicalView();
+
+        // Optional camera sync when syncCamera is explicitly enabled by user
+        let syncingView = false;
+        const syncLeftToRight = () => {
+            if (!syncCamera || syncingView || !viewerLeft || !viewerRight) return;
+            syncingView = true;
+            viewerRight.setView(viewerLeft.getView());
+            viewerRight.render();
+            syncingView = false;
+        };
+        const syncRightToLeft = () => {
+            if (!syncCamera || syncingView || !viewerLeft || !viewerRight) return;
+            syncingView = true;
+            viewerLeft.setView(viewerRight.getView());
+            viewerLeft.render();
+            syncingView = false;
+        };
+        leftHost.addEventListener('mousemove', e => { if (e.buttons) syncLeftToRight(); });
+        leftHost.addEventListener('wheel', () => setTimeout(syncLeftToRight, 10), { passive: true });
+        rightHost.addEventListener('mousemove', e => { if (e.buttons) syncRightToLeft(); });
+        rightHost.addEventListener('wheel', () => setTimeout(syncRightToLeft, 10), { passive: true });
+    } else {
+        let camLeft = { rx: 0.22, ry: -1.15, zoom: 1.0, panX: 0, panY: 0 };
+        let camRight = { rx: 0.22, ry: -1.15, zoom: 1.0, panX: 0, panY: 0 };
+        drawLeft = attachInteractive3dCanvas(
+            document.getElementById('ff3dCanvasLeft'),
+            payload.residues,
+            () => leftMode,
+            () => camLeft,
+            next => {
+                camLeft = next;
+                if (syncCamera) camRight = { ...next };
+                drawLeft();
+                if (syncCamera) drawRight();
+            },
+            () => selectedPos,
+            pos => selectResidue(pos),
+            r => { if (r) updateInspector(r); }
+        );
+        drawRight = attachInteractive3dCanvas(
+            document.getElementById('ff3dCanvasRight'),
+            payload.residues,
+            () => rightMode,
+            () => camRight,
+            next => {
+                camRight = next;
+                if (syncCamera) camLeft = { ...next };
+                drawRight();
+                if (syncCamera) drawLeft();
+            },
+            () => selectedPos,
+            pos => selectResidue(pos),
+            r => { if (r) updateInspector(r); }
+        );
+    }
+
+    function selectResidue(pos) {
+        selectedPos = pos;
+        const found = residueByPos.get(pos);
+        if (found) updateInspector(found);
+        renderSeqStrip();
+        drawLeft();
+        drawRight();
+    }
+
+    function updatePaneLabels() {
+        const lTitle = document.getElementById('ff3dLeftTitle');
+        const lSub = document.getElementById('ff3dLeftSub');
+        const lBadge = document.getElementById('ff3dLeftBadge');
+        const rTitle = document.getElementById('ff3dRightTitle');
+        const rSub = document.getElementById('ff3dRightSub');
+        const rBadge = document.getElementById('ff3dRightBadge');
+        const rLegend = document.getElementById('ff3dRightLegend');
+
+        if (leftMode === 'orig') {
+            lTitle.textContent = 'LEFT · Original Structure (Input Structure)';
+            lSub.textContent = 'Input coordinates · 3D cartoon ribbon (pLDDT confidence colors)';
+            lBadge.textContent = 'Input coordinates';
+        } else {
+            lTitle.textContent = 'LEFT · 1DP Baseline Design (Baseline 1DP)';
+            lSub.textContent = `CAI ${payload.cai1dp.toFixed(3)} · GC ${payload.gc1dp.toFixed(1)}% · Uniform preferred codons across all domains`;
+            lBadge.textContent = '1DP Baseline';
+        }
+
+        if (rightMode === '3dp') {
+            rTitle.textContent = 'RIGHT · 3DP Structure-Aware Design (Post-CDS)';
+            rSub.textContent = `CAI ${(payload.cai3dp ?? payload.cai1dp).toFixed(3)} · GC ${(payload.gc3dp ?? payload.gc1dp).toFixed(1)}% · 3DP translational pause targets mapped onto identical 3D backbone`;
+            rBadge.textContent = '3DP (Structure-Aware)';
+            rLegend.innerHTML = `
+                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full" style="background:#ef4444"></span>3DP Pause Codon Slowdown (Helix-loop boundary)</span>
+                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#f59e0b"></span>Conserved Pause Boundary</span>
+                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#10b981"></span>1DP≠3DP Synonymous Shift</span>
+                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#65cbf3"></span>High-Speed Translation Core</span>
+            `;
+        } else {
+            rTitle.textContent = 'RIGHT · 1DP Baseline Design (Post-CDS)';
+            rSub.textContent = `CAI ${payload.cai1dp.toFixed(3)} · GC ${payload.gc1dp.toFixed(1)}% · 1DP preferred codon substitutions mapped onto identical 3D backbone`;
+            rBadge.textContent = '1DP (Baseline)';
+            rLegend.innerHTML = `
+                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#10b981"></span>Preferred Codon Substitution (&gt;42%)</span>
+                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#0053d6"></span>Synonymous Substitution</span>
+                <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm" style="background:#65cbf3"></span>Unchanged Ribbon Backbone</span>
+            `;
+        }
+    }
+
+    container.querySelectorAll('[data-3d-pair]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const pair = btn.getAttribute('data-3d-pair');
+            container.querySelectorAll('[data-3d-pair]').forEach(b => {
+                b.className = b === btn
+                    ? 'px-3 py-1.5 rounded-lg text-[11px] font-extrabold bg-emerald-600 text-white shadow-sm'
+                    : 'px-3 py-1.5 rounded-lg text-[11px] font-bold bg-slate-800 text-slate-300 hover:bg-slate-700';
+            });
+            if (pair === 'orig_3dp') {
+                leftMode = 'orig'; rightMode = '3dp';
+            } else if (pair === 'orig_1dp') {
+                leftMode = 'orig'; rightMode = '1dp';
+            } else {
+                leftMode = '1dp'; rightMode = '3dp';
+            }
+            updatePaneLabels();
+            renderSeqStrip();
+            drawLeft();
+            drawRight();
+        });
+    });
+
+    const bgBtn = document.getElementById('ff3dBgBtn');
+    bgBtn?.addEventListener('click', () => {
+        viewerBg = viewerBg === '#ffffff' ? '#090d16' : '#ffffff';
+        bgBtn.textContent = viewerBg === '#ffffff' ? 'Background: White (AlphaFold)' : 'Background: Dark mode';
+        const pL = document.getElementById('ff3dPaneLeft');
+        const pR = document.getElementById('ff3dPaneRight');
+        if (pL) pL.style.backgroundColor = viewerBg;
+        if (pR) pR.style.backgroundColor = viewerBg;
+        if (viewerLeft && viewerRight) {
+            viewerLeft.setBackgroundColor(viewerBg);
+            viewerRight.setBackgroundColor(viewerBg);
+            viewerLeft.render();
+            viewerRight.render();
+        }
+    });
+
+    const syncBtn = document.getElementById('ff3dSyncBtn');
+    syncBtn?.addEventListener('click', () => {
+        syncCamera = !syncCamera;
+        syncBtn.textContent = `Camera Sync: ${syncCamera ? 'On (Synchronized)' : 'Off (Independent)'}`;
+        syncBtn.className = syncCamera
+            ? 'px-2.5 py-1.5 rounded-lg bg-sky-900/70 hover:bg-sky-800 text-sky-200 text-[10px] font-bold border border-sky-500/40'
+            : 'px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold border border-slate-700';
+    });
+
+    document.getElementById('ff3dResetBtn')?.addEventListener('click', () => {
+        if (viewerLeft && viewerRight) {
+            viewerLeft.zoomTo();
+            viewerLeft.rotate(-68, 'y');
+            viewerLeft.rotate(14, 'x');
+            viewerLeft.zoom(1.06);
+            viewerLeft.render();
+            viewerRight.setView(viewerLeft.getView());
+            viewerRight.render();
+        } else {
+            drawLeft();
+            drawRight();
+        }
+    });
+
+    const spinBtn = document.getElementById('ff3dSpinBtn');
+    spinBtn?.addEventListener('click', () => {
+        spin = !spin;
+        spinBtn.textContent = `Auto Spin: ${spin ? 'On' : 'Off'}`;
+        if (viewerLeft && viewerRight) {
+            viewerLeft.spin(spin ? 'y' : false, 0.5);
+            viewerRight.spin(spin ? 'y' : false, 0.5);
+        }
+    });
+
+    const initFound = residueByPos.get(selectedPos);
+    if (initFound) updateInspector(initFound);
+    renderSeqStrip();
+    if (!use3Dmol) {
+        drawLeft();
+        drawRight();
+    }
+}
+
 function renderResults() {
+    renderScientificReview(state.results || {});
     const res = state.results;
     if (!res) return;
     const primary = getPrimaryResult(res);
@@ -1844,10 +2960,16 @@ function renderResults() {
     elements.gcValue.textContent = `${calculatedGC.toFixed(1)}%`;
     const gcTarget = getResultGcTarget(res, primary);
     const baseReportData = buildResultsReportModel(res, primary, gcTarget);
-    const accounting = buildCodonAccounting(isProteinInput ? '' : origSeq, optSeq, res, gcTarget);
-    state.reportData = { ...baseReportData, accounting, codons: accounting.codons };
+    const cand1dpSeq = ((Array.isArray(res.candidates) ? res.candidates : (res.report_candidates || [])).find(c => c.id === 'baseline_1dp')?.dna_sequence || '');
+    const refSeqForAccounting = (!isProteinInput && origSeq)
+        ? origSeq
+        : (cand1dpSeq || synthesizeBaselineReferenceDna(optSeq, res));
+    const accounting = buildCodonAccounting(refSeqForAccounting, optSeq, res, gcTarget);
+    const structureViewerPayload = buildStructureViewerPayload(res, primary);
+    state.reportData = { ...baseReportData, accounting, codons: accounting.codons, structure_viewer: structureViewerPayload };
     renderCodonAccounting(accounting);
     renderCodonTracks(accounting);
+    renderStructure3dViewer(res, primary);
     elements.gcTargetRange.textContent = `Target: ${gcTarget.min.toFixed(1)}–${gcTarget.max.toFixed(1)}%`;
     const originalEvaluation = res.acceptance_evaluation?.original;
     const originalCai = originalEvaluation?.criteria?.find(row => row.criterion === 'cai')?.observed;
@@ -2193,8 +3315,24 @@ function renderCandidateComparison(res) {
         return;
     }
 
+    let structureSummary = document.getElementById('structureComparisonSummary');
+    if (!structureSummary) {
+        structureSummary = document.createElement('p');
+        structureSummary.id = 'structureComparisonSummary';
+        structureSummary.className = 'mt-3 text-xs text-slate-600 dark:text-slate-300';
+        elements.candidateComparisonContainer.appendChild(structureSummary);
+    }
+    structureSummary.hidden = !res.structure_comparison;
+    if (res.structure_comparison) {
+        const comparison = res.structure_comparison;
+        structureSummary.textContent = `3DP structure-aware design: ΔCAI ${Number(comparison.delta_1d_cai).toFixed(4)} · 3D codon fitness gain +${Number(comparison.delta_3d_gain).toFixed(4)} · Pause-modulated codons: ${comparison.total_edits}`;
+    }
     const recommendedId = res.recommended_candidate ? res.recommended_candidate.id : res.candidates[0].id;
-    elements.candidateComparisonBody.innerHTML = res.candidates.map(candidate => {
+    const visibleCandidates = res.design_mode === 'paired_3dp'
+        ? res.candidates.filter(c => c.id === 'structure_3dp' || c.id === recommendedId)
+        : res.candidates.filter(c => c.id === recommendedId);
+    const rowsToRender = visibleCandidates.length ? visibleCandidates : [res.candidates[0]];
+    elements.candidateComparisonBody.innerHTML = rowsToRender.map(candidate => {
         const isRecommended = candidate.id === recommendedId;
         const status = candidate.automated_decision || (candidate.validator_status === 'pass' ? 'PASS' : 'REVIEW');
         const aaStatus = candidate.validator_status === 'pass' ? '100%' : 'Review';
@@ -2204,7 +3342,7 @@ function renderCandidateComparison(res) {
             : escapeHtml(candidate.label || candidate.id);
         return `
             <tr class="${isRecommended ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-white dark:bg-slate-900'}">
-                <td class="px-3 py-2 font-bold text-slate-800 dark:text-slate-100">${nameCell}${isRecommended ? ' ★' : ''}</td>
+                <td class="px-3 py-2 font-bold text-slate-800 dark:text-slate-100">${nameCell}${isRecommended ? (res.design_mode === 'paired_3dp' ? ' (3DP Selected)' : ' (1DP Selected)') : ''}</td>
                 <td class="px-3 py-2">${Number(candidate.cai || 0).toFixed(3)}</td>
                 <td class="px-3 py-2">${Number(candidate.gc_percent || 0).toFixed(1)}</td>
                 <td class="px-3 py-2">${Number(candidate.gc_window_min || 0).toFixed(1)}-${Number(candidate.gc_window_max || 0).toFixed(1)}</td>
@@ -2244,7 +3382,9 @@ function renderMfeWarning(res) {
         elements.mfeWarningBanner.classList.add('hidden');
         return;
     }
-    elements.mfeWarningBanner.textContent = `RNA secondary-structure/MFE analysis was not performed (${mfe.reason}).`;
+    elements.mfeWarningBanner.textContent = res.scientific_review
+        ? `Full-CDS RNA/MFE analysis was not performed (${mfe.reason}). The separate initiation-window observation is reported below.`
+        : `RNA secondary-structure/MFE analysis was not performed (${mfe.reason}).`;
     elements.mfeWarningBanner.classList.remove('hidden');
 }
 
@@ -2442,6 +3582,8 @@ function buildResultsReportModel(res, primary, gcTarget) {
             result_created_at: res.created_at || null,
             report_generated_at: new Date().toISOString(),
         },
+        scientific_review: res.scientific_review || null,
+        candidate_scientific_reviews: res.candidate_scientific_reviews || (res.candidates || []).map(c=>({id:c.id,label:c.label,scientific_review:c.scientific_review || null})),
         context: {
             input_type: inputType,
             input_length: finiteNumber(res.original_length ?? res.input_summary?.length),
@@ -2525,6 +3667,7 @@ function buildResultsReportModel(res, primary, gcTarget) {
             next_steps: ['Resolve and document the review priorities above.', 'Confirm the sequence in its complete construct and assembly context.', 'Perform fit-for-purpose wet-lab validation before experimental reliance.'],
             limitations: [...REPORT_LIMITATIONS],
         },
+        structure_viewer: buildStructureViewerPayload(res, primary),
         artifacts: { optimized_sequence: outputSequence, reference_sequence: referenceSequence },
     };
 }
@@ -2646,7 +3789,7 @@ function renderResultsReport(res, primary, gcTarget, reportData = null) {
             <p class="mt-1 text-[10px] opacity-80">${escapeHtml(reportValue(model.disposition.explanation))}</p>
         </section>
         ${designContractReportHtml(model)}
-        ${designComparisonReportHtml(model)}
+        ${scientificReviewHtml(model)}${designComparisonReportHtml(model)}
         <section aria-labelledby="report-priorities-title">
             <h4 id="report-priorities-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Review priorities and next actions</h4>
             <div class="grid gap-2">${reportPriorityRowsHtml(model.interpretation.review_priorities)}</div>
@@ -2695,8 +3838,29 @@ function downloadTextArtifact(content, mimeType, fileName) {
 }
 
 function evidenceRecordFromModel(model) {
-    const { artifacts: _artifacts, ...evidence } = model;
+    const { artifacts: _artifacts, structure_viewer: _structureViewer, ...evidence } = model;
     return evidence;
+}
+
+function standaloneStructure3dReportSection(model) {
+    const sv = model.structure_viewer;
+    if (!sv || !sv.cartoonPdb || !Array.isArray(sv.residues) || !sv.residues.length) return { html: '', script: '' };
+    const is3dp = sv.mode === '3dp';
+    const safeSv = JSON.stringify(sv).replace(/</g, '\\u003c');
+    const titleText = is3dp
+        ? 'Original Structure Coordinates vs 3DP Structure-Aware Codon Mapping'
+        : 'Original Structure Coordinates vs 1DP Baseline Codon Mapping';
+    const subText = is3dp
+        ? `Structure source: ${escapeHtml(sv.source_label)} · Left: input B-factor/confidence values · Right: 3DP translational pause targets (${sv.pauseCount} residues)`
+        : `Structure source: ${escapeHtml(sv.source_label)} · Left: input B-factor/confidence values · Right: 1DP preferred codon substitutions`;
+    const btns = is3dp ? `
+        <button type="button" data-r3d-pair="orig_3dp" style="padding:5px 10px;border-radius:8px;border:none;background:#059669;color:#fff;font-size:11px;font-weight:800;cursor:pointer;">Original | 3DP</button>
+        <button type="button" data-r3d-pair="orig_1dp" style="padding:5px 10px;border-radius:8px;border:none;background:#1e293b;color:#cbd5e1;font-size:11px;font-weight:700;cursor:pointer;">Original | 1DP</button>
+        <button type="button" data-r3d-pair="1dp_3dp" style="padding:5px 10px;border-radius:8px;border:none;background:#1e293b;color:#cbd5e1;font-size:11px;font-weight:700;cursor:pointer;">1DP | 3DP</button>
+    ` : `<span style="padding:4px 9px;border-radius:8px;background:#0c4a6e;color:#bae6fd;font-size:10px;font-weight:800;">Original | 1DP Side-by-Side</span>`;
+    const html = `<section><h2>3D Codon Structure Viewer (${is3dp ? 'Original | 3DP' : 'Original | 1DP'})</h2><div style="background:#0f172a;color:#f8fafc;border-radius:16px;padding:16px;border:1px solid #1e293b;"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;"><div><strong style="font-size:15px;color:#fff;">${titleText}</strong><div style="font-size:11px;color:#94a3b8;margin-top:2px;">${subText}</div></div><div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;">${btns}<button type="button" id="r3dReset" style="padding:5px 10px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:11px;font-weight:700;cursor:pointer;">Reset View</button><button type="button" id="r3dSpin" style="padding:5px 10px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:11px;font-weight:700;cursor:pointer;">Auto Spin: Off</button></div></div><div id="r3dGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"><div id="r3dPaneLeft" style="position:relative;height:380px;border-radius:12px;overflow:hidden;border:1px solid #1e293b;background:#070b14;"><div style="position:absolute;top:10px;left:10px;z-index:2;background:rgba(15,23,42,0.88);border:1px solid #334155;border-radius:8px;padding:6px 10px;pointer-events:none;"><b id="r3dLeftTitle" style="color:#38bdf8;font-size:12px;">LEFT · Original Structure (Input Structure)</b><div id="r3dLeftSub" style="font-size:10px;color:#94a3b8;">Input coordinates (B-factor/confidence) · White sphere = pause target</div></div><canvas id="r3dCanvasLeft" style="width:100%;height:100%;display:block;cursor:grab;"></canvas></div><div id="r3dPaneRight" style="position:relative;height:380px;border-radius:12px;overflow:hidden;border:1px solid #1e293b;background:#070b14;"><div style="position:absolute;top:10px;left:10px;z-index:2;background:rgba(15,23,42,0.88);border:1px solid #334155;border-radius:8px;padding:6px 10px;pointer-events:none;"><b id="r3dRightTitle" style="color:#34d399;font-size:12px;">${is3dp ? 'RIGHT · 3DP Structure-Aware Design (Post-CDS)' : 'RIGHT · 1DP Baseline Design (Post-CDS)'}</b><div id="r3dRightSub" style="font-size:10px;color:#94a3b8;">CAI ${(is3dp ? (sv.cai3dp ?? sv.cai1dp) : sv.cai1dp).toFixed(3)} · GC ${(is3dp ? (sv.gc3dp ?? sv.gc1dp) : sv.gc1dp).toFixed(1)}%</div></div><canvas id="r3dCanvasRight" style="width:100%;height:100%;display:block;cursor:grab;"></canvas></div></div><div style="margin-top:10px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;background:#070b14;border:1px solid #1e293b;border-radius:10px;padding:8px 12px;font-size:11px;color:#cbd5e1;"><div style="display:flex;flex-wrap:wrap;gap:12px;"><span>🔵 Left: Input B-factor/confidence</span><span>🔴 Right Red: Pause-site slowdown</span><span>🔵 Right Cyan: Synonymous shift</span><span>⚫ Right Slate: Unchanged codon</span></div><div id="r3dHover" style="font-family:monospace;color:#6ee7b7;">Click or hover residue for codon details</div></div></div></section>`;
+    const script = `<script>(()=>{const sv=${safeSv},rs=sv.residues||[];if(!rs.length)return;const cx=rs.reduce((s,r)=>s+r.x,0)/rs.length,cy=rs.reduce((s,r)=>s+r.y,0)/rs.length,cz=rs.reduce((s,r)=>s+r.z,0)/rs.length,pts=rs.map(r=>({...r,cx:r.x-cx,cy:r.y-cy,cz:r.z-cz}));let lm='orig',rm=sv.mode==='3dp'?'3dp':'1dp',sel=sv.defaultSelectedPos||1,cmL={rx:0.22,ry:-0.55,zoom:1},cmR={rx:0.22,ry:-0.55,zoom:1},spin=false;const hEl=document.getElementById('r3dHover');const cr=(p0,p1,p2,p3,t)=>{const t2=t*t,t3=t2*t;return[0.5*((2*p1[0])+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),0.5*((2*p1[1])+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3),0.5*((2*p1[2])+(-p0[2]+p2[2])*t+(2*p0[2]-5*p1[2]+4*p2[2]-p3[2])*t2+(-p0[2]+3*p1[2]-3*p2[2]+p3[2])*t3)]};const sh=(hex,f)=>{const h=String(hex||'#38bdf8').replace('#','');return'rgb('+Math.min(255,Math.max(0,Math.round(parseInt(h.slice(0,2),16)*f)))+','+Math.min(255,Math.max(0,Math.round(parseInt(h.slice(2,4),16)*f)))+','+Math.min(255,Math.max(0,Math.round(parseInt(h.slice(4,6),16)*f)))+')'};const cLeft=r=>r.plddt>=90?'#1d4ed8':r.plddt>=70?'#38bdf8':r.plddt>=50?'#eab308':'#f97316';const cRight=(r,m)=>m==='3dp'?((r.isPause&&(r.isDiff||r.isDiffOrig3dp))?'#ef4444':r.isPause?'#eab308':(r.isDiff||r.isDiffOrig3dp)?'#38bdf8':'#334155'):(r.isDiffOrig1dp?(r.freq1dp>=0.35?'#10b981':'#38bdf8'):'#334155');function bind(cv,gM,gC,sC){if(!cv)return()=>{};let dr=false,lx=0,ly=0,pr=[];function proj(pt,w,h,cm){const x1=pt[0]*Math.cos(cm.ry)+pt[2]*Math.sin(cm.ry),z1=-pt[0]*Math.sin(cm.ry)+pt[2]*Math.cos(cm.ry),y2=pt[1]*Math.cos(cm.rx)-z1*Math.sin(cm.rx),z2=pt[1]*Math.sin(cm.rx)+z1*Math.cos(cm.rx),sc=(560*cm.zoom)/(160+z2);return{sx:w*0.5+x1*sc,sy:h*0.5-y2*sc,z:z2,sc}}function draw(){const rc=cv.getBoundingClientRect();if(!rc.width||!rc.height)return;const d=devicePixelRatio||1;cv.width=rc.width*d;cv.height=rc.height*d;const x=cv.getContext('2d');x.setTransform(d,0,0,d,0,0);x.fillStyle='#070b14';x.fillRect(0,0,rc.width,rc.height);const mk=gM(),cm=gC(),segs=[];for(let i=0;i<pts.length-1;i++){const p0=pts[Math.max(0,i-1)],p1=pts[i],p2=pts[i+1],p3=pts[Math.min(pts.length-1,i+2)],c0=[p0.cx,p0.cy,p0.cz],c1=[p1.cx,p1.cy,p1.cz],c2=[p2.cx,p2.cy,p2.cz],c3=[p3.cx,p3.cy,p3.cz],col=mk==='orig'?cLeft(p1):cRight(p1,mk);for(let s=0;s<4;s++){const a=proj(cr(c0,c1,c2,c3,s/4),rc.width,rc.height,cm),b=proj(cr(c0,c1,c2,c3,(s+1)/4),rc.width,rc.height,cm);segs.push({z:(a.z+b.z)*0.5,a,b,col,w:2.0*((a.sc+b.sc)*0.5)})}}pr=pts.map(r=>({...proj([r.cx,r.cy,r.cz],rc.width,rc.height,cm),r}));segs.sort((a,b)=>b.z-a.z).forEach(s=>{const df=Math.max(0.48,Math.min(1.22,1-s.z/95));x.beginPath();x.moveTo(s.a.sx,s.a.sy);x.lineTo(s.b.sx,s.b.sy);x.strokeStyle=sh(s.col,df);x.lineWidth=Math.max(1.8,s.w);x.lineCap='round';x.stroke()});const sp=pr.find(p=>p.r.pos===sel);if(sp){const r=sp.r,tg=mk==='orig'?r.aa+r.pos+' · Orig:'+r.codonOrig+' (pLDDT='+r.plddt.toFixed(1)+')':r.aa+r.pos+' · '+(mk==='3dp'?'3DP:'+r.codon3dp:'1DP:'+r.codon1dp);x.font='bold 11px monospace';const tw=x.measureText(tg).width+12,tx=Math.min(rc.width-tw-6,Math.max(6,sp.sx+8)),ty=Math.max(24,Math.min(rc.height-28,sp.sy-8));x.fillStyle='rgba(15,23,42,0.92)';x.fillRect(tx,ty-14,tw,20);x.fillStyle='#fff';x.fillText(tg,tx+6,ty)}}cv.addEventListener('mousedown',e=>{dr=true;lx=e.clientX;ly=e.clientY});addEventListener('mouseup',()=>{dr=false});addEventListener('mousemove',e=>{if(!dr)return;const cm=gC();sC({rx:Math.max(-1.45,Math.min(1.45,cm.rx+(e.clientY-ly)*0.008)),ry:cm.ry+(e.clientX-lx)*0.008,zoom:cm.zoom});lx=e.clientX;ly=e.clientY;draw()});cv.addEventListener('click',e=>{const rc=cv.getBoundingClientRect(),mx=e.clientX-rc.left,my=e.clientY-rc.top;let b=null,md=18;pr.forEach(p=>{const d=Math.hypot(p.sx-mx,p.sy-my);if(d<md){md=d;b=p}});if(b){sel=b.r.pos;const r=b.r;if(hEl)hEl.textContent='Pos '+r.pos+' ('+r.aa+') | Orig: '+r.codonOrig+' → 1DP: '+r.codon1dp+(r.codon3dp?' → 3DP: '+r.codon3dp:'')+' | pLDDT '+r.plddt.toFixed(1);dL();dR()}});cv.addEventListener('wheel',e=>{e.preventDefault();const cm=gC();sC({...cm,zoom:Math.max(0.45,Math.min(3.5,cm.zoom*(e.deltaY>0?0.92:1.08)))});draw()},{passive:false});return draw}const dL=bind(document.getElementById('r3dCanvasLeft'),()=>lm,()=>cmL,n=>{cmL=n}),dR=bind(document.getElementById('r3dCanvasRight'),()=>rm,()=>cmR,n=>{cmR=n});document.querySelectorAll('[data-r3d-pair]').forEach(btn=>btn.addEventListener('click',()=>{const p=btn.getAttribute('data-r3d-pair');document.querySelectorAll('[data-r3d-pair]').forEach(b=>{b.style.background=b===btn?'#059669':'#1e293b';b.style.color=b===btn?'#fff':'#cbd5e1'});if(p==='orig_3dp'){lm='orig';rm='3dp'}else if(p==='orig_1dp'){lm='orig';rm='1dp'}else{lm='1dp';rm='3dp'}dL();dR()}));document.getElementById('r3dReset')?.addEventListener('click',()=>{cmL={rx:0.22,ry:-0.55,zoom:1};cmR={rx:0.22,ry:-0.55,zoom:1};dL();dR()});const sb=document.getElementById('r3dSpin');sb?.addEventListener('click',()=>{spin=!spin;sb.textContent='Auto Spin: '+(spin?'On':'Off')});function loop(){if(spin){cmL.ry+=0.0045;cmR.ry+=0.0045;dL();dR()}requestAnimationFrame(loop)}addEventListener('resize',()=>{dL();dR()});dL();dR();requestAnimationFrame(loop)})();<\/script>`;
+    return { html, script };
 }
 
 function standaloneReportHtml(model) {
@@ -2736,9 +3900,10 @@ function standaloneReportHtml(model) {
     ].map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(reportValue(value))}</dd>`).join('');
     const sequence = model.artifacts.optimized_sequence.match(/.{1,60}/g)?.join('\n') || model.artifacts.optimized_sequence;
     const referenceSequence = model.artifacts.reference_sequence?.match(/.{1,60}/g)?.join('\n') || model.artifacts.reference_sequence;
+    const structure3dReport = standaloneStructure3dReportSection(model);
     return `<!doctype html><html lang="en" data-theme="${reportTheme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FactorForge Researcher Decision Report — ${escapeHtml(reportValue(model.identity.result_id))}</title><style>
 :root{color-scheme:light}body{margin:0;background:#f1f5f9;color:#0f172a;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.page{max-width:920px;margin:auto;padding:42px 24px 72px}h1{font-size:30px;margin:4px 0}h2{font-size:14px;text-transform:uppercase;letter-spacing:.08em;color:#475569;margin:28px 0 10px}h3{margin:0}.eyebrow{color:#047857;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.muted,small{color:#64748b}.outcome,.section-card{background:#fff;border:2px solid;border-radius:16px;padding:20px}.outcome strong{display:block;font-size:28px}.counts{font-weight:700}.callout{padding:14px;border-radius:12px;background:#fff7ed;border:1px solid #fdba74}.section-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.badge{border-radius:999px;background:#fef3c7;color:#92400e;padding:5px 9px;font-size:10px;font-weight:800;text-transform:uppercase}.axis-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.axis-grid article{border:1px solid #dbe2ea;border-radius:12px;padding:12px}.axis-grid small{display:block;color:#0f766e;font-weight:800;margin-top:4px}.independent{border:1px dashed #94a3b8;border-radius:12px;padding:12px}.candidate-value{font-weight:800;color:#0e7490}.boundary{border-left:4px solid #f59e0b;padding:9px 12px;background:#fffbeb}.priority{display:grid;grid-template-columns:32px 1fr;gap:10px;background:#fff;border:1px solid #dbe2ea;border-left:4px solid;border-radius:12px;padding:14px;margin:8px 0}.priority-number{width:26px;height:26px;border-radius:50%;background:#e2e8f0;display:grid;place-items:center;font-weight:800}.scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;background:#fff}th,td{text-align:left;vertical-align:top;padding:9px;border-bottom:1px solid #e2e8f0}.mismatch{background:#fff1f2;color:#9f1239}dl{display:grid;grid-template-columns:minmax(150px,220px) 1fr;gap:6px 14px}dt{font-weight:700}dd{margin:0;font-family:monospace;overflow-wrap:anywhere}pre{background:#0f172a;color:#a7f3d0;padding:16px;border-radius:12px;overflow:auto;font:12px/1.6 monospace}ul{padding-left:20px}[data-theme="dark"]{color-scheme:dark}[data-theme="dark"] body{background:#0b0f19;color:#f1f5f9}[data-theme="dark"] h2{color:#94a3b8}[data-theme="dark"] .eyebrow{color:#34d399}[data-theme="dark"] .muted,[data-theme="dark"] small{color:#94a3b8}[data-theme="dark"] .outcome,[data-theme="dark"] .section-card{background:#1e293b;border-color:#334155}[data-theme="dark"] .callout{background:#451a03;border-color:#9a3412;color:#fed7aa}[data-theme="dark"] .axis-grid article{border-color:#475569}[data-theme="dark"] .axis-grid small{color:#5eead4}[data-theme="dark"] .candidate-value{color:#67e8f9}[data-theme="dark"] .boundary{background:#422006}[data-theme="dark"] .priority{background:#1e293b;border-color:#334155}[data-theme="dark"] .priority-number{background:#334155;color:#f8fafc}[data-theme="dark"] table{background:#1e293b}[data-theme="dark"] th,[data-theme="dark"] td{border-bottom:1px solid #334155}[data-theme="dark"] .mismatch{background:#4c0519;color:#fda4af}[data-theme="dark"] pre{background:#020617;color:#6ee7b7;border:1px solid #1e293b}@media(max-width:640px){.page{padding:24px 14px}dl{grid-template-columns:1fr}.axis-grid{grid-template-columns:1fr}dd{margin-bottom:7px}}@media print{body{background:#fff!important;color:#0f172a!important}.page{padding:0}.outcome,.section-card,.priority,table{background:#fff!important;break-inside:avoid}.callout{border-color:#999}}
-</style></head><body><main class="page"><p class="eyebrow">FactorForge CDS Design Review</p><h1>Design Comparison &amp; Decision Report</h1><p class="muted">Result ${escapeHtml(reportValue(model.identity.result_id))} · created ${escapeHtml(reportValue(model.identity.result_created_at))} · report generated ${escapeHtml(model.identity.report_generated_at)}</p><div class="callout"><b>Sequence-data notice:</b> This HTML contains ${referenceSequence ? 'the reference and optimized DNA sequences' : 'the optimized DNA sequence'}. Handle and share it according to your sequence-data policy.</div><section><h2>Decision brief</h2><div class="outcome" style="border-color:${decisionColor}"><strong style="color:${decisionColor}">${escapeHtml(model.disposition.automated_decision.replaceAll('_', ' '))}</strong><p>${escapeHtml(model.interpretation.headline)}</p><p class="counts">${escapeHtml(`${reportValue(model.disposition.required_failure_count)} required fail · ${reportValue(model.disposition.preferred_warning_count)} warning · ${reportValue(model.disposition.unavailable_check_count)} unavailable`)}</p><small>${escapeHtml(reportValue(model.disposition.explanation))}</small></div></section>${standaloneContract}${standaloneComparison}<section><h2>Review priorities and next actions</h2>${priorities}</section><section><h2>Requested vs applied settings</h2><div class="scroll"><table><thead><tr><th>Setting</th><th>Requested</th><th>Applied / recorded</th></tr></thead><tbody>${settings}</tbody></table></div></section><section><h2>All computational checks</h2><div class="scroll"><table><thead><tr><th>Detection</th><th>Enforcement</th><th>Action</th><th>Status</th></tr></thead><tbody>${checks}</tbody></table></div></section>${candidates}<section><h2>Sequence and process</h2><p>Input type: <b>${escapeHtml(model.context.input_type)}</b> · output length: <b>${escapeHtml(reportValue(model.sequence_summary.output_length_nt, ' nt'))}</b> · nucleotide comparison: <b>${escapeHtml(model.sequence_summary.comparison_available ? reportValue(model.sequence_summary.nucleotide_changes) : 'Not recorded')}</b></p><p>Domestication: ${escapeHtml(model.process.domestication_attempted ? 'Attempted' : 'Not attempted')} · MFE: ${escapeHtml(model.metrics.mfe_status === 'computed' ? 'Computed' : `Not computed (${model.metrics.mfe_status_reason})`)}</p></section><section><h2>Downstream handoff checklist</h2><ul>${model.interpretation.next_steps.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section><section><h2>Reproducibility and provenance</h2><dl>${provenanceRows}</dl></section>${referenceSequence ? `<section><h2>Reference sequence (DNA)</h2><pre>${escapeHtml(referenceSequence)}</pre></section>` : ''}<section><h2>Optimized sequence (DNA)</h2><pre>${escapeHtml(sequence)}</pre></section><section><h2>Interpretation and limitations</h2><p>${escapeHtml(model.interpretation.scope)}</p><ul>${model.interpretation.limitations.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section></main></body></html>`;
+</style></head><body><main class="page"><p class="eyebrow">FactorForge CDS Design Review</p><h1>Design Comparison &amp; Decision Report</h1><p class="muted">Result ${escapeHtml(reportValue(model.identity.result_id))} · created ${escapeHtml(reportValue(model.identity.result_created_at))} · report generated ${escapeHtml(model.identity.report_generated_at)}</p><div class="callout"><b>Sequence-data notice:</b> This HTML contains ${referenceSequence ? 'the reference and optimized DNA sequences' : 'the optimized DNA sequence'}. Handle and share it according to your sequence-data policy.</div><section><h2>Decision brief</h2><div class="outcome" style="border-color:${decisionColor}"><strong style="color:${decisionColor}">${escapeHtml(model.disposition.automated_decision.replaceAll('_', ' '))}</strong><p>${escapeHtml(model.interpretation.headline)}</p><p class="counts">${escapeHtml(`${reportValue(model.disposition.required_failure_count)} required fail · ${reportValue(model.disposition.preferred_warning_count)} warning · ${reportValue(model.disposition.unavailable_check_count)} unavailable`)}</p><small>${escapeHtml(reportValue(model.disposition.explanation))}</small></div></section>${structure3dReport.html}${standaloneContract}${scientificReviewHtml(model)}${standaloneComparison}<section><h2>Review priorities and next actions</h2>${priorities}</section><section><h2>Requested vs applied settings</h2><div class="scroll"><table><thead><tr><th>Setting</th><th>Requested</th><th>Applied / recorded</th></tr></thead><tbody>${settings}</tbody></table></div></section><section><h2>All computational checks</h2><div class="scroll"><table><thead><tr><th>Detection</th><th>Enforcement</th><th>Action</th><th>Status</th></tr></thead><tbody>${checks}</tbody></table></div></section>${candidates}<section><h2>Sequence and process</h2><p>Input type: <b>${escapeHtml(model.context.input_type)}</b> · output length: <b>${escapeHtml(reportValue(model.sequence_summary.output_length_nt, ' nt'))}</b> · nucleotide comparison: <b>${escapeHtml(model.sequence_summary.comparison_available ? reportValue(model.sequence_summary.nucleotide_changes) : 'Not recorded')}</b></p><p>Domestication: ${escapeHtml(model.process.domestication_attempted ? 'Attempted' : 'Not attempted')} · MFE: ${escapeHtml(model.metrics.mfe_status === 'computed' ? 'Computed' : `Not computed (${model.metrics.mfe_status_reason})`)}</p></section><section><h2>Downstream handoff checklist</h2><ul>${model.interpretation.next_steps.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section><section><h2>Reproducibility and provenance</h2><dl>${provenanceRows}</dl></section>${referenceSequence ? `<section><h2>Reference sequence (DNA)</h2><pre>${escapeHtml(referenceSequence)}</pre></section>` : ''}<section><h2>Optimized sequence (DNA)</h2><pre>${escapeHtml(sequence)}</pre></section><section><h2>Interpretation and limitations</h2><p>${escapeHtml(model.interpretation.scope)}</p><ul>${model.interpretation.limitations.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section></main>${structure3dReport.script}</body></html>`;
 }
 
 function downloadResultsReportHtml(model) {
@@ -2757,7 +3922,8 @@ function standaloneInteractiveReportHtml(model) {
     const script = `<script>const reportData=${safeData};(()=>{const a=reportData.accounting,cs=a.codons||[],o=document.getElementById('reportOriginal'),p=document.getElementById('reportOptimized'),i=document.getElementById('reportInspector');const color=f=>f==null?'#334155':f*100<20?'#ef4444':f*100<35?'#f59e0b':f*100<50?'#64748b':f*100<=70?'#22c55e':'#10b981';const fmt=f=>f==null?'N/A':(f*100).toFixed(1)+'%';function draw(c,key,h){const r=c.getBoundingClientRect(),d=devicePixelRatio||1,w=Math.max(1,r.width);c.width=w*d;c.height=56*d;const x=c.getContext('2d');x.scale(d,d);x.fillStyle='#020617';x.fillRect(0,0,w,56);if(!cs.length)return;const sw=w/cs.length;cs.forEach((v,n)=>{x.fillStyle=color(v[key]);x.fillRect(n*sw,13,Math.max(1,sw+.25),30)});if(h!=null){x.strokeStyle='#fff';x.beginPath();x.moveTo((h+.5)*sw,2);x.lineTo((h+.5)*sw,54);x.stroke()}}function render(h){draw(o,'origFreq',h);draw(p,'optFreq',h)}function move(e){if(!cs.length)return;const r=p.getBoundingClientRect(),n=Math.max(0,Math.min(cs.length-1,Math.floor((e.clientX-r.left)/r.width*cs.length))),v=cs[n];render(n);i.textContent='Codon '+(n+1)+' · nt '+(n*3+1)+'–'+(n*3+3)+' · '+v.origCodon+' ('+fmt(v.origFreq)+') → '+v.optCodon+' ('+fmt(v.optFreq)+') · AA '+v.aa+' · local GC '+(v.localGc==null?'N/A':v.localGc.toFixed(1)+'%')+' · '+(v.isChanged?'change observed':'unchanged')}[o,p].forEach(c=>c.addEventListener('mousemove',move));addEventListener('resize',()=>render(null));render(null)})();<\/script>`;
     return standaloneReportHtml(model)
         .replace('</style>', '.accounting{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.accounting article{background:#fff;border:1px solid #dbe2ea;border-radius:12px;padding:12px}.accounting b,.accounting small{display:block}.standalone-track{background:#0f172a;border-radius:14px;padding:16px}.standalone-track>div{display:grid;grid-template-columns:70px 1fr;align-items:center;gap:8px;margin:8px 0;color:#cbd5e1;font-size:12px;font-weight:700}.standalone-track canvas{width:100%;height:56px;border-radius:8px;cursor:crosshair}.report-inspector{grid-template-columns:1fr!important;background:#1e293b;padding:12px;border-radius:8px}@media(max-width:640px){.accounting{grid-template-columns:1fr 1fr}}</style>')
-        .replace('</main></body>', `${interactive}</main>${script}</body>`);
+        .replace('</main>', `${interactive}</main>`)
+        .replace('</body>', `${script}</body>`);
 }
 
 function downloadInteractiveReport(model) {
@@ -2778,6 +3944,7 @@ async function downloadEvidencePackageZip() {
     try {
         showToast('Compiling complete evidence package (.zip)...', 'info');
         const zip = new JSZip();
+        const fastaFolder = zip.folder('sequences');
         const primary = getPrimaryResult(state.results);
         const optSeq = primary.optimized_sequence;
         const targetName = (state.sequenceName || 'Target_Sequence').replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -2785,11 +3952,13 @@ async function downloadEvidencePackageZip() {
 
         // 1. FASTA files
         const policyLabel = state.codonPolicy === 'plantform_balanced_codon_v1' ? 'balanced_non_cpg' : (state.codonPolicy || 'standard');
-        const multiFasta = `>${targetName}_OPTIMIZED | GC=${primary.metrics.gc_percent || 'N/A'}% | Policy=${policyLabel}\n${optSeq}\n`;
+        const candidates = (state.results.candidates || []).filter(candidate => candidate.dna_sequence);
+        const multiFasta = candidates.length ? candidates.map(candidate => `>${targetName}_${String(candidate.id).replace(/[^A-Za-z0-9_-]/g,'_')} | Policy=${policyLabel}\n${candidate.dna_sequence}\n`).join('') : `>${targetName}_OPTIMIZED | GC=${primary.metrics.gc_percent ?? 'N/A'}% | Policy=${policyLabel}\n${optSeq}\n`;
         fastaFolder.file("all_variants.fasta", multiFasta);
-        fastaFolder.file(`${targetName}_optimized.fasta`, multiFasta);
-        if (state.originalSequence) {
-            fastaFolder.file(`${targetName}_original.fasta`, `>${targetName}_ORIGINAL\n${state.originalSequence}\n`);
+        fastaFolder.file(`${targetName}_optimized.fasta`, `>${targetName}_OPTIMIZED | Policy=${policyLabel}\n${optSeq}\n`);
+        const reference = state.reportData?.artifacts?.reference_sequence;
+        if (reference) {
+            fastaFolder.file(`${targetName}_original.fasta`, `>${targetName}_ORIGINAL\n${reference}\n`);
         }
 
         // 2. Structured JSON
@@ -2804,27 +3973,7 @@ async function downloadEvidencePackageZip() {
         zip.file("experiment.json", JSON.stringify(expJson, null, 2));
 
         // 3. Markdown Design Dossier
-        const mdDossier = [
-            `# FactorForge Design Dossier: ${targetName}`,
-            ``,
-            `- **Date:** ${timestamp}`,
-            `- **Host Organism:** ${state.host || 'nbenthamiana'}`,
-            `- **Engine Version:** v3.5.4`,
-            ``,
-            `## 1. Sequence Metrics Summary`,
-            ``,
-            `| Metric | Value |`,
-            `|---|---|`,
-            `| Sequence Length | ${optSeq.length} nt |`,
-            `| GC Content | ${primary.metrics.gc_percent || 'N/A'}% |`,
-            `| CAI Score | ${primary.metrics.cai || 'N/A'} |`,
-            `| Amino Acid Invariant | Preserved (Zero Missense) |`,
-            ``,
-            `## 2. Regulatory & Quality Summary`,
-            `- [x] Translation verified strictly in frame.`,
-            `- [x] Type IIS assembly clearance checked.`,
-            `- [x] Package compiled with cryptographic integrity manifest.`,
-        ].join('\n');
+        const mdDossier = evidenceDossierMarkdown(state.results, primary, targetName, timestamp);
         zip.file("DESIGN_DOSSIER.md", mdDossier);
 
         // 4. Standalone HTML Report
@@ -2848,6 +3997,35 @@ async function downloadEvidencePackageZip() {
         console.error('Evidence package compilation error:', err);
         showToast('Failed to compile evidence package: ' + err.message, 'error');
     }
+}
+
+function evidenceDossierMarkdown(result, primary, targetName, timestamp) {
+    const typeIis = (result.qc_decision_matrix || []).find(check => check.criterion === 'type_iis');
+    const observation = result.scientific_review || {};
+    return [
+        `# FactorForge Design Dossier: ${targetName}`,
+        ``,
+        `- **Date:** ${timestamp}`,
+        `- **Host Organism:** ${result.host_profile || 'Not recorded'}`,
+        `- **Product Version:** ${result.product_version || 'Not recorded'}`,
+        `- **Engine:** ${result.cds_design?.engine || 'Not recorded'} · ${result.cds_design?.engine_version || 'Not recorded'}`,
+        ``,
+        `## 1. Sequence Metrics Summary`,
+        ``,
+        `| Metric | Value |`,
+        `|---|---|`,
+        `| Sequence Length | ${primary.optimized_sequence.length} nt |`,
+        `| GC Content | ${primary.metrics.gc_percent ?? 'N/A'}% |`,
+        `| CAI Score | ${primary.metrics.cai ?? 'N/A'} |`,
+        `| Recorded amino-acid identity | ${result.constraint_report?.aa_identity ?? 'Not recorded'} |`,
+        ``,
+        `## 2. Computational Review Summary`,
+        `- Recorded Type IIS check: ${typeIis?.result || 'Not recorded'}`,
+        `- Policy decision: ${result.policy_decision || 'Not recorded'}`,
+        `- RNA scan: ${observation.rna_risks?.summary_status || 'Not recorded'}`,
+        `- Initiation-window MFE: ${observation.initiation_mfe?.status || 'Not recorded'}`,
+        `- Computational observations do not establish laboratory acceptance, expression or folding benefits.`,
+    ].join('\n');
 }
 
 function downloadEvidenceRecordJson(model) {
@@ -3106,10 +4284,17 @@ function historyResultSnapshot(result, primary) {
         label: candidate.label || candidate.id || null,
         cai: candidate.cai ?? null,
         gc_percent: candidate.gc_percent ?? null,
+        dna_sequence: candidate.dna_sequence || null,
         automated_decision: candidate.automated_decision || null,
         required_failure_count: candidate.required_failure_count ?? null,
         preferred_warning_count: candidate.preferred_warning_count ?? null,
     })) : [];
+    const lightViewer = result.structure_viewer ? {
+        source_type: result.structure_viewer.source_type || null,
+        source_label: result.structure_viewer.source_label || null,
+        positions: result.structure_viewer.positions || [],
+        ca_trace: result.structure_viewer.ca_trace || [],
+    } : null;
     return {
         optimized_sequence: primary.optimized_sequence,
         original_length: result.original_length ?? result.input_summary?.length ?? null,
@@ -3138,6 +4323,12 @@ function historyResultSnapshot(result, primary) {
         cds_design: clone(result.cds_design || null),
         constraint_report: clone(result.constraint_report || null),
         custom_restriction_sites: clone(result.custom_restriction_sites || null),
+        scientific_review: clone(result.scientific_review || null),
+        candidate_scientific_reviews: Array.isArray(result.candidates) ? result.candidates.map(c=>({id:c.id,label:c.label,scientific_review:clone(c.scientific_review || null)})) : clone(result.candidate_scientific_reviews || []),
+        design_mode: result.design_mode || null,
+        structure_comparison: clone(result.structure_comparison || null),
+        structure_viewer: lightViewer,
+        candidates: clone(result.candidates || null),
         report_candidates: candidates,
     };
 }
@@ -3150,7 +4341,7 @@ function addToHistory(input, result) {
         timestamp: new Date().toLocaleString(),
         inputLen: input.length,
         inputType: result.input_type || result.validation?.input_type || result.provenance?.normalized_input_type || null,
-        profile: state.objective,
+        profile: result.design_mode === 'paired_3dp' ? 'structure_3dp' : state.objective,
         host: getResultHostProfile(result),
         cai: primary.metrics.cai,
         gc: calculateGC(primary.optimized_sequence),
@@ -3160,7 +4351,11 @@ function addToHistory(input, result) {
 
     state.history.unshift(item);
     if (state.history.length > 10) state.history.pop();
-    localStorage.setItem('factorforge_history', JSON.stringify({ schemaVersion: HISTORY_SCHEMA_VERSION, items: state.history }));
+    try {
+        localStorage.setItem('factorforge_history', JSON.stringify({ schemaVersion: HISTORY_SCHEMA_VERSION, items: state.history }));
+    } catch (err) {
+        console.warn('Unable to persist full history to localStorage:', err);
+    }
     renderHistory();
 }
 
@@ -3223,6 +4418,7 @@ function clearHistory() {
 }
 
 function clearAll() {
+    invalidateStructureSuggestion();
     elements.sequenceInput.value = '';
     elements.fileUpload.value = '';
     elements.customRestrictionSites.value = '';
@@ -3345,9 +4541,10 @@ function downloadFile(format) {
     let fileName = '';
     const primary = getPrimaryResult(state.results);
     const seq = primary.optimized_sequence;
+    const exportObjective = state.results.design_mode === 'paired_3dp' ? 'structure_3dp' : state.objective;
 
     if (format === 'fasta') {
-        content = `>FactorForge_Optimized | Objective: ${state.objective} | CAI: ${primary.metrics.cai}\n${seq}`;
+        content = `>FactorForge_Optimized | Objective: ${exportObjective} | CAI: ${primary.metrics.cai}\n${seq}`;
         fileName = `optimized_sequence_${Date.now()}.fasta`;
     } else {
         // Basic GenBank template
@@ -3357,7 +4554,7 @@ function downloadFile(format) {
         content += `FEATURES             Location/Qualifiers\n`;
         content += `     CDS             1..${seq.length}\n`;
         content += `                     /label="Optimized_CDS"\n`;
-        content += `                     /note="Objective: ${state.objective}"\n`;
+        content += `                     /note="Objective: ${exportObjective}"\n`;
         content += `ORIGIN      \n`;
 
         const lines = seq.toLowerCase().match(/.{1,60}/g);
@@ -3386,7 +4583,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.5.4';
+        const version = state.results.engine_versions?.product || '3.5.6';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }
@@ -3532,7 +4729,9 @@ function setWorkspaceState(viewState) {
     if (viewState === 'review' && elements.reviewConfigSummary) {
         const hostName = elements.hostSelect ? elements.hostSelect.options[elements.hostSelect.selectedIndex].text.split('(')[0].trim() : 'N. benthamiana';
         const presetName = elements.sopPresetSelect ? elements.sopPresetSelect.options[elements.sopPresetSelect.selectedIndex].text.split('(')[0].trim() : 'FactorForge Default';
-        elements.reviewConfigSummary.textContent = `Host: ${hostName} · Profile: ${presetName} · Standard Safety Baseline`;
+        elements.reviewConfigSummary.textContent = state.results?.design_mode === 'paired_3dp'
+            ? `Host: ${hostName} · 3DP experimental + 1DP comparator · direct testing, approval/evidence deferred`
+            : `Host: ${hostName} · Profile: ${presetName} · Standard Safety Baseline`;
     }
 }
 

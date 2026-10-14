@@ -2,7 +2,14 @@
 
 Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cds/blob/main/CHANGELOG.md)
 
-FactorForge v3.0+ is the current public release line.
+FactorForge v3.0+ is the current product line.
+
+## v3.5.6 — reviewed structure workflow repairs (2026-10-13)
+
+- Web/API patch: exact-match uploaded structures and explicit position review are required for experimental 3DP.
+- Automatic external inference, artificial structure/confidence fallback and automatic approval are disabled.
+- RNA/MFE observations and candidate evidence exports retain computational limitations.
+- Package publication, Git tag and a new archival DOI are pending. Synthetic structure checks do not establish independent real-structure accuracy.
 
 ## v3.5.4 — standalone and optional-persistence stability
 
