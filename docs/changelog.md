@@ -6,9 +6,12 @@ FactorForge v3.0+ is the current product line.
 
 ## v3.5.6 — reviewed structure workflow repairs (2026-10-13)
 
+- 1DP sequence optimization is active as the primary production default for peer-reviewed plant CDS design.
+- 3DP structure-conditioned optimization is designated as In Development (cloud GPU auto-folding infrastructure in progress; exact-match PDB/mmCIF uploads supported for partner pilots).
+- Interactive 3D cartoon ribbon viewer integrated with per-residue pLDDT confidence coloring and pause codon highlight tracks.
 - Web/API patch: exact-match uploaded structures and explicit position review are required for experimental 3DP.
 - Automatic external inference, artificial structure/confidence fallback and automatic approval are disabled.
-- RNA/MFE observations and candidate evidence exports retain computational limitations.
+- Pre-synthesis RNA/MFE observations and candidate evidence exports retain computational limitations.
 - Package publication, Git tag and a new archival DOI are pending. Synthetic structure checks do not establish independent real-structure accuracy.
 
 ## v3.5.4 — standalone and optional-persistence stability
