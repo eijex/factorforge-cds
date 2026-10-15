@@ -4,7 +4,8 @@
 
 ## 3.5.6 — 2026-10-13 (web/API patch; package publication pending)
 
-- Web structure handling now requires exact-match uploaded PDB/mmCIF coordinates and explicit reviewed positions. Automatic external folding, artificial structure/confidence fallback, and auto-approval are disabled. Job400 metrics are synthetic reconstruction checks; independent public-structure/DSSP validation remains open.
+- 1DP sequence optimization is established as the primary production default for peer-reviewed, reproducible plant CDS design. 3DP structure-conditioned design is categorized as In Development, with automated cloud GPU folding in progress and manual exact-match PDB/mmCIF uploads supported for research partner pilots.
+- Web structure handling requires exact-match uploaded PDB/mmCIF coordinates and explicit reviewed positions. Automatic external folding, artificial structure/confidence fallback, and auto-approval are disabled. Job400 metrics are synthetic reconstruction checks; independent public-structure/DSSP validation remains open.
 
 - Job 399: add offline structural annotation context and explicit conflict review; reject malformed sidecar binding and nonfinite scores, recompute merged-domain PAE, and report degenerate backbone geometry as unassigned.
 
