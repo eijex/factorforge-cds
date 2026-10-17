@@ -121,6 +121,7 @@ def calculate_dinucleotide_ratio(sequence: str, dinucleotide: str = "CG") -> flo
 # data/reference/active_codon_reference.json.
 _HOST_CODON_TABLE_OVERRIDES: dict[str, str] = {
     "nbenthamiana": "profiles/nbev11_cds_hc_derived_codons.json",
+    "human_stemcell": "profiles/human_stemcell_derived_codons.json",
 }
 
 

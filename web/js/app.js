@@ -11,7 +11,8 @@ const ENABLE_MOCK = window.FACTORFORGE_ENABLE_MOCK === true;
 const HOST_LABELS = {
     nbenthamiana: 'N. benthamiana',
     by2: 'Tobacco BY-2',
-    ntabacum: 'Tobacco BY-2'
+    ntabacum: 'Tobacco BY-2',
+    human_stemcell: 'Human Stem Cell (hMSC / iPSC)'
 };
 // GC reference band per host. Populated live from GET /api/optimize's
 // host_metadata[host].gc_range (api/optimize.py's _default_gc_constraints /
@@ -22,7 +23,8 @@ const HOST_LABELS = {
 const OFFLINE_GC_RANGES = {
     nbenthamiana: { gc_min: 40.0, gc_max: 47.0 },
     by2: { gc_min: 55.0, gc_max: 65.0 },
-    ntabacum: { gc_min: 55.0, gc_max: 65.0 }
+    ntabacum: { gc_min: 55.0, gc_max: 65.0 },
+    human_stemcell: { gc_min: 45.0, gc_max: 50.0 }
 };
 // Recognition sequences mirror Domesticator.ASSEMBLY_STANDARDS["golden_gate"]
 // and design_review.TYPE_IIS_SITES["SapI"]. scan_rc lets the API check both strands.
@@ -1613,6 +1615,11 @@ async function runOptimization() {
 
     if (!state.sequence || state.sequence.length < 3) {
         showToast('Please enter a valid DNA sequence', 'error');
+        return;
+    }
+
+    if (state.host === 'human_stemcell') {
+        showToast('Human Stem Cell (hMSC / iPSC) is currently In Development (Job 407 prototype). Online web optimization is locked pending wet-lab calibration. Please use factorforge.engines.stemcell_3dp locally.', 'info');
         return;
     }
 
@@ -4583,7 +4590,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.5.6';
+        const version = state.results.engine_versions?.product || '3.5.7';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }

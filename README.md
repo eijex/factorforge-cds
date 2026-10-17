@@ -14,7 +14,7 @@
 
 FactorForge performs deterministic CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. It is positioned as a pre-synthesis review harness: it helps teams generate reproducible CDS candidates, inspect assembly-relevant sequence constraints, and package design metadata before downstream synthesis, cloning, or experimental review. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
 
-FactorForge v3.5.6 uses independently versioned engines:
+FactorForge v3.5.7 uses independently versioned engines:
 
 | Generation | Engine | Version | Availability |
 |---|---|---:|---|
@@ -96,7 +96,7 @@ FactorForge outputs are **in-silico only** and have not been experimentally vali
 ## Citing
 
 ```
-FactorForge v3.5.6 (2026). Open-source constraint-based CDS design and sequence review.
+FactorForge v3.5.7 (2026). Open-source constraint-based CDS design and sequence review.
 Eijex. https://github.com/eijex/factorforge-cds
 ```
 
@@ -174,3 +174,7 @@ Direct 1DP/3DP browser testing reports sense-CDS RNA motif scans and available i
 `factorforge nbfold annotate` and `factorforge nbfold optimize` provide the experimental local Phase A/B workflow for exact-match structure files and an explicit user review manifest. See [NB-Fold documentation](docs/experimental-structure.md#local-nb-fold-reviewed-cli-pipeline-job-398-phase-ab).
 
 Web structure handling now requires exact-match uploaded PDB/mmCIF coordinates and explicit reviewed positions. Automatic external folding, artificial structure/confidence fallback, and auto-approval are disabled. Job400 metrics are synthetic reconstruction checks; independent public-structure/DSSP validation remains open.
+
+### Experimental human-reference prototype
+
+`factorforge.engines.stemcell_3dp.StemCell3DPOptimizer` is a local experimental interface using a generic human-frequency reference and provisional Eijex review criteria. It is not an MSC/iPSC-calibrated model or a laboratory-approved SOP. See [prototype boundaries](docs/model_cards/human-reference-prototype.md). It is not a new production web host.

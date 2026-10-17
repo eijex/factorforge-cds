@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 3.5.7 — 2026-10-17 (web UI & stemcell engine patch; package publication pending)
+
+- Job 407: add experimental human-reference stem cell prototype (`StemCell3DPOptimizer`) with explicit provisional policy provenance, post-generation RNA observations, and manual structure review. Correct stacked-pair measurement, isolate ViennaRNA 37°C model parameters per call, and block failed or unavailable computational checks. No cell-specific calibration, PKR safety, expression benefit, or laboratory approval is established.
+- Web UI: expose 'Human Stem Cell (hMSC / iPSC) · In Development' in expression host selector with 45.0%–50.0% GC reference band and informative in-development notice guard.
+- Maintain strict scientific truthfulness boundary: online cloud synthesis is locked pending experimental validation, directing researchers to the local Python engine.
 
 ## 3.5.6 — 2026-10-13 (web/API patch; package publication pending)
 

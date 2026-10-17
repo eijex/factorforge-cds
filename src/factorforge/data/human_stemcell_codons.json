@@ -1,0 +1,329 @@
+{
+  "organism": "Homo sapiens (generic human reference)",
+  "source": "Legacy table attributed to Kazusa human codon usage; cell-specific derivation not verified",
+  "description": "Provisional frequency reference, not measured MSC/iPSC tRNA abundance",
+  "codons": {
+    "TTT": {
+      "aa": "F",
+      "frequency": 0.46438,
+      "per_thousand": 17.6
+    },
+    "TTC": {
+      "aa": "F",
+      "frequency": 0.53562,
+      "per_thousand": 20.3
+    },
+    "TTA": {
+      "aa": "L",
+      "frequency": 0.076846,
+      "per_thousand": 7.7
+    },
+    "TTG": {
+      "aa": "L",
+      "frequency": 0.128743,
+      "per_thousand": 12.9
+    },
+    "CTT": {
+      "aa": "L",
+      "frequency": 0.131737,
+      "per_thousand": 13.2
+    },
+    "CTC": {
+      "aa": "L",
+      "frequency": 0.195609,
+      "per_thousand": 19.6
+    },
+    "CTA": {
+      "aa": "L",
+      "frequency": 0.071856,
+      "per_thousand": 7.2
+    },
+    "CTG": {
+      "aa": "L",
+      "frequency": 0.39521,
+      "per_thousand": 39.6
+    },
+    "ATT": {
+      "aa": "I",
+      "frequency": 0.361174,
+      "per_thousand": 16.0
+    },
+    "ATC": {
+      "aa": "I",
+      "frequency": 0.469526,
+      "per_thousand": 20.8
+    },
+    "ATA": {
+      "aa": "I",
+      "frequency": 0.1693,
+      "per_thousand": 7.5
+    },
+    "ATG": {
+      "aa": "M",
+      "frequency": 1.0,
+      "per_thousand": 22.0
+    },
+    "GTT": {
+      "aa": "V",
+      "frequency": 0.181219,
+      "per_thousand": 11.0
+    },
+    "GTC": {
+      "aa": "V",
+      "frequency": 0.23888,
+      "per_thousand": 14.5
+    },
+    "GTA": {
+      "aa": "V",
+      "frequency": 0.116969,
+      "per_thousand": 7.1
+    },
+    "GTG": {
+      "aa": "V",
+      "frequency": 0.462932,
+      "per_thousand": 28.1
+    },
+    "TCT": {
+      "aa": "S",
+      "frequency": 0.187423,
+      "per_thousand": 15.2
+    },
+    "TCC": {
+      "aa": "S",
+      "frequency": 0.218249,
+      "per_thousand": 17.7
+    },
+    "TCA": {
+      "aa": "S",
+      "frequency": 0.150432,
+      "per_thousand": 12.2
+    },
+    "TCG": {
+      "aa": "S",
+      "frequency": 0.054254,
+      "per_thousand": 4.4
+    },
+    "AGT": {
+      "aa": "S",
+      "frequency": 0.149199,
+      "per_thousand": 12.1
+    },
+    "AGC": {
+      "aa": "S",
+      "frequency": 0.240444,
+      "per_thousand": 19.5
+    },
+    "CCT": {
+      "aa": "P",
+      "frequency": 0.286416,
+      "per_thousand": 17.5
+    },
+    "CCC": {
+      "aa": "P",
+      "frequency": 0.324059,
+      "per_thousand": 19.8
+    },
+    "CCA": {
+      "aa": "P",
+      "frequency": 0.276596,
+      "per_thousand": 16.9
+    },
+    "CCG": {
+      "aa": "P",
+      "frequency": 0.11293,
+      "per_thousand": 6.9
+    },
+    "ACT": {
+      "aa": "T",
+      "frequency": 0.246241,
+      "per_thousand": 13.1
+    },
+    "ACC": {
+      "aa": "T",
+      "frequency": 0.355263,
+      "per_thousand": 18.9
+    },
+    "ACA": {
+      "aa": "T",
+      "frequency": 0.283835,
+      "per_thousand": 15.1
+    },
+    "ACG": {
+      "aa": "T",
+      "frequency": 0.114662,
+      "per_thousand": 6.1
+    },
+    "GCT": {
+      "aa": "A",
+      "frequency": 0.265512,
+      "per_thousand": 18.4
+    },
+    "GCC": {
+      "aa": "A",
+      "frequency": 0.399711,
+      "per_thousand": 27.7
+    },
+    "GCA": {
+      "aa": "A",
+      "frequency": 0.227994,
+      "per_thousand": 15.8
+    },
+    "GCG": {
+      "aa": "A",
+      "frequency": 0.106782,
+      "per_thousand": 7.4
+    },
+    "TAT": {
+      "aa": "Y",
+      "frequency": 0.443636,
+      "per_thousand": 12.2
+    },
+    "TAC": {
+      "aa": "Y",
+      "frequency": 0.556364,
+      "per_thousand": 15.3
+    },
+    "TAA": {
+      "aa": "*",
+      "frequency": 0.294118,
+      "per_thousand": 1.0
+    },
+    "TAG": {
+      "aa": "*",
+      "frequency": 0.235294,
+      "per_thousand": 0.8
+    },
+    "TGA": {
+      "aa": "*",
+      "frequency": 0.470588,
+      "per_thousand": 1.6
+    },
+    "CAT": {
+      "aa": "H",
+      "frequency": 0.419231,
+      "per_thousand": 10.9
+    },
+    "CAC": {
+      "aa": "H",
+      "frequency": 0.580769,
+      "per_thousand": 15.1
+    },
+    "CAA": {
+      "aa": "Q",
+      "frequency": 0.264516,
+      "per_thousand": 12.3
+    },
+    "CAG": {
+      "aa": "Q",
+      "frequency": 0.735484,
+      "per_thousand": 34.2
+    },
+    "AAT": {
+      "aa": "N",
+      "frequency": 0.470914,
+      "per_thousand": 17.0
+    },
+    "AAC": {
+      "aa": "N",
+      "frequency": 0.529086,
+      "per_thousand": 19.1
+    },
+    "AAA": {
+      "aa": "K",
+      "frequency": 0.433393,
+      "per_thousand": 24.4
+    },
+    "AAG": {
+      "aa": "K",
+      "frequency": 0.566607,
+      "per_thousand": 31.9
+    },
+    "GAT": {
+      "aa": "D",
+      "frequency": 0.464819,
+      "per_thousand": 21.8
+    },
+    "GAC": {
+      "aa": "D",
+      "frequency": 0.535181,
+      "per_thousand": 25.1
+    },
+    "GAA": {
+      "aa": "E",
+      "frequency": 0.422741,
+      "per_thousand": 29.0
+    },
+    "GAG": {
+      "aa": "E",
+      "frequency": 0.577259,
+      "per_thousand": 39.6
+    },
+    "TGT": {
+      "aa": "C",
+      "frequency": 0.456897,
+      "per_thousand": 10.6
+    },
+    "TGC": {
+      "aa": "C",
+      "frequency": 0.543103,
+      "per_thousand": 12.6
+    },
+    "TGG": {
+      "aa": "W",
+      "frequency": 1.0,
+      "per_thousand": 13.2
+    },
+    "CGT": {
+      "aa": "R",
+      "frequency": 0.079365,
+      "per_thousand": 4.5
+    },
+    "CGC": {
+      "aa": "R",
+      "frequency": 0.183422,
+      "per_thousand": 10.4
+    },
+    "CGA": {
+      "aa": "R",
+      "frequency": 0.109347,
+      "per_thousand": 6.2
+    },
+    "CGG": {
+      "aa": "R",
+      "frequency": 0.201058,
+      "per_thousand": 11.4
+    },
+    "AGA": {
+      "aa": "R",
+      "frequency": 0.215168,
+      "per_thousand": 12.2
+    },
+    "AGG": {
+      "aa": "R",
+      "frequency": 0.21164,
+      "per_thousand": 12.0
+    },
+    "GGT": {
+      "aa": "G",
+      "frequency": 0.163636,
+      "per_thousand": 10.8
+    },
+    "GGC": {
+      "aa": "G",
+      "frequency": 0.336364,
+      "per_thousand": 22.2
+    },
+    "GGA": {
+      "aa": "G",
+      "frequency": 0.25,
+      "per_thousand": 16.5
+    },
+    "GGG": {
+      "aa": "G",
+      "frequency": 0.25,
+      "per_thousand": 16.5
+    }
+  },
+  "calibration_status": "UNVERIFIED",
+  "laboratory_approval": "NOT_OBTAINED"
+}
