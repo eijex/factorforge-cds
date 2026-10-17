@@ -4,6 +4,13 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current product line.
 
+## v3.5.7 — human stem cell prototype preview and web UI host update (2026-10-17)
+
+- Added experimental local human stem cell reference prototype (`StemCell3DPOptimizer`, Job 407) with isolated 37°C ViennaRNA thermodynamic evaluation and rigorous stacked-pair duplex stem calculation.
+- Web UI Expression Host selector updated with `Human Stem Cell (hMSC / iPSC) · In Development` and 45.0%–50.0% GC reference band.
+- Strict truthfulness boundary enforced: online cloud optimization is locked pending wet-lab calibration, directing users to the local Python engine.
+- Package publication pending; MSC/iPSC biological validation remains uncalibrated.
+
 ## v3.5.6 — reviewed structure workflow repairs (2026-10-13)
 
 - 1DP sequence optimization is active as the primary production default for peer-reviewed plant CDS design.

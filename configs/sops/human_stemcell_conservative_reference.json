@@ -1,0 +1,76 @@
+{
+  "$schema": "factorforge-sop-v1",
+  "profile_id": "human_stemcell_conservative_reference",
+  "sop_name": "Eijex provisional human-reference review profile",
+  "version": "1.0.1",
+  "author": "Eijex",
+  "status": "EXPERIMENTAL_UNVALIDATED",
+  "derived_from": "Generic human codon-frequency reference and provisional Eijex computational criteria; SCI SOP pending",
+  "scope_note": "Not a general laboratory SOP or cell-specific calibration. Pattern exclusions and modeled structure observations do not establish biological efficacy or PKR safety.",
+  "default_enforcement": "IGNORE",
+  "unknown_rule_policy": "ERROR",
+  "workflow": {
+    "design_method": "3dp_structural_pause",
+    "comparison_methods": [
+      "1dp_cai",
+      "gc_target"
+    ],
+    "sequence_requirements": {
+      "reproducibility_seed": null,
+      "kozak_optimization": false,
+      "suppress_tpa": false,
+      "temperature_celsius": 37.0,
+      "target_gc_range": [
+        44.0,
+        50.0
+      ],
+      "gc_optimal_centroid": 46.5,
+      "max_duplex_stem_length": 19,
+      "type_iis_enzymes": [
+        "BsaI",
+        "BsmBI",
+        "BpiI"
+      ],
+      "custom_restriction_sites": [
+        "EcoRI",
+        "BamHI",
+        "HindIII",
+        "NotI",
+        "XhoI",
+        "NheI"
+      ],
+      "mirna_avoidance_seeds": [
+        "AGCACTT",
+        "GTGCAAT",
+        "CAGTATT",
+        "ACTGGAA"
+      ]
+    },
+    "review_policy": {
+      "cai": "PREFERRED",
+      "overall_gc": "HARD_FAIL",
+      "local_gc": "PREFERRED",
+      "repeats": "PREFERRED",
+      "homopolymers": "PREFERRED",
+      "forbidden_motifs": "HARD_FAIL"
+    }
+  },
+  "rules": {
+    "biological.reading_frame.v1": "HARD_FAIL",
+    "rna.cryptic_splice.v1": "HARD_FAIL",
+    "rna.polya_motifs.v1": "HARD_FAIL",
+    "synthesis.gc_extremes.v1": "HARD_FAIL",
+    "policy.synthesis.homopolymer.v1": "WARNING",
+    "policy.initiation_mfe.v1": "IGNORE"
+  },
+  "experimental_observation_policy": {
+    "status": "PROVISIONAL_UNCALIBRATED",
+    "authority": "EIJEX_EXPERIMENTAL",
+    "initiation_min_kcal_mol": -5.0,
+    "local_min_kcal_mol": -12.0,
+    "max_stacked_pairs_exclusive": 20,
+    "scope": "sense_cds_only",
+    "enforcement_stage": "POST_GENERATION",
+    "not_a_pkr_assay": true
+  }
+}
