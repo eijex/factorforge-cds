@@ -15,7 +15,7 @@ from typing import Any
 
 from factorforge.analysis.metrics import STANDARD_GENETIC_CODE
 from factorforge.constraints.type_iis import get_canonical_forbidden_motifs
-from factorforge.engines.structural_pause import StructuralPauseDPOptimizer
+from factorforge.engines.dp_v2_2 import DPV220Optimizer
 from factorforge.rules.registry import RuleRegistry
 from factorforge.sops.config import SopProfile
 
@@ -261,16 +261,16 @@ class StemCell3DPOptimizer:
             not isinstance(m, str) or not m or set(m) - set("ACGT") for m in self.forbidden_motifs
         ):
             raise ValueError("Motifs must be uppercase unambiguous DNA")
-        self.optimizer = StructuralPauseDPOptimizer(
-            positions=self.pause_positions,
-            target_adaptiveness=pause_target_adaptiveness,
-            penalty_weight=pause_penalty_weight if self.pause_positions else 0.0,
+        self.optimizer = DPV220Optimizer(
+            pause_positions=self.pause_positions,
+            pause_target_adaptiveness=pause_target_adaptiveness,
+            pause_penalty_weight=pause_penalty_weight if self.pause_positions else 0.0,
             structure_reference=structure_reference or "sequence_only_no_structural_evidence",
             forbidden_motifs=self.forbidden_motifs,
             include_reverse_complement=False,
         )
 
-    def optimize(self, protein_sequence, left_flank="", right_flank=""):
+    def optimize(self, protein_sequence, left_flank="", right_flank="", stop_codon="TAA"):
         protein = "".join(protein_sequence.upper().split()).rstrip("*")
         result = self.optimizer.optimize(
             protein_sequence=protein,
@@ -279,10 +279,25 @@ class StemCell3DPOptimizer:
             target_gc_max=self.target_gc_max,
             left_flank=left_flank,
             right_flank=right_flank,
+            stop_codon=stop_codon,
         )
-        return self.evaluate_candidate(result["sequence"], protein, left_flank, right_flank)
+        evaluated = self.evaluate_candidate(
+            result["sequence"], protein, left_flank, right_flank, stop_codon
+        )
+        evaluated["engine_version"] = result["engine_version"]
+        evaluated["score"] = result["score"]
+        evaluated["initiation_gc_status"] = result["initiation_gc_status"]
+        evaluated["initiation_gc_active_min_count"] = result["initiation_gc_active_min_count"]
+        evaluated["initiation_gc_active_max_count"] = result["initiation_gc_active_max_count"]
+        evaluated["relaxation_performed"] = result["initiation_gc_status"] in (
+            "SYNONYMOUS_ENVELOPE_CLAMPED",
+            "AUTOMATON_REACHABILITY_RELAXED",
+        )
+        return evaluated
 
-    def evaluate_candidate(self, dna, expected_protein, left_flank="", right_flank=""):
+    def evaluate_candidate(
+        self, dna, expected_protein, left_flank="", right_flank="", stop_codon="TAA"
+    ):
         """Independently check a candidate; no post-hoc modification or relaxation."""
         dna = "".join(dna.upper().split())
         protein = "".join(expected_protein.upper().split()).rstrip("*")
@@ -292,9 +307,15 @@ class StemCell3DPOptimizer:
         if translated != protein or "*" in translated:
             raise ValueError("Candidate translation mismatch")
         gc = (dna.count("G") + dna.count("C")) / len(dna)
-        found = [
-            m for m in self.forbidden_motifs if m in left_flank.upper() + dna + right_flank.upper()
-        ]
+        if not isinstance(stop_codon, str) or stop_codon.upper() not in ("", "TAA", "TAG", "TGA"):
+            raise ValueError("Stop must be a standard stop codon or empty")
+        for flank in (left_flank, right_flank):
+            if not isinstance(flank, str) or set(flank.upper()) - set("ACGT"):
+                raise ValueError("Construct contexts must be unambiguous DNA")
+        construct = left_flank.upper() + dna + stop_codon.upper() + right_flank.upper()
+        # Include homopolymer vetoes inserted by the shared core.
+        motifs = set(self.forbidden_motifs) | {base * 6 for base in "ACGT"}
+        found = sorted(m for m in motifs if m in construct)
         thermo = evaluate_37c_thermodynamics(dna)
         checks = {
             "translation_identity": True,
@@ -337,6 +358,11 @@ class StemCell3DPOptimizer:
             protein_length=len(protein),
             dna_length_nt=len(dna),
             optimized_sequence=dna,
+            full_construct=construct,
+            stop_codon=stop_codon.upper(),
+            constraint_scope="FULL_CONSTRUCT"
+            if (left_flank or right_flank or stop_codon)
+            else "CDS_ONLY",
             cai=round(
                 math.exp(
                     sum(math.log(self.codon_weights[dna[i : i + 3]]) for i in range(0, len(dna), 3))

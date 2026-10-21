@@ -1619,7 +1619,7 @@ async function runOptimization() {
     }
 
     if (state.host === 'human_stemcell') {
-        showToast('Human Stem Cell (hMSC / iPSC) is currently In Development (Job 407 prototype). Online web optimization is locked pending wet-lab calibration. Please use factorforge.engines.stemcell_3dp locally.', 'info');
+        showToast('Human Stem Cell (hMSC / iPSC) is currently In Development (research prototype). Online web optimization is locked pending wet-lab calibration. Please use factorforge.engines.stemcell_3dp locally.', 'info');
         return;
     }
 

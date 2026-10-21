@@ -4,9 +4,16 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current product line.
 
+## v3.5.8 — DP v2.2/v2.3 forward recurrence & multi-class pause release (2026-10-21)
+
+- Integrated DP v2.2 forward recurrence: Unified 1DP/3DP forward dynamic programming recurrence ($F_t(g, q)$), 5' translation initiation ramp ($K=15$ codons), and synonymous GC envelope clamping without expanding state dimensionality ($\mathcal{O}(N^2 |Q| B)$, $B \le 6$). Zero parity invariant mathematically verified against baseline.
+- Integrated DP v2.3 multi-class pause & Nature problem engine: Automated sequence domain profiler (`StructuralPauseAnnotator`) detecting Signal Peptide cleavage sites (SP), Cysteine networks (Cys), Transmembrane helices (TM), N-Glycosylation sequons (Glyc), and Flexible hinges (Hinge). Class-specific pause penalties ($\lambda_k, 	au_k$) mitigate translocon congestion, signal miscleavage, and non-native disulfide dimerization.
+- Rebased `StemCell3DPOptimizer` on the unified DP v2.2/v2.3 core with full construct constraint checks.
+- Registered `dp_v2_2` and `dp_v2_3` in `version_manifest.json` and engine registry; synchronized web/API revisions to `v3.5.8-2026-10-21`.
+
 ## v3.5.7 — human stem cell prototype preview and web UI host update (2026-10-17)
 
-- Added experimental local human stem cell reference prototype (`StemCell3DPOptimizer`, Job 407) with isolated 37°C ViennaRNA thermodynamic evaluation and rigorous stacked-pair duplex stem calculation.
+- Added experimental local human stem cell reference prototype (`StemCell3DPOptimizer`) with isolated 37°C ViennaRNA thermodynamic evaluation and rigorous stacked-pair duplex stem calculation.
 - Web UI Expression Host selector updated with `Human Stem Cell (hMSC / iPSC) · In Development` and 45.0%–50.0% GC reference band.
 - Strict truthfulness boundary enforced: online cloud optimization is locked pending wet-lab calibration, directing users to the local Python engine.
 - Package publication pending; MSC/iPSC biological validation remains uncalibrated.
@@ -14,7 +21,7 @@ FactorForge v3.0+ is the current product line.
 ## v3.5.6 — reviewed structure workflow repairs (2026-10-13)
 
 - 1DP sequence optimization is active as the primary production default for peer-reviewed plant CDS design.
-- 3DP structure-conditioned optimization is designated as In Development (cloud GPU auto-folding infrastructure in progress; exact-match PDB/mmCIF uploads supported for partner pilots).
+- 3DP structure-conditioned optimization is designated as In Development (cloud GPU auto-folding infrastructure in progress; exact-match PDB/mmCIF uploads supported for research pilots).
 - Interactive 3D cartoon ribbon viewer integrated with per-residue pLDDT confidence coloring and pause codon highlight tracks.
 - Web/API patch: exact-match uploaded structures and explicit position review are required for experimental 3DP.
 - Automatic external inference, artificial structure/confidence fallback and automatic approval are disabled.

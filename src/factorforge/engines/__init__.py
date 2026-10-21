@@ -6,10 +6,36 @@ from .registry import EngineRegistry
 from factorforge.registry.versioning import engine_metadata
 
 
+def _load_dp_v2_2():
+    """Load the opt-in core only when explicitly requested."""
+    from .dp_v2_2 import DPV220EngineAdapter
+
+    return DPV220EngineAdapter
+
+
+def _load_dp_v2_3():
+    """Load DP v2.3.0 engine when requested."""
+    from .dp_v2_3 import DPV230EngineAdapter
+
+    return DPV230EngineAdapter
+
+
 def register_builtin_engines() -> None:
     """Register bundled engines."""
     from .profile.optimizer import RuleBasedOptimizer
     from .dp_adapter import DPEngineAdapter
+
+    EngineRegistry.register_lazy(
+        "dp_v2_2",
+        _load_dp_v2_2,
+        metadata={**engine_metadata("dp_v2_2"), "stable": False},
+    )
+
+    EngineRegistry.register_lazy(
+        "dp_v2_3",
+        _load_dp_v2_3,
+        metadata={**engine_metadata("dp_v2_3"), "stable": False},
+    )
 
     EngineRegistry.register(
         "profile",
