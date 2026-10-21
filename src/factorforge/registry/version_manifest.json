@@ -2,9 +2,9 @@
   "schema_version": "1.0",
   "product": {
     "name": "FactorForge",
-    "version": "3.5.7",
+    "version": "3.5.8",
     "release_status": "web_deployed_package_pending",
-    "previous_stable_version": "3.5.6"
+    "previous_stable_version": "3.5.7"
   },
   "engines": {
     "profile": {
@@ -60,6 +60,24 @@
       "availability": "feature_gated",
       "default_enabled": false,
       "description": "Exact suffix rescue conditioned on a verified prefix and carried constraint state"
+    },
+    "dp_v2_2": {
+      "display_name": "DP v2.2",
+      "generation": 2,
+      "version": "2.2.0",
+      "status": "research_candidate",
+      "availability": "local_python",
+      "default_enabled": false,
+      "description": "Opt-in initiation-aware DP with reviewed position penalties; no expression or folding validation"
+    },
+    "dp_v2_3": {
+      "display_name": "DP v2.3",
+      "generation": 2,
+      "version": "2.3.0",
+      "status": "research_candidate",
+      "availability": "local_python",
+      "default_enabled": false,
+      "description": "Multi-class membrane pause and Nature problem engine with automated domain annotation (SP, Cys, TM, Glyc, Hinge)"
     }
   }
 }

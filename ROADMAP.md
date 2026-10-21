@@ -2,14 +2,14 @@
 
 FactorForge development direction and planned work.
 
-> Current product line: **v3.5.7** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current product line: **v3.5.8** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
 
 ## Current Release Status
 
-FactorForge v3.5.7 retains the web/API product line with versioned Sequence
+FactorForge v3.5.8 retains the web/API product line with versioned Sequence
 Policy Profiles (internally retained as `SopProfile` for compatibility), an
 editable browser-local policy workflow and SOP Builder, Top-K discovery slates,
 an explicit DP v2.1.1 path, constrained-sLLM research integration, and adaptive
@@ -182,10 +182,10 @@ Public-safe summaries may be tracked as GitHub Issues under the [Wet-lab Validat
 - Protein structure prediction (use AlphaFold / ESMFold directly)
 - CDS design for microbial hosts (E. coli, yeast)
 
-## Web deployment — 2026-10-12 (Job 390)
+## Web deployment — 2026-10-12
 
-The current web build is job390-2026-10-12 on the FactorForge 3.5.5 source line, independently tracked from Git tags/package publication. It supports explicit 1DP/experimental direct 3DP browser testing with uploaded exact-match structure and reviewed positions. Custom SOP management is paused; the built-in default policy is active. Existing approval/evidence integrations remain available for later use. No new package release or biological validation is implied.
+The current web build is based on the FactorForge 3.5.5 source line, independently tracked from Git tags/package publication. It supports explicit 1DP/experimental direct 3DP browser testing with uploaded exact-match structure and reviewed positions. Custom SOP management is paused; the built-in default policy is active. Existing approval/evidence integrations remain available for later use. No new package release or biological validation is implied.
 
-## 2026-10-12 scientific web checkpoint — Job 397
+## 2026-10-12 scientific web checkpoint
 
 Direct 1DP/3DP browser testing integrates RNA motif scans and available initiation-window MFE into results/reports/history. Structure confidence observations can suggest positions for explicit acceptance and review. Missing required checks block policy approval; unsupported structure evidence creates no arbitrary fallback positions. Generation objectives and codon reference are unchanged. This is a web build on source 3.5.5, separately tracked from the verified public Git tag 3.5.4, package publication and biological validation.

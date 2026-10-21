@@ -24,15 +24,15 @@ an old/new comparison and human biological review before synthesis replacement.
 The experimental YieldPredict 14D contract requires independent evaluation and
 retraining; default 13D checkpoints must not be silently repurposed.
 
-## Direct 3DP browser testing (web build; Jobs 389–397)
+## Direct 3DP browser testing (web build)
 
 The FactorForge form supports explicit 1DP/3DP selection. 3DP uploads a PDB/mmCIF file, selects chain and one-based file model order, and requires reviewed one-based protein positions. The selected observed chain must exactly match the complete protein; partial or homologous structures require the retained local reviewed mapping workflow. Direct requests use `/api/optimize` with `design_mode=paired_3dp` and `structure_context={content,format,chain,model,positions,positions_reviewed,target_adaptiveness,penalty_weight}`.
 
 Limits: 3–300 amino acids, structure content 250 KB, HTTP JSON body 1 MB. Both candidates use the configured codon reference, requested GC and canonical motif exclusions plus custom additions. Invalid inputs and infeasible candidates fail without a baseline fallback. Existing sequence-only settings and API requests remain supported. 3DP uses its explicit DP settings and does not apply Kozak, TpA, template or seed transformations. SOP checks are reported for both candidates; regeneration is manual and never silently changes mode. Watermark stays disabled.
 
-This is stateless computational testing, with no ResearchOS approval or ValidationHub evidence recording. Those existing integrations remain available for later operational use. The structure file is not retained in the response or browser history; normal design results may be retained in local browser history. Submit only public-safe inputs. Structural conformity metrics are codon-weight proxies, not folding/expression measurements. Web deployment revisions are tracked separately from a package release.
+This is stateless computational testing, with no external service dependencies or remote database recording. Those existing integrations remain available for later operational use. The structure file is not retained in the response or browser history; normal design results may be retained in local browser history. Submit only public-safe inputs. Structural conformity metrics are codon-weight proxies, not folding/expression measurements. Web deployment revisions are tracked separately from a package release.
 
-## Observation integration (Job 397)
+## Observation integration
 
 Both browser modes attach `scientific_review` to the primary output and each
 paired candidate: sense-CDS motif scan (`SEQUENCE_SCAN`) and initiation-window
@@ -79,15 +79,15 @@ The current timeout is checked after computational stages; it rejects overdue ru
 
 Phase C intake requires at least one valid sequence/hash/length binding field; malformed supplied fields are rejected. Length-only binding checks coordinate compatibility and does not establish sequence identity. Supply the exact sequence or its SHA-256 for identity verification. Unknown UniProt source versions remain null. Missing or degenerate dihedrals are `U` (unassigned), with `PARTIAL`/`NOT_AVAILABLE` status when appropriate. The local H/E/C observer is an unvalidated heuristic, separate from DSSP; synthetic geometry tests do not establish agreement on real structures. PAE segmentation and domain-core warnings remain experimental review heuristics.
 
-## Phase C specification alignment & synthetic reconstruction checks (Job 400)
+## Phase C specification alignment & synthetic reconstruction checks
 
-- **Baseline preservation (`v1.2.1`):** For `v1.2.1`, errors found in the Job 399 review were fixed and related tests passed (이번 리뷰에서 발견한 오류를 수정하고 관련 테스트를 통과했다); `v1.2.1` is preserved as the operational baseline rather than claiming all possible runtime bugs are closed or calling the thresholds a universal biological standard.
+- **Baseline preservation (`v1.2.1`):** For `v1.2.1`, errors found in the previous structural review were fixed and related tests passed; `v1.2.1` is preserved as the operational baseline rather than claiming all possible runtime bugs are closed or calling the thresholds a universal biological standard.
 - **Explicit PAE parameter semantics (`PAE_PARAMETER_PROFILES`):**
   - `min_protein_aa` (`20 aa`): minimum total protein length to attempt PAE segmentation.
   - `min_subdomain_aa`: initial 20-residue sliding-window seed length (`8 aa` in `v1_2_1_baseline` vs `10 aa` in `prd_v1_0_0_candidate`).
   - `min_domain_aa`: post-merge global domain minimum length (`8 aa` in `v1_2_1_baseline` vs `40 aa` in `prd_v1_0_0_candidate`).
   - `merge_cutoff_angstrom`: cross-subdomain merge threshold (`12.0 Å` in `v1_2_1_baseline` vs `15.0 Å` in `prd_v1_0_0_candidate`).
 - **InterPro `entry_type` separation:** `domain_caller` preserves all normalized InterPro entries in `interpro_annotations`, filters `interpro_domains` and `consensus_domains` strictly to `entry_type == "domain"` (`used_for_domain_consensus=True`, plus untyped legacy entries for backward compatibility), and records `family`, `homologous_superfamily`, `repeat`, and `site` entries in `interpro_non_domain_annotations` (`used_for_domain_consensus=False`) so full-length Family/Superfamily spans or short Repeat/Site motifs never collapse multi-domain boundaries or erase inter-domain linkers. Overlapping `Domain` entries record `merged_domain_ids` and `merged_accessions`.
-- **Synthetic reconstruction checks:** current Job400 fixtures generate backbone coordinates from hand-entered H/E/C labels and compare them with those same labels. PAE and InterPro intervals are constructed fixtures. They verify code behavior, not independent DSSP agreement, real public-coordinate performance, or biological superiority of the default PAE profile. Genuine public-coordinate/provider/DSSP evaluation remains open.
+- **Synthetic reconstruction checks:** current synthetic structure fixtures generate backbone coordinates from hand-entered H/E/C labels and compare them with those same labels. PAE and InterPro intervals are constructed fixtures. They verify code behavior, not independent DSSP agreement, real public-coordinate performance, or biological superiority of the default PAE profile. Genuine public-coordinate/provider/DSSP evaluation remains open.
 
 Web structure handling requires an exact-match local upload and explicit human-reviewed positions. Remote inference, private reference cache lookup, artificial coordinate/confidence fallback, and automatic approval are disabled. Results without bound structure data hide the 3D viewer. Uploaded sources remain provider-unverified unless separately established; panels annotate synonymous-codon choices on the same coordinates.

@@ -1,31 +1,38 @@
 # Changelog
 
+## 3.5.8 — 2026-10-21 (DP v2.2/v2.3 forward recurrence & multi-class pause release; package publication pending)
+
+- DP v2.2 forward recurrence unification: Unified 1DP/3DP forward dynamic programming recurrence ($F_t(g, q)$), 5' translation initiation ramp ($K=15$ codons), and synonymous GC envelope clamping without expanding state dimensionality ($\mathcal{O}(N^2 |Q| B)$, $B \le 6$). Bit-identical zero parity invariant verified against DP v2.1.1 baseline when pause weight $\lambda=0$.
+- DP v2.3 multi-class structural pause & Nature problem engine: Integrated `StructuralPauseAnnotator` for automatic sub-10ms sequence-level detection of 5 biophysical domain classes (Signal Peptide cleavage, Cysteine networks, Transmembrane helices, N-Glycosylation, Flexible hinges). Class-specific penalty weights ($\lambda_k, \tau_k$) calibrated to mitigate translocon pore congestion, signal miscleavage, and non-native disulfide dimerization.
+- Stem cell prototype adapter: Rebased `StemCell3DPOptimizer` on the unified DP v2.2 core while preserving 37°C thermodynamic constraints, full-construct Type IIS / homopolymer checks, and stop codon handling.
+- Engine registry & manifest: Registered `dp_v2_2` and `dp_v2_3` in `version_manifest.json` and `factorforge.engines` lazy loader. Synchronized web/API deployment revisions to `v3.5.8-2026-10-21`.
+
 ## 3.5.7 — 2026-10-17 (web UI & stemcell engine patch; package publication pending)
 
-- Job 407: add experimental human-reference stem cell prototype (`StemCell3DPOptimizer`) with explicit provisional policy provenance, post-generation RNA observations, and manual structure review. Correct stacked-pair measurement, isolate ViennaRNA 37°C model parameters per call, and block failed or unavailable computational checks. No cell-specific calibration, PKR safety, expression benefit, or laboratory approval is established.
+- Stem cell prototype: add experimental human-reference stem cell prototype (`StemCell3DPOptimizer`) with explicit provisional policy provenance, post-generation RNA observations, and manual structure review. Correct stacked-pair measurement, isolate ViennaRNA 37°C model parameters per call, and block failed or unavailable computational checks. No cell-specific calibration, PKR safety, expression benefit, or laboratory approval is established.
 - Web UI: expose 'Human Stem Cell (hMSC / iPSC) · In Development' in expression host selector with 45.0%–50.0% GC reference band and informative in-development notice guard.
 - Maintain strict scientific truthfulness boundary: online cloud synthesis is locked pending experimental validation, directing researchers to the local Python engine.
 
 ## 3.5.6 — 2026-10-13 (web/API patch; package publication pending)
 
-- 1DP sequence optimization is established as the primary production default for peer-reviewed, reproducible plant CDS design. 3DP structure-conditioned design is categorized as In Development, with automated cloud GPU folding in progress and manual exact-match PDB/mmCIF uploads supported for research partner pilots.
-- Web structure handling requires exact-match uploaded PDB/mmCIF coordinates and explicit reviewed positions. Automatic external folding, artificial structure/confidence fallback, and auto-approval are disabled. Job400 metrics are synthetic reconstruction checks; independent public-structure/DSSP validation remains open.
+- 1DP sequence optimization is established as the primary production default for peer-reviewed, reproducible plant CDS design. 3DP structure-conditioned design is categorized as In Development, with automated cloud GPU folding in progress and manual exact-match PDB/mmCIF uploads supported for research pilots.
+- Web structure handling requires exact-match uploaded PDB/mmCIF coordinates and explicit reviewed positions. Automatic external folding, artificial structure/confidence fallback, and auto-approval are disabled. Structure metrics are synthetic reconstruction checks; independent public-structure/DSSP validation remains open.
 
-- Job 399: add offline structural annotation context and explicit conflict review; reject malformed sidecar binding and nonfinite scores, recompute merged-domain PAE, and report degenerate backbone geometry as unassigned.
+- Structural annotation: add offline structural annotation context and explicit conflict review; reject malformed sidecar binding and nonfinite scores, recompute merged-domain PAE, and report degenerate backbone geometry as unassigned.
 
-- Job 398: add local reviewed NB-Fold annotate/optimize commands; reject changed confidence provenance/export metadata and unexplained manual positions. No folding or yield validation is implied.
+- Reviewed NB-Fold commands: add local reviewed NB-Fold annotate/optimize commands; reject changed confidence provenance/export metadata and unexplained manual positions. No folding or yield validation is implied.
 
-- Job 397: repair client ZIP folder creation, include both available candidates, and derive dossier version/checks from returned evidence without fabricated certification/integrity claims.
+- Client export: repair client ZIP folder creation, include both available candidates, and derive dossier version/checks from returned evidence without fabricated certification/integrity claims.
 
-- Job 397: integrate RNA motif scans, per-call validated initiation MFE and evidence-based structure position suggestions into direct browser results/reports/history; require human acceptance and review, block required unavailable policy checks, and preserve default-only SOP and generation objectives.
+- Web observations: integrate RNA motif scans, per-call validated initiation MFE and evidence-based structure position suggestions into direct browser results/reports/history; require human acceptance and review, block required unavailable policy checks, and preserve default-only SOP and generation objectives.
 
-- Job 390: pause custom SOP management in the public UI; retain implementation and saved settings while applying the built-in default policy. Keep direct 1DP/3DP testing.
+- SOP policy UI: pause custom SOP management in the public UI; retain implementation and saved settings while applying the built-in default policy. Keep direct 1DP/3DP testing.
 
 - Disable unconnected Arg/Ser, splice-remediation and 5-prime boundary comparison
   controls; remove prechecked states and unsupported translation-efficiency wording.
   Existing engine/API optimization settings are unchanged.
 
-- Job 389: direct experimental 3DP form/API execution using uploaded exact-match PDB/mmCIF structure and reviewed positions; paired baseline results; ResearchOS governance deferred for this stateless test path. No deployment.
+- Experimental 3DP testing: direct experimental 3DP form/API execution using uploaded exact-match PDB/mmCIF structure and reviewed positions; paired baseline results; governance deferred for this stateless test path. No deployment.
 
 - Pause watermark in the web UI, retain disabled state after profile import, and expose baseline/local experimental 3DP workflow selection without transferring sequence input.
 

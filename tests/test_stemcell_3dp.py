@@ -229,10 +229,10 @@ def test_independent_gc_check_blocks_candidate():
 
 
 def test_same_reference_1dp_comparator():
-    from factorforge.engines.dp_v2 import DPV2Optimizer
+    from factorforge.engines.dp_v2_1_1 import DPV211Optimizer
 
     engine = StemCell3DPOptimizer(target_gc_min=0, target_gc_max=1)
-    expected = DPV2Optimizer(
+    expected = DPV211Optimizer(
         forbidden_motifs=engine.forbidden_motifs, include_reverse_complement=False
     ).optimize(
         protein_sequence="MASTWQHLEK",

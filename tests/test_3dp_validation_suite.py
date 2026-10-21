@@ -23,8 +23,10 @@ from factorforge.validation.tradeoff_suite import (
 
 @pytest.fixture
 def benthamiana_weights():
-    from agentos.structure.design_adapter import load_nbenthamiana_weights
-    return load_nbenthamiana_weights()
+    # FactorForge engineering tests must run without the private AgentOS package.
+    from factorforge.analysis.metrics import load_codon_usage_table
+
+    return load_codon_usage_table().codon_weights
 
 
 @pytest.fixture

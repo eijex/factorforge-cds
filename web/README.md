@@ -202,26 +202,26 @@ GNU Affero General Public License v3.0 - see [LICENSE](../LICENSE)
 
 ## Current testing UI
 
-The workflow selector offers 1DP baseline and experimental 3DP. Baseline retains the existing public design form. Selecting 3DP opens `http://127.0.0.1:8788/ui?mode=paired_3dp` on the tester's own computer; no entered sequence is copied or sent. An operator must first configure/start the private ResearchOS service. This link is not a hosted public 3DP service.
+The workflow selector offers 1DP baseline and experimental 3DP. Baseline retains the existing public design form. Selecting 3DP opens `http://127.0.0.1:8788/ui?mode=paired_3dp` on the tester's own computer; no entered sequence is copied or sent. An operator must first configure/start the local service. This link is not a hosted public 3DP service.
 
-The local UI offers actual 1DP-only DP v2 generation (one candidate) or 3DP generation with a DP v2 comparator (two candidates). Registered target/structure references and AgentOS human approval are required. The tester selects the method; no automatic biological winner is chosen.
+The local UI offers actual 1DP-only DP v2 generation (one candidate) or 3DP generation with a DP v2 comparator (two candidates). Registered target/structure references and human approval are required. The tester selects the method; no automatic biological winner is chosen.
 
 Watermark is displayed as **Disabled**, remains unchecked even after an uploaded profile requests it, and is not enabled by this UI. Other profile settings and the design objective are preserved. This UI pause does not remove library-level experimental functions.
 
-## Direct 3DP browser testing (unreleased; Job 389)
+## Direct 3DP browser testing (unreleased)
 
 The FactorForge form supports explicit 1DP/3DP selection. 3DP uploads a PDB/mmCIF file, selects chain and one-based file model order, and requires reviewed one-based protein positions. The selected observed chain must exactly match the complete protein; partial or homologous structures require the retained local reviewed mapping workflow. Direct requests use `/api/optimize` with `design_mode=paired_3dp` and `structure_context={content,format,chain,model,positions,positions_reviewed,target_adaptiveness,penalty_weight}`.
 
 Limits: 3–300 amino acids, structure content 250 KB, HTTP JSON body 1 MB. Both candidates use the configured codon reference, requested GC and canonical motif exclusions plus custom additions. Invalid inputs and infeasible candidates fail without a baseline fallback. Existing sequence-only settings and API requests remain supported. 3DP uses its explicit DP settings and does not apply Kozak, TpA, template or seed transformations. SOP checks are reported for both candidates; regeneration is manual and never silently changes mode. Watermark stays disabled.
 
-This is stateless computational testing, with no ResearchOS approval or ValidationHub evidence recording. Those existing integrations remain available for later operational use. The structure file is not retained in the response or browser history; normal design results may be retained in local browser history. Submit only public-safe inputs. Structural conformity metrics are codon-weight proxies, not folding/expression measurements. These source changes are not deployed or a new package release.
+This is stateless computational testing, with no external service dependencies or remote database recording. Those existing integrations remain available for later operational use. The structure file is not retained in the response or browser history; normal design results may be retained in local browser history. Submit only public-safe inputs. Structural conformity metrics are codon-weight proxies, not folding/expression measurements. These source changes are not deployed or a new package release.
 
-## Current public policy UI (Job 390, 2026-10-12)
+## Current public policy UI (2026-10-12)
 
 Custom SOP management is paused. The built-in FactorForge default policy is applied; upload/export/preset/editing controls are hidden and disabled. Their code and previous browser configuration remain available for later reactivation through ENABLE_CUSTOM_SOP. Saved custom SOPs are ignored without deletion. 1DP/3DP mode selection and explicit structure inputs remain active. This supersedes the earlier public SOP upload/export instructions. Public API contracts are retained.
 
-### Scientific web observations (Job 397)
+### Scientific web observations
 
 Direct 1DP/3DP browser testing reports sense-CDS RNA motif scans and available initiation-window MFE in results, downloadable reports and local history. Structure confidence observations can suggest positions for explicit acceptance and review; unsupported inputs do not invent positions. These checks do not establish expression, yield or folding benefits. The default policy remains active and custom SOP management remains paused. See `docs/experimental-structure.md` for the API and measurement boundary.
 
-Web structure handling now requires exact-match uploaded PDB/mmCIF coordinates and explicit reviewed positions. Automatic external folding, artificial structure/confidence fallback, and auto-approval are disabled. Job400 metrics are synthetic reconstruction checks; independent public-structure/DSSP validation remains open.
+Web structure handling now requires exact-match uploaded PDB/mmCIF coordinates and explicit reviewed positions. Automatic external folding, artificial structure/confidence fallback, and auto-approval are disabled. Structure metrics are synthetic reconstruction checks; independent public-structure/DSSP validation remains open.

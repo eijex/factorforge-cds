@@ -838,7 +838,7 @@ class handler(BaseHTTPRequestHandler):
         health_info = {
             "status": "healthy",
             "service": "FactorForge API",
-            "web_deployment_revision": "job407-v3.5.7-2026-10-17",
+            "web_deployment_revision": "v3.5.8-2026-10-21",
             "version": ENGINE_VERSIONS["product"],
             "factorforge_available": FACTORFORGE_AVAILABLE,
             "endpoints": {
