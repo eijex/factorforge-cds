@@ -1383,7 +1383,7 @@
                     class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
             </div>
             <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
-                <!-- Version 3.5.7 -->
+                <!-- Version 3.5.8 -->
                 <div class="relative pl-8 border-l-2 border-emerald-500">
                     <div
                         class="absolute -left-[9px] top-0 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
@@ -1391,6 +1391,21 @@
                     <div class="flex items-center space-x-2 mb-2">
                         <span
                             class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.5.8</h3>
+                        <span class="text-slate-400 text-[10px]">2026-10-21</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Unified 1DP/3DP Forward Recurrence (DP v2.2):</b> Unified exact DP forward recurrence ($F_t(g, q)$) with 5′ translation initiation ramp ($K=15$ codons) and synonymous GC envelope clamping ($\mathcal{O}(N^2 |Q| B)$, $B \le 6$). Zero-parity bit-level equivalence with baseline verified when $\lambda=0$.</li>
+                        <li><b>Nature Problem & Membrane Pause Engine (DP v2.3):</b> Instantaneous (< 10ms) automated domain profiling (`StructuralPauseAnnotator`) detecting Signal Peptide cleavage sites (SP), Cysteine networks (Cys), Transmembrane helices (TM), N-Glycosylation sequons (Glyc), and Flexible hinges. Class-specific pause penalties ($\lambda_k, 	au_k$) mitigate translocon congestion, signal miscleavage, and 50 kDa non-native dimer aggregation.</li>
+                        <li><b>Stem Cell 3DP Adapter Rebase:</b> Rebased `StemCell3DPOptimizer` on the unified DP v2.2/v2.3 core while strictly preserving 37°C thermodynamics, full-construct Type IIS / homopolymer invariants, and stop codon handling.</li>
+                    </ul>
+                </div>
+                <!-- Version 3.5.7 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-300 dark:bg-slate-600 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
                         <h3 class="font-bold text-slate-800 dark:text-white">v3.5.7</h3>
                         <span class="text-slate-400 text-[10px]">2026-10-17</span>
                     </div>
