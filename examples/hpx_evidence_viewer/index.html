@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HPX Evidence &amp; Design Assumption Inspection Viewer</title>
+<style>
+  :root {
+    --bg-main: #070b14;
+    --bg-card: #0d1527;
+    --bg-card-sub: #131e36;
+    --border: #1e2c4a;
+    --border-light: #2c3e66;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --accent-blue: #38bdf8;
+    --accent-pink: #f43f5e;
+    --accent-amber: #f59e0b;
+    --accent-emerald: #10b981;
+    --plddt-vhigh: #1d4ed8;
+    --plddt-conf: #0284c7;
+    --plddt-low: #eab308;
+    --plddt-vlow: #ea580c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg-main);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 16px;
+    line-height: 1.5;
+  }
+  .container { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge-blue { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+  .badge-amber { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+  .badge-purple { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+  .badge-gray { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
+  .badge-pink { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+
+  /* Header */
+  .header-flex { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+  .title { font-size: 20px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
+  .subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+  .header-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+
+  /* Alert / Disclaimer */
+  .disclaimer-box {
+    background: rgba(15, 23, 42, 0.7);
+    border-left: 4px solid var(--accent-amber);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+    font-size: 12px;
+    color: #cbd5e1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .disclaimer-box strong { color: #fde047; }
+
+  /* Grid Layout: Tracks on Left, 3D Canvas on Right */
+  .main-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(360px, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 1080px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Multi-track view styles */
+  .track-container { display: flex; flex-direction: column; gap: 12px; }
+  .track-row {
+    background: var(--bg-card-sub);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    position: relative;
+  }
+  .track-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #cbd5e1;
+    margin-bottom: 8px;
+  }
+  .track-canvas-box {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+  canvas.track-cv {
+    display: block;
+    width: 100%;
+    cursor: crosshair;
+  }
+
+  /* 3D Viewport */
+  .viewport-3d-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+  }
+  .canvas3d-wrapper {
+    position: relative;
+    width: 100%;
+    height: 520px;
+    background: radial-gradient(circle at 50% 50%, #152238 0%, #080c14 100%);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  canvas#canvas3d {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: grab;
+  }
+  canvas#canvas3d:active { cursor: grabbing; }
+
+  .view-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .btn-group { display: flex; gap: 6px; }
+  button.btn {
+    background: var(--bg-card-sub);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  button.btn:hover { background: #1e2c4a; border-color: var(--accent-blue); }
+  button.btn.active { background: #0284c7; border-color: #38bdf8; color: #fff; }
+
+  /* Inspector Card */
+  .inspector-card {
+    background: var(--bg-card-sub);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+  }
+  .inspect-item { display: flex; flex-direction: column; gap: 2px; }
+  .inspect-label { font-size: 10px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
+  .inspect-value { font-size: 13px; font-weight: 700; color: #fff; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  /* Legend */
+  .legend-row { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px; align-items: center; color: var(--text-muted); }
+  .legend-chip { display: flex; align-items: center; gap: 5px; }
+  .legend-color { width: 10px; height: 10px; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- 1. Header Card -->
+  <div class="card">
+    <div class="header-flex">
+      <div>
+        <div class="title">
+          <span>Human Hemopexin (HPX) — Evidence &amp; Design Inspection</span>
+        </div>
+        <div class="subtitle">
+          UniProtKB <code>P02790</code> (Homo sapiens) · 462 aa Precursor / 439 aa Mature Secreted Chain
+        </div>
+        <div class="header-chips">
+          <span class="badge badge-blue">UniProtKB 2026_04 (Curated)</span>
+          <span class="badge badge-purple">AlphaFold v2.0 (AF-P02790-F1 Predicted Monomer)</span>
+          <span class="badge badge-amber">Evidence: UNVERIFIED_PUBLIC_CORPUS</span>
+          <span class="badge badge-gray">Biological validation: NOT_AVAILABLE</span>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+        <div class="btn-group">
+          <button id="btnPrecursor" class="btn active" onclick="setConstructMode('precursor')">Precursor (1..462)</button>
+          <button id="btnMature" class="btn" onclick="setConstructMode('mature')">Mature (24..462, SP Cleaved)</button>
+        </div>
+        <div style="font-size:11px; color:var(--text-muted);">
+          Construct Offset: <span id="offsetLabel" style="color:#fff; font-weight:700;">0 aa (Identical)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Methodological Guidance & Disclaimer Card -->
+  <div class="card disclaimer-box">
+    <div>
+      <strong>[EMBL-EBI Methodological Caution: pLDDT Interpretation]</strong>
+      <p>AlphaFold pLDDT is a per-residue score of <em>local prediction confidence</em> along the modeled backbone. High pLDDT (&gt;90) indicates high confidence in local residue geometry, but does not provide experimental proof of absolute physical rigidity. Low pLDDT (&lt;50) denotes low prediction confidence, but does not definitively prove an intrinsically disordered region in vivo. Missing coordinates (if any) are flagged explicitly as unmodeled.</p>
+    </div>
+    <div>
+      <strong>[Design Assumption Scope: 4DP +35 aa Exit-Tunnel Shift]</strong>
+      <p>The 4DP deceleration intervals depicted below reflect computational model placements under the <em>+35 aa ribosome exit-tunnel hypothesis</em> ($W_k = [b_k+33, b_k+37]$). They visualize where codon relative adaptability ($w_i$) was computationally modulated by configured objective penalties to aid review prior to wet-lab synthesis. They <strong>do not validate physical in vivo translation rates, ribosomal pause durations, or chaperone-assisted folding kinetics</strong>.</p>
+    </div>
+  </div>
+
+  <!-- 3. Main Grid -->
+  <div class="main-grid">
+
+    <!-- Left Column: Synchronized 1D Feature Tracks -->
+    <div class="track-container">
+
+      <!-- Track 1: Sequence & Coordinate Mapping -->
+      <div class="track-row">
+        <div class="track-header">
+          <span>TRACK 1: SEQUENCE &amp; COORDINATE RULER (UniProt vs Construct)</span>
+          <span id="seqHoverCoord" style="color:var(--accent-blue); font-family:monospace;">Hover or click residue</span>
+        </div>
+        <div class="track-canvas-box">
+          <canvas id="cvCoord" class="track-cv" height="44"></canvas>
+        </div>
+      </div>
+
+      <!-- Track 2: Curated vs Heuristic Domain & Functional Features -->
+      <div class="track-row">
+        <div class="track-header">
+          <span>TRACK 2: CURATED FUNCTIONAL DOMAINS &amp; POST-TRANSLATIONAL FEATURES</span>
+          <span class="badge badge-blue" style="font-size:10px;">UniProtKB 2026_04</span>
+        </div>
+        <div class="track-canvas-box">
+          <canvas id="cvDomains" class="track-cv" height="68"></canvas>
+        </div>
+        <div class="legend-row" style="margin-top:8px;">
+          <div class="legend-chip"><div class="legend-color" style="background:#6366f1;"></div><span>SP (1-23)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#0ea5e9;"></div><span>Beta-Propeller 1 (53-231)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#f59e0b;"></div><span>Inter-domain Linker / Hinge (232-258)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#10b981;"></div><span>Beta-Propeller 2 (259-450)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#e11d48;"></div><span>Disulfide (S-S)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#a855f7;"></div><span>N-Glycosylation</span></div>
+        </div>
+      </div>
+
+      <!-- Track 3: AlphaFold Structural Confidence (pLDDT) -->
+      <div class="track-row">
+        <div class="track-header">
+          <span>TRACK 3: ALPHAFOLD STRUCTURAL CONFIDENCE (pLDDT Profile, AF-P02790-F1)</span>
+          <span id="plddtHoverVal" style="font-family:monospace; color:#38bdf8;">Mean: 87.58</span>
+        </div>
+        <div class="track-canvas-box">
+          <canvas id="cvPlddt" class="track-cv" height="55"></canvas>
+        </div>
+        <div class="legend-row" style="margin-top:6px;">
+          <div class="legend-chip"><div class="legend-color" style="background:#1d4ed8;"></div><span>Very High (&gt;90)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#0284c7;"></div><span>Confident (70-90)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#eab308;"></div><span>Low (50-70)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#ea580c;"></div><span>Very Low (&lt;50)</span></div>
+          <span style="font-size:10px; color:#64748b;">(Source: AlphaFold DB Monomer v2.0)</span>
+        </div>
+      </div>
+
+      <!-- Track 4: FactorForge 4DP Design Hypothesis Intervals -->
+      <div class="track-row">
+        <div class="track-header">
+          <span>TRACK 4: FACTORFORGE DESIGN INTERVALS (+35 aa Exit-Tunnel vs Static)</span>
+          <span class="badge badge-pink" style="font-size:10px;">Hypothesis-Driven Placement</span>
+        </div>
+        <div class="track-canvas-box">
+          <canvas id="cvDesign" class="track-cv" height="52"></canvas>
+        </div>
+        <div class="legend-row" style="margin-top:6px;">
+          <div class="legend-chip"><div class="legend-color" style="background:#f43f5e;"></div><span>4DP Shifted: [264-268] (Domain 1 Clearance, 231+35&plusmn;2)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#ec4899;"></div><span>4DP Shifted: [291-295] (Linker Clearance, 258+35&plusmn;2)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#94a3b8;"></div><span>3DP Static: [232-258] (0 aa Shift Heuristic)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#475569;"></div><span>Terminal [483-487]: Excluded (&gt;462 aa)</span></div>
+        </div>
+      </div>
+
+      <!-- Track 5: Candidate Comparison (Codon Relative Adaptability Profile wi) -->
+      <div class="track-row">
+        <div class="track-header">
+          <span>TRACK 5: CODON RELATIVE ADAPTABILITY COMPARISON (wi Profile)</span>
+          <span style="font-size:11px; color:var(--text-muted); font-family:monospace;">Objective Penalty Profiles (Not Physical Speed)</span>
+        </div>
+        <div class="track-canvas-box">
+          <canvas id="cvAdapt" class="track-cv" height="65"></canvas>
+        </div>
+        <div class="legend-row" style="margin-top:6px;">
+          <div class="legend-chip"><div class="legend-color" style="background:#38bdf8;"></div><span>1DP Baseline (Uniform High wi &ge; 0.85)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#94a3b8;"></div><span>3DP Static (Hinge Pause, wi &approx; 0.40 at 232-258)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#f43f5e;"></div><span>4DP Tunnel-Shifted (wi &approx; 0.42 at [264-268] &amp; [291-295])</span></div>
+        </div>
+      </div>
+
+      <!-- Residue & Feature Inspector Card -->
+      <div class="inspector-card">
+        <div class="inspect-item">
+          <span class="inspect-label">Selected Residue</span>
+          <span id="inspRes" class="inspect-value" style="color:#38bdf8;">#240 Asn (N)</span>
+        </div>
+        <div class="inspect-item">
+          <span class="inspect-label">UniProt / Construct Pos</span>
+          <span id="inspPos" class="inspect-value">240 / 240</span>
+        </div>
+        <div class="inspect-item">
+          <span class="inspect-label">AlphaFold pLDDT</span>
+          <span id="inspPlddt" class="inspect-value" style="color:#38bdf8;">91.42 (Very High)</span>
+        </div>
+        <div class="inspect-item">
+          <span class="inspect-label">Domain / Feature</span>
+          <span id="inspFeature" class="inspect-value" style="color:#cbd5e1;">Inter-domain Hinge / N-Glyco</span>
+        </div>
+        <div class="inspect-item">
+          <span class="inspect-label">1DP / 3DP / 4DP wi</span>
+          <span id="inspWi" class="inspect-value" style="color:#fb7185;">1.00 / 0.61 / 1.00</span>
+        </div>
+        <div class="inspect-item">
+          <span class="inspect-label">4DP Design Interval</span>
+          <span id="inspDesign" class="inspect-value" style="color:#94a3b8;">Outside Pause Target</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Interactive 3D Structural Viewport -->
+    <div class="card viewport-3d-card">
+      <div class="track-header" style="margin-bottom:0;">
+        <div>
+          <span style="font-size:13px; font-weight:800;">3D STRUCTURAL INSPECTION VIEWPORT</span>
+          <span style="display:block; font-size:11px; color:var(--text-muted); font-weight:normal;">
+            AlphaFold Predicted Monomer <code>AF-P02790-F1</code> (462 CA coordinates) · Offline WebGL Canvas
+          </span>
+        </div>
+        <button class="btn" onclick="resetCamera()">Reset Camera</button>
+      </div>
+
+      <div class="canvas3d-wrapper">
+        <canvas id="canvas3d"></canvas>
+        <div style="position:absolute; bottom:10px; left:12px; font-size:10px; color:#94a3b8; background:rgba(7,11,20,0.8); padding:4px 8px; border-radius:4px; pointer-events:none;">
+          Mouse Drag: Orbit Rotate · Wheel: Zoom · Shift+Drag: Pan · Click residue: Select
+        </div>
+        <div id="badge3dStructure" style="position:absolute; top:10px; right:12px; font-size:10px; background:rgba(2,132,199,0.25); color:#7dd3fc; border:1px solid rgba(56,189,248,0.4); padding:3px 8px; border-radius:4px;">
+          Prediction (Computational)
+        </div>
+      </div>
+
+      <div class="view-controls">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Color 3D Backbone:</span>
+          <button id="btnColorPlddt" class="btn active" onclick="setColorMode('plddt')">pLDDT Confidence</button>
+          <button id="btnColorDomain" class="btn" onclick="setColorMode('domain')">Domains (Propellers 1 &amp; 2)</button>
+          <button id="btnColorDesign" class="btn" onclick="setColorMode('design')">4DP Pause Intervals</button>
+        </div>
+        <div style="font-size:11px; color:#64748b;">
+          Experimental Comparison: Rabbit HPX intact (PDB 1QJS)
+        </div>
+      </div>
+
+      <div style="font-size:11px; color:#94a3b8; border-top:1px solid var(--border); padding-top:8px; line-height:1.4;">
+        <strong>Structure Annotation Integrity:</strong> The human full-length precursor (with SP 1-23) has no full intact experimental crystal structure in the PDB. This 3D viewport renders AlphaFold Monomer v2.0 predictions with exact atomic CA coordinates. Experimental structures (e.g. 1QJS, 1QHU) lack the signal peptide and have species/construct variations.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Embed Full JSON Data directly for 100% Offline Resilience -->
+<script>
+const HPX_DATA = {"meta":{"protein":"Human Hemopexin (HPX)","uniprot_id":"P02790","gene":"HPX","organism":"Homo sapiens (Human)","curation_version":"UniProtKB Release 2026_04","experimental_structure_notes":"Partial crystal structures available (e.g. Rabbit HPX PDB 1QJS; Human N-terminal domain PDB 1QHU). Full-length precursor structure is an AlphaFold computational prediction (AF-P02790-F1).","evidence_classification":"UNVERIFIED_PUBLIC_CORPUS","biological_validation":"NOT_AVAILABLE","plddt_disclaimer":"pLDDT is a per-residue measure of AlphaFold local prediction confidence. It is not an experimental or definitive measure of rigidity or disorder (EMBL-EBI guidance).","design_disclaimer":"4DP pause intervals are model design intervals under the +35 aa ribosome exit-tunnel hypothesis. They demonstrate where codon adaptation was computationally modulated, not in vivo translation rates or folding outcomes."},"sequence":"MARVLGAPVALGLWSLCWSLAIATPLPPTSAHGNVAEGETKPDPDVTERCSDGWSFDATTLDDNGTMLFFKGEFVWKSHKWDRELISERWKNFPSPVDAAFRQGHNSVFLIKGDKVWVYPPEKKEKGYPKLLQDEFPGIPSPLDAAVECHRGECQAEGVLFFQGDREWFWDLATGTMKERSWPAVGNCSSALRWLGRYYCFQGNQFLRFDPVRGEVPPRYPRDVRDYFMPCPGRGHGHRNGTGHGNSTHHGPEYMRCSPHLVLSALTSDNHGATYAFSGTHYWRLDTSRDGWHSWPIAHQWPQGPSAVDAAFSWEEKLYLVQGTQVYVFLTKGGYTLVSGYPKRLEKEVGTPHGIILDSVDAAFICPGSSRLHIMAGRRLWWLDLKSGAQATWTELPWPHEKVDGALCMEKSLGPNSCSANGPGLYLIHGPNLYCYSDVEKLNAAKALPQPQNVTSLLGCTH","construct_mapping":{"uniprot_range":[1,462],"precursor_range":[1,462],"mature_range":[24,462],"mature_length":439,"signal_peptide":[1,23]},"curated_features":{"domains":[{"name":"Signal Peptide","start":1,"end":23,"type":"signal","source":"UniProtKB 2026_04"},{"name":"Hemopexin Repeat 1","start":53,"end":93,"type":"domain","source":"UniProtKB 2026_04"},{"name":"Hemopexin Repeat 2","start":94,"end":139,"type":"domain","source":"UniProtKB 2026_04"},{"name":"Hemopexin Repeat 3","start":140,"end":184,"type":"domain","source":"UniProtKB 2026_04"},{"name":"Hemopexin Repeat 4","start":185,"end":231,"type":"domain","source":"UniProtKB 2026_04"},{"name":"Inter-domain Hinge / Linker","start":232,"end":258,"type":"hinge","source":"UniProtKB 2026_04"},{"name":"Hemopexin Repeat 5","start":259,"end":304,"type":"domain","source":"UniProtKB 2026_04"},{"name":"Hemopexin Repeat 6","start":305,"end":352,"type":"domain","source":"UniProtKB 2026_04"},{"name":"Hemopexin Repeat 7","start":357,"end":396,"type":"domain","source":"UniProtKB 2026_04"},{"name":"Hemopexin Repeat 8","start":400,"end":450,"type":"domain","source":"UniProtKB 2026_04"}],"disulfides":[{"start":50,"end":231,"desc":"Domain 1 Closure","source":"UniProtKB 2026_04"},{"start":149,"end":154,"desc":"Intra-repeat 3 loop","source":"UniProtKB 2026_04"},{"start":188,"end":200,"desc":"Intra-repeat 4 loop","source":"UniProtKB 2026_04"},{"start":257,"end":460,"desc":"Domain 2 Closure","source":"UniProtKB 2026_04"},{"start":366,"end":408,"desc":"Intra-repeat 7 loop","source":"UniProtKB 2026_04"},{"start":418,"end":435,"desc":"Intra-repeat 8 loop","source":"UniProtKB 2026_04"}],"glycosylations":[{"pos":24,"type":"O-linked","source":"UniProtKB 2026_04"},{"pos":29,"type":"O-linked","source":"UniProtKB 2026_04"},{"pos":64,"type":"N-linked","source":"UniProtKB 2026_04"},{"pos":187,"type":"N-linked","source":"UniProtKB 2026_04"},{"pos":240,"type":"N-linked","source":"UniProtKB 2026_04"},{"pos":246,"type":"N-linked","source":"UniProtKB 2026_04"},{"pos":453,"type":"N-linked","source":"UniProtKB 2026_04"}],"binding_sites":[{"pos":79,"desc":"Axial heme binding","source":"UniProtKB 2026_04"},{"pos":150,"desc":"Axial heme binding","source":"UniProtKB 2026_04"},{"pos":236,"desc":"Axial heme binding","source":"UniProtKB 2026_04"},{"pos":293,"desc":"Axial heme binding","source":"UniProtKB 2026_04"}]},"structural_confidence":[54.16,38.28,38.06,43.38,44.03,45.88,44.34,53.88,45.16,44.44,42.25,47.0,43.19,40.53,41.75,37.59,35.44,40.31,39.69,45.25,38.19,51.94,37.88,43.84,39.34,43.12,54.31,40.47,39.41,39.28,37.94,34.31,34.28,30.27,37.16,32.78,36.5,31.61,38.88,54.69,59.69,69.69,84.25,86.19,86.44,87.25,89.25,89.0,91.19,92.31,93.0,90.0,89.5,93.88,95.5,96.56,98.31,98.69,98.31,98.19,96.81,94.62,92.62,92.62,93.81,94.5,95.88,96.75,97.12,97.88,97.25,96.81,96.81,96.44,96.75,95.75,92.44,77.94,72.38,77.94,87.19,88.62,93.38,93.44,95.56,96.69,93.19,91.62,89.81,92.5,88.75,87.44,93.94,93.62,94.75,97.19,98.44,98.62,98.75,98.62,98.25,96.88,91.38,85.88,84.0,88.0,92.5,95.75,96.69,97.81,98.38,98.31,98.25,97.81,97.44,96.69,95.81,94.44,93.38,90.56,81.56,80.31,74.69,69.19,58.19,67.31,81.44,88.38,93.5,94.12,96.69,97.31,97.12,95.62,95.0,97.38,97.69,97.0,98.25,97.69,97.5,97.69,98.62,98.62,98.81,98.81,98.75,98.44,98.12,97.56,96.94,96.19,97.69,97.5,95.12,97.06,97.62,97.88,98.56,98.69,98.81,98.69,98.25,96.75,95.31,97.62,98.25,98.5,98.56,98.56,98.12,96.56,96.62,97.31,96.94,97.62,96.75,97.5,97.88,97.0,96.62,97.62,96.31,97.5,97.56,93.62,96.81,98.44,98.19,98.69,98.75,97.81,98.25,97.44,96.88,96.62,98.12,98.69,98.69,98.69,98.5,97.06,94.0,94.81,96.94,98.06,98.44,98.25,98.25,97.75,98.06,97.25,96.25,97.44,97.12,97.81,95.81,95.06,92.94,97.06,96.94,96.38,95.75,94.88,92.75,92.88,92.62,92.25,89.44,88.31,90.56,89.62,88.75,90.0,83.88,79.31,61.81,51.91,41.19,32.78,32.72,32.44,32.56,36.34,30.25,37.09,37.12,39.66,36.94,42.81,47.53,56.84,63.78,66.75,80.19,89.88,91.06,89.06,85.38,86.75,91.19,93.0,96.44,97.31,98.38,98.12,97.88,97.44,96.81,95.19,95.38,94.56,96.88,97.81,98.0,97.62,98.06,96.12,94.25,95.81,96.19,97.38,97.06,96.94,95.69,94.38,94.94,93.62,92.31,94.88,92.81,92.5,93.56,95.38,95.06,95.81,97.81,96.0,94.88,96.38,97.56,92.25,95.12,97.62,98.06,97.0,97.31,98.44,98.12,98.5,98.69,98.25,97.62,97.25,94.56,95.38,97.69,98.44,98.38,98.69,98.38,97.81,95.38,93.94,97.5,98.12,98.62,98.31,98.56,97.81,97.0,93.31,92.06,95.0,97.5,96.88,98.0,97.81,97.44,97.0,98.06,98.0,97.06,95.88,94.31,93.12,93.62,93.81,94.69,93.5,93.19,94.56,91.12,90.75,91.38,89.56,92.69,90.5,93.44,95.75,97.75,98.38,98.44,98.25,97.94,96.31,94.19,92.75,96.25,97.25,98.0,98.38,98.56,97.88,98.12,96.81,95.38,96.12,97.12,97.94,98.31,98.06,98.12,97.81,96.56,96.56,96.69,94.44,94.12,95.25,96.25,96.81,97.81,97.81,97.81,97.75,97.44,97.75,97.19,97.94,95.88,96.06,97.88,97.69,98.06,98.25,97.69,96.81,94.19,88.69,85.25,84.75,84.62,75.06,69.81,75.56,81.12,84.06,81.62,76.62,74.0,78.5,85.75,92.94,96.0,96.94,97.56,97.0,96.94,94.25,93.62,94.56,94.5,95.69,95.44,95.31,93.19,93.5,95.38,94.56,95.31,97.19,96.81,97.12,96.62,95.12,95.69,96.88,94.62,93.75,93.25,91.38,91.31,92.31,91.19,89.56,90.5,90.88,89.38,90.38,74.25,60.44],"design_hypotheses":{"static_3dp":{"description":"Static boundary pause heuristic (0 aa shift assumption)","intervals":[[232,258]]},"shifted_4dp":{"description":"Ribosome exit-tunnel shift hypothesis (+35 aa offset, half-width W=2)","shift_aa":35,"half_width":2,"intervals":[{"boundary":231,"shifted_window":[264,268],"reason":"Domain 1 exit tunnel clearance"},{"boundary":258,"shifted_window":[291,295],"reason":"Inter-domain linker clearance"}],"out_of_bounds_excluded":[{"boundary":450,"theoretical_window":[483,487],"reason":"Exceeds sequence length (N=462)"}]}},"candidate_profiles":{"1dp":{"label":"1DP Baseline (Uniform High Adaptation)","wi":[0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,1.0,0.875,1.0,0.875,0.875,1.0,0.783,1.0,0.724,0.735,0.786,1.0,1.0,0.818,0.735,0.818,0.667,0.724,0.875,0.852,0.875,0.852,1.0,1.0,0.818,0.955,0.852,0.783,0.852,0.735,1.0,0.783,1.0,0.852,1.0,1.0,1.0,1.0,0.852,0.852,0.786,0.735,1.0,1.0,1.0,1.0,1.0,0.724,0.735,0.818,0.613,1.0,1.0,0.724,0.783,0.724,0.724,1.0,0.852,0.955,0.818,1.0,0.729,0.783,0.818,0.955,1.0,0.724,0.786,1.0,0.875,0.783,0.875,1.0,0.852,1.0,1.0,1.0,0.955,0.818,0.735,0.724,0.786,0.783,1.0,1.0,1.0,0.729,1.0,0.735,0.852,0.724,1.0,1.0,1.0,0.695,0.875,0.875,0.818,0.724,0.724,0.818,0.724,0.735,0.695,0.875,0.724,1.0,1.0,0.818,0.852,0.818,0.613,0.875,0.706,0.729,0.875,0.783,0.875,1.0,0.852,1.0,1.0,1.0,0.818,0.852,0.724,0.955,0.735,0.818,0.852,0.818,1.0,0.818,0.735,1.0,1.0,1.0,1.0,0.818,0.735,0.852,0.955,0.818,1.0,1.0,1.0,0.852,1.0,1.0,1.0,0.735,1.0,1.0,0.724,0.818,0.955,0.783,1.0,0.875,1.0,1.0,0.735,0.786,0.852,0.783,0.783,1.0,1.0,0.955,1.0,1.0,0.735,0.955,0.695,1.0,0.852,1.0,0.818,0.735,0.786,0.818,1.0,1.0,0.955,1.0,0.852,0.875,1.0,0.955,0.735,0.818,1.0,0.875,0.875,0.955,0.695,0.875,0.955,0.852,1.0,0.955,0.852,1.0,1.0,1.0,0.875,0.852,0.875,0.735,0.955,0.735,0.724,0.735,0.724,0.955,0.786,0.735,1.0,0.735,0.724,0.735,0.786,0.783,1.0,0.724,0.724,0.735,0.875,0.818,0.695,1.0,0.955,0.852,0.783,0.875,0.724,1.0,1.0,1.0,0.783,1.0,1.0,1.0,0.783,0.852,0.786,0.724,0.735,1.0,1.0,0.695,1.0,1.0,0.783,0.735,1.0,0.724,1.0,1.0,0.955,1.0,0.852,1.0,0.783,0.955,0.852,0.735,1.0,0.724,0.783,1.0,0.875,0.729,1.0,0.724,0.818,1.0,0.875,0.818,0.735,0.875,0.783,1.0,1.0,0.852,1.0,1.0,1.0,0.783,1.0,0.818,0.818,0.724,1.0,0.695,1.0,1.0,0.818,0.735,1.0,0.818,1.0,0.695,1.0,1.0,1.0,1.0,0.724,0.735,0.735,0.695,1.0,1.0,1.0,0.783,0.735,0.695,0.875,0.724,0.955,1.0,0.818,0.724,0.818,1.0,0.735,0.667,0.875,0.724,0.735,0.729,1.0,1.0,0.852,0.783,1.0,0.852,1.0,1.0,1.0,1.0,0.852,0.875,0.735,0.783,0.783,0.955,1.0,0.724,0.729,1.0,1.0,0.735,0.955,1.0,1.0,1.0,1.0,1.0,0.852,1.0,0.724,0.783,0.735,1.0,0.818,1.0,1.0,1.0,1.0,0.818,1.0,0.875,1.0,0.875,0.724,0.818,0.724,1.0,0.852,0.735,1.0,1.0,0.852,1.0,0.818,0.724,0.783,1.0,0.735,0.875,0.786,0.783,0.852,0.783,1.0,0.786,0.735,0.875,0.735,1.0,0.695,1.0,0.729,0.724,0.735,0.875,0.786,1.0,0.695,0.852,0.695,0.783,0.852,1.0,0.818,0.724,1.0,0.786,1.0,1.0,0.724,1.0,1.0,0.875,0.818,0.875,0.818,0.786,1.0,1.0,0.783,1.0,1.0,0.735,0.852,1.0,0.724]},"3dp":{"label":"3DP Static (Hinge Pause Heuristic)","wi":[0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,1.0,0.875,1.0,1.0,0.688,0.667,0.522,1.0,1.0,0.706,1.0,0.579,0.65,0.818,0.706,1.0,0.611,1.0,1.0,1.0,0.875,0.852,1.0,1.0,0.818,0.955,0.852,0.783,0.852,0.735,1.0,0.783,1.0,0.852,1.0,1.0,1.0,1.0,0.852,0.852,0.786,0.735,1.0,1.0,1.0,1.0,1.0,0.724,0.735,0.818,0.613,1.0,1.0,0.724,0.783,0.724,0.724,1.0,0.852,0.955,0.818,1.0,0.729,0.783,0.818,0.955,1.0,0.724,0.786,1.0,0.875,0.783,0.875,1.0,0.852,1.0,1.0,1.0,0.955,0.818,0.735,0.724,0.786,0.783,1.0,1.0,1.0,0.729,1.0,0.735,0.852,0.724,1.0,1.0,1.0,0.695,0.875,0.875,0.818,0.724,0.724,0.818,0.724,0.735,0.695,0.875,0.724,1.0,1.0,0.818,0.852,0.818,0.613,0.875,0.706,0.729,0.875,0.783,0.875,1.0,0.852,1.0,1.0,1.0,0.818,0.852,0.724,0.955,0.735,0.818,0.852,0.818,1.0,0.818,0.735,1.0,1.0,1.0,1.0,0.818,0.735,0.852,0.955,0.818,1.0,1.0,1.0,0.852,1.0,1.0,1.0,0.735,1.0,1.0,0.724,0.818,0.955,0.783,1.0,0.875,1.0,1.0,0.735,0.786,0.852,0.783,0.783,1.0,1.0,0.955,1.0,1.0,0.735,0.955,0.695,1.0,0.852,1.0,0.818,0.735,0.786,0.818,1.0,1.0,0.955,1.0,0.852,0.875,1.0,0.955,0.735,0.818,1.0,0.875,0.875,0.955,0.695,0.875,0.955,0.852,1.0,0.955,0.852,1.0,1.0,1.0,0.875,0.852,0.875,0.735,0.955,0.735,0.724,0.735,0.724,0.955,0.786,0.706,0.611,0.706,0.724,0.706,0.786,0.522,0.611,0.724,0.724,0.706,0.688,0.818,0.695,1.0,0.955,0.852,0.783,0.875,0.724,1.0,1.0,1.0,0.783,1.0,1.0,1.0,0.783,0.852,0.786,0.724,0.735,1.0,1.0,0.695,1.0,1.0,0.783,0.735,1.0,0.724,1.0,1.0,0.955,1.0,0.852,1.0,0.783,0.955,0.852,0.735,1.0,0.724,0.783,1.0,0.875,0.729,1.0,0.724,0.818,1.0,0.875,0.818,0.735,0.875,0.783,1.0,1.0,0.852,1.0,1.0,1.0,0.783,1.0,0.818,0.818,0.724,1.0,0.695,1.0,1.0,0.818,0.735,1.0,0.818,1.0,0.695,1.0,1.0,1.0,1.0,0.724,0.735,0.735,0.695,1.0,1.0,1.0,0.783,0.735,0.695,0.875,0.724,0.955,1.0,0.818,0.724,0.818,1.0,0.735,1.0,0.875,0.724,0.735,0.729,1.0,1.0,0.852,0.783,1.0,0.852,1.0,1.0,1.0,1.0,0.852,0.875,0.735,0.783,0.783,0.955,1.0,0.724,0.729,1.0,1.0,0.735,0.955,1.0,1.0,1.0,1.0,1.0,0.852,1.0,0.724,0.783,0.735,1.0,0.818,1.0,1.0,1.0,1.0,0.818,1.0,0.875,1.0,0.875,0.724,0.818,0.724,1.0,0.852,0.735,1.0,1.0,0.852,1.0,0.818,0.724,0.783,1.0,0.735,0.875,0.786,0.783,0.852,0.783,1.0,0.786,0.735,0.875,0.735,1.0,0.695,1.0,0.729,0.724,0.735,0.875,0.786,1.0,0.695,0.852,1.0,0.783,0.852,1.0,0.818,0.724,1.0,0.786,1.0,1.0,0.724,1.0,1.0,0.875,0.818,0.875,0.818,0.786,1.0,1.0,0.783,1.0,1.0,0.735,0.852,1.0,0.724]},"4dp":{"label":"4DP Tunnel-Shifted (+35 aa Hypothesis)","wi":[0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,1.0,0.875,1.0,0.875,0.875,1.0,0.783,1.0,0.724,0.735,0.786,1.0,1.0,0.818,0.735,0.818,0.667,0.724,0.875,0.852,0.875,0.852,1.0,1.0,0.818,0.955,0.852,0.783,0.852,0.735,1.0,0.783,1.0,0.852,1.0,1.0,1.0,1.0,0.852,0.852,0.786,0.735,1.0,1.0,1.0,1.0,1.0,0.724,0.735,0.818,0.613,1.0,1.0,0.724,0.783,0.724,0.724,1.0,0.852,0.955,0.818,1.0,0.729,0.783,0.818,0.955,1.0,0.724,0.786,1.0,0.875,0.783,0.875,1.0,0.852,1.0,1.0,1.0,0.955,0.818,0.735,0.724,0.786,0.783,1.0,1.0,1.0,0.729,1.0,0.735,0.852,0.724,1.0,1.0,1.0,0.695,0.875,0.875,0.818,0.724,0.724,0.818,0.724,0.735,0.695,0.875,0.724,1.0,1.0,0.818,0.852,0.818,0.613,0.875,0.706,0.729,0.875,0.783,0.875,1.0,0.852,1.0,1.0,1.0,0.818,0.852,0.724,0.955,0.735,0.818,0.852,0.818,1.0,0.818,0.735,1.0,1.0,1.0,1.0,0.818,0.735,0.852,0.955,0.818,1.0,1.0,1.0,0.852,1.0,1.0,1.0,0.735,1.0,1.0,0.724,0.818,0.955,0.783,1.0,0.875,1.0,1.0,0.735,0.786,0.852,0.783,0.783,1.0,1.0,0.955,1.0,1.0,0.735,0.955,0.695,1.0,0.852,1.0,0.818,0.735,0.786,0.818,1.0,1.0,0.955,1.0,0.852,0.875,1.0,0.955,0.735,0.818,1.0,0.875,0.875,0.955,0.695,0.875,0.955,0.852,1.0,0.955,0.852,1.0,1.0,1.0,0.875,0.852,0.875,0.735,0.955,0.735,0.724,0.735,0.724,0.955,0.786,0.735,1.0,0.735,0.724,0.735,0.786,0.783,1.0,0.724,0.724,0.735,0.875,0.818,0.695,1.0,0.955,0.852,0.783,0.875,0.724,1.0,1.0,1.0,0.42,0.42,0.42,0.42,0.42,0.852,0.786,0.724,0.735,1.0,1.0,0.695,1.0,1.0,0.783,0.735,1.0,0.724,1.0,1.0,0.955,1.0,0.852,1.0,0.783,0.955,0.852,0.45,0.45,0.45,0.45,0.45,0.875,0.729,1.0,0.724,0.818,1.0,0.875,0.818,0.735,0.875,0.783,1.0,1.0,0.852,1.0,1.0,1.0,0.783,1.0,0.818,0.818,0.724,1.0,0.695,1.0,1.0,0.818,0.735,1.0,0.818,1.0,0.695,1.0,1.0,1.0,1.0,0.724,0.735,0.735,0.695,1.0,1.0,1.0,0.783,0.735,0.695,0.875,0.724,0.955,1.0,0.818,0.724,0.818,1.0,0.735,0.667,0.875,0.724,0.735,0.729,1.0,1.0,0.852,0.783,1.0,0.852,1.0,1.0,1.0,1.0,0.852,0.875,0.735,0.783,0.783,0.955,1.0,0.724,0.729,1.0,1.0,0.735,0.955,1.0,1.0,1.0,1.0,1.0,0.852,1.0,0.724,0.783,0.735,1.0,0.818,1.0,1.0,1.0,1.0,0.818,1.0,0.875,1.0,0.875,0.724,0.818,0.724,1.0,0.852,0.735,1.0,1.0,0.852,1.0,0.818,0.724,0.783,1.0,0.735,0.875,0.786,0.783,0.852,0.783,1.0,0.786,0.735,0.875,0.735,1.0,0.695,1.0,0.729,0.724,0.735,0.875,0.786,1.0,0.695,0.852,0.695,0.783,0.852,1.0,0.818,0.724,1.0,0.786,1.0,1.0,0.724,1.0,1.0,0.875,0.818,0.875,0.818,0.786,1.0,1.0,0.783,1.0,1.0,0.735,0.852,1.0,0.724]}},"ca_atoms":[{"num":1,"res":"M","res3":"MET","x":2.172,"y":38.062,"z":55.482,"plddt":54.16},{"num":2,"res":"A","res3":"ALA","x":4.591,"y":35.734,"z":56.019,"plddt":38.28},{"num":3,"res":"R","res3":"ARG","x":5.441,"y":32.494,"z":57.756,"plddt":38.06},{"num":4,"res":"V","res3":"VAL","x":6.061,"y":29.581,"z":58.987,"plddt":43.38},{"num":5,"res":"L","res3":"LEU","x":7.134,"y":25.845,"z":58.881,"plddt":44.03},{"num":6,"res":"G","res3":"GLY","x":7.912,"y":23.517,"z":61.839,"plddt":45.88},{"num":7,"res":"A","res3":"ALA","x":9.94,"y":20.241,"z":61.432,"plddt":44.34},{"num":8,"res":"P","res3":"PRO","x":11.982,"y":17.8,"z":62.526,"plddt":53.88},{"num":9,"res":"V","res3":"VAL","x":14.368,"y":15.036,"z":63.596,"plddt":45.16},{"num":10,"res":"A","res3":"ALA","x":16.847,"y":12.106,"z":63.622,"plddt":44.44},{"num":11,"res":"L","res3":"LEU","x":19.554,"y":10.439,"z":62.615,"plddt":42.25},{"num":12,"res":"G","res3":"GLY","x":22.53,"y":8.075,"z":61.72,"plddt":47.0},{"num":13,"res":"L","res3":"LEU","x":25.916,"y":8.696,"z":60.849,"plddt":43.19},{"num":14,"res":"W","res3":"TRP","x":28.961,"y":8.737,"z":59.485,"plddt":40.53},{"num":15,"res":"S","res3":"SER","x":32.395,"y":9.438,"z":57.996,"plddt":41.75},{"num":16,"res":"L","res3":"LEU","x":34.815,"y":10.633,"z":55.264,"plddt":37.59},{"num":17,"res":"C","res3":"CYS","x":38.355,"y":11.017,"z":54.543,"plddt":35.44},{"num":18,"res":"W","res3":"TRP","x":41.884,"y":11.197,"z":53.127,"plddt":40.31},{"num":19,"res":"S","res3":"SER","x":44.235,"y":11.603,"z":50.125,"plddt":39.69},{"num":20,"res":"L","res3":"LEU","x":47.976,"y":10.942,"z":49.796,"plddt":45.25},{"num":21,"res":"A","res3":"ALA","x":50.306,"y":11.093,"z":46.741,"plddt":38.19},{"num":22,"res":"I","res3":"ILE","x":53.713,"y":9.418,"z":46.071,"plddt":51.94},{"num":23,"res":"A","res3":"ALA","x":55.663,"y":10.163,"z":42.856,"plddt":37.88},{"num":24,"res":"T","res3":"THR","x":58.015,"y":8.902,"z":40.051,"plddt":43.84},{"num":25,"res":"P","res3":"PRO","x":59.904,"y":7.887,"z":37.746,"plddt":39.34},{"num":26,"res":"L","res3":"LEU","x":59.793,"y":7.682,"z":33.827,"plddt":43.12},{"num":27,"res":"P","res3":"PRO","x":61.053,"y":6.422,"z":30.953,"plddt":54.31},{"num":28,"res":"P","res3":"PRO","x":62.104,"y":5.501,"z":27.785,"plddt":40.47},{"num":29,"res":"T","res3":"THR","x":60.389,"y":5.512,"z":24.319,"plddt":39.41},{"num":30,"res":"S","res3":"SER","x":59.485,"y":2.964,"z":21.738,"plddt":39.28},{"num":31,"res":"A","res3":"ALA","x":56.875,"y":1.707,"z":19.234,"plddt":37.94},{"num":32,"res":"H","res3":"HIS","x":53.607,"y":2.929,"z":17.8,"plddt":34.31},{"num":33,"res":"G","res3":"GLY","x":50.665,"y":0.509,"z":17.964,"plddt":34.28},{"num":34,"res":"N","res3":"ASN","x":48.429,"y":2.025,"z":15.281,"plddt":30.27},{"num":35,"res":"V","res3":"VAL","x":45.346,"y":-0.155,"z":15.295,"plddt":37.16},{"num":36,"res":"A","res3":"ALA","x":44.236,"y":1.463,"z":12.091,"plddt":32.78},{"num":37,"res":"E","res3":"GLU","x":40.556,"y":0.679,"z":11.924,"plddt":36.5},{"num":38,"res":"G","res3":"GLY","x":40.863,"y":-0.487,"z":8.322,"plddt":31.61},{"num":39,"res":"E","res3":"GLU","x":38.6,"y":1.833,"z":6.345,"plddt":38.88},{"num":40,"res":"T","res3":"THR","x":36.822,"y":-0.875,"z":4.326,"plddt":54.69},{"num":41,"res":"K","res3":"LYS","x":36.793,"y":0.815,"z":0.89,"plddt":59.69},{"num":42,"res":"P","res3":"PRO","x":33.126,"y":1.7,"z":0.211,"plddt":69.69},{"num":43,"res":"D","res3":"ASP","x":31.458,"y":-0.797,"z":-2.142,"plddt":84.25},{"num":44,"res":"P","res3":"PRO","x":31.915,"y":0.682,"z":-5.692,"plddt":86.19},{"num":45,"res":"D","res3":"ASP","x":28.246,"y":-0.153,"z":-6.547,"plddt":86.44},{"num":46,"res":"V","res3":"VAL","x":27.03,"y":1.737,"z":-3.445,"plddt":87.25},{"num":47,"res":"T","res3":"THR","x":29.416,"y":4.631,"z":-4.258,"plddt":89.25},{"num":48,"res":"E","res3":"GLU","x":28.103,"y":4.911,"z":-7.851,"plddt":89.0},{"num":49,"res":"R","res3":"ARG","x":24.338,"y":4.69,"z":-7.055,"plddt":91.19},{"num":50,"res":"C","res3":"CYS","x":24.712,"y":7.137,"z":-4.123,"plddt":92.31},{"num":51,"res":"S","res3":"SER","x":26.623,"y":9.695,"z":-6.307,"plddt":93.0},{"num":52,"res":"D","res3":"ASP","x":24.883,"y":13.052,"z":-7.053,"plddt":90.0},{"num":53,"res":"G","res3":"GLY","x":24.576,"y":12.405,"z":-10.852,"plddt":89.5},{"num":54,"res":"W","res3":"TRP","x":22.832,"y":9.004,"z":-10.496,"plddt":93.88},{"num":55,"res":"S","res3":"SER","x":19.467,"y":8.367,"z":-12.241,"plddt":95.5},{"num":56,"res":"F","res3":"PHE","x":17.331,"y":5.275,"z":-12.954,"plddt":96.56},{"num":57,"res":"D","res3":"ASP","x":16.123,"y":4.655,"z":-16.531,"plddt":98.31},{"num":58,"res":"A","res3":"ALA","x":12.902,"y":2.946,"z":-15.273,"plddt":98.69},{"num":59,"res":"T","res3":"THR","x":11.095,"y":2.034,"z":-12.006,"plddt":98.31},{"num":60,"res":"T","res3":"THR","x":8.2,"y":-0.375,"z":-11.201,"plddt":98.19},{"num":61,"res":"L","res3":"LEU","x":6.924,"y":-3.148,"z":-8.877,"plddt":96.81},{"num":62,"res":"D","res3":"ASP","x":7.081,"y":-6.845,"z":-9.805,"plddt":94.62},{"num":63,"res":"D","res3":"ASP","x":4.315,"y":-9.378,"z":-9.225,"plddt":92.62},{"num":64,"res":"N","res3":"ASN","x":5.843,"y":-10.163,"z":-5.744,"plddt":92.62},{"num":65,"res":"G","res3":"GLY","x":5.579,"y":-6.419,"z":-4.777,"plddt":93.81},{"num":66,"res":"T","res3":"THR","x":9.382,"y":-6.023,"z":-5.027,"plddt":94.5},{"num":67,"res":"M","res3":"MET","x":10.511,"y":-2.555,"z":-6.165,"plddt":95.88},{"num":68,"res":"L","res3":"LEU","x":12.656,"y":-2.7,"z":-9.32,"plddt":96.75},{"num":69,"res":"F","res3":"PHE","x":15.134,"y":0.065,"z":-10.228,"plddt":97.12},{"num":70,"res":"F","res3":"PHE","x":16.577,"y":-0.262,"z":-13.772,"plddt":97.88},{"num":71,"res":"K","res3":"LYS","x":19.871,"y":1.268,"z":-14.983,"plddt":97.25},{"num":72,"res":"G","res3":"GLY","x":21.809,"y":0.261,"z":-18.114,"plddt":96.81},{"num":73,"res":"E","res3":"GLU","x":22.037,"y":-3.572,"z":-18.202,"plddt":96.81},{"num":74,"res":"F","res3":"PHE","x":21.266,"y":-3.95,"z":-14.455,"plddt":96.44},{"num":75,"res":"V","res3":"VAL","x":18.352,"y":-4.0,"z":-12.001,"plddt":96.75},{"num":76,"res":"W","res3":"TRP","x":18.389,"y":-3.338,"z":-8.234,"plddt":95.75},{"num":77,"res":"K","res3":"LYS","x":15.705,"y":-5.162,"z":-6.209,"plddt":92.44},{"num":78,"res":"S","res3":"SER","x":14.078,"y":-5.063,"z":-2.759,"plddt":77.94},{"num":79,"res":"H","res3":"HIS","x":15.225,"y":-3.441,"z":0.532,"plddt":72.38},{"num":80,"res":"K","res3":"LYS","x":18.615,"y":-5.263,"z":0.119,"plddt":77.94},{"num":81,"res":"W","res3":"TRP","x":19.349,"y":-3.529,"z":-3.214,"plddt":87.19},{"num":82,"res":"D","res3":"ASP","x":20.537,"y":-6.851,"z":-4.714,"plddt":88.62},{"num":83,"res":"R","res3":"ARG","x":22.013,"y":-6.134,"z":-8.203,"plddt":93.38},{"num":84,"res":"E","res3":"GLU","x":21.3,"y":-8.505,"z":-11.124,"plddt":93.44},{"num":85,"res":"L","res3":"LEU","x":21.578,"y":-8.457,"z":-14.938,"plddt":95.56},{"num":86,"res":"I","res3":"ILE","x":18.216,"y":-7.652,"z":-16.625,"plddt":96.69},{"num":87,"res":"S","res3":"SER","x":18.833,"y":-10.634,"z":-18.988,"plddt":93.19},{"num":88,"res":"E","res3":"GLU","x":18.916,"y":-13.118,"z":-16.025,"plddt":91.62},{"num":89,"res":"R","res3":"ARG","x":15.21,"y":-12.5,"z":-15.128,"plddt":89.81},{"num":90,"res":"W","res3":"TRP","x":13.813,"y":-10.878,"z":-18.324,"plddt":92.5},{"num":91,"res":"K","res3":"LYS","x":15.116,"y":-13.261,"z":-21.006,"plddt":88.75},{"num":92,"res":"N","res3":"ASN","x":15.498,"y":-11.688,"z":-24.496,"plddt":87.44},{"num":93,"res":"F","res3":"PHE","x":14.961,"y":-8.079,"z":-23.277,"plddt":93.94},{"num":94,"res":"P","res3":"PRO","x":17.381,"y":-5.614,"z":-25.005,"plddt":93.62},{"num":95,"res":"S","res3":"SER","x":18.782,"y":-3.229,"z":-22.262,"plddt":94.75},{"num":96,"res":"P","res3":"PRO","x":18.417,"y":-0.315,"z":-21.256,"plddt":97.19},{"num":97,"res":"V","res3":"VAL","x":14.711,"y":0.018,"z":-20.2,"plddt":98.44},{"num":98,"res":"D","res3":"ASP","x":13.007,"y":3.286,"z":-21.291,"plddt":98.62},{"num":99,"res":"A","res3":"ALA","x":9.808,"y":2.769,"z":-19.218,"plddt":98.75},{"num":100,"res":"A","res3":"ALA","x":8.181,"y":0.101,"z":-17.005,"plddt":98.62},{"num":101,"res":"F","res3":"PHE","x":4.813,"y":-0.49,"z":-15.27,"plddt":98.25},{"num":102,"res":"R","res3":"ARG","x":2.811,"y":-3.315,"z":-13.595,"plddt":96.88},{"num":103,"res":"Q","res3":"GLN","x":-0.637,"y":-4.457,"z":-14.808,"plddt":91.38},{"num":104,"res":"G","res3":"GLY","x":-3.158,"y":-6.676,"z":-12.927,"plddt":85.88},{"num":105,"res":"H","res3":"HIS","x":-0.574,"y":-7.315,"z":-10.106,"plddt":84.0},{"num":106,"res":"N","res3":"ASN","x":0.761,"y":-10.178,"z":-12.287,"plddt":88.0},{"num":107,"res":"S","res3":"SER","x":2.353,"y":-8.7,"z":-15.471,"plddt":92.5},{"num":108,"res":"V","res3":"VAL","x":5.376,"y":-6.371,"z":-15.805,"plddt":95.75},{"num":109,"res":"F","res3":"PHE","x":5.53,"y":-4.296,"z":-19.001,"plddt":96.69},{"num":110,"res":"L","res3":"LEU","x":9.029,"y":-3.274,"z":-20.174,"plddt":97.81},{"num":111,"res":"I","res3":"ILE","x":9.275,"y":-0.658,"z":-22.962,"plddt":98.38},{"num":112,"res":"K","res3":"LYS","x":12.213,"y":0.223,"z":-25.216,"plddt":98.31},{"num":113,"res":"G","res3":"GLY","x":12.043,"y":2.527,"z":-28.232,"plddt":98.25},{"num":114,"res":"D","res3":"ASP","x":8.95,"y":1.529,"z":-30.23,"plddt":97.81},{"num":115,"res":"K","res3":"LYS","x":8.586,"y":-1.984,"z":-28.631,"plddt":97.44},{"num":116,"res":"V","res3":"VAL","x":6.806,"y":-3.538,"z":-25.632,"plddt":96.69},{"num":117,"res":"W","res3":"TRP","x":7.679,"y":-6.744,"z":-23.731,"plddt":95.81},{"num":118,"res":"V","res3":"VAL","x":5.398,"y":-8.416,"z":-21.131,"plddt":94.44},{"num":119,"res":"Y","res3":"TYR","x":6.566,"y":-10.705,"z":-18.321,"plddt":93.38},{"num":120,"res":"P","res3":"PRO","x":6.027,"y":-13.508,"z":-17.506,"plddt":90.56},{"num":121,"res":"P","res3":"PRO","x":5.45,"y":-14.172,"z":-21.267,"plddt":81.56},{"num":122,"res":"E","res3":"GLU","x":3.047,"y":-17.114,"z":-20.53,"plddt":80.31},{"num":123,"res":"K","res3":"LYS","x":0.44,"y":-14.626,"z":-19.084,"plddt":74.69},{"num":124,"res":"K","res3":"LYS","x":-0.103,"y":-12.979,"z":-22.518,"plddt":69.19},{"num":125,"res":"E","res3":"GLU","x":-0.625,"y":-15.004,"z":-25.713,"plddt":58.19},{"num":126,"res":"K","res3":"LYS","x":2.308,"y":-15.474,"z":-28.173,"plddt":67.31},{"num":127,"res":"G","res3":"GLY","x":3.116,"y":-12.085,"z":-29.775,"plddt":81.44},{"num":128,"res":"Y","res3":"TYR","x":5.666,"y":-10.073,"z":-27.697,"plddt":88.38},{"num":129,"res":"P","res3":"PRO","x":7.679,"y":-8.038,"z":-28.429,"plddt":93.5},{"num":130,"res":"K","res3":"LYS","x":4.899,"y":-5.908,"z":-30.003,"plddt":94.12},{"num":131,"res":"L","res3":"LEU","x":5.082,"y":-2.403,"z":-31.46,"plddt":96.69},{"num":132,"res":"L","res3":"LEU","x":4.075,"y":0.331,"z":-28.957,"plddt":97.31},{"num":133,"res":"Q","res3":"GLN","x":1.666,"y":1.666,"z":-31.645,"plddt":97.12},{"num":134,"res":"D","res3":"ASP","x":-0.12,"y":-1.741,"z":-31.89,"plddt":95.62},{"num":135,"res":"E","res3":"GLU","x":-0.641,"y":-1.995,"z":-28.084,"plddt":95.0},{"num":136,"res":"F","res3":"PHE","x":-1.082,"y":1.768,"z":-27.276,"plddt":97.38},{"num":137,"res":"P","res3":"PRO","x":-2.089,"y":3.599,"z":-30.548,"plddt":97.69},{"num":138,"res":"G","res3":"GLY","x":-0.954,"y":7.279,"z":-30.558,"plddt":97.0},{"num":139,"res":"I","res3":"ILE","x":1.377,"y":7.108,"z":-27.487,"plddt":98.25},{"num":140,"res":"P","res3":"PRO","x":4.773,"y":8.571,"z":-28.593,"plddt":97.69},{"num":141,"res":"S","res3":"SER","x":8.211,"y":6.849,"z":-28.475,"plddt":97.5},{"num":142,"res":"P","res3":"PRO","x":10.785,"y":6.773,"z":-26.908,"plddt":97.69},{"num":143,"res":"L","res3":"LEU","x":9.092,"y":7.211,"z":-23.479,"plddt":98.62},{"num":144,"res":"D","res3":"ASP","x":10.84,"y":8.581,"z":-20.342,"plddt":98.62},{"num":145,"res":"A","res3":"ALA","x":8.412,"y":6.959,"z":-17.841,"plddt":98.81},{"num":146,"res":"A","res3":"ALA","x":5.227,"y":4.933,"z":-17.329,"plddt":98.81},{"num":147,"res":"V","res3":"VAL","x":3.037,"y":4.104,"z":-14.273,"plddt":98.75},{"num":148,"res":"E","res3":"GLU","x":-0.116,"y":2.016,"z":-13.748,"plddt":98.44},{"num":149,"res":"C","res3":"CYS","x":-3.183,"y":3.997,"z":-12.592,"plddt":98.12},{"num":150,"res":"H","res3":"HIS","x":-6.004,"y":2.089,"z":-10.888,"plddt":97.56},{"num":151,"res":"R","res3":"ARG","x":-9.721,"y":2.941,"z":-10.938,"plddt":96.94},{"num":152,"res":"G","res3":"GLY","x":-10.571,"y":4.908,"z":-7.765,"plddt":96.19},{"num":153,"res":"E","res3":"GLU","x":-7.094,"y":6.56,"z":-7.728,"plddt":97.69},{"num":154,"res":"C","res3":"CYS","x":-7.609,"y":7.544,"z":-11.376,"plddt":97.5},{"num":155,"res":"Q","res3":"GLN","x":-11.093,"y":8.14,"z":-12.876,"plddt":95.12},{"num":156,"res":"A","res3":"ALA","x":-10.643,"y":4.917,"z":-14.937,"plddt":97.06},{"num":157,"res":"E","res3":"GLU","x":-8.271,"y":1.915,"z":-15.022,"plddt":97.62},{"num":158,"res":"G","res3":"GLY","x":-5.274,"y":3.056,"z":-17.092,"plddt":97.88},{"num":159,"res":"V","res3":"VAL","x":-1.569,"y":3.829,"z":-17.596,"plddt":98.56},{"num":160,"res":"L","res3":"LEU","x":0.174,"y":7.224,"z":-17.412,"plddt":98.69},{"num":161,"res":"F","res3":"PHE","x":2.9,"y":7.78,"z":-20.066,"plddt":98.81},{"num":162,"res":"F","res3":"PHE","x":5.584,"y":10.525,"z":-19.983,"plddt":98.69},{"num":163,"res":"Q","res3":"GLN","x":7.772,"y":12.015,"z":-22.751,"plddt":98.25},{"num":164,"res":"G","res3":"GLY","x":9.713,"y":15.226,"z":-22.042,"plddt":96.75},{"num":165,"res":"D","res3":"ASP","x":7.264,"y":17.736,"z":-20.501,"plddt":95.31},{"num":166,"res":"R","res3":"ARG","x":4.146,"y":15.926,"z":-21.894,"plddt":97.62},{"num":167,"res":"E","res3":"GLU","x":1.9,"y":13.362,"z":-20.216,"plddt":98.25},{"num":168,"res":"W","res3":"TRP","x":-0.864,"y":11.015,"z":-21.473,"plddt":98.5},{"num":169,"res":"F","res3":"PHE","x":-3.492,"y":8.961,"z":-19.665,"plddt":98.56},{"num":170,"res":"W","res3":"TRP","x":-4.238,"y":5.711,"z":-21.539,"plddt":98.56},{"num":171,"res":"D","res3":"ASP","x":-7.718,"y":4.335,"z":-20.722,"plddt":98.12},{"num":172,"res":"L","res3":"LEU","x":-7.529,"y":0.5,"z":-20.752,"plddt":96.56},{"num":173,"res":"A","res3":"ALA","x":-11.312,"y":0.001,"z":-21.206,"plddt":96.62},{"num":174,"res":"T","res3":"THR","x":-11.724,"y":2.348,"z":-24.226,"plddt":97.31},{"num":175,"res":"G","res3":"GLY","x":-8.232,"y":2.039,"z":-25.806,"plddt":96.94},{"num":176,"res":"T","res3":"THR","x":-7.999,"y":5.877,"z":-25.932,"plddt":97.62},{"num":177,"res":"M","res3":"MET","x":-5.37,"y":8.419,"z":-24.851,"plddt":96.75},{"num":178,"res":"K","res3":"LYS","x":-5.919,"y":11.832,"z":-23.2,"plddt":97.5},{"num":179,"res":"E","res3":"GLU","x":-3.061,"y":14.339,"z":-23.072,"plddt":97.88},{"num":180,"res":"R","res3":"ARG","x":-2.685,"y":16.022,"z":-19.658,"plddt":97.0},{"num":181,"res":"S","res3":"SER","x":-1.22,"y":19.441,"z":-18.856,"plddt":96.62},{"num":182,"res":"W","res3":"TRP","x":0.619,"y":19.007,"z":-15.53,"plddt":97.62},{"num":183,"res":"P","res3":"PRO","x":3.182,"y":21.882,"z":-15.271,"plddt":96.31},{"num":184,"res":"A","res3":"ALA","x":3.981,"y":21.001,"z":-11.601,"plddt":97.5},{"num":185,"res":"V","res3":"VAL","x":5.081,"y":17.379,"z":-12.439,"plddt":97.56},{"num":186,"res":"G","res3":"GLY","x":7.626,"y":18.317,"z":-15.156,"plddt":93.62},{"num":187,"res":"N","res3":"ASN","x":10.012,"y":15.809,"z":-16.763,"plddt":96.81},{"num":188,"res":"C","res3":"CYS","x":10.017,"y":12.308,"z":-15.199,"plddt":98.44},{"num":189,"res":"S","res3":"SER","x":13.134,"y":10.113,"z":-15.786,"plddt":98.19},{"num":190,"res":"S","res3":"SER","x":10.995,"y":7.252,"z":-14.359,"plddt":98.69},{"num":191,"res":"A","res3":"ALA","x":7.682,"y":6.82,"z":-12.453,"plddt":98.75},{"num":192,"res":"L","res3":"LEU","x":6.185,"y":4.38,"z":-9.914,"plddt":97.81},{"num":193,"res":"R","res3":"ARG","x":3.028,"y":3.592,"z":-7.955,"plddt":98.25},{"num":194,"res":"W","res3":"TRP","x":3.622,"y":2.409,"z":-4.347,"plddt":97.44},{"num":195,"res":"L","res3":"LEU","x":0.834,"y":1.747,"z":-1.774,"plddt":96.88},{"num":196,"res":"G","res3":"GLY","x":-1.556,"y":3.895,"z":-3.942,"plddt":96.62},{"num":197,"res":"R","res3":"ARG","x":0.866,"y":6.891,"z":-4.174,"plddt":98.12},{"num":198,"res":"Y","res3":"TYR","x":2.28,"y":8.17,"z":-7.488,"plddt":98.69},{"num":199,"res":"Y","res3":"TYR","x":5.902,"y":9.281,"z":-7.857,"plddt":98.69},{"num":200,"res":"C","res3":"CYS","x":7.8,"y":11.057,"z":-10.644,"plddt":98.69},{"num":201,"res":"F","res3":"PHE","x":11.603,"y":10.626,"z":-10.468,"plddt":98.5},{"num":202,"res":"Q","res3":"GLN","x":13.833,"y":13.472,"z":-11.743,"plddt":97.06},{"num":203,"res":"G","res3":"GLY","x":17.285,"y":11.879,"z":-11.653,"plddt":94.0},{"num":204,"res":"N","res3":"ASN","x":18.239,"y":11.556,"z":-7.95,"plddt":94.81},{"num":205,"res":"Q","res3":"GLN","x":15.152,"y":13.593,"z":-6.962,"plddt":96.94},{"num":206,"res":"F","res3":"PHE","x":11.481,"y":12.625,"z":-6.764,"plddt":98.06},{"num":207,"res":"L","res3":"LEU","x":8.089,"y":14.268,"z":-6.367,"plddt":98.44},{"num":208,"res":"R","res3":"ARG","x":4.633,"y":12.928,"z":-5.481,"plddt":98.25},{"num":209,"res":"F","res3":"PHE","x":1.626,"y":13.936,"z":-7.6,"plddt":98.25},{"num":210,"res":"D","res3":"ASP","x":-2.182,"y":13.568,"z":-7.757,"plddt":97.75},{"num":211,"res":"P","res3":"PRO","x":-2.7,"y":11.25,"z":-10.828,"plddt":98.06},{"num":212,"res":"V","res3":"VAL","x":-5.91,"y":13.133,"z":-11.895,"plddt":97.25},{"num":213,"res":"R","res3":"ARG","x":-5.02,"y":16.81,"z":-11.179,"plddt":96.25},{"num":214,"res":"G","res3":"GLY","x":-1.194,"y":16.743,"z":-11.6,"plddt":97.44},{"num":215,"res":"E","res3":"GLU","x":-0.897,"y":18.669,"z":-8.297,"plddt":97.12},{"num":216,"res":"V","res3":"VAL","x":2.417,"y":18.377,"z":-6.413,"plddt":97.81},{"num":217,"res":"P","res3":"PRO","x":2.1,"y":18.803,"z":-2.599,"plddt":95.81},{"num":218,"res":"P","res3":"PRO","x":4.459,"y":21.269,"z":-0.821,"plddt":95.06},{"num":219,"res":"R","res3":"ARG","x":8.044,"y":20.179,"z":0.179,"plddt":92.94},{"num":220,"res":"Y","res3":"TYR","x":8.977,"y":18.45,"z":-3.087,"plddt":97.06},{"num":221,"res":"P","res3":"PRO","x":11.306,"y":17.523,"z":-4.693,"plddt":96.94},{"num":222,"res":"R","res3":"ARG","x":12.913,"y":15.06,"z":-2.19,"plddt":96.38},{"num":223,"res":"D","res3":"ASP","x":16.164,"y":13.072,"z":-2.534,"plddt":95.75},{"num":224,"res":"V","res3":"VAL","x":15.74,"y":9.389,"z":-3.63,"plddt":94.88},{"num":225,"res":"R","res3":"ARG","x":18.762,"y":8.434,"z":-1.416,"plddt":92.75},{"num":226,"res":"D","res3":"ASP","x":16.876,"y":9.501,"z":1.734,"plddt":92.88},{"num":227,"res":"Y","res3":"TYR","x":13.696,"y":7.373,"z":1.075,"plddt":92.62},{"num":228,"res":"F","res3":"PHE","x":13.831,"y":4.67,"z":-1.659,"plddt":92.25},{"num":229,"res":"M","res3":"MET","x":17.586,"y":3.931,"z":-1.821,"plddt":89.44},{"num":230,"res":"P","res3":"PRO","x":19.801,"y":3.18,"z":1.251,"plddt":88.31},{"num":231,"res":"C","res3":"CYS","x":22.922,"y":5.375,"z":1.113,"plddt":90.56},{"num":232,"res":"P","res3":"PRO","x":25.602,"y":5.661,"z":3.877,"plddt":89.62},{"num":233,"res":"G","res3":"GLY","x":24.981,"y":8.696,"z":6.161,"plddt":88.75},{"num":234,"res":"R","res3":"ARG","x":21.51,"y":9.287,"z":4.549,"plddt":90.0},{"num":235,"res":"G","res3":"GLY","x":17.871,"y":8.54,"z":5.439,"plddt":83.88},{"num":236,"res":"H","res3":"HIS","x":14.6,"y":9.811,"z":6.96,"plddt":79.31},{"num":237,"res":"G","res3":"GLY","x":14.819,"y":7.696,"z":10.203,"plddt":61.81},{"num":238,"res":"H","res3":"HIS","x":17.616,"y":9.373,"z":12.304,"plddt":51.91},{"num":239,"res":"R","res3":"ARG","x":17.189,"y":12.695,"z":14.175,"plddt":41.19},{"num":240,"res":"N","res3":"ASN","x":20.716,"y":13.325,"z":15.537,"plddt":32.78},{"num":241,"res":"G","res3":"GLY","x":21.313,"y":16.547,"z":13.528,"plddt":32.72},{"num":242,"res":"T","res3":"THR","x":20.037,"y":20.142,"z":14.051,"plddt":32.44},{"num":243,"res":"G","res3":"GLY","x":18.049,"y":20.47,"z":10.732,"plddt":32.56},{"num":244,"res":"H","res3":"HIS","x":14.364,"y":21.593,"z":10.62,"plddt":36.34},{"num":245,"res":"G","res3":"GLY","x":11.994,"y":18.586,"z":10.911,"plddt":30.25},{"num":246,"res":"N","res3":"ASN","x":10.086,"y":17.68,"z":7.756,"plddt":37.09},{"num":247,"res":"S","res3":"SER","x":6.801,"y":16.098,"z":8.872,"plddt":37.12},{"num":248,"res":"T","res3":"THR","x":7.31,"y":12.45,"z":7.981,"plddt":39.66},{"num":249,"res":"H","res3":"HIS","x":7.619,"y":12.359,"z":11.769,"plddt":36.94},{"num":250,"res":"H","res3":"HIS","x":8.241,"y":8.973,"z":13.458,"plddt":42.81},{"num":251,"res":"G","res3":"GLY","x":4.519,"y":8.118,"z":13.374,"plddt":47.53},{"num":252,"res":"P","res3":"PRO","x":3.145,"y":4.678,"z":14.355,"plddt":56.84},{"num":253,"res":"E","res3":"GLU","x":5.305,"y":2.661,"z":11.845,"plddt":63.78},{"num":254,"res":"Y","res3":"TYR","x":7.4,"y":1.537,"z":14.894,"plddt":66.75},{"num":255,"res":"M","res3":"MET","x":4.007,"y":0.648,"z":16.473,"plddt":80.19},{"num":256,"res":"R","res3":"ARG","x":2.871,"y":-1.514,"z":13.435,"plddt":89.88},{"num":257,"res":"C","res3":"CYS","x":3.901,"y":-4.776,"z":15.191,"plddt":91.06},{"num":258,"res":"S","res3":"SER","x":3.582,"y":-3.409,"z":18.761,"plddt":89.06},{"num":259,"res":"P","res3":"PRO","x":1.27,"y":-5.477,"z":21.046,"plddt":85.38},{"num":260,"res":"H","res3":"HIS","x":0.067,"y":-2.02,"z":22.303,"plddt":86.75},{"num":261,"res":"L","res3":"LEU","x":-1.227,"y":-0.888,"z":18.869,"plddt":91.19},{"num":262,"res":"V","res3":"VAL","x":-4.855,"y":0.336,"z":19.066,"plddt":93.0},{"num":263,"res":"L","res3":"LEU","x":-6.704,"y":0.726,"z":15.767,"plddt":96.44},{"num":264,"res":"S","res3":"SER","x":-9.644,"y":3.218,"z":15.851,"plddt":97.31},{"num":265,"res":"A","res3":"ALA","x":-11.484,"y":2.467,"z":12.568,"plddt":98.38},{"num":266,"res":"L","res3":"LEU","x":-11.632,"y":0.096,"z":9.579,"plddt":98.12},{"num":267,"res":"T","res3":"THR","x":-13.133,"y":0.771,"z":6.112,"plddt":97.88},{"num":268,"res":"S","res3":"SER","x":-13.159,"y":-0.481,"z":2.502,"plddt":97.44},{"num":269,"res":"D","res3":"ASP","x":-14.213,"y":1.736,"z":-0.431,"plddt":96.81},{"num":270,"res":"N","res3":"ASN","x":-16.265,"y":0.745,"z":-3.521,"plddt":95.19},{"num":271,"res":"H","res3":"HIS","x":-12.955,"y":0.109,"z":-5.454,"plddt":95.38},{"num":272,"res":"G","res3":"GLY","x":-11.702,"y":-2.347,"z":-2.744,"plddt":94.56},{"num":273,"res":"A","res3":"ALA","x":-9.17,"y":0.044,"z":-1.136,"plddt":96.88},{"num":274,"res":"T","res3":"THR","x":-9.077,"y":-1.127,"z":2.522,"plddt":97.81},{"num":275,"res":"Y","res3":"TYR","x":-7.786,"y":1.013,"z":5.406,"plddt":98.0},{"num":276,"res":"A","res3":"ALA","x":-7.012,"y":0.754,"z":9.118,"plddt":97.62},{"num":277,"res":"F","res3":"PHE","x":-6.84,"y":3.98,"z":11.194,"plddt":98.06},{"num":278,"res":"S","res3":"SER","x":-4.753,"y":4.688,"z":14.328,"plddt":96.12},{"num":279,"res":"G","res3":"GLY","x":-4.548,"y":8.171,"z":15.863,"plddt":94.25},{"num":280,"res":"T","res3":"THR","x":-3.522,"y":10.644,"z":13.099,"plddt":95.81},{"num":281,"res":"H","res3":"HIS","x":-2.375,"y":7.908,"z":10.65,"plddt":96.19},{"num":282,"res":"Y","res3":"TYR","x":-3.668,"y":5.044,"z":8.508,"plddt":97.38},{"num":283,"res":"W","res3":"TRP","x":-2.411,"y":1.836,"z":6.857,"plddt":97.06},{"num":284,"res":"R","res3":"ARG","x":-3.628,"y":0.536,"z":3.475,"plddt":96.94},{"num":285,"res":"L","res3":"LEU","x":-4.258,"y":-3.228,"z":3.811,"plddt":95.69},{"num":286,"res":"D","res3":"ASP","x":-5.249,"y":-4.254,"z":0.219,"plddt":94.38},{"num":287,"res":"T","res3":"THR","x":-1.706,"y":-3.25,"z":-0.955,"plddt":94.94},{"num":288,"res":"S","res3":"SER","x":0.063,"y":-5.533,"z":1.627,"plddt":93.62},{"num":289,"res":"R","res3":"ARG","x":1.877,"y":-7.417,"z":-1.222,"plddt":92.31},{"num":290,"res":"D","res3":"ASP","x":3.774,"y":-4.16,"z":-2.045,"plddt":94.88},{"num":291,"res":"G","res3":"GLY","x":4.838,"y":-3.785,"z":1.655,"plddt":92.81},{"num":292,"res":"W","res3":"TRP","x":3.736,"y":-1.699,"z":4.658,"plddt":92.5},{"num":293,"res":"H","res3":"HIS","x":3.93,"y":2.012,"z":5.521,"plddt":93.56},{"num":294,"res":"S","res3":"SER","x":1.665,"y":4.336,"z":7.584,"plddt":95.38},{"num":295,"res":"W","res3":"TRP","x":0.547,"y":7.753,"z":6.275,"plddt":95.06},{"num":296,"res":"P","res3":"PRO","x":-1.037,"y":10.857,"z":7.874,"plddt":95.81},{"num":297,"res":"I","res3":"ILE","x":-4.855,"y":10.925,"z":7.255,"plddt":97.81},{"num":298,"res":"A","res3":"ALA","x":-4.542,"y":14.382,"z":5.589,"plddt":96.0},{"num":299,"res":"H","res3":"HIS","x":-2.373,"y":12.861,"z":2.77,"plddt":94.88},{"num":300,"res":"Q","res3":"GLN","x":-5.353,"y":10.86,"z":1.375,"plddt":96.38},{"num":301,"res":"W","res3":"TRP","x":-8.374,"y":12.741,"z":2.809,"plddt":97.56},{"num":302,"res":"P","res3":"PRO","x":-7.444,"y":16.439,"z":2.399,"plddt":92.25},{"num":303,"res":"Q","res3":"GLN","x":-9.799,"y":18.555,"z":4.622,"plddt":95.12},{"num":304,"res":"G","res3":"GLY","x":-10.794,"y":15.369,"z":6.55,"plddt":97.62},{"num":305,"res":"P","res3":"PRO","x":-10.75,"y":14.812,"z":10.332,"plddt":98.06},{"num":306,"res":"S","res3":"SER","x":-7.497,"y":14.735,"z":12.384,"plddt":97.0},{"num":307,"res":"A","res3":"ALA","x":-8.421,"y":11.235,"z":13.718,"plddt":97.31},{"num":308,"res":"V","res3":"VAL","x":-11.128,"y":8.652,"z":12.769,"plddt":98.44},{"num":309,"res":"D","res3":"ASP","x":-13.337,"y":7.0,"z":15.443,"plddt":98.12},{"num":310,"res":"A","res3":"ALA","x":-15.567,"y":5.215,"z":12.887,"plddt":98.5},{"num":311,"res":"A","res3":"ALA","x":-15.709,"y":4.769,"z":9.102,"plddt":98.69},{"num":312,"res":"F","res3":"PHE","x":-17.975,"y":3.145,"z":6.482,"plddt":98.25},{"num":313,"res":"S","res3":"SER","x":-18.705,"y":3.211,"z":2.717,"plddt":97.62},{"num":314,"res":"W","res3":"TRP","x":-22.028,"y":3.44,"z":0.875,"plddt":97.25},{"num":315,"res":"E","res3":"GLU","x":-22.479,"y":3.711,"z":-2.915,"plddt":94.56},{"num":316,"res":"E","res3":"GLU","x":-19.619,"y":5.941,"z":-4.326,"plddt":95.38},{"num":317,"res":"K","res3":"LYS","x":-19.061,"y":7.653,"z":-0.914,"plddt":97.69},{"num":318,"res":"L","res3":"LEU","x":-16.721,"y":7.175,"z":2.049,"plddt":98.44},{"num":319,"res":"Y","res3":"TYR","x":-17.903,"y":8.341,"z":5.506,"plddt":98.38},{"num":320,"res":"L","res3":"LEU","x":-15.32,"y":9.3,"z":8.187,"plddt":98.69},{"num":321,"res":"V","res3":"VAL","x":-16.497,"y":10.093,"z":11.756,"plddt":98.38},{"num":322,"res":"Q","res3":"GLN","x":-14.683,"y":12.098,"z":14.482,"plddt":97.81},{"num":323,"res":"G","res3":"GLY","x":-16.784,"y":12.312,"z":17.684,"plddt":95.38},{"num":324,"res":"T","res3":"THR","x":-20.14,"y":13.387,"z":16.142,"plddt":93.94},{"num":325,"res":"Q","res3":"GLN","x":-18.653,"y":15.119,"z":13.049,"plddt":97.5},{"num":326,"res":"V","res3":"VAL","x":-19.353,"y":13.208,"z":9.809,"plddt":98.12},{"num":327,"res":"Y","res3":"TYR","x":-17.182,"y":13.818,"z":6.725,"plddt":98.62},{"num":328,"res":"V","res3":"VAL","x":-18.311,"y":12.496,"z":3.302,"plddt":98.31},{"num":329,"res":"F","res3":"PHE","x":-15.882,"y":11.908,"z":0.415,"plddt":98.56},{"num":330,"res":"L","res3":"LEU","x":-16.542,"y":11.032,"z":-3.241,"plddt":97.81},{"num":331,"res":"T","res3":"THR","x":-14.306,"y":8.141,"z":-4.5,"plddt":97.0},{"num":332,"res":"K","res3":"LYS","x":-14.083,"y":9.234,"z":-8.221,"plddt":93.31},{"num":333,"res":"G","res3":"GLY","x":-10.303,"y":9.546,"z":-8.819,"plddt":92.06},{"num":334,"res":"G","res3":"GLY","x":-9.05,"y":10.147,"z":-5.279,"plddt":95.0},{"num":335,"res":"Y","res3":"TYR","x":-11.082,"y":11.367,"z":-2.287,"plddt":97.5},{"num":336,"res":"T","res3":"THR","x":-12.95,"y":14.697,"z":-2.639,"plddt":96.88},{"num":337,"res":"L","res3":"LEU","x":-14.848,"y":16.213,"z":0.328,"plddt":98.0},{"num":338,"res":"V","res3":"VAL","x":-18.559,"y":16.726,"z":-0.492,"plddt":97.81},{"num":339,"res":"S","res3":"SER","x":-19.596,"y":20.4,"z":-0.231,"plddt":97.44},{"num":340,"res":"G","res3":"GLY","x":-21.203,"y":21.278,"z":3.145,"plddt":97.0},{"num":341,"res":"Y","res3":"TYR","x":-19.3,"y":18.627,"z":5.208,"plddt":98.06},{"num":342,"res":"P","res3":"PRO","x":-18.452,"y":18.106,"z":8.026,"plddt":98.0},{"num":343,"res":"K","res3":"LYS","x":-22.025,"y":17.756,"z":9.394,"plddt":97.06},{"num":344,"res":"R","res3":"ARG","x":-23.311,"y":16.614,"z":12.813,"plddt":95.88},{"num":345,"res":"L","res3":"LEU","x":-24.214,"y":12.867,"z":12.958,"plddt":94.31},{"num":346,"res":"E","res3":"GLU","x":-27.793,"y":13.767,"z":14.069,"plddt":93.12},{"num":347,"res":"K","res3":"LYS","x":-28.273,"y":15.862,"z":10.863,"plddt":93.62},{"num":348,"res":"E","res3":"GLU","x":-27.049,"y":13.001,"z":8.625,"plddt":93.81},{"num":349,"res":"V","res3":"VAL","x":-28.622,"y":9.865,"z":10.21,"plddt":94.69},{"num":350,"res":"G","res3":"GLY","x":-30.768,"y":11.07,"z":13.18,"plddt":93.5},{"num":351,"res":"T","res3":"THR","x":-30.293,"y":9.953,"z":16.834,"plddt":93.19},{"num":352,"res":"P","res3":"PRO","x":-31.162,"y":6.896,"z":18.981,"plddt":94.56},{"num":353,"res":"H","res3":"HIS","x":-34.33,"y":7.562,"z":21.023,"plddt":91.12},{"num":354,"res":"G","res3":"GLY","x":-33.589,"y":9.11,"z":24.468,"plddt":90.75},{"num":355,"res":"I","res3":"ILE","x":-29.763,"y":8.82,"z":23.991,"plddt":91.38},{"num":356,"res":"I","res3":"ILE","x":-27.34,"y":11.684,"z":23.262,"plddt":89.56},{"num":357,"res":"L","res3":"LEU","x":-24.2,"y":10.327,"z":21.55,"plddt":92.69},{"num":358,"res":"D","res3":"ASP","x":-20.938,"y":12.222,"z":22.251,"plddt":90.5},{"num":359,"res":"S","res3":"SER","x":-18.96,"y":9.743,"z":20.061,"plddt":93.44},{"num":360,"res":"V","res3":"VAL","x":-19.27,"y":6.64,"z":17.845,"plddt":95.75},{"num":361,"res":"D","res3":"ASP","x":-16.938,"y":3.648,"z":18.4,"plddt":97.75},{"num":362,"res":"A","res3":"ALA","x":-17.488,"y":1.738,"z":15.144,"plddt":98.38},{"num":363,"res":"A","res3":"ALA","x":-19.645,"y":1.644,"z":12.022,"plddt":98.44},{"num":364,"res":"F","res3":"PHE","x":-20.167,"y":-0.741,"z":9.077,"plddt":98.25},{"num":365,"res":"I","res3":"ILE","x":-22.354,"y":-1.437,"z":6.032,"plddt":97.94},{"num":366,"res":"C","res3":"CYS","x":-22.349,"y":-4.898,"z":4.475,"plddt":96.31},{"num":367,"res":"P","res3":"PRO","x":-21.972,"y":-5.061,"z":0.632,"plddt":94.19},{"num":368,"res":"G","res3":"GLY","x":-25.265,"y":-4.464,"z":-1.271,"plddt":92.75},{"num":369,"res":"S","res3":"SER","x":-27.056,"y":-3.104,"z":1.879,"plddt":96.25},{"num":370,"res":"S","res3":"SER","x":-28.314,"y":0.361,"z":2.933,"plddt":97.25},{"num":371,"res":"R","res3":"ARG","x":-28.401,"y":-0.825,"z":6.602,"plddt":98.0},{"num":372,"res":"L","res3":"LEU","x":-25.809,"y":1.158,"z":8.545,"plddt":98.38},{"num":373,"res":"H","res3":"HIS","x":-24.766,"y":-0.512,"z":11.8,"plddt":98.56},{"num":374,"res":"I","res3":"ILE","x":-23.447,"y":1.904,"z":14.49,"plddt":97.88},{"num":375,"res":"M","res3":"MET","x":-21.834,"y":1.008,"z":17.842,"plddt":98.12},{"num":376,"res":"A","res3":"ALA","x":-21.326,"y":3.15,"z":20.962,"plddt":96.81},{"num":377,"res":"G","res3":"GLY","x":-20.155,"y":1.522,"z":24.218,"plddt":95.38},{"num":378,"res":"R","res3":"ARG","x":-22.266,"y":-1.611,"z":24.892,"plddt":96.12},{"num":379,"res":"R","res3":"ARG","x":-24.941,"y":-0.703,"z":22.281,"plddt":97.12},{"num":380,"res":"L","res3":"LEU","x":-25.387,"y":-1.729,"z":18.639,"plddt":97.94},{"num":381,"res":"W","res3":"TRP","x":-28.024,"y":-0.17,"z":16.349,"plddt":98.31},{"num":382,"res":"W","res3":"TRP","x":-29.036,"y":-0.565,"z":12.734,"plddt":98.06},{"num":383,"res":"L","res3":"LEU","x":-30.658,"y":2.173,"z":10.59,"plddt":98.12},{"num":384,"res":"D","res3":"ASP","x":-31.457,"y":2.671,"z":6.849,"plddt":97.81},{"num":385,"res":"L","res3":"LEU","x":-29.206,"y":5.327,"z":5.222,"plddt":96.56},{"num":386,"res":"K","res3":"LYS","x":-31.978,"y":6.027,"z":2.64,"plddt":96.56},{"num":387,"res":"S","res3":"SER","x":-34.036,"y":7.599,"z":5.483,"plddt":96.69},{"num":388,"res":"G","res3":"GLY","x":-31.272,"y":10.202,"z":6.23,"plddt":94.44},{"num":389,"res":"A","res3":"ALA","x":-32.061,"y":12.388,"z":9.294,"plddt":94.12},{"num":390,"res":"Q","res3":"GLN","x":-35.47,"y":10.574,"z":9.668,"plddt":95.25},{"num":391,"res":"A","res3":"ALA","x":-33.812,"y":7.158,"z":10.215,"plddt":96.25},{"num":392,"res":"T","res3":"THR","x":-35.157,"y":5.016,"z":13.092,"plddt":96.81},{"num":393,"res":"W","res3":"TRP","x":-32.332,"y":3.427,"z":15.119,"plddt":97.81},{"num":394,"res":"T","res3":"THR","x":-33.197,"y":-0.191,"z":16.051,"plddt":97.81},{"num":395,"res":"E","res3":"GLU","x":-31.124,"y":-1.632,"z":18.93,"plddt":97.81},{"num":396,"res":"L","res3":"LEU","x":-29.653,"y":-5.149,"z":18.442,"plddt":97.75},{"num":397,"res":"P","res3":"PRO","x":-28.329,"y":-7.68,"z":21.0,"plddt":97.44},{"num":398,"res":"W","res3":"TRP","x":-24.592,"y":-8.561,"z":20.751,"plddt":97.75},{"num":399,"res":"P","res3":"PRO","x":-21.923,"y":-10.063,"z":23.14,"plddt":97.19},{"num":400,"res":"H","res3":"HIS","x":-19.457,"y":-7.069,"z":23.112,"plddt":97.94},{"num":401,"res":"E","res3":"GLU","x":-19.039,"y":-4.389,"z":25.819,"plddt":95.88},{"num":402,"res":"K","res3":"LYS","x":-16.721,"y":-2.198,"z":23.652,"plddt":96.06},{"num":403,"res":"V","res3":"VAL","x":-15.214,"y":-2.174,"z":20.129,"plddt":97.88},{"num":404,"res":"D","res3":"ASP","x":-12.658,"y":0.133,"z":18.426,"plddt":97.69},{"num":405,"res":"G","res3":"GLY","x":-13.747,"y":-0.513,"z":14.796,"plddt":98.06},{"num":406,"res":"A","res3":"ALA","x":-15.821,"y":-2.623,"z":12.406,"plddt":98.25},{"num":407,"res":"L","res3":"LEU","x":-15.731,"y":-3.773,"z":8.755,"plddt":97.69},{"num":408,"res":"C","res3":"CYS","x":-18.128,"y":-5.87,"z":6.649,"plddt":96.81},{"num":409,"res":"M","res3":"MET","x":-16.61,"y":-7.026,"z":3.317,"plddt":94.19},{"num":410,"res":"E","res3":"GLU","x":-16.719,"y":-9.9,"z":0.749,"plddt":88.69},{"num":411,"res":"K","res3":"LYS","x":-12.927,"y":-10.483,"z":0.603,"plddt":85.25},{"num":412,"res":"S","res3":"SER","x":-11.233,"y":-11.982,"z":3.689,"plddt":84.75},{"num":413,"res":"L","res3":"LEU","x":-9.694,"y":-9.406,"z":6.043,"plddt":84.62},{"num":414,"res":"G","res3":"GLY","x":-6.387,"y":-11.185,"z":6.805,"plddt":75.06},{"num":415,"res":"P","res3":"PRO","x":-5.427,"y":-14.884,"z":6.354,"plddt":69.81},{"num":416,"res":"N","res3":"ASN","x":-8.759,"y":-16.465,"z":7.46,"plddt":75.56},{"num":417,"res":"S","res3":"SER","x":-12.393,"y":-15.819,"z":6.439,"plddt":81.12},{"num":418,"res":"C","res3":"CYS","x":-15.177,"y":-16.734,"z":8.909,"plddt":84.06},{"num":419,"res":"S","res3":"SER","x":-17.732,"y":-16.756,"z":6.019,"plddt":81.62},{"num":420,"res":"A","res3":"ALA","x":-17.786,"y":-19.546,"z":3.404,"plddt":76.62},{"num":421,"res":"N","res3":"ASN","x":-20.364,"y":-17.993,"z":1.004,"plddt":74.0},{"num":422,"res":"G","res3":"GLY","x":-20.857,"y":-14.325,"z":2.095,"plddt":78.5},{"num":423,"res":"P","res3":"PRO","x":-19.2,"y":-11.183,"z":3.502,"plddt":85.75},{"num":424,"res":"G","res3":"GLY","x":-17.118,"y":-11.502,"z":6.68,"plddt":92.94},{"num":425,"res":"L","res3":"LEU","x":-18.108,"y":-9.184,"z":9.566,"plddt":96.0},{"num":426,"res":"Y","res3":"TYR","x":-14.989,"y":-8.071,"z":11.466,"plddt":96.94},{"num":427,"res":"L","res3":"LEU","x":-14.909,"y":-6.317,"z":14.883,"plddt":97.56},{"num":428,"res":"I","res3":"ILE","x":-11.702,"y":-5.059,"z":16.582,"plddt":97.0},{"num":429,"res":"H","res3":"HIS","x":-11.011,"y":-4.311,"z":20.274,"plddt":96.94},{"num":430,"res":"G","res3":"GLY","x":-7.425,"y":-3.592,"z":21.416,"plddt":94.25},{"num":431,"res":"P","res3":"PRO","x":-5.17,"y":-6.435,"z":20.084,"plddt":93.62},{"num":432,"res":"N","res3":"ASN","x":-8.192,"y":-8.684,"z":19.237,"plddt":94.56},{"num":433,"res":"L","res3":"LEU","x":-9.897,"y":-9.262,"z":15.85,"plddt":94.5},{"num":434,"res":"Y","res3":"TYR","x":-13.3,"y":-11.021,"z":16.004,"plddt":95.69},{"num":435,"res":"C","res3":"CYS","x":-15.024,"y":-12.466,"z":12.905,"plddt":95.44},{"num":436,"res":"Y","res3":"TYR","x":-18.736,"y":-13.305,"z":12.331,"plddt":95.31},{"num":437,"res":"S","res3":"SER","x":-20.243,"y":-14.883,"z":9.161,"plddt":93.19},{"num":438,"res":"D","res3":"ASP","x":-23.092,"y":-12.284,"z":9.176,"plddt":93.5},{"num":439,"res":"V","res3":"VAL","x":-25.077,"y":-9.915,"z":11.48,"plddt":95.38},{"num":440,"res":"E","res3":"GLU","x":-27.488,"y":-12.746,"z":12.53,"plddt":94.56},{"num":441,"res":"K","res3":"LYS","x":-24.506,"y":-14.669,"z":14.05,"plddt":95.31},{"num":442,"res":"L","res3":"LEU","x":-23.324,"y":-11.478,"z":15.802,"plddt":97.19},{"num":443,"res":"N","res3":"ASN","x":-26.824,"y":-10.998,"z":17.288,"plddt":96.81},{"num":444,"res":"A","res3":"ALA","x":-27.245,"y":-14.697,"z":18.27,"plddt":97.12},{"num":445,"res":"A","res3":"ALA","x":-23.754,"y":-15.018,"z":19.871,"plddt":96.62},{"num":446,"res":"K","res3":"LYS","x":-23.754,"y":-15.843,"z":23.633,"plddt":95.12},{"num":447,"res":"A","res3":"ALA","x":-19.938,"y":-15.465,"z":23.858,"plddt":95.69},{"num":448,"res":"L","res3":"LEU","x":-17.093,"y":-13.855,"z":21.872,"plddt":96.88},{"num":449,"res":"P","res3":"PRO","x":-15.547,"y":-16.082,"z":19.13,"plddt":94.62},{"num":450,"res":"Q","res3":"GLN","x":-11.841,"y":-16.979,"z":19.416,"plddt":93.75},{"num":451,"res":"P","res3":"PRO","x":-9.956,"y":-13.738,"z":18.512,"plddt":93.25},{"num":452,"res":"Q","res3":"GLN","x":-7.276,"y":-13.387,"z":15.854,"plddt":91.38},{"num":453,"res":"N","res3":"ASN","x":-4.449,"y":-10.849,"z":16.443,"plddt":91.31},{"num":454,"res":"V","res3":"VAL","x":-4.993,"y":-7.327,"z":14.957,"plddt":92.31},{"num":455,"res":"T","res3":"THR","x":-1.243,"y":-7.16,"z":14.075,"plddt":91.19},{"num":456,"res":"S","res3":"SER","x":-1.826,"y":-10.096,"z":11.638,"plddt":89.56},{"num":457,"res":"L","res3":"LEU","x":-3.838,"y":-7.578,"z":9.515,"plddt":90.5},{"num":458,"res":"L","res3":"LEU","x":-0.582,"y":-5.55,"z":9.338,"plddt":90.88},{"num":459,"res":"G","res3":"GLY","x":1.607,"y":-8.514,"z":8.198,"plddt":89.38},{"num":460,"res":"C","res3":"CYS","x":3.197,"y":-9.115,"z":11.642,"plddt":90.38},{"num":461,"res":"T","res3":"THR","x":4.081,"y":-12.729,"z":12.571,"plddt":74.25},{"num":462,"res":"H","res3":"HIS","x":3.668,"y":-13.594,"z":16.282,"plddt":60.44}]};
+
+// State management
+let constructMode = 'precursor'; // 'precursor' (1..462) or 'mature' (24..462)
+let selectedResNum = 240; // Default selected residue (1-based UniProt)
+let hoveredResNum = null;
+let colorMode = 'plddt'; // 'plddt', 'domain', 'design'
+
+// Coordinates and DOM elements
+const totalRes = 462;
+const caAtoms = HPX_DATA.ca_atoms;
+
+function setConstructMode(mode) {
+  constructMode = mode;
+  document.getElementById('btnPrecursor').classList.toggle('active', mode === 'precursor');
+  document.getElementById('btnMature').classList.toggle('active', mode === 'mature');
+  const offsetLabel = document.getElementById('offsetLabel');
+  if (mode === 'mature') {
+    offsetLabel.textContent = '-23 aa (Residues 1-23 Cleaved)';
+    offsetLabel.style.color = '#f59e0b';
+  } else {
+    offsetLabel.textContent = '0 aa (Identical to UniProt)';
+    offsetLabel.style.color = '#38bdf8';
+  }
+  renderAllTracks();
+  updateInspector();
+}
+
+function setColorMode(mode) {
+  colorMode = mode;
+  document.getElementById('btnColorPlddt').classList.toggle('active', mode === 'plddt');
+  document.getElementById('btnColorDomain').classList.toggle('active', mode === 'domain');
+  document.getElementById('btnColorDesign').classList.toggle('active', mode === 'design');
+  requestAnimationFrame(draw3D);
+}
+
+// Coordinate conversions
+function getConstructPos(uniprotPos) {
+  if (constructMode === 'mature') {
+    if (uniprotPos <= 23) return 'Cleaved (SP)';
+    return uniprotPos - 23;
+  }
+  return uniprotPos;
+}
+
+// ----------------- 1D TRACK RENDERING (HTML5 Canvas) -----------------
+function initTrackCanvases() {
+  const ids = ['cvCoord', 'cvDomains', 'cvPlddt', 'cvDesign', 'cvAdapt'];
+  ids.forEach(id => {
+    const cv = document.getElementById(id);
+    const rect = cv.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    cv.width = rect.width * dpr;
+    cv.height = cv.getAttribute('height') * dpr;
+    cv.style.width = rect.width + 'px';
+    cv.style.height = cv.getAttribute('height') + 'px';
+
+    cv.addEventListener('mousemove', (e) => {
+      const r = cv.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      const resIdx = Math.max(1, Math.min(totalRes, Math.round((x / r.width) * totalRes)));
+      hoveredResNum = resIdx;
+      renderAllTracks();
+      updateInspector();
+    });
+    cv.addEventListener('mouseleave', () => {
+      hoveredResNum = null;
+      renderAllTracks();
+      updateInspector();
+    });
+    cv.addEventListener('click', (e) => {
+      const r = cv.getBoundingClientRect();
+      const x = e.clientX - r.left;
+      selectedResNum = Math.max(1, Math.min(totalRes, Math.round((x / r.width) * totalRes)));
+      renderAllTracks();
+      updateInspector();
+      focus3DOnResidue(selectedResNum);
+    });
+  });
+  renderAllTracks();
+}
+
+function renderAllTracks() {
+  renderCoordTrack();
+  renderDomainTrack();
+  renderPlddtTrack();
+  renderDesignTrack();
+  renderAdaptTrack();
+}
+
+function getX(resNum, w) {
+  return ((resNum - 0.5) / totalRes) * w;
+}
+
+// Track 1: Coordinate Rulers
+function renderCoordTrack() {
+  const cv = document.getElementById('cvCoord');
+  const ctx = cv.getContext('2d');
+  const w = cv.width;
+  const h = cv.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Background guide
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, w, h);
+
+  // Signal peptide highlight (1..23)
+  const spW = getX(23, w);
+  ctx.fillStyle = 'rgba(99, 102, 241, 0.25)';
+  ctx.fillRect(0, 0, spW, h);
+  ctx.strokeStyle = '#6366f1';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(spW, 0); ctx.lineTo(spW, h);
+  ctx.stroke();
+
+  // Mature chain region (24..462)
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '11px monospace';
+  ctx.fillText('SP (1-23)', 6, 16);
+  ctx.fillText('Mature Secreted Chain (24-462)', spW + 10, 16);
+
+  // Ticks & Ruler
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, 24); ctx.lineTo(w, 24);
+  ctx.stroke();
+
+  for (let r = 50; r <= 450; r += 50) {
+    const rx = getX(r, w);
+    ctx.beginPath();
+    ctx.moveTo(rx, 24); ctx.lineTo(rx, 30);
+    ctx.stroke();
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    const label = constructMode === 'mature' ? (r <= 23 ? '-' : (r - 23)) : r;
+    ctx.fillText(label, rx, 40);
+  }
+
+  drawCursors(ctx, w, h);
+}
+
+// Track 2: Curated Domains & Features
+function renderDomainTrack() {
+  const cv = document.getElementById('cvDomains');
+  const ctx = cv.getContext('2d');
+  const w = cv.width;
+  const h = cv.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Domain blocks
+  HPX_DATA.curated_features.domains.forEach(d => {
+    const x1 = getX(d.start, w);
+    const x2 = getX(d.end, w);
+    let color = '#0ea5e9';
+    if (d.type === 'signal') color = '#6366f1';
+    else if (d.type === 'hinge') color = '#f59e0b';
+    else if (d.start >= 259) color = '#10b981';
+
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.75;
+    ctx.fillRect(x1, 10, Math.max(2, x2 - x1), 20);
+    ctx.globalAlpha = 1.0;
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(x1, 10, Math.max(2, x2 - x1), 20);
+
+    if (x2 - x1 > 28) {
+      ctx.fillStyle = '#fff';
+      ctx.font = '9px sans-serif';
+      ctx.textAlign = 'center';
+      const shortName = d.name.replace('Hemopexin Repeat ', 'R').replace('Inter-domain Hinge / Linker', 'Hinge');
+      ctx.fillText(shortName, (x1 + x2) / 2, 23);
+    }
+  });
+
+  // Disulfide bonds (arcs on bottom track)
+  HPX_DATA.curated_features.disulfides.forEach(ds => {
+    const sx = getX(ds.start, w);
+    const ex = getX(ds.end, w);
+    ctx.strokeStyle = '#e11d48';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(sx, 38);
+    ctx.bezierCurveTo(sx, 58, ex, 58, ex, 38);
+    ctx.stroke();
+
+    ctx.fillStyle = '#fb7185';
+    ctx.beginPath();
+    ctx.arc(sx, 38, 2.5, 0, Math.PI * 2);
+    ctx.arc(ex, 38, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Glycosylation sites (diamonds on top)
+  HPX_DATA.curated_features.glycosylations.forEach(g => {
+    const gx = getX(g.pos, w);
+    ctx.fillStyle = g.type === 'N-linked' ? '#c084fc' : '#38bdf8';
+    ctx.beginPath();
+    ctx.moveTo(gx, 2);
+    ctx.lineTo(gx + 3.5, 6);
+    ctx.lineTo(gx, 10);
+    ctx.lineTo(gx - 3.5, 6);
+    ctx.closePath();
+    ctx.fill();
+  });
+
+  drawCursors(ctx, w, h);
+}
+
+// Track 3: AlphaFold pLDDT
+function renderPlddtTrack() {
+  const cv = document.getElementById('cvPlddt');
+  const ctx = cv.getContext('2d');
+  const w = cv.width;
+  const h = cv.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const plddts = HPX_DATA.structural_confidence;
+  const barW = w / totalRes;
+
+  for (let i = 0; i < totalRes; i++) {
+    const p = plddts[i];
+    const x = i * barW;
+    const barH = (p / 100.0) * (h - 8);
+    let color = '#ea580c';
+    if (p > 90) color = '#1d4ed8';
+    else if (p > 70) color = '#0284c7';
+    else if (p > 50) color = '#eab308';
+
+    ctx.fillStyle = color;
+    ctx.fillRect(x, h - barH, Math.max(1, barW), barH);
+  }
+
+  // 70 and 90 threshold dashed lines
+  [70, 90].forEach(thresh => {
+    const ty = h - (thresh / 100.0) * (h - 8);
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.setLineDash([2, 4]);
+    ctx.beginPath();
+    ctx.moveTo(0, ty); ctx.lineTo(w, ty);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  drawCursors(ctx, w, h);
+}
+
+// Track 4: Design Intervals
+function renderDesignTrack() {
+  const cv = document.getElementById('cvDesign');
+  const ctx = cv.getContext('2d');
+  const w = cv.width;
+  const h = cv.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // 3DP Static Hinge pause [232..258]
+  const s1 = getX(232, w);
+  const s2 = getX(258, w);
+  ctx.fillStyle = 'rgba(148, 163, 184, 0.4)';
+  ctx.fillRect(s1, 6, Math.max(2, s2 - s1), 16);
+  ctx.strokeStyle = '#94a3b8';
+  ctx.strokeRect(s1, 6, Math.max(2, s2 - s1), 16);
+  ctx.fillStyle = '#cbd5e1';
+  ctx.font = '9px sans-serif';
+  ctx.fillText('3DP Static [232-258]', (s1 + s2) / 2 - 40, 18);
+
+  // 4DP Shifted pause windows: [264..268] and [291..295]
+  const intervals = [
+    { start: 264, end: 268, label: '4DP [264-268] (231+35)' },
+    { start: 291, end: 295, label: '4DP [291-295] (258+35)' }
+  ];
+  intervals.forEach(iv => {
+    const x1 = getX(iv.start, w);
+    const x2 = getX(iv.end, w);
+    ctx.fillStyle = '#f43f5e';
+    ctx.fillRect(x1, 26, Math.max(3, x2 - x1), 18);
+    ctx.strokeStyle = '#fff';
+    ctx.strokeRect(x1, 26, Math.max(3, x2 - x1), 18);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.fillText(iv.label, x1 - 15, 40);
+  });
+
+  drawCursors(ctx, w, h);
+}
+
+// Track 5: Candidate Adaptation Profile wi
+function renderAdaptTrack() {
+  const cv = document.getElementById('cvAdapt');
+  const ctx = cv.getContext('2d');
+  const w = cv.width;
+  const h = cv.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const p1 = HPX_DATA.candidate_profiles['1dp'].wi;
+  const p3 = HPX_DATA.candidate_profiles['3dp'].wi;
+  const p4 = HPX_DATA.candidate_profiles['4dp'].wi;
+
+  function drawProfileLine(arr, color, lw, dash = []) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw;
+    ctx.setLineDash(dash);
+    ctx.beginPath();
+    for (let i = 0; i < totalRes; i++) {
+      const x = getX(i + 1, w);
+      const y = h - 6 - arr[i] * (h - 12);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Draw 1DP (light blue), 3DP (gray dashed), 4DP (rose pink solid)
+  drawProfileLine(p1, '#38bdf8', 1.2, [3, 3]);
+  drawProfileLine(p3, '#94a3b8', 1.2, [4, 2]);
+  drawProfileLine(p4, '#f43f5e', 2.0);
+
+  drawCursors(ctx, w, h);
+}
+
+// Draw Selected & Hovered Cursors across all tracks
+function drawCursors(ctx, w, h) {
+  if (selectedResNum !== null) {
+    const sx = getX(selectedResNum, w);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(sx, 0); ctx.lineTo(sx, h);
+    ctx.stroke();
+  }
+  if (hoveredResNum !== null && hoveredResNum !== selectedResNum) {
+    const hx = getX(hoveredResNum, w);
+    ctx.strokeStyle = '#f43f5e';
+    ctx.lineWidth = 1.0;
+    ctx.beginPath();
+    ctx.moveTo(hx, 0); ctx.lineTo(hx, h);
+    ctx.stroke();
+  }
+}
+
+// Update Inspector Details
+function updateInspector() {
+  const curRes = hoveredResNum || selectedResNum || 240;
+  const atom = caAtoms[curRes - 1];
+  const plddt = atom ? atom.plddt : 0;
+  const resCode = atom ? atom.res : 'X';
+  const res3 = atom ? atom.res3 : 'UNK';
+
+  document.getElementById('inspRes').textContent = `#${curRes} ${res3} (${resCode})`;
+  const cPos = getConstructPos(curRes);
+  document.getElementById('inspPos').textContent = `${curRes} (UniProt) / ${cPos} (Construct)`;
+
+  let plddtClass = 'Very High';
+  if (plddt <= 50) plddtClass = 'Very Low';
+  else if (plddt <= 70) plddtClass = 'Low';
+  else if (plddt <= 90) plddtClass = 'Confident';
+  document.getElementById('inspPlddt').textContent = `${plddt} (${plddtClass})`;
+
+  // Find Domain / Feature
+  let featName = 'None / Inter-repeat';
+  HPX_DATA.curated_features.domains.forEach(d => {
+    if (curRes >= d.start && curRes <= d.end) featName = d.name;
+  });
+  HPX_DATA.curated_features.glycosylations.forEach(g => {
+    if (g.pos === curRes) featName += ` · ${g.type} Glycosylation`;
+  });
+  document.getElementById('inspFeature').textContent = featName;
+
+  // wi values
+  const w1 = HPX_DATA.candidate_profiles['1dp'].wi[curRes - 1];
+  const w3 = HPX_DATA.candidate_profiles['3dp'].wi[curRes - 1];
+  const w4 = HPX_DATA.candidate_profiles['4dp'].wi[curRes - 1];
+  document.getElementById('inspWi').textContent = `${w1.toFixed(2)} / ${w3.toFixed(2)} / ${w4.toFixed(2)}`;
+
+  // 4DP design interval status
+  let designStatus = 'Outside Pause Target';
+  if (curRes >= 264 && curRes <= 268) designStatus = '★ 4DP Pause Target [264-268] (Domain 1 Clearance)';
+  else if (curRes >= 291 && curRes <= 295) designStatus = '★ 4DP Pause Target [291-295] (Linker Clearance)';
+  else if (curRes >= 232 && curRes <= 258) designStatus = '3DP Static Pause Region (Unshifted)';
+  document.getElementById('inspDesign').textContent = designStatus;
+  document.getElementById('inspDesign').style.color = (curRes >= 264 && curRes <= 268) || (curRes >= 291 && curRes <= 295) ? '#fb7185' : '#94a3b8';
+
+  document.getElementById('seqHoverCoord').textContent = `Position: UniProt #${curRes} | Construct #${cPos} | ${res3} (${resCode})`;
+  document.getElementById('plddtHoverVal').textContent = `Residue #${curRes} pLDDT: ${plddt}`;
+}
+
+// ----------------- 3D BACKBONE VIEWPORT (WebGL Canvas) -----------------
+let rotX = -0.3;
+let rotY = 0.6;
+let zoom = 1.35;
+let panX = 0;
+let panY = 0;
+let isDragging = false;
+let lastMouseX = 0;
+let lastMouseY = 0;
+
+// Center of mass calculation
+let cx = 0, cy = 0, cz = 0;
+caAtoms.forEach(a => { cx += a.x; cy += a.y; cz += a.z; });
+cx /= totalRes; cy /= totalRes; cz /= totalRes;
+
+function init3D() {
+  const cv = document.getElementById('canvas3d');
+  const rect = cv.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = rect.width * dpr;
+  cv.height = rect.height * dpr;
+
+  cv.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+  });
+  window.addEventListener('mouseup', () => { isDragging = false; });
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - lastMouseX;
+    const dy = e.clientY - lastMouseY;
+    if (e.shiftKey) {
+      panX += dx * 0.15;
+      panY += dy * 0.15;
+    } else {
+      rotY += dx * 0.008;
+      rotX += dy * 0.008;
+    }
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+    requestAnimationFrame(draw3D);
+  });
+  cv.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    zoom *= e.deltaY < 0 ? 1.08 : 0.92;
+    zoom = Math.max(0.4, Math.min(4.0, zoom));
+    requestAnimationFrame(draw3D);
+  }, { passive: false });
+
+  requestAnimationFrame(draw3D);
+}
+
+function resetCamera() {
+  rotX = -0.3;
+  rotY = 0.6;
+  zoom = 1.35;
+  panX = 0;
+  panY = 0;
+  requestAnimationFrame(draw3D);
+}
+
+function focus3DOnResidue(resNum) {
+  requestAnimationFrame(draw3D);
+}
+
+function projectPoint(x, y, z, w, h) {
+  // Translate to center of mass
+  const tx = x - cx;
+  const ty = y - cy;
+  const tz = z - cz;
+
+  // Rotate Y
+  const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+  const x1 = tx * cosY + tz * sinY;
+  const z1 = -tx * sinY + tz * cosY;
+
+  // Rotate X
+  const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+  const y2 = ty * cosX - z1 * sinX;
+  const z2 = ty * sinX + z1 * cosX;
+
+  // Perspective project
+  const fov = 350 * zoom;
+  const camDist = 200;
+  const pz = z2 + camDist;
+  const scale = pz > 1 ? fov / pz : fov;
+
+  return {
+    px: w / 2 + (x1 + panX) * scale,
+    py: h / 2 + (y2 + panY) * scale,
+    pz: z2
+  };
+}
+
+function draw3D() {
+  const cv = document.getElementById('canvas3d');
+  const ctx = cv.getContext('2d');
+  const w = cv.width;
+  const h = cv.height;
+  ctx.clearRect(0, 0, w, h);
+
+  // Project all CA atoms
+  const projected = caAtoms.map(a => {
+    const p = projectPoint(a.x, a.y, a.z, w, h);
+    return {
+      num: a.num,
+      res: a.res,
+      plddt: a.plddt,
+      px: p.px,
+      py: p.py,
+      pz: p.pz
+    };
+  });
+
+  // Sort segments by average pz for depth buffering
+  const segments = [];
+  for (let i = 0; i < totalRes - 1; i++) {
+    const p1 = projected[i];
+    const p2 = projected[i + 1];
+    segments.push({
+      p1, p2,
+      depth: (p1.pz + p2.pz) / 2,
+      idx: i + 1
+    });
+  }
+  segments.sort((a, b) => b.depth - a.depth);
+
+  // Draw backbone ribbon segments
+  segments.forEach(seg => {
+    let col = '#0284c7';
+    if (colorMode === 'plddt') {
+      const p = seg.p1.plddt;
+      if (p > 90) col = '#1d4ed8';
+      else if (p > 70) col = '#0284c7';
+      else if (p > 50) col = '#eab308';
+      else col = '#ea580c';
+    } else if (colorMode === 'domain') {
+      if (seg.idx <= 23) col = '#6366f1';
+      else if (seg.idx <= 231) col = '#0ea5e9';
+      else if (seg.idx <= 258) col = '#f59e0b';
+      else col = '#10b981';
+    } else if (colorMode === 'design') {
+      if ((seg.idx >= 264 && seg.idx <= 268) || (seg.idx >= 291 && seg.idx <= 295)) {
+        col = '#f43f5e';
+      } else {
+        col = '#334155';
+      }
+    }
+
+    const isSel = (seg.p1.num === selectedResNum || seg.p2.num === selectedResNum);
+    ctx.strokeStyle = isSel ? '#ffffff' : col;
+    ctx.lineWidth = isSel ? 4.5 : (colorMode === 'design' && col === '#f43f5e' ? 3.5 : 2.0);
+    ctx.beginPath();
+    ctx.moveTo(seg.p1.px, seg.p1.py);
+    ctx.lineTo(seg.p2.px, seg.p2.py);
+    ctx.stroke();
+  });
+
+  // Highlight selected residue atom
+  if (selectedResNum && projected[selectedResNum - 1]) {
+    const s = projected[selectedResNum - 1];
+    ctx.fillStyle = '#38bdf8';
+    ctx.shadowColor = '#38bdf8';
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(s.px, s.py, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText(`#${selectedResNum} (${s.res})`, s.px + 9, s.py + 4);
+  }
+}
+
+// Window load init
+window.addEventListener('load', () => {
+  initTrackCanvases();
+  init3D();
+  updateInspector();
+});
+window.addEventListener('resize', () => {
+  initTrackCanvases();
+  const cv3d = document.getElementById('canvas3d');
+  const rect = cv3d.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  cv3d.width = rect.width * dpr;
+  cv3d.height = rect.height * dpr;
+  requestAnimationFrame(draw3D);
+});
+</script>
+
+</body>
+</html>
