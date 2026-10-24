@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.5.10 — 2026-10-24 (4DP Space-Time Exit-Tunnel DP, Equivalence-Preserving Local Codon Rewriter & GCP Training Telemetry; package publication pending)
+
+- Experimental 4DP scoring applies a configurable positional offset (currently +35 aa) to selected pause windows. This is a modeling assumption, not calibrated translation kinetics or demonstrated folding/yield improvement.
+- `ConstrainedLocalRewriter` provides deterministic local synonymous rewrites and constraint audits under the configured DP objective. Separate DP replay counts do not establish matched execution budgets or end-to-end speedup. No independent hairpin-removal objective is claimed.
+- `TrainingTelemetryLogger` provides local JSONL/SQLite records with content hashes, numeric observations and explicit computational evidence labels. Configuration checks precede runner client creation; live AgentOS/ResearchOS/ValidationHub ingestion, remote persistence and authenticated human ownership are not established by these local tables.
+- Stage009 stores an exploratory public-corpus comparison: held-out NLL Frequency 1.113339, Bigram 1.128064, sLLM 1.132609. The neural model did not exceed the frequency baseline on this test. Biological validation: NOT_AVAILABLE.
+
+## 3.5.9 — 2026-10-23 (Internal development milestone; consolidated into 3.5.10)
+
+- Constrained Local Codon Rewriter (ConstrainedLocalRewriter v1.0.0): Implemented deterministic synonymous peephole ($w \in \{1,2,3\}$) and coupled 2-site GC-neutral swaps maintaining DP v2.3 objective parity.
+- 4DP Ribosome Exit-Tunnel Latency Formulation: Formulated $+35\text{ aa}$ modeling assumption ($i_{\text{ext}} = i_{\text{ptc}} + L_{\text{tunnel}}$) resolving structural exit-tunnel latency.
+- ML Stage 009 & Telemetry Scaffolding: Established leak-free evaluation benchmark partition (<40% BLOSUM62 homology) and hash-only telemetry contract. Consolidated into 3.5.10 public candidate.
+
 ## 3.5.8 — 2026-10-21 (DP v2.2/v2.3 forward recurrence & multi-class pause release; package publication pending)
 
 - DP v2.2 forward recurrence unification: Unified 1DP/3DP forward dynamic programming recurrence ($F_t(g, q)$), 5' translation initiation ramp ($K=15$ codons), and synonymous GC envelope clamping without expanding state dimensionality ($\mathcal{O}(N^2 |Q| B)$, $B \le 6$). Bit-identical zero parity invariant verified against DP v2.1.1 baseline when pause weight $\lambda=0$.

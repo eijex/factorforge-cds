@@ -1,0 +1,3 @@
+# HPX evidence viewer — reviewed prototype
+
+Open index.html. Canvas-projected Cα reference trace, not Mol*/WebGL. Imported functional annotations lack bound UniProt source snapshots. Local structure sequence/coordinates/confidence agree with reference.pdb; original download authenticity was not independently verified. Candidate adaptation profiles are NOT_AVAILABLE without CDS/engine/reference provenance. Mature mode relabels coordinates in the retained precursor reference frame. Original temporary artifacts remain unchanged. No biological validation or offline browser-network guarantee is claimed from static checks alone.

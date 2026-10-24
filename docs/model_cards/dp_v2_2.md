@@ -28,4 +28,4 @@ result = engine.optimize("KK", {"AAA": 1.0, "AAG": 0.45}, 0, 1)
 The registry ID returns `DPV220EngineAdapter` and requires explicit
 `codon_weights`. Constructor options go in `engine_settings`; no named host
 profile is inferred. `python scripts/verify-dp-v2-2-0.py` runs synthetic engineering
-checks. These are not a biological benchmark or full manuscript parity proof.
+checks. These are not a biological benchmark or full publication parity proof.

@@ -14,20 +14,23 @@ metric calculation is the next development milestone.
 
 from __future__ import annotations
 
-import os
-import sys
-import time
 import json
-from datetime import datetime, timezone
+import os
+import time
 from pathlib import Path
-from googleapiclient import discovery
-from google.oauth2 import service_account
-from google.cloud import storage
 
-KEY_PATH = r"C:\Users\munky\.gcp\factorforge-runner-key.json"
-PROJECT_ID = "fair-conduit-510507-p5"
-ZONE = "asia-northeast3-a"
-BUCKET_NAME = "factorforge-fair-conduit"
+from google.cloud import storage
+from google.oauth2 import service_account
+from googleapiclient import discovery
+from googleapiclient.errors import HttpError
+
+from factorforge.telemetry.training_logger import verify_gcp_account_policy
+
+GCP_ACCOUNT = os.environ.get("EIJEX_GCP_ACCOUNT", "munkyu.kim@eijex.com")
+KEY_PATH = os.environ.get("EIJEX_GCP_KEY_PATH", str(Path.home() / ".gcp" / "factorforge-runner-key.json"))
+PROJECT_ID = os.environ.get("EIJEX_GCP_PROJECT_ID", "fair-conduit-510507-p5")
+ZONE = os.environ.get("EIJEX_GCP_ZONE", "asia-northeast3-a")
+BUCKET_NAME = os.environ.get("EIJEX_GCP_BUCKET", "factorforge-fair-conduit")
 INSTANCE_NAME = "factorforge-plantform-cloud-node"
 SERVICE_ACCOUNT_EMAIL = f"factorforge-runner@{PROJECT_ID}.iam.gserviceaccount.com"
 
@@ -49,7 +52,7 @@ TEST_PAYLOAD = {
             "type_iis_clean": True,
             "watermark_present": False,
             "watermark_score": 0.320,
-            "sequence_sample": "GAGGTGCAGCTGGTGGAGTCTGGGGGAGGCTTGGTACAGCCTGGGGGGTCCCTGAGACTCTCCTGTGCAGCCTCTGGATTCACCTT"
+            "sequence_sample": "GAGGTGCAGCTGGTGGAGTCTGGGGGAGGCTTGGTACAGCCTGGGGGGTCCCTGAGACTCTCCTGTGCAGCCTCTGGATTCACCTT",
         },
         {
             "id": "Adalimumab-HC-1DP-Baseline-W0",
@@ -63,7 +66,7 @@ TEST_PAYLOAD = {
             "type_iis_clean": True,
             "watermark_present": False,
             "watermark_score": 0.310,
-            "sequence_sample": "GAAGTCCAATTAGTAGAATCAGGAGGTGGATTAGTACAACCAGGTAGATCACTAAGATTATCATGTGCAGCTTCTGGATTTACATTT"
+            "sequence_sample": "GAAGTCCAATTAGTAGAATCAGGAGGTGGATTAGTACAACCAGGTAGATCACTAAGATTATCATGTGCAGCTTCTGGATTTACATTT",
         },
         {
             "id": "Adalimumab-HC-Watermarked-W1",
@@ -77,7 +80,7 @@ TEST_PAYLOAD = {
             "type_iis_clean": True,
             "watermark_present": True,
             "watermark_score": 0.845,
-            "sequence_sample": "GAGGTCCAGCTCGTGGAGTCCGGAGGCGGACTCGTCCAGCCCGGACGATCCCTCCGCCTCTCCTGCGCCGCCTCCGGCTTCACCTTC"
+            "sequence_sample": "GAGGTCCAGCTCGTGGAGTCCGGAGGCGGACTCGTCCAGCCCGGACGATCCCTCCGCCTCTCCTGCGCCGCCTCCGGCTTCACCTTC",
         },
         {
             "id": "Adalimumab-LC-3DP-BestBet",
@@ -91,7 +94,7 @@ TEST_PAYLOAD = {
             "type_iis_clean": True,
             "watermark_present": False,
             "watermark_score": 0.335,
-            "sequence_sample": "GACATCCAGATGACCCAGTCTCCATCCTCCCTGTCTGCATCTGTAGGAGACAGAGTCACCATCACTTGCCGGGCAAGTCAGGGCATC"
+            "sequence_sample": "GACATCCAGATGACCCAGTCTCCATCCTCCCTGTCTGCATCTGTAGGAGACAGAGTCACCATCACTTGCCGGGCAAGTCAGGGCATC",
         },
         {
             "id": "Adalimumab-LC-1DP-Baseline-W0",
@@ -105,25 +108,37 @@ TEST_PAYLOAD = {
             "type_iis_clean": True,
             "watermark_present": False,
             "watermark_score": 0.325,
-            "sequence_sample": "GATATTCAAATGACTCAATCACCATCATCATTATCAGCATCAGTAGGAGATAGAGTAACAATTACTTGTAGAGCTTCTCAAGGAATT"
-        }
-    ]
+            "sequence_sample": "GATATTCAAATGACTCAATCACCATCATCATTATCAGCATCAGTAGGAGATAGAGTAACAATTACTTGTAGAGCTTCTCAAGGAATT",
+        },
+    ],
 }
 
 
 def get_compute_client():
-    credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
+    verified = verify_gcp_account_policy(
+        project_id=PROJECT_ID,
+        account_email=GCP_ACCOUNT,
+        key_path=KEY_PATH,
+        bucket_name=BUCKET_NAME,
+    )
+    credentials = service_account.Credentials.from_service_account_file(verified["key_path"])
     return discovery.build("compute", "v1", credentials=credentials)
 
 
 def get_storage_client():
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = KEY_PATH
-    return storage.Client(project=PROJECT_ID)
+    verified = verify_gcp_account_policy(
+        project_id=PROJECT_ID,
+        account_email=GCP_ACCOUNT,
+        key_path=KEY_PATH,
+        bucket_name=BUCKET_NAME,
+    )
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = verified["key_path"]
+    return storage.Client(project=verified["project_id"])
 
 
 def create_ephemeral_instance(compute, instance_name: str = INSTANCE_NAME):
     payload_json_escaped = json.dumps(TEST_PAYLOAD).replace("'", "'\\''")
-    
+
     startup_script = f"""#!/bin/bash
 set -e
 
@@ -183,8 +198,8 @@ total_elapsed = time.time() - start_time
 bundle = {{
     "cloud_environment": {{
         "provider": "Google Cloud Platform (GCP)",
-        "project_id": "fair-conduit-510507-p5",
-        "zone": "asia-northeast3-a",
+        "project_id": "{PROJECT_ID}",
+        "zone": "{ZONE}",
         "machine_type": "e2-standard-2",
         "hostname": socket.gethostname(),
         "os_kernel": platform.platform(),
@@ -260,9 +275,11 @@ poweroff
 
 def wait_for_zone_operation(compute, operation_name: str):
     while True:
-        result = compute.zoneOperations().get(
-            project=PROJECT_ID, zone=ZONE, operation=operation_name
-        ).execute()
+        result = (
+            compute.zoneOperations()
+            .get(project=PROJECT_ID, zone=ZONE, operation=operation_name)
+            .execute()
+        )
         status = result.get("status")
         if status == "DONE":
             if "error" in result:
@@ -274,10 +291,14 @@ def wait_for_zone_operation(compute, operation_name: str):
 def delete_instance(compute, instance_name: str = INSTANCE_NAME):
     print(f"[Teardown] Deleting VM '{instance_name}' to guarantee ZERO lingering cost...")
     try:
-        op = compute.instances().delete(project=PROJECT_ID, zone=ZONE, instance=instance_name).execute()
+        op = (
+            compute.instances()
+            .delete(project=PROJECT_ID, zone=ZONE, instance=instance_name)
+            .execute()
+        )
         wait_for_zone_operation(compute, op["name"])
         print(f"[Teardown] VM '{instance_name}' permanently DELETED.")
-    except Exception as e:
+    except (HttpError, OSError, TimeoutError, ValueError) as e:
         print(f"[Teardown Note] Instance delete call: {e}")
 
 
@@ -303,14 +324,18 @@ def run_gcp_verification():
         for attempt in range(40):
             time.sleep(5)
             if blob.exists():
-                print(f"[3/4] SUCCESS! Artifact detected in GCS after ~{(attempt + 1)*5}s.")
+                print(f"[3/4] SUCCESS! Artifact detected in GCS after ~{(attempt + 1) * 5}s.")
                 content = blob.download_as_text()
                 bundle_data = json.loads(content)
                 break
-            
+
             # Check VM state
             try:
-                inst = compute.instances().get(project=PROJECT_ID, zone=ZONE, instance=INSTANCE_NAME).execute()
+                inst = (
+                    compute.instances()
+                    .get(project=PROJECT_ID, zone=ZONE, instance=INSTANCE_NAME)
+                    .execute()
+                )
                 status = inst.get("status")
                 if status == "TERMINATED":
                     print("[3/4] VM powered off. Checking final GCS artifact...")
@@ -318,8 +343,10 @@ def run_gcp_verification():
                         content = blob.download_as_text()
                         bundle_data = json.loads(content)
                     break
-            except Exception:
-                pass
+            except (HttpError, OSError, TimeoutError, ValueError):
+                print(
+                    "[Polling Warning] Cloud status check failed; retrying within the existing limit."
+                )
 
         if not bundle_data:
             raise TimeoutError("Experiment timed out waiting for GCS artifact.")
@@ -328,11 +355,15 @@ def run_gcp_verification():
         print("[4/4] Requesting ephemeral instance deletion...")
         try:
             del_op = delete_instance(compute, INSTANCE_NAME)
-            print(f"[4/4] Deletion operation initiated: {del_op.get('name')}. Verifying completion...")
+            print(
+                f"[4/4] Deletion operation initiated: {del_op.get('name')}. Verifying completion..."
+            )
             wait_for_zone_operation(compute, del_op["name"])
             print("[4/4] Confirmed: VM instance has been permanently deleted from GCP.")
-        except Exception as e:
-            print(f"[WARNING] Automated deletion encountered an issue: {e}. Manual console verification advised.")
+        except (HttpError, OSError, TimeoutError, ValueError) as e:
+            print(
+                f"[WARNING] Automated deletion encountered an issue: {e}. Manual console verification advised."
+            )
         elapsed = time.time() - start_time
         print(f"[Complete] Total cycle time: {elapsed:.1f}s.")
 

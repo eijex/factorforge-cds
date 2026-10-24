@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <meta name="eijex-web-build" content="v3.5.8-2026-10-21">
+    <meta name="eijex-web-build" content="v3.5.10-2026-10-24">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FactorForge | N. benthamiana CDS Design</title>
@@ -90,7 +90,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.5.7 Release Notes
+                            v3.5.10 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -1383,7 +1383,7 @@
                     class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
             </div>
             <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
-                <!-- Version 3.5.8 -->
+                <!-- Version 3.5.10 -->
                 <div class="relative pl-8 border-l-2 border-emerald-500">
                     <div
                         class="absolute -left-[9px] top-0 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
@@ -1391,6 +1391,38 @@
                     <div class="flex items-center space-x-2 mb-2">
                         <span
                             class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.5.10</h3>
+                        <span class="text-slate-400 text-[10px]">2026-10-24</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>4DP Space-Time Ribosome Exit-Tunnel Optimization (DP v2.3):</b> Synchronized structural domain emergence at residue $e$ with ribosome peptidyl-transferase deceleration at codon $p = e + 35$ ($\Delta L_{\text{tunnel}} = 35\text{ aa}$), coupling co-translational folding kinetics across SP, Cys, TM, Glyc, and Hinge domain classes.</li>
+                        <li><b>Equivalence-Preserving Local Codon Rewriter (`ConstrainedLocalRewriter`):</b> Deterministic post-DP local window optimization ($w \in [1, 3]$ codons) eliminating cross-boundary dinucleotide and secondary-structure hairpins while strictly preserving amino-acid identity, GC% envelope, 5′ initiation ramp, and Aho-Corasick forbidden motif invariants.</li>
+                        <li><b>Dual-Track Training Telemetry &amp; Stage 009 Fixed Evaluation:</b> Hash-only SHA-256 training telemetry (`UNVERIFIED_PUBLIC_CORPUS`, `Biological validation: NOT_AVAILABLE`) with GCP account guard and leak-free 31-CDS *N. benthamiana* public benchmark evaluation.</li>
+                    </ul>
+                </div>
+                <!-- Version 3.5.9 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-300 dark:bg-slate-600 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <span
+                            class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold rounded-md uppercase">Internal Milestone</span>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.5.9</h3>
+                        <span class="text-slate-400 text-[10px]">2026-10-23</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Constrained Local Codon Rewriter (`ConstrainedLocalRewriter` v1.0.0):</b> Implemented deterministic synonymous peephole ($w \in \{1,2,3\}$) and coupled 2-site GC-neutral swaps maintaining DP v2.3 objective parity.</li>
+                        <li><b>4DP Ribosome Exit-Tunnel Latency Formulation:</b> Formulated $+35\text{ aa}$ modeling assumption ($i_{ext} = i_{ptc} + L_{tunnel}$) resolving structural exit-tunnel latency.</li>
+                        <li><b>ML Stage 009 &amp; Telemetry Scaffolding:</b> Established leak-free evaluation benchmark partition (&lt;40% BLOSUM62 homology) and hash-only telemetry contract. Consolidated into v3.5.10 public candidate.</li>
+                    </ul>
+                </div>
+                <!-- Version 3.5.8 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-300 dark:bg-slate-600 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
                         <h3 class="font-bold text-slate-800 dark:text-white">v3.5.8</h3>
                         <span class="text-slate-400 text-[10px]">2026-10-21</span>
                     </div>

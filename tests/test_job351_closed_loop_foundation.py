@@ -1,6 +1,7 @@
 """Unit tests for Job 351: Codon Closed-Loop Evidence Foundation."""
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -158,7 +159,7 @@ class TestJob351ClosedLoopFoundation:
         )
         temp_ledger.register_policy(pol)
 
-        key_path = r"C:\Users\munky\.gcp\factorforge-runner-key.json"
+        key_path = os.environ.get("EIJEX_GCP_KEY_PATH", str(Path.home() / ".gcp" / "factorforge-runner-key.json"))
         if os.path.exists(key_path):
             synced = temp_ledger.sync_to_gcs(
                 bucket_name="factorforge-fair-conduit",

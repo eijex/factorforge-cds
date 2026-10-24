@@ -1,37 +1,53 @@
 """FactorForge Ephemeral Cloud Runner.
 
 Safely provisions a temporary VM on GCP Compute Engine, executes an experiment,
-verifies output on GCS, and guarantees total teardown/deletion of the VM.
-Zero risk of runaway cloud spend.
+verifies output on GCS, and attempts teardown/deletion of the VM.
+Deletion failures and residual cloud costs require independent monitoring.
+Enforces munkyu.kim@eijex.com GCP account policy (blocks legacy free-credit project).
 """
 
 from __future__ import annotations
 
 import os
-import sys
-import time
-from datetime import datetime, timezone
 from pathlib import Path
-from googleapiclient import discovery
-from google.oauth2 import service_account
-from google.cloud import storage
+import time
 
-KEY_PATH = r"C:\Users\munky\.gcp\factorforge-runner-key.json"
-PROJECT_ID = "fair-conduit-510507-p5"
-ZONE = "asia-northeast3-a"
-BUCKET_NAME = "factorforge-fair-conduit"
+from google.cloud import storage
+from google.oauth2 import service_account
+from googleapiclient import discovery
+from googleapiclient.errors import HttpError
+
+from factorforge.telemetry.training_logger import verify_gcp_account_policy
+
+GCP_ACCOUNT = os.environ.get("EIJEX_GCP_ACCOUNT", "munkyu.kim@eijex.com")
+KEY_PATH = os.environ.get("EIJEX_GCP_KEY_PATH", str(Path.home() / ".gcp" / "factorforge-runner-key.json"))
+PROJECT_ID = os.environ.get("EIJEX_GCP_PROJECT_ID", "fair-conduit-510507-p5")
+ZONE = os.environ.get("EIJEX_GCP_ZONE", "asia-northeast3-a")
+BUCKET_NAME = os.environ.get("EIJEX_GCP_BUCKET", "factorforge-fair-conduit")
 INSTANCE_NAME = "factorforge-exp-runner"
 SERVICE_ACCOUNT_EMAIL = f"factorforge-runner@{PROJECT_ID}.iam.gserviceaccount.com"
 
 
 def get_compute_client():
-    credentials = service_account.Credentials.from_service_account_file(KEY_PATH)
+    verified = verify_gcp_account_policy(
+        project_id=PROJECT_ID,
+        account_email=GCP_ACCOUNT,
+        key_path=KEY_PATH,
+        bucket_name=BUCKET_NAME,
+    )
+    credentials = service_account.Credentials.from_service_account_file(verified["key_path"])
     return discovery.build("compute", "v1", credentials=credentials)
 
 
 def get_storage_client():
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = KEY_PATH
-    return storage.Client(project=PROJECT_ID)
+    verified = verify_gcp_account_policy(
+        project_id=PROJECT_ID,
+        account_email=GCP_ACCOUNT,
+        key_path=KEY_PATH,
+        bucket_name=BUCKET_NAME,
+    )
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = verified["key_path"]
+    return storage.Client(project=verified["project_id"])
 
 
 def create_ephemeral_instance(compute, instance_name: str = INSTANCE_NAME):
@@ -100,9 +116,11 @@ poweroff
 
 def wait_for_zone_operation(compute, operation_name: str):
     while True:
-        result = compute.zoneOperations().get(
-            project=PROJECT_ID, zone=ZONE, operation=operation_name
-        ).execute()
+        result = (
+            compute.zoneOperations()
+            .get(project=PROJECT_ID, zone=ZONE, operation=operation_name)
+            .execute()
+        )
         status = result.get("status")
         if status == "DONE":
             if "error" in result:
@@ -112,12 +130,18 @@ def wait_for_zone_operation(compute, operation_name: str):
 
 
 def delete_instance(compute, instance_name: str = INSTANCE_NAME):
-    print(f"[Teardown] Deleting VM '{instance_name}' to ensure ZERO lingering cost...")
+    print(
+        f"[Teardown] Deleting VM '{instance_name}' (residual resources and billing require separate checks)..."
+    )
     try:
-        op = compute.instances().delete(project=PROJECT_ID, zone=ZONE, instance=instance_name).execute()
+        op = (
+            compute.instances()
+            .delete(project=PROJECT_ID, zone=ZONE, instance=instance_name)
+            .execute()
+        )
         wait_for_zone_operation(compute, op["name"])
         print(f"[Teardown] VM '{instance_name}' permanently DELETED.")
-    except Exception as e:
+    except (HttpError, OSError, TimeoutError, ValueError) as e:
         print(f"[Teardown Warning] Error deleting VM: {e}")
 
 
@@ -136,7 +160,9 @@ def run_experiment_lifecycle():
         op = create_ephemeral_instance(compute, INSTANCE_NAME)
         wait_for_zone_operation(compute, op["name"])
         print(f"[2/4] VM '{INSTANCE_NAME}' is now PROVISIONED and RUNNING!")
-        print(">> GCP 콘솔 화면에서 [새로고침(Refresh)]을 누르시면 녹색 체크와 함께 VM이 떠 있는 것을 직접 보실 수 있습니다!")
+        print(
+            ">> GCP 콘솔 화면에서 [새로고침(Refresh)]을 누르시면 녹색 체크와 함께 VM이 떠 있는 것을 직접 보실 수 있습니다!"
+        )
 
         # Wait for experiment output in GCS or VM shutdown (max 3 minutes)
         print("[3/4] Waiting for experiment completion & auto-shutdown (max 180s)...")
@@ -155,25 +181,35 @@ def run_experiment_lifecycle():
 
             # Check instance status
             try:
-                inst = compute.instances().get(project=PROJECT_ID, zone=ZONE, instance=INSTANCE_NAME).execute()
+                inst = (
+                    compute.instances()
+                    .get(project=PROJECT_ID, zone=ZONE, instance=INSTANCE_NAME)
+                    .execute()
+                )
                 status = inst.get("status")
                 if status == "TERMINATED":
                     print(f"[3/4] VM has powered off itself (status: {status}).")
                     completed = True
                     break
-            except Exception:
-                pass
+            except (HttpError, OSError, TimeoutError, ValueError):
+                print(
+                    "[Polling Warning] Cloud status check failed; retrying within the existing limit."
+                )
 
         if not completed:
             print("[Warning] Timeout reached. Initiating forced teardown.")
 
     finally:
-        # Guarantee teardown no matter what
-        print("[4/4] Starting guaranteed instance teardown...")
+        # Attempt teardown even when execution fails
+        print("[4/4] Attempting instance teardown...")
         delete_instance(compute, INSTANCE_NAME)
         elapsed = time.time() - start_time
-        print(f"[Complete] Total cycle time: {elapsed:.1f}s. Cost incurred: ~$0.0001 (0.1원 미만).")
-        print(">> GCP 콘솔에서 다시 [새로고침(Refresh)]을 누르시면 인스턴스가 완전히 사라진 깨끗한 화면을 확인하실 수 있습니다.")
+        print(
+            f"[Complete] Total cycle time: {elapsed:.1f}s. Cost not measured; verify cloud billing and residual resources."
+        )
+        print(
+            ">> GCP 콘솔에서 다시 [새로고침(Refresh)]을 누르시면 인스턴스가 완전히 사라진 깨끗한 화면을 확인하실 수 있습니다."
+        )
 
 
 if __name__ == "__main__":

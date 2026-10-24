@@ -1,0 +1,63 @@
+{
+  "$schema": "factorforge-sop-v1",
+  "profile_id": "plantform_benthamiana_production",
+  "sop_name": "N. benthamiana configured design-review profile",
+  "version": "1.0.0",
+  "author": "FactorForge internal configuration; partner authorship not verified",
+  "status": "INTERNAL_REVIEW_DRAFT",
+  "derived_from": "Internal configuration attributed to collaboration context; source authority not independently verified in this review",
+  "scope_note": "Configured in-silico sequence review checks only; not certification of complete PlantForm SOP compliance or biological safety.",
+  "default_enforcement": "IGNORE",
+  "unknown_rule_policy": "ERROR",
+  "workflow": {
+    "design_method": "feasibility_best",
+    "comparison_methods": [
+      "high_cai",
+      "gc_target",
+      "diverse_dp"
+    ],
+    "sequence_requirements": {
+      "reproducibility_seed": 42,
+      "kozak_optimization": true,
+      "suppress_tpa": true,
+      "type_iis_enzymes": [
+        "BsaI",
+        "BpiI",
+        "BsmBI"
+      ],
+      "custom_restriction_sites": [],
+      "codon_balance": {
+        "arg_ratio_aga_agg": 1.0,
+        "ser_five_codon_uniform": true,
+        "tandem_repeat_avoidance": true
+      },
+      "gc_envelope": {
+        "min_gc": 40.0,
+        "max_gc": 48.0
+      }
+    },
+    "review_policy": {
+      "cai": "PREFERRED",
+      "overall_gc": "HARD_FAIL",
+      "local_gc": "HARD_FAIL",
+      "repeats": "HARD_FAIL",
+      "homopolymers": "HARD_FAIL",
+      "forbidden_motifs": "HARD_FAIL"
+    }
+  },
+  "rules": {
+    "biological.reading_frame.v1": "HARD_FAIL",
+    "assembly.type_iis.bsai.v1": "HARD_FAIL",
+    "assembly.type_iis.bpii.v1": "HARD_FAIL",
+    "assembly.type_iis.bsmbi.v1": "HARD_FAIL",
+    "rna.cryptic_splice.v1": "HARD_FAIL",
+    "rna.polya_motifs.v1": "HARD_FAIL",
+    "rna.au_rich_elements.v1": "HARD_FAIL",
+    "synthesis.gc_extremes.v1": "HARD_FAIL",
+    "policy.synthesis.homopolymer.v1": "HARD_FAIL",
+    "policy.initiation_mfe.v1": "WARNING"
+  },
+  "approval_status": "NOT_DOCUMENTED_IN_LOCAL_REVIEW",
+  "authority_scope": "CONFIGURED_SEQUENCE_CHECKS_ONLY",
+  "workflow_metadata_enforcement": "Workflow fields are metadata; only mapped registry rules are enforced by SopProfile."
+}

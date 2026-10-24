@@ -33,9 +33,25 @@ models/
 .vscode/
 .idea/
 
-# Environment
+# Environment & Security Credentials (strictly excluded from public repo)
 .env
 .env.local
+.env.*.local
+*.pem
+*.key
+*.key.json
+*.id_rsa
+*.id_ed25519
+*credential*.json
+*secret*.json
+*.sqlite
+*.sqlite3
+*.db-journal
+*.log
+.gcp/
+.aws/
+.azure/
+_local_reports/
 
 # OS
 .DS_Store
@@ -46,10 +62,6 @@ CLAUDE.md
 GEMINI.md
 .claude/
 _ideas/
-
-# Local environment (database credentials etc.)
-.env
-.env.local
 
 # Notebooks (Kaggle/Colab specific — not for public use)
 notebooks/

@@ -2,14 +2,14 @@
 
 FactorForge development direction and planned work.
 
-> Current product line: **v3.5.8** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current product line: **v3.5.10** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
 
 ## Current Release Status
 
-FactorForge v3.5.8 retains the web/API product line with versioned Sequence
+FactorForge v3.5.10 retains the web/API product line with versioned Sequence
 Policy Profiles (internally retained as `SopProfile` for compatibility), an
 editable browser-local policy workflow and SOP Builder, Top-K discovery slates,
 an explicit DP v2.1.1 path, constrained-sLLM research integration, and adaptive
