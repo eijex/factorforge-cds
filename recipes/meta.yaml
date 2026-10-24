@@ -7,8 +7,8 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name.replace('-', '_') }}-{{ version }}.tar.gz
-  # Set only after verifying the actual published version-specific source archive.
-  sha256: {{ environ["FACTORFORGE_SDIST_SHA256"] }}
+  # Verified against the published 3.5.10 source archive (Job456).
+  sha256: af77a781ed522a6c9a303a90d962c37645f9d28b4970ba0adfe764884ac2ea0a
 
 build:
   number: 0

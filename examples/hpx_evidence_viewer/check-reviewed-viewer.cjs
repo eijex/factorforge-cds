@@ -5,7 +5,7 @@ const elements=new Map(), events={};
 function element(id){
  if(elements.has(id))return elements.get(id);
  const h=Number((html.match(new RegExp('id="'+id+'"[^>]*height="(\\d+)"'))||[])[1]||350);
- const ctx=new Proxy({}, {get:(o,k)=>o[k]??(()=>{}),set:(o,k,v)=>(o[k]=v,true)});
+ const ctx=new Proxy({measureText:t=>({width:String(t).length*5})}, {get:(o,k)=>o[k]??(()=>{}),set:(o,k,v)=>(o[k]=v,true)});
  const e={width:800,height:h,dataset:{},style:{},textContent:'',innerHTML:'',classList:{toggle(){}},listeners:{},
   getAttribute(k){return String(this[k]);},getBoundingClientRect(){return {width:800,height:parseFloat(this.style.height)||h,left:0,top:0};},
   getContext(){return ctx;}, addEventListener(k,f){(this.listeners[k]??=[]).push(f);}};

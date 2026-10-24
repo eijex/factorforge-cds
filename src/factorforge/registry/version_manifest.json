@@ -3,7 +3,7 @@
   "product": {
     "name": "FactorForge",
     "version": "3.5.10",
-    "release_status": "local_candidate_package_pending",
+    "release_status": "released",
     "previous_stable_version": "3.5.8"
   },
   "engines": {
