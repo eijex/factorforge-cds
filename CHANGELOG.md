@@ -1,6 +1,11 @@
 # Changelog
 
-## 3.5.10 — 2026-10-24 (4DP Space-Time Exit-Tunnel DP, Equivalence-Preserving Local Codon Rewriter & GCP Training Telemetry; package publication pending)
+## Unreleased
+
+- Correct public web processing/history and experimental-engine descriptions; distinguish collaboration enquiries from permission for research retention/reuse.
+- Make HPX offline Chromium regression portable and check page errors, exact selection and mature-coordinate mapping. These checks cover the tested browser configuration, not universal certification.
+
+## 3.5.10 — 2026-10-24 (4DP Space-Time Exit-Tunnel DP, Equivalence-Preserving Local Codon Rewriter & GCP Training Telemetry; Git tag and PyPI publication confirmed2026-10-24)
 
 - Experimental 4DP scoring applies a configurable positional offset (currently +35 aa) to selected pause windows. This is a modeling assumption, not calibrated translation kinetics or demonstrated folding/yield improvement.
 - `ConstrainedLocalRewriter` provides deterministic local synonymous rewrites and constraint audits under the configured DP objective. Separate DP replay counts do not establish matched execution budgets or end-to-end speedup. No independent hairpin-removal objective is claimed.

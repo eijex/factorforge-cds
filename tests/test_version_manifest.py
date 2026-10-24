@@ -7,7 +7,7 @@ def test_product_and_engine_versions_are_independently_declared() -> None:
     metadata = public_version_metadata()
 
     assert __version__ == "3.5.10"
-    assert metadata["product"]["release_status"] == "local_candidate_package_pending"
+    assert metadata["product"]["release_status"] == "released"
     assert metadata["engines"]["profile"]["generation"] == 1
     assert metadata["engines"]["dp"]["version"] == engine_version("dp")
     assert metadata["engines"]["dp_v2_2"]["version"] == "2.2.0"

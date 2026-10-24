@@ -196,7 +196,7 @@
         </div>
         <div class="header-chips">
           <span class="badge badge-blue">Imported annotations (binding unverified)</span>
-          <span class="badge badge-purple">AlphaFold v2.0 (AF-P02790-F1 Predicted Monomer)</span>
+          <span class="badge badge-purple">Local AlphaFold snapshot (AF-P02790-F1 Predicted Monomer)</span>
           <span class="badge badge-amber">Evidence: UNVERIFIED_PUBLIC_CORPUS</span>
           <span class="badge badge-gray">Biological validation: NOT_AVAILABLE</span>
         </div>
@@ -204,7 +204,7 @@
       <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
         <div class="btn-group">
           <button id="btnPrecursor" class="btn active" onclick="setConstructMode('precursor')">Precursor (1..462)</button>
-          <button id="btnMature" class="btn" onclick="setConstructMode('mature')">Mature (24..462, SP Cleaved)</button>
+          <button id="btnMature" class="btn" onclick="setConstructMode('mature')">Mature labels (24..462)</button>
         </div>
         <div style="font-size:11px; color:var(--text-muted);">
           Construct Offset: <span id="offsetLabel" style="color:#fff; font-weight:700;">0 aa (Identical)</span>
@@ -221,7 +221,7 @@
     </div>
     <div>
       <strong>[Design Assumption Scope: 4DP +35 aa Exit-Tunnel Shift]</strong>
-      <p>The 4DP deceleration intervals depicted below reflect computational model placements under the <em>+35 aa ribosome exit-tunnel hypothesis</em> ($W_k = [b_k+33, b_k+37]$). They visualize where codon relative adaptability ($w_i$) was computationally modulated by configured objective penalties to aid review prior to wet-lab synthesis. They <strong>do not validate physical in vivo translation rates, ribosomal pause durations, or chaperone-assisted folding kinetics</strong>.</p>
+      <p>The intervals mark configured positions under the +35 aa offset hypothesis. Candidate CDS and engine-bound adaptability profiles are NOT_AVAILABLE. These positions do not establish measured translation rates, pause durations or folding outcomes.</p>
     </div>
   </div>
 
@@ -245,7 +245,7 @@
       <!-- Track 2: Curated vs Heuristic Domain & Functional Features -->
       <div class="track-row">
         <div class="track-header">
-          <span>TRACK 2: CURATED FUNCTIONAL DOMAINS &amp; POST-TRANSLATIONAL FEATURES</span>
+          <span>TRACK 2: IMPORTED FUNCTIONAL DOMAINS &amp; POST-TRANSLATIONAL FEATURES</span>
           <span class="badge badge-blue" style="font-size:10px;">Source binding unverified</span>
         </div>
         <div class="track-canvas-box">
@@ -289,8 +289,8 @@
           <canvas id="cvDesign" class="track-cv" height="52"></canvas>
         </div>
         <div class="legend-row" style="margin-top:6px;">
-          <div class="legend-chip"><div class="legend-color" style="background:#f43f5e;"></div><span>4DP Shifted: [264-268] (Domain 1 Clearance, 231+35&plusmn;2)</span></div>
-          <div class="legend-chip"><div class="legend-color" style="background:#ec4899;"></div><span>4DP Shifted: [291-295] (Linker Clearance, 258+35&plusmn;2)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#f43f5e;"></div><span>4DP Shifted: [264-268] (Boundary offset, 231+35&plusmn;2)</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#ec4899;"></div><span>4DP Shifted: [291-295] (Linker offset, 258+35&plusmn;2)</span></div>
           <div class="legend-chip"><div class="legend-color" style="background:#94a3b8;"></div><span>3DP Static: [232-258] (0 aa Shift Heuristic)</span></div>
           <div class="legend-chip"><div class="legend-color" style="background:#475569;"></div><span>Terminal [483-487]: Excluded (&gt;462 aa)</span></div>
         </div>
@@ -307,8 +307,8 @@
         </div>
         <div class="legend-row" style="margin-top:6px;">
           <div class="legend-chip"><div class="legend-color" style="background:#38bdf8;"></div><span>Candidate profiles unavailable: engine-bound CDS required</span></div>
-          <div class="legend-chip"><div class="legend-color" style="background:#94a3b8;"></div><span>3DP Static (Hinge Pause, wi &approx; 0.40 at 232-258)</span></div>
-          <div class="legend-chip"><div class="legend-color" style="background:#f43f5e;"></div><span>4DP Tunnel-Shifted (wi &approx; 0.42 at [264-268] &amp; [291-295])</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#94a3b8;"></div><span>3DP candidate profile: NOT_AVAILABLE</span></div>
+          <div class="legend-chip"><div class="legend-color" style="background:#f43f5e;"></div><span>4DP candidate profile: NOT_AVAILABLE</span></div>
         </div>
       </div>
 
@@ -372,13 +372,12 @@
           <button id="btnColorDesign" class="btn" onclick="setColorMode('design')">4DP Pause Intervals</button>
         </div>
         <div style="font-size:11px; color:#64748b;">
-          Experimental Comparison: Rabbit HPX intact (PDB 1QJS)
+          Experimental comparison: source binding pending
         </div>
       </div>
 
       <div style="font-size:11px; color:#94a3b8; border-top:1px solid var(--border); padding-top:8px; line-height:1.4;">
-        <strong>Structure Annotation Integrity:</strong> The human full-length precursor (with SP 1-23) has no full intact experimental crystal structure in the PDB. This 3D viewport renders AlphaFold Monomer v2.0 predictions with exact atomic CA coordinates. Experimental structures (e.g. 1QJS, 1QHU) lack the signal peptide and have species/construct variations.
-      </div>
+        <strong>Reference Snapshot Integrity:</strong> Local reference sequence, C-alpha coordinates and confidence were checked. Original download authenticity and experimental structure assignments remain unverified.</div>
     </div>
 
   </div>
@@ -570,7 +569,7 @@ function renderDomainTrack() {
       ctx.font = '9px sans-serif';
       ctx.textAlign = 'center';
       const shortName = d.name.replace('Hemopexin Repeat ', 'R').replace('Inter-domain Hinge / Linker', 'Hinge');
-      ctx.fillText(shortName, (x1 + x2) / 2, 23);
+      if (ctx.measureText(shortName).width < x2 - x1 - 4) ctx.fillText(shortName, (x1 + x2) / 2, 23);
     }
   });
 
@@ -681,7 +680,7 @@ function renderDesignTrack() {
     ctx.strokeRect(x1, 26, Math.max(3, x2 - x1), 18);
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 9px sans-serif';
-    ctx.fillText(iv.label, x1 - 15, 40);
+    // Interval labels remain in the legend to avoid narrow-screen overlap.
   });
 
   drawCursors(ctx, w, h);
@@ -751,8 +750,8 @@ function updateInspector() {
 
   // 4DP design interval status
   let designStatus = 'Outside Pause Target';
-  if (curRes >= 264 && curRes <= 268) designStatus = '★ 4DP Pause Target [264-268] (Domain 1 Clearance)';
-  else if (curRes >= 291 && curRes <= 295) designStatus = '★ 4DP Pause Target [291-295] (Linker Clearance)';
+  if (curRes >= 264 && curRes <= 268) designStatus = '★ 4DP Pause Target [264-268] (Boundary offset)';
+  else if (curRes >= 291 && curRes <= 295) designStatus = '★ 4DP Pause Target [291-295] (Linker offset)';
   else if (curRes >= 232 && curRes <= 258) designStatus = '3DP Static Pause Region (Unshifted)';
   document.getElementById('inspDesign').textContent = designStatus;
   document.getElementById('inspDesign').style.color = (curRes >= 264 && curRes <= 268) || (curRes >= 291 && curRes <= 295) ? '#fb7185' : '#94a3b8';
