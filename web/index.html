@@ -1349,22 +1349,71 @@
     <div id="toastContainer" class="fixed bottom-6 right-6 flex flex-col space-y-3 z-[100]"></div>
 
     <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
-        <div id="privacy" class="mt-6 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl text-xs text-amber-800 dark:text-amber-300">
-            <div class="flex flex-col space-y-1">
-                <span>⚠ This tool produces in-silico CDS design candidates and pre-synthesis review artifacts only. Review and wet-lab testing are required before relying on any design in experiments.</span>
-                <span>⚠ In-silico metrics do not demonstrate or guarantee expression, yield, synthesis acceptance, folding, glycosylation, regulatory approval, or biological activity.</span>
-                <span>⚠ Users are responsible for verifying intellectual property rights and regulatory compliance for their sequences.</span>
-                <span>ℹ Anonymous usage statistics (design options and aggregate result metrics) are collected to improve this tool. Submitted sequences are not logged or stored.</span>
-                <span>ℹ Public wet-lab feedback must be coarse and non-confidential. Do not submit raw sequences, construct IDs, target identities, exact process parameters, patient data, or partner/customer confidential information.</span>
+        <div id="privacy" class="mt-8 p-6 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm text-xs space-y-6">
+            <!-- 2-Column Grid for Scientific Evidence & Privacy Governance -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Column 1: Scientific & Experimental Boundary -->
+                <div class="p-4 bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-800/60 rounded-xl space-y-3">
+                    <div class="flex items-center space-x-2 text-amber-900 dark:text-amber-200 font-bold text-xs uppercase tracking-wider">
+                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>Scientific Evidence &amp; Experimental Boundaries</span>
+                    </div>
+                    <ul class="space-y-2 text-amber-900/90 dark:text-amber-300/90 leading-relaxed list-disc list-inside">
+                        <li><b>In-Silico Review Artifacts Only:</b> FactorForge produces computational CDS candidates and pre-synthesis review artifacts. Independent scientific review and empirical wet-lab validation are mandatory prior to relying on any design in experiments.</li>
+                        <li><b>No Biological or Kinetic Guarantees:</b> In-silico metrics, codon adaptation profiles, 4DP structural pause intervals (+35 aa modeling assumption), and AlphaFold pLDDT scores do not establish in vivo translation rates, folding kinetics, protein yield, glycosylation, regulatory clearance, or biological activity.</li>
+                        <li><b>Regulatory &amp; IP Responsibility:</b> Users are solely responsible for verifying intellectual property freedom-to-operate, biosecurity screening, and regulatory compliance for their sequences.</li>
+                    </ul>
+                </div>
+
+                <!-- Column 2: Data Privacy, IP & Confidentiality -->
+                <div class="p-4 bg-slate-100/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl space-y-3">
+                    <div class="flex items-center space-x-2 text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wider">
+                        <svg class="w-4 h-4 text-teal-600 dark:text-teal-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        <span>Data Privacy &amp; Confidentiality Protection</span>
+                    </div>
+                    <ul class="space-y-2 text-slate-700 dark:text-slate-300 leading-relaxed list-disc list-inside">
+                        <li><b>Zero Sequence Retention:</b> Sequences submitted to this web interface are processed ephemerally in-browser and runtime memory. Submitted sequences are never logged, stored on remote servers, or incorporated into models. Only anonymous aggregate usage telemetry is collected.</li>
+                        <li><b>Strict Non-Confidential Feedback:</b> Public wet-lab feedback and GitHub issue submissions must be coarse and non-confidential. Do not submit raw sequences, construct IDs, target identities, exact process parameters, patient data, or partner/customer confidential information.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Collaboration & DP Engine Access Notice (3DP / 4DP) -->
+            <div class="p-4 bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 rounded-xl space-y-2.5">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex items-center space-x-2 text-emerald-900 dark:text-emerald-200 font-bold text-xs uppercase tracking-wider">
+                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span>Advanced 3DP &amp; 4DP Collaborative Optimization</span>
+                    </div>
+                    <a href="mailto:eijex.lab@gmail.com" class="inline-flex items-center px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs rounded-lg transition-colors shadow-sm">
+                        Request Collaboration (eijex.lab@gmail.com)
+                    </a>
+                </div>
+                <p class="text-emerald-950 dark:text-emerald-200/90 leading-relaxed">
+                    While co-translational <b>3DP</b> (structural pause) and <b>4DP</b> (space-time exit-tunnel dynamic programming) optimization engines are fully developed, they are currently restricted from open public web execution due to proprietary IP protection and ongoing prospective experimental validation.
+                </p>
+                <p class="text-emerald-950 dark:text-emerald-200/90 leading-relaxed">
+                    If your research project requires 3DP/4DP sequence designs, we welcome joint collaboration. You may submit your target protein or CDS sequences directly to <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold text-emerald-700 dark:text-emerald-300 hover:text-emerald-600">eijex.lab@gmail.com</a>.
+                </p>
+                <div class="p-2.5 bg-white/70 dark:bg-slate-900/60 border border-emerald-300/60 dark:border-emerald-700/60 rounded-lg text-[11px] text-emerald-900 dark:text-emerald-300 space-y-1">
+                    <p><b>Data Usage &amp; Retention Notice:</b> Sequences shared for collaborative 3DP/4DP optimization are retained within FactorForge internal research repositories and utilized for benchmark calibration and DP engine development. Please ensure you possess the necessary rights and approvals before submitting confidential or proprietary sequences.</p>
+                </div>
             </div>
         </div>
-        <div class="flex flex-wrap justify-center gap-4 text-xs text-slate-400 mt-3">
+        <div class="flex flex-wrap justify-center gap-4 text-xs text-slate-400 mt-4">
             <a href="https://github.com/eijex/factorforge-cds" target="_blank" rel="noopener"
                 class="hover:text-slate-200 transition-colors">GitHub</a>
             <a href="https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml"
                 target="_blank" rel="noopener" class="hover:text-slate-200 transition-colors">Share Wet-lab Results (GitHub)</a>
             <a href="https://github.com/eijex/factorforge-cds/releases" target="_blank" rel="noopener"
                 class="hover:text-slate-200 transition-colors">Release Notes</a>
+            <a href="mailto:eijex.lab@gmail.com" class="hover:text-slate-200 transition-colors">Contact (eijex.lab@gmail.com)</a>
         </div>
     </div>
 
