@@ -1,37 +1,28 @@
-"""DP v2.4.0 Optimizer: Tropical Semiring Formulation, TASEP Traffic Collision Smoothing, and Optimal Transport Cadence.
+"""Experimental max-plus DP with optional positional pause-ramp interpolation.
 
-Mathematical & Architectural Innovations:
-1. Tropical Max-Plus Semiring Formalization (T = (R U {-inf}, oplus, otimes)):
-   Encodes dynamic programming Bellman transitions as linear contractions over max-plus algebra
-   where a oplus b = max(a, b) and a otimes b = a + b.
-2. TASEP (Totally Asymmetric Simple Exclusion Process) Collision Smoothing Guard:
-   Models ribosome translation on the mRNA lattice. Prevents steep single-codon deceleration
-   shock waves that trigger ribosome collision and No-Go Decay (NGD) by deploying upstream
-   ramp deceleration (W_tasep = 3-5 codons) and local traffic shock penalties.
-3. 1D Wasserstein Optimal Transport Cadence (W1 Metric):
-   Measures cumulative elongation time trajectory divergence against target structural pause profiles
-   in exact O(N) closed-form computation.
-4. Transfer Matrix Topological Entropy & Feasibility Guard:
-   Pre-evaluates transition matrix reachability and topological entropy h = ln rho(M).
-5. Exact Zero-Parity Invariant:
-   When TASEP smoothing and OT weights are 0, guarantees exact bit-identical parity with
-   DP v2.3.0 and baseline 1DP compilers.
-6. Strictly Bounded Polynomial Scaling:
-   Guarantees O(N^2 * |Q| * B) computational complexity with B <= 6 synonymous branch factor.
+The historical TASEP/Wasserstein/entropy API names are compatibility labels.
+This module has no particle-exclusion traffic simulator, calibrated elongation
+rates, normalized probability-mass transport distance or spectral-radius entropy.
+Post-hoc diagnostics are sequence-weight proxies, not biological measurements.
+Unused nonzero shock/transport objective weights are explicitly rejected.
+Zero-weight/no-smoothing parity is tested on fixtures, not a universal proof.
+UNVERIFIED_PUBLIC_CORPUS. Biological validation: NOT_AVAILABLE.
 """
 
 from __future__ import annotations
+
 import math
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from collections.abc import Iterable
+from typing import Any, ClassVar
 
 from factorforge.analysis.metrics import STANDARD_GENETIC_CODE, detect_homopolymers
 from factorforge.constraints.type_iis import get_canonical_forbidden_motifs
+from factorforge.engines.dp_v2_3 import StructuralPauseAnnotator
 from factorforge.engines.profile.scoring import compute_5p_mfe_evidence
 from factorforge.engines.sllm.automaton import AutomatonCompiler, CompiledAutomaton
 from factorforge.utils.exceptions import UnsatisfiableDesignError
-from factorforge.engines.dp_v2_3 import StructuralPauseAnnotator
 
-AA_TO_CODONS: Dict[str, List[str]] = {}
+AA_TO_CODONS: dict[str, list[str]] = {}
 for codon, aa in STANDARD_GENETIC_CODE.items():
     if aa != "*":
         AA_TO_CODONS.setdefault(aa, []).append(codon)
@@ -57,7 +48,7 @@ class TropicalSemiring:
 
 
 class TASEPKineticsEngine:
-    """Totally Asymmetric Simple Exclusion Process (TASEP) Ribosome Traffic Collision Engine."""
+    """Legacy-named positional ramp and adjacent-weight proxy helpers; not a TASEP simulator."""
 
     RIBOSOME_FOOTPRINT_CODONS = 10  # Standard eukaryotic ribosome footprint ~30 nt
 
@@ -65,15 +56,15 @@ class TASEPKineticsEngine:
     def compute_smoothed_pause_map(
         cls,
         protein: str,
-        active_pause_map: Dict[int, List[Tuple[str, float, float]]],
+        active_pause_map: dict[int, list[tuple[str, float, float]]],
         smoothing_window: int = 3,
-    ) -> Dict[int, List[Tuple[str, float, float]]]:
+    ) -> dict[int, list[tuple[str, float, float]]]:
         """Distributes steep deceleration points over an upstream ramp window to prevent traffic jams.
 
         For each annotated pause position p with target tau_k:
         Positions p - d (for d in 1..smoothing_window-1) receive an interpolated buffer rate.
         """
-        smoothed_map: Dict[int, List[Tuple[str, float, float]]] = {}
+        smoothed_map: dict[int, list[tuple[str, float, float]]] = {}
         for pos, annot_list in active_pause_map.items():
             smoothed_map.setdefault(pos, []).extend(annot_list)
 
@@ -82,7 +73,9 @@ class TASEPKineticsEngine:
                 for d in range(1, smoothing_window):
                     upstream_pos = pos - d
                     if upstream_pos >= 1 and upstream_pos not in active_pause_map:
-                        ramp_tau = round(target_tau + (float(d) / smoothing_window) * (1.0 - target_tau), 3)
+                        ramp_tau = round(
+                            target_tau + (float(d) / smoothing_window) * (1.0 - target_tau), 3
+                        )
                         ramp_weight = round(weight * (1.0 - float(d) / smoothing_window) * 0.5, 3)
                         smoothed_map.setdefault(upstream_pos, []).append(
                             (f"{c_name}_RAMP_d{d}", ramp_weight, ramp_tau)
@@ -93,13 +86,13 @@ class TASEPKineticsEngine:
     def evaluate_shock_potential(
         cls,
         sequence: str,
-        codon_weights: Dict[str, float],
+        codon_weights: dict[str, float],
         shock_threshold: float = 0.45,
-    ) -> Dict[str, Any]:
-        """Calculates the TASEP traffic shock potential across the translated sequence."""
+    ) -> dict[str, Any]:
+        """Describes relative adjacent codon-weight drops, not collisions or measured rates."""
         codons = [sequence[i : i + 3] for i in range(0, len(sequence), 3)]
         rates = [codon_weights.get(c, 0.5) for c in codons]
-        shocks: List[Dict[str, Any]] = []
+        shocks: list[dict[str, Any]] = []
 
         for i in range(1, len(rates)):
             prev_rate = rates[i - 1]
@@ -107,19 +100,23 @@ class TASEPKineticsEngine:
             drop = prev_rate - curr_rate
             rel_drop = drop / (prev_rate + 1e-6)
             if rel_drop > shock_threshold:
-                shocks.append({
-                    "position": i + 1,
-                    "prev_codon": codons[i - 1],
-                    "prev_rate": round(prev_rate, 3),
-                    "curr_codon": codons[i],
-                    "curr_rate": round(curr_rate, 3),
-                    "relative_drop": round(rel_drop, 3),
-                })
+                shocks.append(
+                    {
+                        "position": i + 1,
+                        "prev_codon": codons[i - 1],
+                        "prev_rate": round(prev_rate, 3),
+                        "curr_codon": codons[i],
+                        "curr_rate": round(curr_rate, 3),
+                        "relative_drop": round(rel_drop, 3),
+                    }
+                )
 
         mean_rate = sum(rates) / len(rates) if rates else 0.0
         collision_index = sum(s["relative_drop"] for s in shocks) / max(1, len(rates))
 
         return {
+            "scope": "ADJACENT_CODON_WEIGHT_PROXY_NOT_COLLISION_MODEL",
+            "rate_units": "NOT_AVAILABLE",
             "total_shocks_detected": len(shocks),
             "collision_index": round(collision_index, 4),
             "shock_details": shocks[:10],
@@ -128,17 +125,17 @@ class TASEPKineticsEngine:
 
 
 class WassersteinCadenceEvaluator:
-    """1D Optimal Transport Cadence Distance Evaluator (Monge-Kantorovich / W1 metric)."""
+    """Legacy name for mean cumulative reciprocal-weight discrepancy, not normalized W1."""
 
     @classmethod
     def evaluate_1d_wasserstein(
         cls,
         sequence: str,
-        codon_weights: Dict[str, float],
-        target_pause_map: Dict[int, List[Tuple[str, float, float]]],
+        codon_weights: dict[str, float],
+        target_pause_map: dict[int, list[tuple[str, float, float]]],
         default_tau: float = 1.0,
     ) -> float:
-        """Evaluates 1D Wasserstein distance between candidate cumulative time and target time trajectory."""
+        """Returns a reciprocal-weight trajectory proxy; units/time calibration unavailable."""
         codons = [sequence[i : i + 3] for i in range(0, len(sequence), 3)]
         n = len(codons)
         if n == 0:
@@ -166,7 +163,7 @@ class WassersteinCadenceEvaluator:
 
 
 class TransferMatrixFeasibilityGuard:
-    """Topological Entropy & A Priori Reachability Guard via Automaton Transfer Matrix."""
+    """Prefix DFA reachability diagnostic, not full-design feasibility or topological entropy."""
 
     @classmethod
     def check_feasibility(
@@ -174,15 +171,15 @@ class TransferMatrixFeasibilityGuard:
         protein: str,
         automaton: CompiledAutomaton,
         ramp_length: int = 15,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Pre-checks non-empty language reachability across first ramp_length codons."""
-        active_states: Set[int] = {0}
+        active_states: set[int] = {0}
         n_check = min(len(protein), ramp_length)
 
         for i in range(n_check):
             aa = protein[i]
             codons = AA_TO_CODONS.get(aa, [])
-            next_states: Set[int] = set()
+            next_states: set[int] = set()
             for s in active_states:
                 for c in codons:
                     succ, is_forbidden = automaton.step_codon(s, c)
@@ -194,21 +191,26 @@ class TransferMatrixFeasibilityGuard:
                     "feasible": False,
                     "failed_at_codon": i + 1,
                     "topological_entropy": 0.0,
+                    "scope": "PREFIX_REACHABILITY_ONLY",
+                    "entropy_is_calibrated": False,
                 }
 
         h_top = math.log(max(1, len(active_states))) / float(max(1, n_check))
         return {
             "feasible": True,
             "failed_at_codon": None,
-            "topological_entropy": round(h_top, 4),
+            "topological_entropy": round(h_top, 4),  # deprecated alias, not spectral entropy
+            "log_reachable_state_count_per_codon": round(h_top, 4),
+            "scope": "PREFIX_REACHABILITY_ONLY",
+            "entropy_is_calibrated": False,
             "surviving_states_at_ramp": len(active_states),
         }
 
 
 class DPV240Optimizer:
-    """DP v2.4.0 Optimizer: Tropical Max-Plus Core, TASEP Collision Smoothing, and Wasserstein Cadence."""
+    """Experimental max-plus DP; optional positional ramp, diagnostic-only trajectory proxies."""
 
-    DEFAULT_CLASS_PARAMS: Dict[str, Dict[str, Any]] = {
+    DEFAULT_CLASS_PARAMS: ClassVar[dict[str, dict[str, Any]]] = {
         "SP": {"weight": 2.0, "target_tau": 0.35, "description": "Signal peptide cleavage site"},
         "SS": {"weight": 2.0, "target_tau": 0.45, "description": "Disulfide loop chaperone pause"},
         "TM": {"weight": 3.0, "target_tau": 0.25, "description": "Transmembrane domain entry/exit"},
@@ -219,8 +221,8 @@ class DPV240Optimizer:
 
     def __init__(
         self,
-        forbidden_enzymes: Optional[Iterable[str]] = ("BsaI", "BsmBI", "NotI"),
-        forbidden_motifs: Optional[Iterable[str]] = None,
+        forbidden_enzymes: Iterable[str] | None = ("BsaI", "BsmBI", "NotI"),
+        forbidden_motifs: Iterable[str] | None = None,
         include_reverse_complement: bool = True,
         ramp_length_codons: int = 15,
         alpha_harmonization: float = 1.0,
@@ -233,17 +235,26 @@ class DPV240Optimizer:
         initiation_gc_min: float = 0.20,
         initiation_gc_max: float = 0.30,
         nominal_ramp_gc: float = 0.25,
-        pause_positions: Optional[Iterable[int]] = None,
+        pause_positions: Iterable[int] | None = None,
         pause_target_adaptiveness: float = 0.45,
         pause_penalty_weight: float = 0.0,
         auto_annotate_pauses: bool = False,
-        pause_classes: Optional[Dict[str, Dict[str, Any]]] = None,
-        structure_reference: Optional[str] = None,
+        pause_classes: dict[str, dict[str, Any]] | None = None,
+        structure_reference: str | None = None,
         enable_tasep_smoothing: bool = False,
         tasep_smoothing_window: int = 3,
         lambda_tasep_shock: float = 0.0,
         lambda_ot_cadence: float = 0.0,
     ) -> None:
+        for value in (lambda_tasep_shock, lambda_ot_cadence):
+            if type(value) not in (int, float) or not math.isfinite(value) or value != 0:
+                raise ValueError(
+                    "Nonzero or invalid shock/transport objective weights are unsupported"
+                )
+        if type(enable_tasep_smoothing) is not bool:
+            raise TypeError("enable_tasep_smoothing must be bool")
+        if type(tasep_smoothing_window) is not int or tasep_smoothing_window < 1:
+            raise ValueError("tasep_smoothing_window must be a positive integer")
         if forbidden_motifs is not None:
             motifs = list(forbidden_motifs)
         else:
@@ -279,7 +290,7 @@ class DPV240Optimizer:
         self.lambda_ot_cadence = lambda_ot_cadence
 
         # Multi-Class Structural Pause Conditioning
-        self.configured_classes: Dict[str, Dict[str, Any]] = {}
+        self.configured_classes: dict[str, dict[str, Any]] = {}
         for cls_name, defaults in self.DEFAULT_CLASS_PARAMS.items():
             self.configured_classes[cls_name] = {
                 "positions": set(),
@@ -315,11 +326,9 @@ class DPV240Optimizer:
         if not 0.0 <= self.initiation_gc_min <= self.initiation_gc_max <= 1.0:
             raise ValueError("initiation GC bounds must satisfy 0 <= min <= max <= 1")
 
-    def _resolve_active_pause_map(
-        self, protein: str
-    ) -> Dict[int, List[Tuple[str, float, float]]]:
+    def _resolve_active_pause_map(self, protein: str) -> dict[int, list[tuple[str, float, float]]]:
         """Resolves active pause map, applying TASEP upstream collision smoothing if enabled."""
-        active_map: Dict[int, List[Tuple[str, float, float]]] = {}
+        active_map: dict[int, list[tuple[str, float, float]]] = {}
 
         # 1. Base configured classes
         for c_name, c_data in self.configured_classes.items():
@@ -334,7 +343,8 @@ class DPV240Optimizer:
             detected = StructuralPauseAnnotator.annotate(protein)
             for c_name, positions in detected.items():
                 defaults = self.configured_classes.get(
-                    c_name, self.DEFAULT_CLASS_PARAMS.get(c_name, {"weight": 2.0, "target_tau": 0.45})
+                    c_name,
+                    self.DEFAULT_CLASS_PARAMS.get(c_name, {"weight": 2.0, "target_tau": 0.45}),
                 )
                 w = defaults["weight"]
                 tau = defaults["target_tau"]
@@ -354,8 +364,8 @@ class DPV240Optimizer:
         self,
         position_idx: int,
         codon: str,
-        codon_weights: Dict[str, float],
-        active_pause_map: Dict[int, List[Tuple[str, float, float]]],
+        codon_weights: dict[str, float],
+        active_pause_map: dict[int, list[tuple[str, float, float]]],
     ) -> float:
         """Computes position-dependent structural log-fitness score w_struct(i, c)."""
         w = codon_weights.get(codon, 1e-4)
@@ -388,17 +398,17 @@ class DPV240Optimizer:
     def optimize(
         self,
         protein_sequence: str,
-        codon_weights: Dict[str, float],
+        codon_weights: dict[str, float],
         target_gc_min: float = 0.40,
         target_gc_max: float = 0.47,
         upstream_context: str = "",
         stop_codon: str = "TAA",
         downstream_context: str = "",
         allow_nearest_infeasible: bool = False,
-        left_flank: Optional[str] = None,
-        right_flank: Optional[str] = None,
-    ) -> Dict[str, Any]:
-        """Executes exact DP optimization using Tropical Semiring formulation and TASEP kinetic guards."""
+        left_flank: str | None = None,
+        right_flank: str | None = None,
+    ) -> dict[str, Any]:
+        """Optimizes the implemented finite-state score; diagnostic proxies do not alter it."""
         up_ctx = left_flank if left_flank is not None else upstream_context
         down_ctx = right_flank if right_flank is not None else downstream_context
 
@@ -426,7 +436,11 @@ class DPV240Optimizer:
         up_ctx_clean = "".join(up_ctx.upper().split())
         down_ctx_clean = "".join(down_ctx.upper().split())
         stop_clean = "".join(stop_codon.upper().split())
-        for seq, label in [(up_ctx_clean, "upstream"), (down_ctx_clean, "downstream"), (stop_clean, "stop")]:
+        for seq, label in [
+            (up_ctx_clean, "upstream"),
+            (down_ctx_clean, "downstream"),
+            (stop_clean, "stop"),
+        ]:
             if any(b not in "ACGT" for b in seq):
                 raise ValueError(f"Invalid character in {label} context: '{seq}'")
 
@@ -442,39 +456,40 @@ class DPV240Optimizer:
         syn_min_possible_gc = [0] * (n_codons + 1)
         syn_max_possible_gc = [0] * (n_codons + 1)
         for i, aa in enumerate(clean_protein):
-            possible_gcs = [
-                sum(1 for b in c if b in "GC") for c in AA_TO_CODONS[aa]
-            ]
+            possible_gcs = [sum(1 for b in c if b in "GC") for c in AA_TO_CODONS[aa]]
             syn_min_possible_gc[i + 1] = syn_min_possible_gc[i] + min(possible_gcs)
             syn_max_possible_gc[i + 1] = syn_max_possible_gc[i] + max(possible_gcs)
 
         total_min_possible_gc = syn_min_possible_gc[n_codons]
         total_max_possible_gc = syn_max_possible_gc[n_codons]
 
-        if max_gc_count < total_min_possible_gc or min_gc_count > total_max_possible_gc:
-            if not allow_nearest_infeasible:
-                raise UnsatisfiableDesignError(
-                    f"DP v2.4.0: Target GC band [{gc_min_frac * 100:.1f}%, {gc_max_frac * 100:.1f}%] "
-                    f"is physically unreachable. Synonymous achievable range: "
-                    f"[{total_min_possible_gc / total_nt * 100:.1f}%, {total_max_possible_gc / total_nt * 100:.1f}%]."
-                )
+        if (
+            max_gc_count < total_min_possible_gc or min_gc_count > total_max_possible_gc
+        ) and not allow_nearest_infeasible:
+            raise UnsatisfiableDesignError(
+                f"DP v2.4.0: Target GC band [{gc_min_frac * 100:.1f}%, {gc_max_frac * 100:.1f}%] "
+                f"is physically unreachable. Synonymous achievable range: "
+                f"[{total_min_possible_gc / total_nt * 100:.1f}%, {total_max_possible_gc / total_nt * 100:.1f}%]."
+            )
 
         # 5' Initiation Ramp GC Constraints at codon i = K = ramp_length_codons
         ramp_k = min(self.ramp_length_codons, n_codons)
         ramp_nt = ramp_k * 3
         apply_initiation_gc_guard = n_codons >= self.ramp_length_codons
-        nom_init_min = int(math.ceil(self.initiation_gc_min * ramp_nt))
-        nom_init_max = int(math.floor(self.initiation_gc_max * ramp_nt))
+        nom_init_min = math.ceil(self.initiation_gc_min * ramp_nt)
+        nom_init_max = math.floor(self.initiation_gc_max * ramp_nt)
         if nom_init_min > nom_init_max:
-            mid_init = int(round(self.nominal_ramp_gc * ramp_nt))
+            mid_init = round(self.nominal_ramp_gc * ramp_nt)
             nom_init_min = mid_init
             nom_init_max = mid_init
 
         ramp_min_possible_gc = sum(
-            min(c.count("G") + c.count("C") for c in AA_TO_CODONS[aa]) for aa in clean_protein[:ramp_k]
+            min(c.count("G") + c.count("C") for c in AA_TO_CODONS[aa])
+            for aa in clean_protein[:ramp_k]
         )
         ramp_max_possible_gc = sum(
-            max(c.count("G") + c.count("C") for c in AA_TO_CODONS[aa]) for aa in clean_protein[:ramp_k]
+            max(c.count("G") + c.count("C") for c in AA_TO_CODONS[aa])
+            for aa in clean_protein[:ramp_k]
         )
 
         init_min_gc_count = max(nom_init_min, ramp_min_possible_gc)
@@ -509,18 +524,18 @@ class DPV240Optimizer:
                 )
 
         # Dynamic Programming Layers using Tropical Semiring
-        dp_layers: List[
-            Dict[Tuple[int, int], Tuple[float, Optional[str], Optional[int], Optional[int], int]]
+        dp_layers: list[
+            dict[tuple[int, int], tuple[float, str | None, int | None, int | None, int]]
         ] = []
         dp_layers.append({(0, start_state): (TropicalSemiring.ONE, None, None, None, 0)})
 
         for i, aa in enumerate(clean_protein):
             current_layer = dp_layers[-1]
-            next_layer: Dict[
-                Tuple[int, int], Tuple[float, Optional[str], Optional[int], Optional[int], int]
+            next_layer: dict[
+                tuple[int, int], tuple[float, str | None, int | None, int | None, int]
             ] = {}
             synonymous_codons = AA_TO_CODONS[aa]
-            is_ramp_boundary = (i == ramp_k - 1)
+            is_ramp_boundary = i == ramp_k - 1
 
             for (g, s), (score, _, _, _, prev_path_rank) in current_layer.items():
                 for codon in synonymous_codons:
@@ -546,8 +561,8 @@ class DPV240Optimizer:
                         (
                             existing_score,
                             existing_codon,
-                            existing_prev_g,
-                            existing_prev_s,
+                            _existing_prev_g,
+                            _existing_prev_s,
                             existing_prev_rank,
                         ) = next_layer[state_key]
                         if next_score > existing_score + 1e-12:
@@ -579,7 +594,7 @@ class DPV240Optimizer:
                         0
                         if init_min_gc_count <= k_st[0] <= init_max_gc_count
                         else min(abs(k_st[0] - init_min_gc_count), abs(k_st[0] - init_max_gc_count))
-                        for k_st in next_layer.keys()
+                        for k_st in next_layer
                     )
                     next_layer = {
                         k_st: v
@@ -602,8 +617,8 @@ class DPV240Optimizer:
                 next_layer.keys(), key=lambda k_st: (next_layer[k_st][4], next_layer[k_st][1])
             )
             rank_map = {st: idx for idx, st in enumerate(sorted_states)}
-            compacted_layer: Dict[
-                Tuple[int, int], Tuple[float, Optional[str], Optional[int], Optional[int], int]
+            compacted_layer: dict[
+                tuple[int, int], tuple[float, str | None, int | None, int | None, int]
             ] = {}
             for st, (sc, cd, pg, ps, pr) in next_layer.items():
                 compacted_layer[st] = (sc, cd, pg, ps, rank_map[st])
@@ -614,8 +629,8 @@ class DPV240Optimizer:
         s_tail = (stop_clean + down_ctx_clean).upper()
 
         # Filter states compatible with full construct tail
-        valid_final_states: List[
-            Tuple[Tuple[int, int], Tuple[float, Optional[str], Optional[int], Optional[int], int]]
+        valid_final_states: list[
+            tuple[tuple[int, int], tuple[float, str | None, int | None, int | None, int]]
         ] = []
         for (g, s), val in final_layer.items():
             curr = s
@@ -669,7 +684,7 @@ class DPV240Optimizer:
         best_state, (best_score, _, _, _, _) = best_item
 
         # Traceback to reconstruct optimal CDS
-        chosen_codons: List[str] = []
+        chosen_codons: list[str] = []
         curr_g, curr_s = best_state
 
         for layer_idx in range(n_codons, 0, -1):
@@ -746,22 +761,24 @@ class DPV240Optimizer:
         )
 
         # Summary of structural pause classes
-        pause_report: List[Dict[str, Any]] = []
+        pause_report: list[dict[str, Any]] = []
         for pos in sorted(active_pause_map.keys()):
             c_idx = pos - 1
             if c_idx < len(chosen_codons):
                 cd = chosen_codons[c_idx]
                 cd_w = codon_weights.get(cd, 0.5)
                 for c_name, w, tau in active_pause_map[pos]:
-                    pause_report.append({
-                        "position": pos,
-                        "class": c_name,
-                        "chosen_codon": cd,
-                        "codon_weight": round(cd_w, 4),
-                        "target_tau": tau,
-                        "penalty_weight": w,
-                        "deviation": round(abs(cd_w - tau), 4),
-                    })
+                    pause_report.append(
+                        {
+                            "position": pos,
+                            "class": c_name,
+                            "chosen_codon": cd,
+                            "codon_weight": round(cd_w, 4),
+                            "target_tau": tau,
+                            "penalty_weight": w,
+                            "deviation": round(abs(cd_w - tau), 4),
+                        }
+                    )
 
         class_counts = {}
         for item in pause_report:
@@ -811,6 +828,11 @@ class DPV240Optimizer:
                 "details": pause_report,
             },
             "kinetics_and_transport": {
+                "scope": "POSTHOC_WEIGHT_PROXIES_NOT_BIOPHYSICAL_VALIDATION",
+                "cadence_metric": "MEAN_ABSOLUTE_CUMULATIVE_RECIPROCAL_WEIGHT_DIFFERENCE",
+                "is_normalized_wasserstein": False,
+                "evidence_tier": "UNVERIFIED_PUBLIC_CORPUS",
+                "biological_validation": "NOT_AVAILABLE",
                 "tasep": tasep_kinetics,
                 "wasserstein_1d_cadence_distance": wasserstein_ot_distance,
                 "transfer_matrix_feasibility": feasibility_check,
@@ -822,20 +844,20 @@ class DPV240Optimizer:
 class DPV240EngineAdapter:
     """FactorForge Profile Engine adapter for DPV240Optimizer."""
 
-    def __init__(self, optimizer: Optional[DPV240Optimizer] = None) -> None:
+    def __init__(self, optimizer: DPV240Optimizer | None = None) -> None:
         self.optimizer = optimizer or DPV240Optimizer()
 
     def optimize_cds(
         self,
         protein_sequence: str,
-        codon_weights: Dict[str, float],
+        codon_weights: dict[str, float],
         target_gc_min: float = 0.40,
         target_gc_max: float = 0.47,
         upstream_context: str = "",
         stop_codon: str = "TAA",
         downstream_context: str = "",
         allow_nearest_infeasible: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return self.optimizer.optimize(
             protein_sequence=protein_sequence,
             codon_weights=codon_weights,
