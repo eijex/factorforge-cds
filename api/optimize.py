@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.5.10
+Product Version: 3.5.11
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -248,7 +248,7 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": product_version() if FACTORFORGE_AVAILABLE else "3.5.10",
+    "product": product_version() if FACTORFORGE_AVAILABLE else "3.5.11",
     "rule_engine": engine_version("profile") if FACTORFORGE_AVAILABLE else "1.0.0",
     "dp_engine": engine_version("dp") if FACTORFORGE_AVAILABLE else "2.0.1",
     "dp_v2_1_engine": (engine_version("dp_v2_1") if FACTORFORGE_AVAILABLE else "2.1.0-dev"),
@@ -838,7 +838,7 @@ class handler(BaseHTTPRequestHandler):
         health_info = {
             "status": "healthy",
             "service": "FactorForge API",
-            "web_deployment_revision": "v3.5.10-2026-10-24",
+            "web_deployment_revision": "v3.5.11-2026-10-25",
             "version": ENGINE_VERSIONS["product"],
             "factorforge_available": FACTORFORGE_AVAILABLE,
             "endpoints": {
@@ -882,7 +882,7 @@ class handler(BaseHTTPRequestHandler):
                 if FACTORFORGE_AVAILABLE
                 else {
                     "product": {
-                        "version": "3.5.10",
+                        "version": "3.5.11",
                         "release_status": "web_deployed_package_pending",
                     }
                 }
