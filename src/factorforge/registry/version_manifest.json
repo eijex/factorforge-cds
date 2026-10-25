@@ -2,9 +2,9 @@
   "schema_version": "1.0",
   "product": {
     "name": "FactorForge",
-    "version": "3.5.10",
+    "version": "3.5.11",
     "release_status": "released",
-    "previous_stable_version": "3.5.8"
+    "previous_stable_version": "3.5.10"
   },
   "engines": {
     "profile": {

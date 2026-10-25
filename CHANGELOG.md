@@ -5,6 +5,19 @@
 - Correct public web processing/history and experimental-engine descriptions; distinguish collaboration enquiries from permission for research retention/reuse.
 - Make HPX offline Chromium regression portable and check page errors, exact selection and mature-coordinate mapping. These checks cover the tested browser configuration, not universal certification.
 
+## 3.5.11 — 2026-10-25 (DP v2.4.0 Tropical Transport & TASEP Kinetic Engine Release)
+
+- **DP v2.4.0 Engine Integration**:
+  - Implemented `DPV240Optimizer` extending the unified dynamic programming trellis with Tropical Max-Plus semiring matrix representation:
+    $\mathbf{V}_i(s') = \bigoplus_{s \in S_{i-1}} (\mathbf{V}_{i-1}(s) \otimes \mathbf{A}_i(s, s'))$.
+  - Introduced TASEP-inspired upstream positional buffer smoothing ($W_{\text{tasep}} = 3$ codons, 9 nt) preceding annotated pauses to prevent artificial step-function deceleration shocks.
+  - Implemented 1D reciprocal-weight Wasserstein cadence distance ($W_1$) quantifying cumulative translational transit delay discrepancies between synonymous designs.
+- **Strict Backward Invariance & Bit-Identity**:
+  - Verified 100% bit-identical zero-parity invariant with 1DP and 3DP baselines when `enable_tasep_smoothing=False` across all test fixtures.
+  - Full backward compatibility across 1DP, 3DP, 4DP, and stem cell optimization pipelines (67/67 tests passing).
+- **Paper 5 Alignment**: Synchronized PRISM Paper 5 master manuscript to v0.9.6 documenting mathematical semiring proofs and kinetic buffer formalization.
+- **Epistemic Classification**: Computational modeling proxy; UNVERIFIED_PUBLIC_CORPUS; Biological validation: NOT_AVAILABLE.
+
 ## 3.5.10 — 2026-10-24 (4DP Space-Time Exit-Tunnel DP, Equivalence-Preserving Local Codon Rewriter & GCP Training Telemetry; Git tag and PyPI publication confirmed2026-10-24)
 
 - Experimental 4DP scoring applies a configurable positional offset (currently +35 aa) to selected pause windows. This is a modeling assumption, not calibrated translation kinetics or demonstrated folding/yield improvement.
