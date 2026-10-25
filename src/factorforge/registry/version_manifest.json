@@ -79,6 +79,15 @@
       "default_enabled": false,
       "description": "Multi-class membrane pause and Nature problem engine with automated domain annotation (SP, Cys, TM, Glyc, Hinge) and 4DP shifted exit-tunnel window (+35 aa modeling assumption) support"
     },
+    "dp_v2_4": {
+      "display_name": "DP v2.4",
+      "generation": 2,
+      "version": "2.4.0",
+      "status": "research_candidate",
+      "availability": "local_python",
+      "default_enabled": false,
+      "description": "Tropical max-plus semiring formulation with TASEP ribosome collision smoothing, 1D Wasserstein cadence metric, and transfer matrix feasibility guard"
+    },
     "local_rewriter": {
       "display_name": "ConstrainedLocalRewriter",
       "generation": 2,

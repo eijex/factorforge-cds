@@ -20,6 +20,13 @@ def _load_dp_v2_3():
     return DPV230EngineAdapter
 
 
+def _load_dp_v2_4():
+    """Load DP v2.4.0 engine when requested."""
+    from .dp_v2_4 import DPV240EngineAdapter
+
+    return DPV240EngineAdapter
+
+
 def register_builtin_engines() -> None:
     """Register bundled engines."""
     from .profile.optimizer import RuleBasedOptimizer
@@ -35,6 +42,12 @@ def register_builtin_engines() -> None:
         "dp_v2_3",
         _load_dp_v2_3,
         metadata={**engine_metadata("dp_v2_3"), "stable": False},
+    )
+
+    EngineRegistry.register_lazy(
+        "dp_v2_4",
+        _load_dp_v2_4,
+        metadata={**engine_metadata("dp_v2_4"), "stable": False},
     )
 
     EngineRegistry.register(
