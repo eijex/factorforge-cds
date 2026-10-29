@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Official Bioconda Distribution**:
+  - `factorforge-cds` is now officially available on Bioconda: `conda install -c bioconda factorforge-cds` or `mamba install -c bioconda factorforge-cds`.
+  - Upstream recipe merged into `bioconda/bioconda-recipes` (PR #65834, approved by Björn Grüning).
+  - Package index: https://anaconda.org/bioconda/factorforge-cds
 - Correct public web processing/history and experimental-engine descriptions; distinguish collaboration enquiries from permission for research retention/reuse.
 - Make HPX offline Chromium regression portable and check page errors, exact selection and mature-coordinate mapping. These checks cover the tested browser configuration, not universal certification.
 

@@ -5,6 +5,7 @@
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyPI](https://img.shields.io/pypi/v/factorforge-cds.svg)](https://pypi.org/project/factorforge-cds/)
+[![Bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](https://anaconda.org/bioconda/factorforge-cds)
 [![CI](https://github.com/eijex/factorforge-cds/actions/workflows/ci.yml/badge.svg)](https://github.com/eijex/factorforge-cds/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/eijex/factorforge-cds/branch/main/graph/badge.svg)](https://codecov.io/gh/eijex/factorforge-cds)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20407330.svg)](https://doi.org/10.5281/zenodo.20407330)
@@ -31,7 +32,15 @@ FactorForge v3.5.11 uses independently versioned engines:
 ## Quick Start
 
 ```bash
+# Recommended for Bioinformatics: Conda / Mamba
+conda install -c bioconda factorforge-cds
+# or
+mamba install -c bioconda factorforge-cds
+
+# Via PyPI
 pip install factorforge-cds
+
+# Run optimization
 factorforge optimize my_protein.fasta -o output.fasta
 ```
 
@@ -43,6 +52,7 @@ Or use the **[web app](https://factorforge.eijex.com)** — no installation requ
 
 | Method | Description | Link |
 |--------|-------------|------|
+| **Bioconda** | Conda/Mamba package for bioinformatics workflows | `conda install -c bioconda factorforge-cds` |
 | **Web App** | No installation, demo & light use | [factorforge.eijex.com](https://factorforge.eijex.com) |
 | **CLI / Python** | Local use, batch processing, data privacy | `pip install factorforge-cds` |
 | **Docker** | Full web interface locally | `docker pull ghcr.io/eijex/factorforge-cds:latest` |
