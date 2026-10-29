@@ -6,6 +6,16 @@
 
 ## Installation
 
+### Via Bioconda (Recommended for Bioinformatics)
+
+```bash
+conda install -c bioconda factorforge-cds
+# or
+mamba install -c bioconda factorforge-cds
+```
+
+### Via PyPI
+
 ```bash
 pip install factorforge-cds
 ```
