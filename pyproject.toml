@@ -45,6 +45,16 @@ ml = [
     "torch>=2.0",
     "onnxruntime>=1.16",
 ]
+acceleration = [
+    "pyahocorasick>=2.3.1",
+]
+benchmark = [
+    "dnachisel>=3.2.16",
+    "scipy>=1.17",
+]
+ml-structure = [
+    "fair-esm>=2.0.0",
+]
 
 [project.urls]
 Homepage = "https://factorforge.eijex.com"

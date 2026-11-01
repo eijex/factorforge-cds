@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Bind DP/3DP/4DP validation fixtures to public source snapshots; correct the ubiquitin Pfam boundary and distinguish CATH domain ends from hemopexin repeat ends. Extend short-instance exhaustive comparison and retain explicit unexecuted-invariant states.
+
 - **Official Bioconda Distribution**:
   - `factorforge-cds` is now officially available on Bioconda: `conda install -c bioconda factorforge-cds` or `mamba install -c bioconda factorforge-cds`.
   - Upstream recipe merged into `bioconda/bioconda-recipes` (PR #65834, approved by Björn Grüning).

@@ -132,3 +132,19 @@ Submission channels:
 - See [VALIDATION.md](https://github.com/eijex/factorforge-cds/blob/main/VALIDATION.md) for the current public validation log.
 
 All public entries require manual review before publication.
+
+
+## Matched DP / 3DP / 4DP research comparison
+
+The comparison utility uses identical sequence constraints and reports three-candidate
+self-preference separately from exhaustive agreement on tested short instances.
+Domain ends are source-specific annotations, not experimentally established optimal
+pause sites. The public fixtures bind their sequences and selected coordinates to
+content hashes of dated UniProt/RCSB/InterPro/PDBe responses. Ubiquitin uses the
+Pfam PF00240 span3–74 of the first UBC monomer; the light-chain junction uses CATH
+4nylL01 end107. Hemopexin uses mapped UniProt **repeat** ends; these are not claims
+about independent folding-domain boundaries. Source annotations can differ.
+
+These checks do not establish expression, folding or yield improvement. Timing and
+Python-traced memory apply to the measured configuration; skipped invariants remain
+NOT_RUN rather than passing.

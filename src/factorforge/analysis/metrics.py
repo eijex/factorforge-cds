@@ -408,18 +408,45 @@ def detect_repeats(sequence: str) -> list[dict[str, Any]]:
 
 
 def detect_forbidden_motifs(sequence: str, motifs: list[str]) -> list[dict[str, Any]]:
-    """Find all exact forbidden motif occurrences."""
+    """Find all exact forbidden motif occurrences.
+
+    Uses pyahocorasick C-automaton when available for O(N + M) single-pass scanning;
+    falls back transparently to pure Python string searching if unavailable.
+    """
     seq = _normalize_dna(sequence)
-    findings: list[dict[str, Any]] = []
-    for motif in motifs:
-        normalized = _normalize_dna(motif)
-        if not normalized:
-            continue
-        start = seq.find(normalized)
-        while start != -1:
-            findings.append({"start": start, "end": start + len(normalized), "motif": normalized})
-            start = seq.find(normalized, start + 1)
-    return findings
+    if not seq or not motifs:
+        return []
+
+    try:
+        import ahocorasick
+
+        A = ahocorasick.Automaton()
+        has_motif = False
+        for m in motifs:
+            norm = _normalize_dna(m)
+            if norm:
+                A.add_word(norm, norm)
+                has_motif = True
+        if not has_motif:
+            return []
+        A.make_automaton()
+
+        findings: list[dict[str, Any]] = []
+        for end_idx, norm in A.iter(seq):
+            start = end_idx - len(norm) + 1
+            findings.append({"start": start, "end": end_idx + 1, "motif": norm})
+        return sorted(findings, key=lambda x: (x["start"], x["end"]))
+    except ImportError:
+        findings = []
+        for motif in motifs:
+            normalized = _normalize_dna(motif)
+            if not normalized:
+                continue
+            start = seq.find(normalized)
+            while start != -1:
+                findings.append({"start": start, "end": start + len(normalized), "motif": normalized})
+                start = seq.find(normalized, start + 1)
+        return findings
 
 
 def detect_invalid_codons(sequence: str) -> list[dict[str, Any]]:
