@@ -998,8 +998,10 @@ def audit(sequence_fasta, reference_codon_profile, exclude_region, output):
 
 
 from factorforge.nbfold.cli import nbfold_cli
+from factorforge.cli.structure_cli import structure_cli
 
 cli.add_command(nbfold_cli)
+cli.add_command(structure_cli)
 
 
 if __name__ == "__main__":

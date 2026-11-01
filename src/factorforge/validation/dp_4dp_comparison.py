@@ -56,6 +56,7 @@ from factorforge.engines.local_rewriter import (
     verify_small_instance_ground_truth,
 )
 from factorforge.engines.profile.scoring import compute_5p_mfe_evidence
+from factorforge.utils.exceptions import UnsatisfiableDesignError
 
 
 def _split_codons(dna: str) -> list[str]:
@@ -293,7 +294,7 @@ def run_matched_dp_comparison(
     if not protein:
         raise ValueError("protein_sequence must not be empty")
     n_codons = len(protein)
-    boundary_list = sorted(set(int(b) for b in boundaries))
+    boundary_list = sorted({int(b) for b in boundaries})
 
     weights = (
         codon_weights if codon_weights is not None else load_codon_usage_table().codon_weights
@@ -491,11 +492,18 @@ def verify_small_instance_exhaustive_dp_4dp(
     target_tau: float = 0.45,
     target_gc_min: float = 0.35,
     target_gc_max: float = 0.55,
+    ramp_length_codons: int = 3,
+    homopolymer_max_run: int = 5,
+    forbidden_enzymes: set[str] | None = None,
+    forbidden_motifs: Iterable[str] | None = None,
+    upstream_context: str = "",
+    stop_codon: str = "TAA",
+    downstream_context: str = "",
 ) -> dict[str, Any]:
     """Exhaustively enumerates all synonymous sequences on a short instance (N <= 8) for 1DP, 3DP, and 4DP.
 
-    Provides an exact ground-truth check that DPV230Optimizer's state transitions, score accumulation,
-    and tie-breaking achieve the true global maximum over the entire feasible set for all three modes.
+    Provides an exact ground-truth check on the tested instance that DPV230Optimizer's state transitions,
+    score accumulation, tie-breaking, and unsatisfiable constraint rejection match brute-force enumeration.
     """
     protein = "".join(protein_sequence.upper().split()).rstrip("*")
     n_codons = len(protein)
@@ -505,7 +513,7 @@ def verify_small_instance_exhaustive_dp_4dp(
     weights = (
         codon_weights if codon_weights is not None else load_codon_usage_table().codon_weights
     )
-    boundary_list = sorted(set(int(b) for b in boundaries))
+    boundary_list = sorted({int(b) for b in boundaries})
 
     pause_3dp = build_4dp_pause_classes(
         boundaries=boundary_list,
@@ -526,14 +534,18 @@ def verify_small_instance_exhaustive_dp_4dp(
         class_name="SHIFTED_4DP",
     )
 
+    shared_opt_kwargs: dict[str, Any] = {
+        "ramp_length_codons": ramp_length_codons,
+        "homopolymer_max_run": homopolymer_max_run,
+        "forbidden_enzymes": forbidden_enzymes,
+        "forbidden_motifs": forbidden_motifs,
+        "auto_annotate_pauses": False,
+    }
+
     opts = {
-        "1dp": DPV230Optimizer(pause_classes=None, ramp_length_codons=3, auto_annotate_pauses=False),
-        "3dp": DPV230Optimizer(
-            pause_classes=pause_3dp, ramp_length_codons=3, auto_annotate_pauses=False
-        ),
-        "4dp": DPV230Optimizer(
-            pause_classes=pause_4dp, ramp_length_codons=3, auto_annotate_pauses=False
-        ),
+        "1dp": DPV230Optimizer(pause_classes=None, **shared_opt_kwargs),
+        "3dp": DPV230Optimizer(pause_classes=pause_3dp, **shared_opt_kwargs),
+        "4dp": DPV230Optimizer(pause_classes=pause_4dp, **shared_opt_kwargs),
     }
 
     mode_ground_truth: dict[str, Any] = {}
@@ -544,6 +556,9 @@ def verify_small_instance_exhaustive_dp_4dp(
             dp_optimizer=opt,
             target_gc_min=target_gc_min,
             target_gc_max=target_gc_max,
+            upstream_context=upstream_context,
+            stop_codon=stop_codon,
+            downstream_context=downstream_context,
         )
         mode_ground_truth[mode_key] = gt
 
@@ -569,6 +584,300 @@ def verify_small_instance_exhaustive_dp_4dp(
     }
 
 
+def verify_small_instance_unsatisfiable_dp_4dp(
+    protein_sequence: str,
+    boundaries: Iterable[int],
+    codon_weights: dict[str, float] | None = None,
+    tunnel_length: int = 3,
+    half_width: int = 1,
+    weight: float = 2.5,
+    target_tau: float = 0.45,
+    target_gc_min: float = 0.40,
+    target_gc_max: float = 0.47,
+    ramp_length_codons: int = 3,
+    homopolymer_max_run: int = 5,
+    forbidden_enzymes: set[str] | None = None,
+    forbidden_motifs: Iterable[str] | None = None,
+    upstream_context: str = "",
+    stop_codon: str = "TAA",
+    downstream_context: str = "",
+) -> dict[str, Any]:
+    """Verifies on an infeasible short instance (N <= 8) that brute-force finds 0 feasible sequences and all DP modes raise UnsatisfiableDesignError."""
+    protein = "".join(protein_sequence.upper().split()).rstrip("*")
+    n_codons = len(protein)
+    if n_codons > 8:
+        raise ValueError("Exhaustive unsatisfiability check is restricted to N <= 8 codons.")
+
+    weights = (
+        codon_weights if codon_weights is not None else load_codon_usage_table().codon_weights
+    )
+    boundary_list = sorted({int(b) for b in boundaries})
+
+    pause_3dp = build_4dp_pause_classes(
+        boundaries=boundary_list,
+        tunnel_length=0,
+        half_width=half_width,
+        weight=weight,
+        target_tau=target_tau,
+        protein_length=n_codons,
+        class_name="STATIC_3DP",
+    )
+    pause_4dp = build_4dp_pause_classes(
+        boundaries=boundary_list,
+        tunnel_length=tunnel_length,
+        half_width=half_width,
+        weight=weight,
+        target_tau=target_tau,
+        protein_length=n_codons,
+        class_name="SHIFTED_4DP",
+    )
+
+    shared_opt_kwargs: dict[str, Any] = {
+        "ramp_length_codons": ramp_length_codons,
+        "homopolymer_max_run": homopolymer_max_run,
+        "forbidden_enzymes": forbidden_enzymes,
+        "forbidden_motifs": forbidden_motifs,
+        "auto_annotate_pauses": False,
+    }
+
+    opts = {
+        "1dp": DPV230Optimizer(pause_classes=None, **shared_opt_kwargs),
+        "3dp": DPV230Optimizer(pause_classes=pause_3dp, **shared_opt_kwargs),
+        "4dp": DPV230Optimizer(pause_classes=pause_4dp, **shared_opt_kwargs),
+    }
+
+    # Check brute-force enumeration raises UnsatisfiableDesignError
+    exhaustive_raised = False
+    try:
+        verify_small_instance_ground_truth(
+            protein_sequence=protein,
+            codon_weights=weights,
+            dp_optimizer=opts["1dp"],
+            target_gc_min=target_gc_min,
+            target_gc_max=target_gc_max,
+            upstream_context=upstream_context,
+            stop_codon=stop_codon,
+            downstream_context=downstream_context,
+        )
+    except UnsatisfiableDesignError:
+        exhaustive_raised = True
+
+    dp_modes_raised: dict[str, bool] = {}
+    for mode_key, opt in opts.items():
+        raised = False
+        try:
+            opt.optimize(
+                protein_sequence=protein,
+                codon_weights=weights,
+                target_gc_min=target_gc_min,
+                target_gc_max=target_gc_max,
+                upstream_context=upstream_context,
+                stop_codon=stop_codon,
+                downstream_context=downstream_context,
+                allow_nearest_infeasible=False,
+            )
+        except UnsatisfiableDesignError:
+            raised = True
+        dp_modes_raised[mode_key] = raised
+
+    all_consistent = exhaustive_raised and all(dp_modes_raised.values())
+    return {
+        "execution_status": "EXECUTED",
+        "protein_sequence": protein,
+        "protein_length_aa": n_codons,
+        "exhaustive_zero_feasible_confirmed": exhaustive_raised,
+        "dp_modes_raised_unsatisfiable": dp_modes_raised,
+        "unsatisfiable_rejection_consistent": all_consistent,
+    }
+
+
+def run_step1_exhaustive_verification_suite(
+    codon_weights: dict[str, float] | None = None,
+) -> dict[str, Any]:
+    """STEP 1 Suite: Exhaustively verifies 1DP, 3DP, and 4DP across diverse short inputs, overlapping windows, ties, and infeasible constraints."""
+    weights = (
+        codon_weights if codon_weights is not None else load_codon_usage_table().codon_weights
+    )
+    uniform_weights = {codon: 0.75 for codon in weights}
+
+    feasible_cases: list[dict[str, Any]] = [
+        {
+            "case_id": "disjoint_windows_8aa",
+            "description": "Disjoint 3DP [1..3] and 4DP [5..7] windows on 8-aa mixed sequence (4,608 synonymous candidates)",
+            "kwargs": {
+                "protein_sequence": "MVSKGEEL",
+                "boundaries": [2],
+                "codon_weights": weights,
+                "tunnel_length": 4,
+                "half_width": 1,
+                "weight": 2.5,
+                "target_tau": 0.45,
+                "target_gc_min": 0.35,
+                "target_gc_max": 0.55,
+            },
+        },
+        {
+            "case_id": "overlapping_dual_boundaries_8aa",
+            "description": "Overlapping dual boundaries b=[2, 3] with delta=1 => merged 3DP [1..4] and merged 4DP [4..7] on 8-aa sequence",
+            "kwargs": {
+                "protein_sequence": "MKLSTVAG",
+                "boundaries": [2, 3],
+                "codon_weights": weights,
+                "tunnel_length": 3,
+                "half_width": 1,
+                "weight": 3.0,
+                "target_tau": 0.40,
+                "target_gc_min": 0.35,
+                "target_gc_max": 0.60,
+            },
+        },
+        {
+            "case_id": "high_degeneracy_6box_7aa",
+            "description": "High-degeneracy 6-box (L, R, S) + 4-box (P, V) sequence (candidate count is enumerated in the result)",
+            "kwargs": {
+                "protein_sequence": "MLRSPVG",
+                "boundaries": [2],
+                "codon_weights": weights,
+                "tunnel_length": 3,
+                "half_width": 1,
+                "weight": 2.5,
+                "target_tau": 0.45,
+                "target_gc_min": 0.40,
+                "target_gc_max": 0.65,
+            },
+        },
+        {
+            "case_id": "exact_score_tie_breaking_7aa",
+            "description": "Uniform codon weights (all w=0.75) inducing massive exact score ties resolved by GC-midpoint distance and LexRank",
+            "kwargs": {
+                "protein_sequence": "MVSKGEE",
+                "boundaries": [2],
+                "codon_weights": uniform_weights,
+                "tunnel_length": 3,
+                "half_width": 1,
+                "weight": 2.0,
+                "target_tau": 0.75,
+                "target_gc_min": 0.35,
+                "target_gc_max": 0.55,
+            },
+        },
+        {
+            "case_id": "flanking_context_and_motif_avoidance_7aa",
+            "description": "Upstream/downstream flanking contexts with forbidden motif avoidance and C-terminal partial window clipping",
+            "kwargs": {
+                "protein_sequence": "MGSKELV",
+                "boundaries": [4],
+                "codon_weights": weights,
+                "tunnel_length": 3,
+                "half_width": 1,
+                "weight": 2.5,
+                "target_tau": 0.45,
+                "target_gc_min": 0.35,
+                "target_gc_max": 0.60,
+                "upstream_context": "CACC",
+                "stop_codon": "TAA",
+                "downstream_context": "GCTT",
+                "forbidden_motifs": ["GGATCC", "GAATTC"],
+            },
+        },
+    ]
+
+    infeasible_cases: list[dict[str, Any]] = [
+        {
+            "case_id": "impossible_high_gc_band_on_at_rich_aa",
+            "description": "AT-locked amino acids (M-I-F-Y-N-K) cannot reach [80%, 95%] GC band",
+            "kwargs": {
+                "protein_sequence": "MIFYNK",
+                "boundaries": [2],
+                "codon_weights": weights,
+                "tunnel_length": 2,
+                "half_width": 1,
+                "target_gc_min": 0.80,
+                "target_gc_max": 0.95,
+            },
+        },
+        {
+            "case_id": "impossible_homopolymer_on_poly_phe",
+            "description": "MFFFF with homopolymer_max_run=2 and forbidden TTC motif leaves 0 valid paths",
+            "kwargs": {
+                "protein_sequence": "MFFFF",
+                "boundaries": [2],
+                "codon_weights": weights,
+                "tunnel_length": 2,
+                "half_width": 1,
+                "target_gc_min": 0.10,
+                "target_gc_max": 0.90,
+                "homopolymer_max_run": 2,
+                "forbidden_motifs": ["TTC"],
+            },
+        },
+        {
+            "case_id": "impossible_stop_downstream_junction_motif",
+            "description": "Stop codon TAA + downstream AAAA triggers homopolymer >= 6 nt violation on every candidate",
+            "kwargs": {
+                "protein_sequence": "MVSKGE",
+                "boundaries": [2],
+                "codon_weights": weights,
+                "tunnel_length": 2,
+                "half_width": 1,
+                "target_gc_min": 0.30,
+                "target_gc_max": 0.60,
+                "stop_codon": "TAA",
+                "downstream_context": "AAAA",
+                "homopolymer_max_run": 5,
+            },
+        },
+    ]
+
+    feasible_results: list[dict[str, Any]] = []
+    for item in feasible_cases:
+        res = verify_small_instance_exhaustive_dp_4dp(**item["kwargs"])
+        feasible_results.append(
+            {
+                "case_id": item["case_id"],
+                "description": item["description"],
+                "result": res,
+            }
+        )
+
+    infeasible_results: list[dict[str, Any]] = []
+    for item in infeasible_cases:
+        res = verify_small_instance_unsatisfiable_dp_4dp(**item["kwargs"])
+        infeasible_results.append(
+            {
+                "case_id": item["case_id"],
+                "description": item["description"],
+                "result": res,
+            }
+        )
+
+    all_feasible_exact = all(
+        r["result"]["all_modes_match_exhaustive_global_optimum_score"]
+        and r["result"]["all_modes_match_exhaustive_global_optimum_sequence"]
+        for r in feasible_results
+    )
+    all_infeasible_exact = all(
+        r["result"]["unsatisfiable_rejection_consistent"] for r in infeasible_results
+    )
+
+    return {
+        "step": "STEP_1_EXHAUSTIVE_VERIFICATION",
+        "scope_note": (
+            "Confirms that 1DP, 3DP, and 4DP match brute-force exhaustive enumeration (score, sequence, "
+            "tie-breaking, and unsatisfiable rejection) on the tested short instances (N <= 8). "
+            "Passing these short-instance tests does not by itself prove correctness on arbitrary unexamined inputs "
+            "or establish wet-lab biological efficacy."
+        ),
+        "feasible_case_count": len(feasible_results),
+        "infeasible_case_count": len(infeasible_results),
+        "all_feasible_cases_match_exhaustive_optimum": all_feasible_exact,
+        "all_infeasible_cases_consistently_rejected": all_infeasible_exact,
+        "step1_gate_passed": all_feasible_exact and all_infeasible_exact,
+        "feasible_cases": feasible_results,
+        "infeasible_cases": infeasible_results,
+    }
+
+
 def verify_dp_4dp_collapse_invariants(
     protein_sequence: str,
     boundaries: Iterable[int],
@@ -585,7 +894,7 @@ def verify_dp_4dp_collapse_invariants(
     weights = (
         codon_weights if codon_weights is not None else load_codon_usage_table().codon_weights
     )
-    boundary_list = sorted(set(int(b) for b in boundaries))
+    boundary_list = sorted({int(b) for b in boundaries})
 
     # 1. Invariant A: lambda = 0 => 1DP == 3DP == 4DP
     comp_lambda_zero = run_matched_dp_comparison(
@@ -880,3 +1189,253 @@ def run_dp_4dp_benchmark_panel(
         "all_targets_invariants_verified": all_targets_invariants_verified,
         "entries": entries,
     }
+
+
+ANNOTATED_PUBLIC_PROTEIN_PANEL: tuple[dict[str, Any], ...] = (
+    {
+        "id": "ubiquitin_1ubq_76aa",
+        "annotation_kind": 'PFAM_DOMAIN_END',
+        "source_snapshot_date": "2026-10-29",
+        "source_snapshots": [{'url': 'https://rest.uniprot.org/uniprotkb/P0CG48?format=json', 'sha256': '2a70e3f891cdcbce7c424244846cf87d1677cecdb86c9b39614b3faad4833d81'}, {'url': 'https://data.rcsb.org/rest/v1/core/polymer_entity/1UBQ/1', 'sha256': '2d62cd6a8280b12897a9c2a43f95867165543f0ae81fbf72fad2500903f0e7e0'}, {'url': 'https://www.ebi.ac.uk/interpro/api/entry/pfam/PF00240/protein/uniprot/P0CG48/', 'sha256': 'e663e2840894bae3cbed1d459c78e58954a5c4565393db5d7bcc47f4e5e6bd7e'}],
+        "name": "Human Ubiquitin (UniProt P0CG48 / PDB 1UBQ Chain A, 76 aa)",
+        "fixture_kind": "ANNOTATED_PUBLIC_PROTEIN",
+        "sequence_provenance": (
+            "UniProtKB P0CG48 (UBC_HUMAN first cleaved monomer 1-76, sequence version 3, entry version 138) / "
+            "RCSB PDB 1UBQ Chain A (76 aa)."
+        ),
+        "coordinate_system": (
+            "1-based mature monomer / PDB 1UBQ Chain A residue numbering [1..76] "
+            "(precursor offset = 0 for monomer unit)."
+        ),
+        "boundary_annotation_source": (
+            "InterPro IPR000626 / Pfam PF00240 (Ubiquitin domain, residues 3-74; "
+            "remaining mature-chain residues 75-76). Annotated domain C-terminal "
+            "boundary b_1 = 74."
+        ),
+        "boundary_provenance": (
+            "Domain annotation with verified source, sequence version, and coordinate system "
+            "(Pfam PF00240 span 3..74 on 1-based monomer [1..76], b=[74]). With L=35, delta=2, "
+            "static 3DP window is D_1=[72..76] whereas shifted 4DP window [107..111] > 76 is "
+            "strictly out-of-bounds (W_1 = empty). Database annotation does not by itself prove "
+            "optimal ribosomal pausing or wet-lab expression superiority."
+        ),
+        "protein": (
+            "MQIFVKTLTGKTITLEVEPSDTIENVKAKIQDKEGIPPDQQRLIFAGKQLEDGRTLSDYN"
+            "IQKESTLHLVLRLRGG"
+        ),
+        "boundaries": [74],
+        "tunnel_length": 35,
+        "half_width": 2,
+    },
+    {
+        "id": "adalimumab_lc_4nyl_214aa",
+        "annotation_kind": 'CATH_DOMAIN_END',
+        "source_snapshot_date": "2026-10-29",
+        "source_snapshots": [{'url': 'https://data.rcsb.org/rest/v1/core/polymer_entity/4NYL/1', 'sha256': '5958c0e0d344ab6b76ff1203bda2030cd700b4b6d93a05a345b1f462f7679f4f'}, {'url': 'https://www.ebi.ac.uk/pdbe/api/mappings/4nyl', 'sha256': '8fc603d643e5de96aeaf644cb29fcfa32b865527b86f1fc5b6ebb5937b913ef6'}],
+        "name": "Adalimumab Fab Light Chain (RCSB PDB 4NYL Entity 1 Chain L, 214 aa)",
+        "fixture_kind": "ANNOTATED_PUBLIC_PROTEIN",
+        "sequence_provenance": (
+            "RCSB PDB 4NYL polymer Entity 1, 214 aa; author chain L maps to label asym A. "
+            "Sequence checked against the source response retrieved 2026-10-29."
+        ),
+        "coordinate_system": "1-based polymer entity sequence positions [1..214]; use residue_number, not author numbering.",
+        "boundary_annotation_source": (
+            "PDBe 4nyl CATH 2.60.40.10: chain L/entity 1 domain 4nylL01 spans 2..107, "
+            "domain 4nylL02 spans 108..212; selected end b=107. InterPro/HMMER spans differ."
+        ),
+        "boundary_provenance": (
+            "Source-specific CATH domain-end annotation; not a universal immunoglobulin junction. "
+            "D=[105..109], W=[140..144] for the configured L=35, half-width=2. "
+            "Annotation does not establish optimal pausing or expression effects."
+        ),
+        "protein": (
+            "DIQMTQSPSSLSASVGDRVTITCRASQGIRNYLAWYQQKPGKAPKLLIYAASTLQSGVPS"
+            "RFSGSGSGTDFTLTISSLQPEDVATYYCQRYNRAPYTFGQGTKVEIKRTVAAPSVFIFPP"
+            "SDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLT"
+            "LSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC"
+        ),
+        "boundaries": [107],
+        "tunnel_length": 35,
+        "half_width": 2,
+    },
+    {
+        "id": "hemopexin_n_propeller_p02790_235aa",
+        "annotation_kind": 'UNIPROT_REPEAT_END_NOT_FOLDING_DOMAIN',
+        "source_snapshot_date": "2026-10-29",
+        "source_snapshots": [{'url': 'https://rest.uniprot.org/uniprotkb/P02790?format=json', 'sha256': '267dc28668399805d9ba2bb2e26d1ffbb0a4b6bd6d9c81f6dbce7b1facfd852d'}],
+        "name": "Human Hemopexin Mature N-Propeller + Hinge Construct (UniProt P02790, 235 aa)",
+        "fixture_kind": "ANNOTATED_PUBLIC_PROTEIN",
+        "sequence_provenance": (
+            "UniProtKB P02790 (HEMO_HUMAN, sequence version 2, entry version 223, snapshot 2026-10-29) precursor "
+            "residues 24-258 corresponding to mature chain residues 1-235 after cleavage of "
+            "the 23-aa N-terminal signal peptide (precursor 1-23)."
+        ),
+        "coordinate_system": (
+            "1-based mature polypeptide residue indexing [1..235], mapped via "
+            "mature_pos = uniprot_precursor_pos - 23."
+        ),
+        "boundary_annotation_source": (
+            "UniProtKB P02790 FT REPEAT annotations (PROSITE PS51642 / Pfam PF00045 Hemopexin "
+            "repeats 1-3 in the N-terminal 4-blade beta-propeller): Repeat 1 = precursor 53..93 "
+            "(mature 30..70, C-terminus b_1 = 70); Repeat 2 = precursor 94..139 (mature 71..116, "
+            "C-terminus b_2 = 116); Repeat 3 = precursor 140..184 (mature 117..161, C-terminus "
+            "b_3 = 161)."
+        ),
+        "boundary_provenance": (
+            "Repeat-end annotations (NOT independent folding-domain ends) with source and coordinate mapping "
+            "(UniProt P02790 entry version 223 Hemopexin repeats 1-3 mapped by -23 signal peptide "
+            "offset to mature 1-based b=[70, 116, 161]). Produces static 3DP windows "
+            "D=[68..72, 114..118, 159..163] and shifted 4DP windows W=[103..107, 149..153, 194..198]. "
+            "Database annotations do not by themselves prove optimal ribosomal pausing or wet-lab "
+            "expression superiority."
+        ),
+        "protein": (
+            "TPLPPTSAHGNVAEGETKPDPDVTERCSDGWSFDATTLDDNGTMLFFKGEFVWKSHKWDR"
+            "ELISERWKNFPSPVDAAFRQGHNSVFLIKGDKVWVYPPEKKEKGYPKLLQDEFPGIPSPL"
+            "DAAVECHRGECQAEGVLFFQGDREWFWDLATGTMKERSWPAVGNCSSALRWLGRYYCFQG"
+            "NQFLRFDPVRGEVPPRYPRDVRDYFMPCPGRGHGHRNGTGHGNSTHHGPEYMRCS"
+        ),
+        "boundaries": [70, 116, 161],
+        "tunnel_length": 35,
+        "half_width": 2,
+    },
+)
+
+
+def run_step2_annotated_public_protein_comparison(
+    step1_result: dict[str, Any] | None = None,
+    codon_weights: dict[str, float] | None = None,
+    panel: Sequence[dict[str, Any]] = ANNOTATED_PUBLIC_PROTEIN_PANEL,
+    weight: float = 2.5,
+    target_tau: float = 0.45,
+    verify_invariants_for_all: bool = False,
+    independent_state_replay: bool = True,
+) -> dict[str, Any]:
+    """STEP 2 Suite: Runs 1DP, 3DP, and 4DP comparison on source-bound public proteins with domain/repeat annotations, gated on STEP 1 passing."""
+    weights = (
+        codon_weights if codon_weights is not None else load_codon_usage_table().codon_weights
+    )
+    step1 = (
+        step1_result
+        if step1_result is not None
+        else run_step1_exhaustive_verification_suite(codon_weights=weights)
+    )
+    if not step1.get("step1_gate_passed", False):
+        raise RuntimeError(
+            "STEP 2 is gated on STEP 1 computational correctness passing; "
+            "step1_gate_passed is False."
+        )
+
+    entries: list[dict[str, Any]] = []
+    invariants_executed_count = 0
+    invariants_not_run_count = 0
+
+    for item in panel:
+        comp = run_matched_dp_comparison(
+            protein_sequence=item["protein"],
+            boundaries=item["boundaries"],
+            codon_weights=weights,
+            tunnel_length=item.get("tunnel_length", 35),
+            half_width=item.get("half_width", 2),
+            weight=weight,
+            target_tau=target_tau,
+            independent_state_replay=independent_state_replay,
+        )
+        if verify_invariants_for_all or len(item["protein"]) <= 100:
+            invariants = verify_dp_4dp_collapse_invariants(
+                protein_sequence=item["protein"],
+                boundaries=item["boundaries"],
+                codon_weights=weights,
+                tunnel_length=item.get("tunnel_length", 35),
+                half_width=item.get("half_width", 2),
+                target_tau=target_tau,
+            )
+            invariants_executed_count += 1
+        else:
+            invariants = make_not_run_invariants_record(
+                "Skipped on >100 aa annotated protein when verify_invariants_for_all=False; not claimed as executed."
+            )
+            invariants_not_run_count += 1
+
+        entries.append(
+            {
+                "id": item["id"],
+                "name": item["name"],
+                "fixture_kind": item["fixture_kind"],
+                "sequence_provenance": item["sequence_provenance"],
+                "coordinate_system": item["coordinate_system"],
+                "boundary_annotation_source": item["boundary_annotation_source"],
+                "boundary_provenance": item["boundary_provenance"],
+                "annotation_kind": item["annotation_kind"],
+                "source_snapshot_date": item["source_snapshot_date"],
+                "source_snapshots": item["source_snapshots"],
+                "comparison": comp,
+                "invariants": invariants,
+            }
+        )
+
+    all_feasible = all(e["comparison"]["all_constraints_satisfied"] for e in entries)
+    all_self_preferred = all(
+        e["comparison"]["candidate_self_preference_verified"] for e in entries
+    )
+    all_state_parity = all(
+        e["comparison"]["state_graph_parity_verified"] for e in entries
+    )
+    executed_invariants = [
+        e["invariants"]["all_invariants_verified"]
+        for e in entries
+        if e["invariants"]["execution_status"] == "EXECUTED"
+    ]
+    all_executed_invariants_ok = bool(executed_invariants) and all(executed_invariants)
+    all_targets_invariants_verified: bool | None = (
+        all_executed_invariants_ok if invariants_not_run_count == 0 else None
+    )
+
+    return {
+        "step": "STEP_2_ANNOTATED_PUBLIC_PROTEIN_COMPARISON",
+        "evidence_classification": "UNVERIFIED_PUBLIC_CORPUS",
+        "biological_validation": "NOT_AVAILABLE",
+        "scope_note": (
+            "Evaluates candidate design differences and common computational metrics across "
+            "1DP, 3DP (L=0), and 4DP (L=35) on source-bound public proteins using source-specific "
+            "domain ends or repeat ends (not equivalent to independent folding-domain ends). Database annotations "
+            "carry uncertainty and do not directly prove optimal pause locations or wet-lab "
+            "expression/yield superiority."
+        ),
+        "step1_prerequisite_passed": True,
+        "annotated_target_count": len(entries),
+        "all_targets_feasible": all_feasible,
+        "all_targets_candidate_self_preference_verified": all_self_preferred,
+        "all_targets_state_graph_parity_verified": all_state_parity,
+        "invariants_executed_target_count": invariants_executed_count,
+        "invariants_not_run_target_count": invariants_not_run_count,
+        "all_executed_invariants_verified": all_executed_invariants_ok,
+        "all_targets_invariants_verified": all_targets_invariants_verified,
+        "entries": entries,
+    }
+
+
+def run_job510_two_step_validation(
+    codon_weights: dict[str, float] | None = None,
+    verify_invariants_for_all: bool = False,
+    independent_state_replay: bool = True,
+) -> dict[str, Any]:
+    """Executes STEP 1 (exhaustive computational correctness verification) followed sequentially by STEP 2 (annotated public protein comparison)."""
+    weights = (
+        codon_weights if codon_weights is not None else load_codon_usage_table().codon_weights
+    )
+    step1 = run_step1_exhaustive_verification_suite(codon_weights=weights)
+    step2 = run_step2_annotated_public_protein_comparison(
+        step1_result=step1,
+        codon_weights=weights,
+        verify_invariants_for_all=verify_invariants_for_all,
+        independent_state_replay=independent_state_replay,
+    )
+    return {
+        "job_id": "510",
+        "evidence_classification": "UNVERIFIED_PUBLIC_CORPUS",
+        "biological_validation": "NOT_AVAILABLE",
+        "step1_exhaustive_verification": step1,
+        "step2_annotated_public_protein_comparison": step2,
+    }
+

@@ -110,6 +110,11 @@ FactorForge v3.5.11 (2026). Open-source constraint-based CDS design and sequence
 Eijex. https://github.com/eijex/factorforge-cds
 ```
 
+The [v3.5.11 software archive](https://doi.org/10.5281/zenodo.23631740)
+and the [accompanying computational preprint](https://doi.org/10.20944/preprints202610.3128.v1)
+are separate citations. The preprint reports historical v3.2.0/v3.3.0 executions,
+not a benchmark of every later software release.
+
 ---
 
 ## Maintainer
