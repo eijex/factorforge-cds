@@ -122,7 +122,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
-## [Unreleased]
+### Historical maintenance notes
 
 - Pin the optional PostgreSQL integration to the portable eijex-db-core 0.1.2 wheel contract. Standalone design and scoring are unchanged.
 
