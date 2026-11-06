@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77.0.3", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "factorforge-cds"
-version = "3.5.11"
+version = "3.5.12"
 description = "FactorForge - open-source CDS design and pre-synthesis sequence review by Eijex."
 readme = "README.md"
 license = "AGPL-3.0-only"

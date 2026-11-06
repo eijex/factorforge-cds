@@ -34,7 +34,7 @@ def fetch_pypi_sha256(package: str, version: str) -> str | None:
     try:
         with urllib.request.urlopen(url, timeout=10) as resp:
             data = json.loads(resp.read())
-    except Exception as exc:
+    except (OSError, ValueError, TypeError, KeyError) as exc:
         print(f"ERROR: could not reach PyPI for {package}=={version}: {exc}")
         return None
     for entry in data.get("urls", []):
@@ -46,6 +46,7 @@ def fetch_pypi_sha256(package: str, version: str) -> str | None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("version", help="Released version already live on PyPI, e.g. 3.2.5")
+    parser.add_argument("--write-only", action="store_true", help="Update only the recipe file; do not switch branches or commit")
     args = parser.parse_args()
     version = args.version
 
@@ -59,13 +60,15 @@ def main() -> None:
 
     meta_path = ROOT / "recipes" / "meta.yaml"
     content = meta_path.read_text(encoding="utf-8")
-    updated = re.sub(r"(sha256:\s*)[0-9a-f]{64}", lambda m: f"{m.group(1)}{sha256}", content)
-    version_updated = re.sub(
-        r'\{% set version = "[^"]+" %\}', f'{{% set version = "{version}" %}}', updated
-    )
+    version_updated = replace_recipe_source(content, version, sha256)
     if version_updated == content:
         print(f"Nothing to update — recipes/meta.yaml already matches {version}/{sha256}.")
         sys.exit(0)
+
+    if args.write_only:
+        meta_path.write_text(version_updated, encoding="utf-8")
+        print(f"Updated only recipes/meta.yaml for {version}; no Git action performed.")
+        return
 
     branch = f"update-conda-recipe-sha-v{version}"
     subprocess.run(["git", "checkout", "-b", branch], cwd=str(ROOT), check=True)
@@ -81,6 +84,18 @@ def main() -> None:
     print(f"This commit does NOT touch the v{version} release tag/commit.")
     print("Push and open a PR (or push to your bioconda-recipes fork) manually:")
     print(f"  git push origin {branch}")
+
+
+def replace_recipe_source(content: str, version: str, sha256: str) -> str:
+    """Bind a published source digest, including an explicit pending placeholder."""
+    if not re.fullmatch(r"\d+\.\d+\.\d+", version) or not re.fullmatch(r"[0-9a-f]{64}", sha256):
+        raise ValueError("Invalid release version or SHA-256")
+    hash_pattern = r"(?m)^([ \t]*sha256:[ \t]*)[^\r\n]+$"
+    version_pattern = r'\{% set version = "[^"]+" %\}'
+    if len(re.findall(hash_pattern, content)) != 1 or len(re.findall(version_pattern, content)) != 1:
+        raise ValueError("Expected exactly one source hash and recipe version")
+    updated = re.sub(hash_pattern, lambda match: match.group(1) + sha256, content)
+    return re.sub(version_pattern, lambda match: f'{{% set version = "{version}" %}}', updated)
 
 
 if __name__ == "__main__":

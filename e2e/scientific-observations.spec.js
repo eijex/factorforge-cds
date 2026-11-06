@@ -1,5 +1,7 @@
 const {test,expect}=require('@playwright/test');
 test.beforeEach(async({page})=>{
+ const source=require('node:fs').readFileSync(require('node:path').join(__dirname,'../web/js/app.js'),'utf8');
+ await page.route('**/js/app.js',route=>route.fulfill({contentType:'text/javascript',body:source.replace('const ENABLE_EXPERIMENTAL_STRUCTURE_WEB = false;','const ENABLE_EXPERIMENTAL_STRUCTURE_WEB = true;')}));
  await page.route('**/api/optimize',route=>route.fulfill({json:route.request().method()==='GET'?
  {capabilities:{direct_structure:{available:true},structure_recommendation:{available:true}}}:
  {success:true,recommendation:{status:'NOT_AVAILABLE',reason:'Unknown confidence source',recommended_positions:[],reviewed:false}}}));

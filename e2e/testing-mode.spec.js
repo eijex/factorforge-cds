@@ -3,7 +3,7 @@ const {test,expect}=require('@playwright/test');
 // Retained custom SOP code is tested behind its disabled production feature flag.
 test.beforeEach(async ({page}) => {
     const source = require('node:fs').readFileSync(require('node:path').join(__dirname, '../web/js/app.js'), 'utf8');
-    await page.route('**/js/app.js', route => route.fulfill({contentType:'text/javascript', body:source.replace('const ENABLE_CUSTOM_SOP = false;', 'const ENABLE_CUSTOM_SOP = true;')}));
+    await page.route('**/js/app.js', route => route.fulfill({contentType:'text/javascript', body:source.replace('const ENABLE_CUSTOM_SOP = false;', 'const ENABLE_CUSTOM_SOP = true;').replace('const ENABLE_EXPERIMENTAL_STRUCTURE_WEB = false;', 'const ENABLE_EXPERIMENTAL_STRUCTURE_WEB = true;')}));
 });
 test('watermark remains disabled after importing an enabled profile', async({page})=>{
   let payload;
@@ -12,7 +12,7 @@ test('watermark remains disabled after importing an enabled profile', async({pag
     return route.fulfill({json:{supported_objectives:['dp_v2_1_1'],capabilities:{},validation_checks:[]}});
   });
   await page.goto('/');
-  await expect(page.locator('#researchTestingStatus')).toContainText('Both modes use this form');
+  await expect(page.locator('#researchTestingStatus')).toContainText('3DP / 4DP research');
   await page.locator('#experimentalSettings > summary').click();
   await expect(page.locator('#toggleWatermark')).toBeDisabled();
   await expect(page.locator('#toggleWatermark')).not.toBeChecked();
