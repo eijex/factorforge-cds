@@ -99,7 +99,9 @@ def test_public_capabilities_report_paused():
     h.end_headers = lambda: None
     with patch("api.optimize.EXPERIMENTAL_3DP_ENABLED", False):
         h.do_GET()
-    capabilities = json.loads(h.wfile.getvalue())["capabilities"]
+    health = json.loads(h.wfile.getvalue())
+    assert health["web_deployment_revision"] == f"v{health['version']}"
+    capabilities = health["capabilities"]
     assert capabilities["direct_structure"]["available"] is False
     assert capabilities["direct_structure"]["status"] == "paused"
     assert capabilities["structure_recommendation"]["available"] is False
