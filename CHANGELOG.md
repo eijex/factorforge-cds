@@ -32,7 +32,6 @@
 - **Strict Backward Invariance & Bit-Identity**:
   - Verified 100% bit-identical zero-parity invariant with 1DP and 3DP baselines when `enable_tasep_smoothing=False` across all test fixtures.
   - Full backward compatibility across 1DP, 3DP, 4DP, and stem cell optimization pipelines (67/67 tests passing).
-- **Paper 5 Alignment**: Synchronized PRISM Paper 5 master manuscript to v0.9.6 documenting mathematical semiring proofs and kinetic buffer formalization.
 - **Epistemic Classification**: Computational modeling proxy; UNVERIFIED_PUBLIC_CORPUS; Biological validation: NOT_AVAILABLE.
 
 ## 3.5.10 — 2026-10-24 (4DP Space-Time Exit-Tunnel DP, Equivalence-Preserving Local Codon Rewriter & GCP Training Telemetry; Git tag and PyPI publication confirmed2026-10-24)
