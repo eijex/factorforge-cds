@@ -1,14 +1,18 @@
 # FactorForge release-gate status
 
-## v3.5.12 local candidate (publication pending)
+## v3.5.12 published (2026-11-06)
 
-This candidate adds consent/policy wording, default-off experimental web
-availability and Bioconda installed-package smoke coverage. Focused execution
-results do not replace a successful release-wide CI run. Before publication,
-complete CI, reviewer installation checks and public-surface/version checks;
-after PyPI publication, bind the Bioconda recipe to its actual source hash and
-obtain the matching archival DOI. Neither a stale hash nor a previous version's
-DOI is evidence for this candidate. No new biological validation is claimed.
+This release adds consent/policy wording, default-off experimental web
+availability and Bioconda installed-package smoke coverage.
+
+- [Exact-source release CI](https://github.com/eijex/factorforge-cds/actions/runs/42181806379): all eight Python/OS combinations passed.
+- [PyPI publication and fresh-install smoke](https://github.com/eijex/factorforge-cds/actions/runs/42184356326): passed.
+- [Remote browser suite](https://github.com/eijex/factorforge-cds/actions/runs/42184346124): 63 passed.
+- Public web v3.5.12 was deployed; synthetic 1DP preserves amino-acid identity and paused structure routes return HTTP 403.
+- [Bioconda recipe update](https://github.com/bioconda/bioconda-recipes/pull/71287) uses the verified published source hash; its merge/build is pending. Prior installed-package smoke coverage is for v3.5.11, not a new Bioconda artifact.
+- A matching new archival DOI has not yet been verified. A previous version's DOI must not be used as this release's DOI.
+
+No new biological validation is claimed.
 
 ## Historical v3.5.10 gate scope and commands
 
