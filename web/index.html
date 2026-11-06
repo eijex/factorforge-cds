@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <meta name="eijex-web-build" content="v3.5.11-2026-10-25">
+    <meta name="eijex-web-build" content="v3.5.12-2026-11-06">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FactorForge | N. benthamiana CDS Design</title>
@@ -90,7 +90,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.5.11 Release Notes
+                            v3.5.12 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -243,16 +243,16 @@
                     </div>
 
                     <section id="researchTestingStatus" class="mb-6 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/30 p-4 text-xs leading-relaxed">
-                        <h3 class="font-bold text-teal-900 dark:text-teal-200">Testing: baseline and structure-conditioned design</h3>
-                        <p>Both modes use this form. 3DP requires uploaded coordinates and explicit position review.</p>
+                        <h3 class="font-bold text-teal-900 dark:text-teal-200">Design availability: 1DP standard; 3DP / 4DP research</h3>
+                        <p>1DP is available in this public form. General 3DP / 4DP web access is on hold pending evaluation and collaborator feedback. Ask about research collaboration below.</p>
                         <fieldset class="mt-3 flex flex-wrap gap-4"><legend class="sr-only">Select design workflow</legend>
                             <label class="font-semibold"><input type="radio" name="researchDesignMode" value="baseline_1dp" checked> 1DP · Baseline Design (Production)</label>
-                            <label class="flex items-center gap-1.5"><input type="radio" name="researchDesignMode" value="paired_3dp"> <span>3DP · Structure-Aware Design</span> <span class="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-[10px] font-bold uppercase">In Development</span></label>
+                            <label class="flex items-center gap-1.5"><input type="radio" name="researchDesignMode" value="paired_3dp" disabled> <span>3DP · Structure-Aware Design</span> <span class="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-[10px] font-bold uppercase">Research · Not publicly enabled</span></label>
                         </fieldset>
                         <div id="structureWebInputs" class="hidden mt-4 space-y-3">
                             <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50/80 dark:bg-amber-950/40 p-3 text-amber-900 dark:text-amber-200">
-                                <p class="font-bold flex items-center gap-1"><span>🔬</span> 3DP Cloud Pipeline: In Active Development</p>
-                                <p class="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Automated AlphaFold cloud GPU folding is currently in active development. For research partners and experimental pilot testing, manual exact-match PDB/mmCIF structure upload is supported below.</p>
+                                <p class="font-bold flex items-center gap-1"><span>🔬</span> Experimental structure-conditioned design</p>
+                                <p class="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Prepared exact-match PDB/mmCIF input and reviewed positions can support CPU optimization in an explicitly enabled research deployment. Automatic structure prediction is separate; GCP is not a prerequisite for the optimization calculation.</p>
                             </div>
                             <details open class="rounded-lg border border-slate-200 dark:border-slate-700 p-2.5">
                                 <summary class="cursor-pointer font-semibold text-slate-700 dark:text-slate-300">Optional: PDB / mmCIF structure upload and position review</summary>
@@ -440,7 +440,7 @@
                             </p>
                         </div>
 
-                        <p class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">Choose options in the form, then save current settings. The example download is a starting template. Uploading YAML/JSON applies its mode, design settings and review levels to this screen and saves them in this browser. It does not run a calculation or approve a laboratory SOP. For 3DP, upload the structure and review positions again.</p>
+                        <p id="policyScopeNotice" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">FactorForge's built-in design and review criteria are applied. They are not a laboratory-approved SOP. Custom SOP upload, export and editing are paused in the public form. For lab-specific requirements, contact eijex.lab@gmail.com before sharing sequence data; feasibility and scope will be agreed before work begins.</p>
                         <!-- Compact Actions Bar -->
                         <div class="flex items-center gap-1.5 pt-2 border-t border-slate-200/80 dark:border-slate-800">
                             <button id="uploadSopButton" type="button" class="flex-1 py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-400 hover:text-emerald-600 transition-colors flex items-center justify-center gap-1 shadow-sm" title="Upload custom SOP (YAML or JSON)">
@@ -1389,20 +1389,23 @@
                         <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
-                        <span>Advanced 3DP &amp; 4DP Collaborative Optimization</span>
+                        <span>Design Modes, Compute &amp; Research Collaboration</span>
                     </div>
                     <a href="mailto:eijex.lab@gmail.com" class="inline-flex items-center px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs rounded-lg transition-colors shadow-sm">
                         Request Collaboration (eijex.lab@gmail.com)
                     </a>
                 </div>
                 <p class="text-emerald-950 dark:text-emerald-200/90 leading-relaxed">
-                    <b>3DP</b> structure-conditioned design is experimental and uses uploaded structure information and reviewed positions in the browser testing workflow. <b>4DP</b> shifted-position scoring is a local Python research path. These implementations do not establish calibrated translation dynamics or demonstrated folding or expression benefits.
+                    <b>1DP</b> is the standard sequence-only CPU design path. <b>3DP / 4DP</b> are experimental research implementations; general web access is on hold pending evaluation and collaborator feedback. Local research code may be included in the package; its presence is not a supported public web feature. Optimization from prepared structural inputs or reviewed boundaries does not inherently require GCP or a GPU.
                 </p>
                 <p class="text-emerald-950 dark:text-emerald-200/90 leading-relaxed">
-                    For a potential 3DP/4DP research collaboration, first send a non-confidential project enquiry to <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold text-emerald-700 dark:text-emerald-300 hover:text-emerald-600">eijex.lab@gmail.com</a>.
+                    <b>Compute boundary:</b> CPU optimization from prepared inputs is separate from automatic structure prediction, which may require a GPU service. Hosting the web interface on Vercel does not enable every research engine: web availability depends on deployed API support and execution limits. These implementations do not establish calibrated translation dynamics or demonstrated folding or expression benefits.
+                </p>
+                <p class="text-emerald-950 dark:text-emerald-200/90 leading-relaxed">
+                    <b>Lab-specific design criteria:</b> FactorForge applies its own default design and review criteria, not an approved SOP for any named laboratory. To discuss your laboratory's SOP, candidate sequence generation or potential 3DP/4DP research collaboration, send a non-confidential enquiry to <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold text-emerald-700 dark:text-emerald-300 hover:text-emerald-600">eijex.lab@gmail.com</a>. Feasibility, scope and data handling must be agreed before work begins; do not include confidential or proprietary sequences in the initial email.
                 </p>
                 <div class="p-2.5 bg-white/70 dark:bg-slate-900/60 border border-emerald-300/60 dark:border-emerald-700/60 rounded-lg text-[11px] text-emerald-900 dark:text-emerald-300 space-y-1">
-                    <p><b>Data Usage &amp; Retention Notice:</b> Before sharing sequence data, agree on authorized access, processing purpose, research reuse, retention and deletion terms. An enquiry is not consent to retain data or use it for training. Do not include confidential or proprietary sequences in the initial email.</p>
+                    <p><b>Sequence Rights &amp; Data Use:</b> Rights and permitted use of submitted sequences and generated candidates, access, retention and deletion terms must be agreed separately before data is shared. Research, model training, publication or public disclosure requires prior explicit consent covering the purpose and disclosure scope. An enquiry or generation request is not consent to those uses or a transfer of rights. The software license does not automatically transfer ownership of sequence outputs to Eijex.</p>
                 </div>
             </div>
         </div>
@@ -1432,7 +1435,7 @@
                     class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
             </div>
             <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
-                <!-- Version 3.5.11 -->
+                <!-- Version 3.5.12 -->
                 <div class="relative pl-8 border-l-2 border-emerald-500">
                     <div
                         class="absolute -left-[9px] top-0 w-4 h-4 bg-emerald-500 rounded-full border-4 border-white dark:border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]">
@@ -1440,6 +1443,22 @@
                     <div class="flex items-center space-x-2 mb-2">
                         <span
                             class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.5.12</h3>
+                        <span class="text-slate-400 text-[10px]">2026-11-06</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Policy and collaboration:</b> Clarified built-in criteria versus laboratory-approved SOPs and the lab-specific enquiry process.</li>
+                        <li><b>Sequence rights and consent:</b> Separate agreements cover rights, retention and deletion; research, training and disclosure require prior explicit consent.</li>
+                        <li><b>Availability:</b> 1DP remains the standard CPU workflow. General 3DP/4DP web access is paused; research implementations are retained behind explicit web/API opt-in.</li>
+                        <li><b>Installation:</b> Bioconda Linux/macOS/WSL guidance and installed-package smoke CI. Package indexes publish independently; verify the exact installed version.</li>
+                    </ul>
+                </div>
+                <!-- Version 3.5.11 -->
+                <div class="relative pl-8 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div
+                        class="absolute -left-[9px] top-0 w-4 h-4 bg-slate-300 dark:bg-slate-600 rounded-full border-4 border-white dark:border-slate-900">
+                    </div>
+                    <div class="flex items-center space-x-2 mb-2">
                         <h3 class="font-bold text-slate-800 dark:text-white">v3.5.11</h3>
                         <span class="text-slate-400 text-[10px]">2026-10-25</span>
                     </div>

@@ -1,11 +1,28 @@
 # Changelog
 
-## Unreleased
+## [Unreleased]
 
+## [3.5.12] — 2026-11-06
+
+- Clarify built-in design/review criteria versus laboratory-approved SOPs; direct lab-specific configuration enquiries to the maintainer before confidential data sharing.
+- Separate software licensing from sequence-output rights. Research/training/publication/disclosure require explicit prior consent; rights, permitted use and retention/deletion are agreed separately.
+- Keep general web 3DP/4DP release on hold. Disable 3DP selection by default and fail closed on API structure actions unless a research deployment explicitly opts in. 1DP and local research implementations remain available; no engine objective changes.
+- Document CPU optimization separately from automatic structure prediction; GCP/GPU is not inherently required for optimization from prepared inputs.
+- Align Bioconda Linux/macOS/WSL instructions, record native Windows upstream non-support, and add installed-package provenance/DP smoke CI. Local Ubuntu replay passed; remote/macOS CI results remain pending.
+- Package indexes and archival records are published independently; use the exact installed version and artifact digest for reproduction. Historical entries below are not new biological claims.
+- Defer Blob URL cleanup until the browser has time to consume report/settings downloads. Remove automatic synthetic-baseline DNA from report accounting and structure comparison; retain known candidate codon counts while reference-dependent shifts remain unavailable without a real input CDS or recorded baseline candidate.
+- Raise the setuptools build requirement to 77.0.3 to match the existing SPDX license-expression metadata; older declared backends could not parse that metadata.
+
+- Bind DP/3DP/4DP validation fixtures to public source snapshots; correct the ubiquitin Pfam boundary and distinguish CATH domain ends from hemopexin repeat ends. Extend short-instance exhaustive comparison and retain explicit unexecuted-invariant states.
+
+- **Official Bioconda Distribution**:
+  - `factorforge-cds` is now officially available on Bioconda: `conda install -c bioconda factorforge-cds` or `mamba install -c bioconda factorforge-cds`.
+  - Upstream recipe merged into `bioconda/bioconda-recipes` (PR #65834, approved by Björn Grüning).
+  - Package index: https://anaconda.org/bioconda/factorforge-cds
 - Correct public web processing/history and experimental-engine descriptions; distinguish collaboration enquiries from permission for research retention/reuse.
 - Make HPX offline Chromium regression portable and check page errors, exact selection and mature-coordinate mapping. These checks cover the tested browser configuration, not universal certification.
 
-## 3.5.11 — 2026-10-25 (DP v2.4.0 Tropical Transport & TASEP Kinetic Engine Release)
+## [3.5.11] — 2026-10-25 (DP v2.4.0 Tropical Transport & TASEP Kinetic Engine Release)
 
 - **DP v2.4.0 Engine Integration**:
   - Implemented `DPV240Optimizer` extending the unified dynamic programming trellis with Tropical Max-Plus semiring matrix representation:
@@ -15,7 +32,6 @@
 - **Strict Backward Invariance & Bit-Identity**:
   - Verified 100% bit-identical zero-parity invariant with 1DP and 3DP baselines when `enable_tasep_smoothing=False` across all test fixtures.
   - Full backward compatibility across 1DP, 3DP, 4DP, and stem cell optimization pipelines (67/67 tests passing).
-- **Paper 5 Alignment**: Synchronized PRISM Paper 5 master manuscript to v0.9.6 documenting mathematical semiring proofs and kinetic buffer formalization.
 - **Epistemic Classification**: Computational modeling proxy; UNVERIFIED_PUBLIC_CORPUS; Biological validation: NOT_AVAILABLE.
 
 ## 3.5.10 — 2026-10-24 (4DP Space-Time Exit-Tunnel DP, Equivalence-Preserving Local Codon Rewriter & GCP Training Telemetry; Git tag and PyPI publication confirmed2026-10-24)
@@ -106,7 +122,7 @@ version drift, unsupported claims, sensitive-data guidance, and stale examples.
 
 ---
 
-## [Unreleased]
+### Historical maintenance notes
 
 - Pin the optional PostgreSQL integration to the portable eijex-db-core 0.1.2 wheel contract. Standalone design and scoring are unchanged.
 

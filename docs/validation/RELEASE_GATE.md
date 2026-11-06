@@ -1,4 +1,16 @@
-# FactorForge v3.5.10 Release Gate
+# FactorForge release-gate status
+
+## v3.5.12 local candidate (publication pending)
+
+This candidate adds consent/policy wording, default-off experimental web
+availability and Bioconda installed-package smoke coverage. Focused execution
+results do not replace a successful release-wide CI run. Before publication,
+complete CI, reviewer installation checks and public-surface/version checks;
+after PyPI publication, bind the Bioconda recipe to its actual source hash and
+obtain the matching archival DOI. Neither a stale hash nor a previous version's
+DOI is evidence for this candidate. No new biological validation is claimed.
+
+## Historical v3.5.10 gate scope and commands
 
 This gate covers the public Open Bio output and I/O contracts. FactorForge remains
 an in-silico CDS design assistant; this gate does not establish wet-lab, yield, or

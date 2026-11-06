@@ -2,12 +2,21 @@
 
 FactorForge development direction and planned work.
 
-> Current product line: **v3.5.11** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current maintenance line: **v3.5.12**. Previous baseline: **v3.5.11** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
 
-## Current Release Status
+## Maintenance release: v3.5.12
+
+Clarify default design/review criteria, lab-specific enquiries and prior explicit
+consent for research/training/disclosure. General 3DP/4DP web access is on hold;
+the public form uses 1DP and the retained 3DP API requires explicit research
+deployment opt-in. Custom SOP management remains paused. Bioconda installation
+guidance and installed-package CI are included. Package index and archival
+versions publish independently of the code; check their exact artifact identity.
+
+## Previous baseline: v3.5.11
 
 FactorForge v3.5.11 retains the web/API product line with versioned Sequence
 Policy Profiles (internally retained as `SopProfile` for compatibility), an

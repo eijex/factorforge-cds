@@ -152,7 +152,7 @@ def iter_public_files(root: Path, include_dirs: set[str], include_root_files: se
             continue
         if path.suffix.lower() not in INCLUDE_SUFFIXES:
             continue
-        if rel.name in include_root_files or rel.parts[0] in include_dirs:
+        if (len(rel.parts) == 1 and rel.name in include_root_files) or rel.parts[0] in include_dirs:
             files.append(path)
     return sorted(files)
 

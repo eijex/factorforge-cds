@@ -202,14 +202,19 @@ test('accounts for synonymous CDS shifts and exports the same interactive report
   expect(html).toContain('sha256:input-272');
 });
 
-test('does not fabricate codon accounting for protein-only input', async ({ page }) => {
+test('reports output codon count without inventing input-CDS shifts', async ({ page }) => {
   await mockOptimization(page, reviewResponse());
   await openApp(page);
   await page.locator('#sequenceInput').fill(SAMPLE_PROTEIN);
   await page.locator('#optimizeBtn').click();
-  await expect(page.locator('#statTotalCodons')).toHaveText('N/A');
+  // The generated CDS has a known length even when the input CDS is absent.
+  await expect(page.locator('#statTotalCodons')).toHaveText(String(MOCK_DNA.length / 3));
   await expect(page.locator('#statShiftBreakdown')).toHaveText('CDS reference required');
   await expect(page.locator('#trackAvailability')).toHaveText('CDS reference required');
+  await expect(page.locator('#statShifts')).toHaveText('N/A');
+  const accounting = await page.evaluate(() => state.reportData.accounting);
+  expect(accounting.available).toBe(false);
+  expect(accounting.codons).toEqual([]);
 });
 
 test('enables DP v2.1.1 only when the API advertises the capability', async ({ page }) => {

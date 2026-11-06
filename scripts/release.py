@@ -189,6 +189,10 @@ def build_targets(old: str, new: str) -> list[tuple[str, list[tuple[str, str]], 
         ("tests/api/test_optimize_contract.py", [
             (f'"product"] == "{old}"', f'"product"] == "{new}"'),
         ], True),
+        ("tests/test_multi_engine_governance.py", [
+            (f'product_version() == "{old}"', f'product_version() == "{new}"'),
+            (f'prov["product_version"] == "{old}"', f'prov["product_version"] == "{new}"'),
+        ], True),
         ("README.md", [
             (f"FactorForge v{old} (", f"FactorForge v{new} ("),
         ], True),

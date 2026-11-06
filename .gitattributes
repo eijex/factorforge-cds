@@ -2,3 +2,5 @@
 *.json text eol=lf
 *.yaml text eol=lf
 *.yml text eol=lf
+# Public structure evidence is byte-hashed; preserve canonical LF bytes on checkout.
+examples/hpx_evidence_viewer/reference.pdb text eol=lf
