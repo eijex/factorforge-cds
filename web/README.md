@@ -1,5 +1,23 @@
 # FactorForge Web Interface
 
+## v3.5.12: current public policy
+
+1DP is the public form's standard CPU design path. General 3DP/4DP access is
+paused pending evaluation and collaborator feedback. A research build can opt in
+with `ENABLE_EXPERIMENTAL_STRUCTURE_WEB`; the API separately requires
+`FACTORFORGE_EXPERIMENTAL_3DP_ENABLED=true`. These are availability flags, not
+access authorization. Prepared-input CPU optimization does not inherently require
+GCP/GPU; automatic structure prediction is a different workload.
+
+The built-in criteria are not an approved laboratory SOP. Custom SOP upload,
+export and editing remain disabled; the older sections below describe retained
+implementation, not current public controls. Lab-specific configuration and
+research collaboration enquiries go to eijex.lab@gmail.com, with no confidential
+sequences in the initial enquiry. Rights, permitted uses, retention and deletion
+are agreed separately; research, training, publication and public disclosure
+require prior explicit consent. The software license does not automatically
+transfer ownership of sequence outputs.
+
 The Arg/Ser, splice-remediation and 5-prime boundary comparison controls are
 not connected to web execution. They are unchecked, disabled and collapsed
 by default. They do not modify API requests; existing engine constraints and

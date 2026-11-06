@@ -6,13 +6,13 @@ from types import SimpleNamespace
 
 import pytest
 
+from api.optimize import handler
 from factorforge.guards.initiation_mfe import evaluate_initiation_mfe
 from factorforge.rules.registry import RuleRegistry
 from factorforge.sops.config import SopProfile
 from factorforge.structure.auto_annotator import recommend_structure_pause_regions
-from tests.test_auto_annotator import _generate_synthetic_pdb
 from tests.api.test_structure_web import PROTEIN, post, request
-from api.optimize import handler
+from tests.test_auto_annotator import _generate_synthetic_pdb
 
 
 def test_flanked_construct_is_not_mislabeled_as_sense_cds():
@@ -118,7 +118,12 @@ def test_recommend_action_does_not_approve_or_generate():
 
 
 @pytest.mark.parametrize("paired", [False, True])
-def test_actual_observations_attached_to_web_result(paired):
+def test_actual_observations_attached_to_web_result(monkeypatch, paired):
+    # Contract fixture; real ViennaRNA is separately exercised with importorskip.
+    monkeypatch.setitem(sys.modules, "RNA", SimpleNamespace(
+        md=lambda: SimpleNamespace(),
+        fold_compound=lambda seq, md: SimpleNamespace(mfe=lambda: ("." * len(seq), -2.0)),
+    ))
     status, result = post(request() if paired else {"sequence": PROTEIN})
     assert status == 200, result
     assert result["scientific_review"]["rna_risks"]["evidence_class"] == "SEQUENCE_SCAN"

@@ -54,6 +54,8 @@ let validationRegistry = [];
 const HISTORY_SCHEMA_VERSION = 3;
 // Custom SOP management is intentionally paused. Retained code can be re-enabled later.
 const ENABLE_CUSTOM_SOP = false;
+// General web access remains paused; research deployments must explicitly opt in.
+const ENABLE_EXPERIMENTAL_STRUCTURE_WEB = false;
 const SOP_STORAGE_KEY = 'factorforge_active_sop_v2';
 const SOP_SCHEMA = 'factorforge-sop-v1';
 const SOP_MODES = Object.freeze(['required', 'preferred', 'ignored']);
@@ -1281,6 +1283,13 @@ function initEventListeners() {
     const syncDesignModeUi = () => {
         const checkedRadio = document.querySelector('input[name="researchDesignMode"]:checked');
         if (!checkedRadio) return;
+        if (!ENABLE_EXPERIMENTAL_STRUCTURE_WEB && checkedRadio.value === 'paired_3dp') {
+            checkedRadio.checked = false;
+            document.querySelector('input[name="researchDesignMode"][value="baseline_1dp"]').checked = true;
+            state.researchDesignMode = 'baseline_1dp';
+            document.getElementById('structureWebInputs').classList.add('hidden');
+            return;
+        }
         const structured = checkedRadio.value === 'paired_3dp';
         state.researchDesignMode = checkedRadio.value;
         elements.btnText.textContent = structured ? 'Generate 3DP (Pilot)' : 'Generate 1DP';
@@ -1295,6 +1304,7 @@ function initEventListeners() {
         handleSequenceChange({ target: elements.sequenceInput });
     };
     document.querySelectorAll('input[name="researchDesignMode"]').forEach(input => {
+        if (input.value === 'paired_3dp') input.disabled = !ENABLE_EXPERIMENTAL_STRUCTURE_WEB;
         input.addEventListener('change', syncDesignModeUi);
     });
     syncDesignModeUi();
@@ -1959,7 +1969,7 @@ function buildCodonAccounting(originalCds, optimizedCds, res, gcTarget) {
     const original = codonsWithoutTerminalStop(originalCds);
     const optimized = codonsWithoutTerminalStop(optimizedCds);
     const comparable = original.valid && optimized.valid && original.codons.length > 0;
-    if (!comparable) return { available: false, reason: originalCds ? 'Valid CDS reference required' : 'CDS reference required', codons: [] };
+    if (!comparable) return { available: false, reason: originalCds ? 'Valid CDS reference required' : 'CDS reference required', candidateCodonCount: optimized.valid ? optimized.codons.length : null, codons: [] };
     const frequencies = responseCodonFrequencies(res, getResultHostProfile(res));
     const length = Math.max(original.codons.length, optimized.codons.length);
     const codons = [];
@@ -2006,7 +2016,7 @@ function percentOf(value, total) {
 
 function renderCodonAccounting(accounting) {
     if (!accounting.available) {
-        elements.statTotalCodons.textContent = 'N/A'; elements.statShifts.textContent = 'N/A';
+        elements.statTotalCodons.textContent = accounting.candidateCodonCount == null ? 'N/A' : String(accounting.candidateCodonCount); elements.statShifts.textContent = 'N/A';
         elements.statUnchanged.textContent = 'N/A'; elements.statSubstitutions.textContent = 'N/A';
         elements.statShiftBreakdown.textContent = accounting.reason;
         elements.statAaIdentity.textContent = 'Translation comparison unavailable';
@@ -2190,7 +2200,7 @@ function buildStructureViewerPayload(res, primary) {
     const seqOrigRaw = !isProteinInputResult(res) ? rawInputSeq : '';
     const optPrimarySeq = primary?.optimized_sequence || '';
     const seq1dp = is3dp
-        ? (cand1dp?.dna_sequence || synthesizeBaselineReferenceDna(optPrimarySeq, res) || optPrimarySeq)
+        ? (cand1dp?.dna_sequence || '')
         : optPrimarySeq;
     const seq3dp = is3dp ? (cand3dp?.dna_sequence || optPrimarySeq) : null;
     const parsedOrig = codonsWithoutTerminalStop(seqOrigRaw);
@@ -2970,7 +2980,7 @@ function renderResults() {
     const cand1dpSeq = ((Array.isArray(res.candidates) ? res.candidates : (res.report_candidates || [])).find(c => c.id === 'baseline_1dp')?.dna_sequence || '');
     const refSeqForAccounting = (!isProteinInput && origSeq)
         ? origSeq
-        : (cand1dpSeq || synthesizeBaselineReferenceDna(optSeq, res));
+        : cand1dpSeq;
     const accounting = buildCodonAccounting(refSeqForAccounting, optSeq, res, gcTarget);
     const structureViewerPayload = buildStructureViewerPayload(res, primary);
     state.reportData = { ...baseReportData, accounting, codons: accounting.codons, structure_viewer: structureViewerPayload };
@@ -3840,8 +3850,12 @@ function downloadTextArtifact(content, mimeType, fileName) {
     const link = document.createElement('a');
     link.href = url;
     link.download = fileName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
     link.click();
-    window.URL.revokeObjectURL(url);
+    link.remove();
+    // Let the browser consume the download before releasing its Blob URL.
+    window.setTimeout(() => window.URL.revokeObjectURL(url), 30000);
 }
 
 function evidenceRecordFromModel(model) {
@@ -4590,7 +4604,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.5.11';
+        const version = state.results.engine_versions?.product || '3.5.12';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }

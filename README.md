@@ -5,6 +5,7 @@
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyPI](https://img.shields.io/pypi/v/factorforge-cds.svg)](https://pypi.org/project/factorforge-cds/)
+[![Bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](https://anaconda.org/bioconda/factorforge-cds)
 [![CI](https://github.com/eijex/factorforge-cds/actions/workflows/ci.yml/badge.svg)](https://github.com/eijex/factorforge-cds/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/eijex/factorforge-cds/branch/main/graph/badge.svg)](https://codecov.io/gh/eijex/factorforge-cds)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20407330.svg)](https://doi.org/10.5281/zenodo.20407330)
@@ -14,7 +15,7 @@
 
 FactorForge performs deterministic CDS design with CAI/GC metrics, PolyA-signal screening, and Golden Gate/MoClo-aware checks. It is positioned as a pre-synthesis review harness: it helps teams generate reproducible CDS candidates, inspect assembly-relevant sequence constraints, and package design metadata before downstream synthesis, cloning, or experimental review. Primary support: *N. benthamiana* (agroinfiltration). Experimental host context: Tobacco BY-2 (`--host by2`).
 
-FactorForge v3.5.11 uses independently versioned engines:
+FactorForge v3.5.12 uses independently versioned engines:
 
 | Generation | Engine | Version | Availability |
 |---|---|---:|---|
@@ -31,11 +32,23 @@ FactorForge v3.5.11 uses independently versioned engines:
 ## Quick Start
 
 ```bash
+# Bioconda: Linux/macOS, or Ubuntu inside WSL on Windows
+conda create -n factorforge-review --override-channels -c conda-forge -c bioconda --strict-channel-priority python=3.11 factorforge-cds
+conda activate factorforge-review
+
+# Via PyPI
 pip install factorforge-cds
+
+# Run optimization
 factorforge optimize my_protein.fasta -o output.fasta
 ```
 
 Or use the **[web app](https://factorforge.eijex.com)** — no installation required.
+
+Bioconda does not support native Windows. Use WSL for that installation route;
+see [installation and reviewer checks](docs/getting-started.md) for the tested
+version, platform limitations and installed-package smoke command. Local DP
+optimization needs no Neon database, GCP account or GPU.
 
 ---
 
@@ -43,6 +56,7 @@ Or use the **[web app](https://factorforge.eijex.com)** — no installation requ
 
 | Method | Description | Link |
 |--------|-------------|------|
+| **Bioconda** | Linux/macOS; WSL on Windows | [Isolated installation](docs/getting-started.md#via-bioconda-recommended-for-bioinformatics) |
 | **Web App** | No installation, demo & light use | [factorforge.eijex.com](https://factorforge.eijex.com) |
 | **CLI / Python** | Local use, batch processing, data privacy | `pip install factorforge-cds` |
 | **Docker** | Full web interface locally | `docker pull ghcr.io/eijex/factorforge-cds:latest` |
@@ -96,9 +110,14 @@ FactorForge outputs are **in-silico only** and have not been experimentally vali
 ## Citing
 
 ```
-FactorForge v3.5.11 (2026). Open-source constraint-based CDS design and sequence review.
+FactorForge v3.5.12 (2026). Open-source constraint-based CDS design and sequence review.
 Eijex. https://github.com/eijex/factorforge-cds
 ```
+
+The [v3.5.11 software archive](https://doi.org/10.5281/zenodo.23631740)
+and the [accompanying computational preprint](https://doi.org/10.20944/preprints202610.3128.v1)
+are separate citations. The preprint reports historical v3.2.0/v3.3.0 executions,
+not a benchmark of every later software release.
 
 ---
 
@@ -151,11 +170,11 @@ GNU Affero General Public License v3.0 — see [LICENSE](LICENSE).
 
 ## Testing status
 
-The web UI now labels watermark as disabled and distinguishes the sequence-only baseline from experimental structure-conditioned testing. The local approved workflow supports explicit 1DP-only or paired 3DP mode. 3DP availability is local research testing; it is not a new public optimization endpoint or a biological-performance claim. See [web UI boundaries](web/README.md).
+The web UI labels watermark as disabled and distinguishes the sequence-only baseline from retained experimental structure-conditioned testing. The local reviewed workflow supports 1DP-only or paired 3DP mode. General 3DP/4DP web access is paused by default; local research availability is not a biological-performance claim. See [web UI boundaries](web/README.md).
 
-## Direct 3DP browser testing (unreleased)
+## Experimental 3DP web access (paused by default)
 
-The FactorForge form supports explicit 1DP/3DP selection. 3DP uploads a PDB/mmCIF file, selects chain and one-based file model order, and requires reviewed one-based protein positions. The selected observed chain must exactly match the complete protein; partial or homologous structures require the retained local reviewed mapping workflow. Direct requests use `/api/optimize` with `design_mode=paired_3dp` and `structure_context={content,format,chain,model,positions,positions_reviewed,target_adaptiveness,penalty_weight}`.
+The public form offers 1DP. General 3DP/4DP web access is paused pending evaluation and collaborator feedback. Research deployments require both a deliberate web build opt-in (`ENABLE_EXPERIMENTAL_STRUCTURE_WEB`) and server opt-in (`FACTORFORGE_EXPERIMENTAL_3DP_ENABLED=true`); these flags are availability controls, not authentication or research consent. Without the server flag, structure generation, recommendation and resolution requests fail with `EXPERIMENTAL_STRUCTURE_DISABLED`. Local experimental implementations are retained. See [research boundaries](docs/experimental-structure.md).
 
 Limits: 3–300 amino acids, structure content 250 KB, HTTP JSON body 1 MB. Both candidates use the configured codon reference, requested GC and canonical motif exclusions plus custom additions. Invalid inputs and infeasible candidates fail without a baseline fallback. Existing sequence-only settings and API requests remain supported. 3DP uses its explicit DP settings and does not apply Kozak, TpA, template or seed transformations. SOP checks are reported for both candidates; regeneration is manual and never silently changes mode. Watermark stays disabled.
 
@@ -163,7 +182,7 @@ This is stateless computational testing, with no external service dependencies o
 
 ## Current public policy UI (2026-10-12)
 
-Custom SOP management is paused. The built-in FactorForge default policy is applied; upload/export/preset/editing controls are hidden and disabled. Their code and previous browser configuration remain available for later reactivation through ENABLE_CUSTOM_SOP. Saved custom SOPs are ignored without deletion. 1DP/3DP mode selection and explicit structure inputs remain active. This supersedes the earlier public SOP upload/export instructions. Public API contracts are retained.
+Custom SOP management is paused. The built-in FactorForge default policy is applied; upload/export/preset/editing controls are hidden and disabled. Their code and previous browser configuration remain available for later reactivation through ENABLE_CUSTOM_SOP. Saved custom SOPs are ignored without deletion. 1DP remains active; general 3DP selection and API structure actions are disabled by default. Their retained research contract requires explicit deployment opt-in. This supersedes the earlier public SOP upload/export instructions.
 
 ### Scientific web observations
 

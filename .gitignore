@@ -112,3 +112,6 @@ archive/v3-ml-prototype/notebooks/*.ipynb
 site/
 data/corpus/
 scratch/
+
+# Local upstream recipe checkout is not a submodule.
+/recipes/bioconda-recipes/

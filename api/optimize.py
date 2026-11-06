@@ -1,19 +1,19 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.5.11
+Product Version: 3.5.12
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
 
-from http.server import BaseHTTPRequestHandler
 import hashlib
 import json
-import sys
+import logging
 import os
 import re
-import logging
+import sys
 import tempfile
 from datetime import datetime, timezone
+from http.server import BaseHTTPRequestHandler
 from typing import Any
 
 # Setup logging
@@ -38,20 +38,7 @@ try:
     from factorforge.engines import EngineRegistry, register_builtin_engines
 
     register_builtin_engines()
-    from factorforge.engines.profile.rules.domesticator import Domesticator
-    from factorforge.engines.profile.rules.rule_engine import RuleEngine
-    from factorforge.engines.profile.utils import get_data_path, load_codon_table
-    from factorforge.engines.profile.scoring import resolve_host_gc_range
-    from factorforge.analysis.metrics import load_codon_usage_table
     from factorforge.analysis.feasibility import DEFAULT_CAI_TARGET, analyze_feasibility
-    from factorforge.engines.dp_v2 import DPV2Optimizer
-    from factorforge.engines.dp_v2_1 import DPV21Optimizer
-    from factorforge.engines.dp_v2_1_1 import DPV211Optimizer
-    from factorforge.registry.versioning import (
-        engine_version,
-        product_version,
-        public_version_metadata,
-    )
     from factorforge.analysis.metrics import (
         calculate_cai,
         calculate_first_region_gc,
@@ -62,7 +49,31 @@ try:
         detect_homopolymers,
         detect_invalid_codons,
         detect_repeats,
+        load_codon_usage_table,
     )
+    from factorforge.design_review import (
+        apply_reviewer_disposition,
+        assert_pathway_invariants,
+        evaluate_candidate,
+        normalize_acceptance_criteria,
+        original_cai,
+        parse_sequence_input,
+        restore_cds_stop_policy,
+    )
+    from factorforge.engines.dp_v2 import DPV2Optimizer
+    from factorforge.engines.dp_v2_1 import DPV21Optimizer
+    from factorforge.engines.dp_v2_1_1 import DPV211Optimizer
+    from factorforge.engines.profile.rules.domesticator import Domesticator
+    from factorforge.engines.profile.rules.rule_engine import RuleEngine
+    from factorforge.engines.profile.scoring import resolve_host_gc_range
+    from factorforge.engines.profile.utils import get_data_path, load_codon_table
+    from factorforge.registry.versioning import (
+        engine_version,
+        product_version,
+        public_version_metadata,
+    )
+    from factorforge.rules.registry import RuleRegistry
+    from factorforge.sops.config import SopProfile
     from factorforge.utils.restriction_sites import (
         detect_restriction_sites,
         domesticate_custom_sites,
@@ -73,25 +84,14 @@ try:
         VALIDATION_REPORT_SCHEMA_VERSION,
         build_validation_report,
     )
-    from factorforge.rules.registry import RuleRegistry
-    from factorforge.sops.config import SopProfile
-    from factorforge.design_review import (
-        apply_reviewer_disposition,
-        assert_pathway_invariants,
-        evaluate_candidate,
-        normalize_acceptance_criteria,
-        original_cai,
-        parse_sequence_input,
-        restore_cds_stop_policy,
-    )
 
     FACTORFORGE_AVAILABLE = True
     logger.info("FactorForge %s engines loaded successfully", product_version())
 except Exception as e:
     FACTORFORGE_AVAILABLE = False
-    IMPORT_ERROR = f"{type(e).__name__}: {str(e)}"
+    IMPORT_ERROR = f"{type(e).__name__}: {e!s}"
     DEFAULT_CAI_TARGET = 0.82
-    logger.error(f"FactorForge import failed: {e}", exc_info=True)
+    logger.exception("FactorForge import failed")
 
 # Constants
 MIN_SEQUENCE_LENGTH = 3
@@ -248,7 +248,7 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": product_version() if FACTORFORGE_AVAILABLE else "3.5.11",
+    "product": product_version() if FACTORFORGE_AVAILABLE else "3.5.12",
     "rule_engine": engine_version("profile") if FACTORFORGE_AVAILABLE else "1.0.0",
     "dp_engine": engine_version("dp") if FACTORFORGE_AVAILABLE else "2.0.1",
     "dp_v2_1_engine": (engine_version("dp_v2_1") if FACTORFORGE_AVAILABLE else "2.1.0-dev"),
@@ -257,6 +257,7 @@ ENGINE_VERSIONS = {
 }
 VALID_EXECUTION_MODES = ["profile", "slm", "dual_compare"]
 ML_PREVIEW_ENABLED = os.environ.get("FACTORFORGE_ML_PREVIEW_ENABLED", "false").lower() == "true"
+EXPERIMENTAL_3DP_ENABLED = os.environ.get("FACTORFORGE_EXPERIMENTAL_3DP_ENABLED", "false").lower() == "true"
 WEB_DB_SAVE_ENABLED = os.environ.get("FACTORFORGE_WEB_DB_SAVE_ENABLED", "false").lower() == "true"
 # Valid characters: ACGT (DNA) or standard 20 Amino Acids (Protein) + * (Stop)
 VALID_AA = "ACDEFGHIKLMNPQRSTVWY"
@@ -317,6 +318,16 @@ class handler(BaseHTTPRequestHandler):
                 self.send_json_response(status_code, result)
                 return
 
+            if not EXPERIMENTAL_3DP_ENABLED and (
+                data.get("design_mode") == "paired_3dp"
+                or data.get("action") in ("recommend_structure", "auto_resolve_structure")
+            ):
+                self.send_json_response(403, {
+                    "success": False,
+                    "error_code": "EXPERIMENTAL_STRUCTURE_DISABLED",
+                    "error": "General 3DP web access is paused pending evaluation. Use 1DP or contact eijex.lab@gmail.com about research collaboration.",
+                })
+                return
             if data.get("action") == "recommend_structure":
                 from factorforge.structure.auto_annotator import recommend_structure_pause_regions
                 context = parse_sequence_input(data.get("sequence", ""))
@@ -640,13 +651,13 @@ class handler(BaseHTTPRequestHandler):
             logger.error(f"Value error: {e}")
             self.send_error_response(400, str(e))
         except Exception as e:
-            logger.error(f"Unexpected error: {e}", exc_info=True)
-            self.send_error_response(500, f"Internal server error: {type(e).__name__}: {str(e)}")
+            logger.exception("Unexpected optimization request error")
+            self.send_error_response(500, f"Internal server error: {type(e).__name__}: {e!s}")
 
     def optimize_structure_web(self, data):
         """Direct, stateless testing; no ResearchOS approval/evidence is implied."""
-        from factorforge.engines.structure_web import run_structure_web
         from factorforge.constraints.type_iis import get_canonical_forbidden_motifs
+        from factorforge.engines.structure_web import run_structure_web
 
         if (
             self.validate_host(data.get("host", DEFAULT_HOST_PROFILE))
@@ -663,7 +674,7 @@ class handler(BaseHTTPRequestHandler):
             )
         sequence = data.get("sequence", "")
         if not isinstance(sequence, str):
-            raise ValueError("sequence must be a string")
+            raise ValueError("sequence must be a string")  # noqa: TRY004 -- preserve HTTP400 contract
         context = parse_sequence_input(sequence)
         if not context["generation_allowed"]:
             raise ValueError("Invalid sequence input for direct 3DP")
@@ -832,13 +843,13 @@ class handler(BaseHTTPRequestHandler):
                 }
                 for r in rules
             ]
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, RuntimeError):
             rule_metadata = []
 
         health_info = {
             "status": "healthy",
             "service": "FactorForge API",
-            "web_deployment_revision": "v3.5.11-2026-10-25",
+            "web_deployment_revision": f"v{ENGINE_VERSIONS['product']}",
             "version": ENGINE_VERSIONS["product"],
             "factorforge_available": FACTORFORGE_AVAILABLE,
             "endpoints": {
@@ -854,9 +865,9 @@ class handler(BaseHTTPRequestHandler):
             "host_metadata": host_metadata_with_gc,
             "supported_objectives": VALID_OBJECTIVES,
             "capabilities": {
-                "structure_recommendation": {"available": True, "requires_review": True},
+                "structure_recommendation": {"available": bool(FACTORFORGE_AVAILABLE and EXPERIMENTAL_3DP_ENABLED), "requires_review": True},
                 "scientific_review": {"schema_version":"1.0","rna_scan":True,"mfe":"optional_local_tool"},
-                "direct_structure": {"available": bool(FACTORFORGE_AVAILABLE), "status": "experimental", "max_protein_aa": 300, "max_structure_bytes": 250000, "approval_status": "not_collected", "evidence_recording": "not_connected"},
+                "direct_structure": {"available": bool(FACTORFORGE_AVAILABLE and EXPERIMENTAL_3DP_ENABLED), "status": "experimental" if EXPERIMENTAL_3DP_ENABLED else "paused", "max_protein_aa": 300, "max_structure_bytes": 250000, "approval_status": "not_collected", "evidence_recording": "not_connected"},
                 "execution_modes": (VALID_EXECUTION_MODES if ML_PREVIEW_ENABLED else ["profile"]),
                 "ml_preview": {
                     "available": bool(FACTORFORGE_AVAILABLE and ML_PREVIEW_ENABLED),
@@ -897,8 +908,8 @@ class handler(BaseHTTPRequestHandler):
             try:
                 optimizer = EngineRegistry.get("profile")
                 health_info["engine"] = {"name": optimizer.name, "version": optimizer.version}
-            except Exception:
-                pass
+            except (ValueError, KeyError, AttributeError, RuntimeError):
+                logger.warning("Optional engine health metadata is unavailable")
 
         logger.info("Health check requested")
         self.send_json_response(200, health_info)
@@ -1116,7 +1127,7 @@ class handler(BaseHTTPRequestHandler):
         if seed is None:
             return None
         if isinstance(seed, bool):
-            raise ValueError("seed must be an integer")
+            raise ValueError("seed must be an integer")  # noqa: TRY004 -- preserve HTTP400 contract
         try:
             parsed = int(seed)
         except (TypeError, ValueError) as exc:
@@ -1133,12 +1144,12 @@ class handler(BaseHTTPRequestHandler):
             return []
 
         if not isinstance(custom_sites, list):
-            raise ValueError("custom_restriction_sites must be a list")
+            raise ValueError("custom_restriction_sites must be a list")  # noqa: TRY004 -- preserve HTTP400 contract
 
         parsed = []
         for index, site in enumerate(custom_sites):
             if not isinstance(site, dict):
-                raise ValueError(f"custom_restriction_sites[{index}] must be an object")
+                raise ValueError(f"custom_restriction_sites[{index}] must be an object")  # noqa: TRY004 -- preserve HTTP400 contract
 
             name = str(site.get("name", "")).strip()
             sequence = str(site.get("sequence", "")).strip().upper()
@@ -1208,7 +1219,7 @@ class handler(BaseHTTPRequestHandler):
         if profiles is None:
             return list(DEFAULT_COMPARE_PROFILES)
         if not isinstance(profiles, list):
-            raise ValueError("profiles must be a list")
+            raise ValueError("profiles must be a list")  # noqa: TRY004 -- preserve HTTP400 contract
         if not profiles:
             raise ValueError("profiles must include at least one profile")
         if len(profiles) > MAX_COMPARE_PROFILES:
@@ -1487,11 +1498,11 @@ class handler(BaseHTTPRequestHandler):
             logger.warning(f"Slate validation error: {e}")
             return 400, {"status": "error", "error": str(e), "success": False}
         except Exception as e:
-            logger.error(f"Unexpected slate error: {e}", exc_info=True)
+            logger.exception("Unexpected slate request error")
             return 500, {
                 "status": "error",
                 "success": False,
-                "error": f"Internal server error: {type(e).__name__}: {str(e)}",
+                "error": f"Internal server error: {type(e).__name__}: {e!s}",
             }
 
     def attach_policy_verdict(self, response, reviewer_disposition=None):
@@ -1516,9 +1527,10 @@ class handler(BaseHTTPRequestHandler):
 
     def attach_scientific_observations(self, response, *, expected_protein):
         response.setdefault("product_version", product_version())
-        from factorforge.guards.plant_rna_guards import scan_plant_rna_risks
-        from factorforge.guards.initiation_mfe import evaluate_initiation_mfe
         from Bio.Seq import Seq
+
+        from factorforge.guards.initiation_mfe import evaluate_initiation_mfe
+        from factorforge.guards.plant_rna_guards import scan_plant_rna_risks
         def observe(dna):
             # A full construct can include promoter/vector flanks: do not label
             # those bases as sense CDS or an initiation window without mapping.
@@ -1694,7 +1706,7 @@ class handler(BaseHTTPRequestHandler):
                     builder = ConstructBuilder(template="standard_expression")
                     construct = builder.build(result.sequence)
                     optimized_sequence = str(construct.seq)
-                except Exception as e:
+                except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, ImportError) as e:
                     logger.warning(f"Construct building failed: {e}, using raw sequence")
                     optimized_sequence = result.sequence
             else:
@@ -1814,8 +1826,8 @@ class handler(BaseHTTPRequestHandler):
             return response
 
         except Exception as e:
-            logger.error(f"Optimization failed: {e}", exc_info=True)
-            raise ValueError(f"Optimization error: {str(e)}")
+            logger.exception("Optimization failed")
+            raise ValueError(f"Optimization error: {e!s}")
 
     def optimize_feasibility_best(
         self,
@@ -2312,7 +2324,7 @@ class handler(BaseHTTPRequestHandler):
             internal_host = HOST_MAP.get(str(host_profile).lower(), DEFAULT_HOST_PROFILE)
         try:
             return len(RuleEngine(host=internal_host).scan_rare_codon_runs(output_cds))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, RuntimeError):
             return 0
 
     def response_profile(self, response, profile, objective):

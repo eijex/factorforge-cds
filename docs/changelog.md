@@ -4,6 +4,12 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current product line.
 
+## v3.5.12 — policy, consent and installation maintenance (2026-11-06)
+
+- Clarified default criteria, lab-specific SOP enquiries and explicit data-use consent.
+- General 3DP/4DP web access remains paused; retained 3DP web execution requires explicit research opt-in. Prepared-input CPU optimization is distinct from GPU structure prediction.
+- Added Bioconda installed-distribution smoke CI and Linux/macOS/WSL guidance. Package indexes and archival records publish independently; verify the exact version when reproducing a run.
+
 ## v3.5.8 — DP v2.2/v2.3 forward recurrence & multi-class pause release (2026-10-21)
 
 - Integrated DP v2.2 forward recurrence: Unified 1DP/3DP forward dynamic programming recurrence ($F_t(g, q)$), 5' translation initiation ramp ($K=15$ codons), and synonymous GC envelope clamping without expanding state dimensionality ($\mathcal{O}(N^2 |Q| B)$, $B \le 6$). Zero parity invariant mathematically verified against baseline.
