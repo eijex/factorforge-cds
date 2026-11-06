@@ -10,7 +10,7 @@ availability and Bioconda installed-package smoke coverage.
 - [Remote browser suite](https://github.com/eijex/factorforge-cds/actions/runs/42184346124): 63 passed.
 - Public web v3.5.12 was deployed; synthetic 1DP preserves amino-acid identity and paused structure routes return HTTP 403.
 - [Bioconda recipe update](https://github.com/bioconda/bioconda-recipes/pull/71287) uses the verified published source hash; its merge/build is pending. Prior installed-package smoke coverage is for v3.5.11, not a new Bioconda artifact.
-- A matching new archival DOI has not yet been verified. A previous version's DOI must not be used as this release's DOI.
+- [Zenodo v3.5.12 archive](https://doi.org/10.5281/zenodo.24001252) is bound to the GitHub v3.5.12 tag. Citation metadata was updated after the archive appeared; the release tag remains immutable.
 
 No new biological validation is claimed.
 
