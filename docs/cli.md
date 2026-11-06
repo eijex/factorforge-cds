@@ -95,6 +95,6 @@ factorforge optimize input.fasta --scan-mode fast -o output.fasta
 factorforge optimize input.fasta --reference-id nbenthamiana_qld183_v103
 ```
 
-### Direct experimental 3DP web API (unreleased)
+### Direct experimental 3DP web API (paused by default)
 
-POST `/api/optimize` with `design_mode=paired_3dp` and a reviewed `structure_context` object. See [experimental structure documentation](experimental-structure.md) for limits and mapping requirements. This stateless path returns a 1DP/3DP pair without external service dependencies or remote evidence recording. No new CLI command or MCP tool is implied.
+Version 3.5.12 disables general 3DP web access by default. Structure actions and `design_mode=paired_3dp` return HTTP 403 / `EXPERIMENTAL_STRUCTURE_DISABLED` unless the server explicitly sets `FACTORFORGE_EXPERIMENTAL_3DP_ENABLED=true`. The public browser build separately keeps 3DP selection disabled. In an enabled research deployment, POST `/api/optimize` with `design_mode=paired_3dp` and a reviewed `structure_context` object. See [experimental structure documentation](experimental-structure.md) for limits and mapping requirements. This stateless research path returns a 1DP/3DP pair without remote evidence recording. No new CLI command or MCP tool is implied.

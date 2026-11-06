@@ -1,5 +1,5 @@
 {% set name = "factorforge-cds" %}
-{% set version = "3.5.11" %}
+{% set version = "3.5.12" %}
 
 package:
   name: {{ name|lower }}
@@ -7,8 +7,9 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name.replace('-', '_') }}-{{ version }}.tar.gz
-  # Verified against the published 3.5.10 source archive (Job456).
-  sha256: af77a781ed522a6c9a303a90d962c37645f9d28b4970ba0adfe764884ac2ea0a
+  # Publication gate: update with scripts/update_conda_recipe_sha.py only after
+  # the 3.5.12 PyPI source archive exists. This recipe is not ready to submit yet.
+  sha256: REPLACE_AFTER_PYPI_3_5_12_PUBLICATION
 
 build:
   number: 0
@@ -21,7 +22,7 @@ requirements:
   host:
     - python >=3.10
     - pip
-    - setuptools >=68
+    - setuptools >=77.0.3
     - wheel
   run:
     - python >=3.10

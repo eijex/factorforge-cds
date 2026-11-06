@@ -1,8 +1,8 @@
 # Position-conditioned DP research module v0.1.0
 
 `factorforge.engines.structural_pause.StructuralPauseDPOptimizer` is an opt-in
-research interface. It is available through an explicit public browser testing route; it is not a
-profile default. Supply explicit one-based residue positions, a structure reference,
+research interface. General browser access is paused by default; local research
+implementations are retained. It is not a profile default. Supply explicit one-based residue positions, a structure reference,
 target relative codon adaptiveness and nonnegative penalty weight. The target
 is uncalibrated; no universal 0.35–0.50 biological interval is established.
 
@@ -24,7 +24,18 @@ an old/new comparison and human biological review before synthesis replacement.
 The experimental YieldPredict 14D contract requires independent evaluation and
 retraining; default 13D checkpoints must not be silently repurposed.
 
-## Direct 3DP browser testing (web build)
+## Direct 3DP browser testing (explicit research opt-in only)
+
+As of 3.5.12, the general public form enables 1DP only.
+3DP/4DP public web release is on hold pending evaluation and collaborator feedback.
+Research deployments must opt in at build time with
+`ENABLE_EXPERIMENTAL_STRUCTURE_WEB` and separately on the server with
+`FACTORFORGE_EXPERIMENTAL_3DP_ENABLED=true`. Default-off structure requests
+return HTTP 403 / `EXPERIMENTAL_STRUCTURE_DISABLED`; GET capabilities report
+them unavailable. These switches are not authentication, approval or consent.
+The following contract describes the retained enabled research path. 4DP has no
+selectable public web mode. GCP/GPU is not required for prepared-input CPU
+optimization; automatic structure prediction is separate.
 
 The FactorForge form supports explicit 1DP/3DP selection. 3DP uploads a PDB/mmCIF file, selects chain and one-based file model order, and requires reviewed one-based protein positions. The selected observed chain must exactly match the complete protein; partial or homologous structures require the retained local reviewed mapping workflow. Direct requests use `/api/optimize` with `design_mode=paired_3dp` and `structure_context={content,format,chain,model,positions,positions_reviewed,target_adaptiveness,penalty_weight}`.
 

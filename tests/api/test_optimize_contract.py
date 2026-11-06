@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from io import BytesIO
 import json
+from io import BytesIO
+
+import pytest
 
 import api.optimize as optimize_api
-import pytest
 from api.optimize import DEFAULT_CAI_TARGET, DEFAULT_GC_MAX, DEFAULT_GC_MIN, handler
 from factorforge import __version__
 from factorforge.registry.versioning import engine_version

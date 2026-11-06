@@ -1,15 +1,18 @@
 """Synthetic direct 3DP tests with actual engines."""
 
-from io import BytesIO
 import json
+from io import BytesIO
+from unittest.mock import patch
+
 import pytest
+
 from api.optimize import handler
 
 PROTEIN = "MASTWQHLEKDPVNRSGYF"
 NAMES = dict(
     zip(
         "MASTWQHLEKDPVNRGYF",
-        "MET ALA SER THR TRP GLN HIS LEU GLU LYS ASP PRO VAL ASN ARG GLY TYR PHE".split(),
+        ["MET", "ALA", "SER", "THR", "TRP", "GLN", "HIS", "LEU", "GLU", "LYS", "ASP", "PRO", "VAL", "ASN", "ARG", "GLY", "TYR", "PHE"],
     )
 )
 
@@ -45,7 +48,8 @@ def request(**changes):
     return data
 
 
-def post(data):
+def post(data, *, research_enabled=True):
+    """Research fixtures explicitly opt in; gate tests pass research_enabled=False."""
     h = object.__new__(handler)
     body = json.dumps(data).encode()
     h.path = "/api/optimize"
@@ -56,8 +60,49 @@ def post(data):
     h.send_response = codes.append
     h.send_header = lambda *a: None
     h.end_headers = lambda: None
-    h.do_POST()
+    with patch("api.optimize.EXPERIMENTAL_3DP_ENABLED", research_enabled):
+        h.do_POST()
     return codes[0], json.loads(h.wfile.getvalue())
+
+
+@pytest.mark.parametrize("data", [
+    {"design_mode": "paired_3dp", "sequence": PROTEIN},
+    {"action": "recommend_structure", "sequence": PROTEIN},
+    {"action": "auto_resolve_structure", "sequence": PROTEIN},
+])
+def test_public_structure_gate_blocks_before_work(monkeypatch, data):
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Research optimizer must not run while disabled")
+
+    monkeypatch.setattr(handler, "optimize_structure_web", forbidden)
+    status, result = post(data, research_enabled=False)
+    assert status == 403
+    assert result["error_code"] == "EXPERIMENTAL_STRUCTURE_DISABLED"
+    assert "candidates" not in result
+
+
+def test_public_gate_keeps_baseline_available():
+    status, result = post({
+        "sequence": PROTEIN, "design_mode": "baseline_1dp",
+        "objective": "feasibility_best", "constraints": {"gc_min": 0, "gc_max": 100},
+    }, research_enabled=False)
+    assert status == 200, result
+    assert result["success"] is True
+
+
+def test_public_capabilities_report_paused():
+    h = object.__new__(handler)
+    h.path = "/api/optimize"
+    h.wfile = BytesIO()
+    h.send_response = lambda *a: None
+    h.send_header = lambda *a: None
+    h.end_headers = lambda: None
+    with patch("api.optimize.EXPERIMENTAL_3DP_ENABLED", False):
+        h.do_GET()
+    capabilities = json.loads(h.wfile.getvalue())["capabilities"]
+    assert capabilities["direct_structure"]["available"] is False
+    assert capabilities["direct_structure"]["status"] == "paused"
+    assert capabilities["structure_recommendation"]["available"] is False
 
 
 def test_actual_paired_generation():
@@ -140,8 +185,9 @@ def test_cds_stop_preserved():
 
 
 def test_mmcif_input_actual_execution():
-    from Bio.PDB import PDBParser, MMCIFIO
     from io import StringIO
+
+    from Bio.PDB import MMCIFIO, PDBParser
 
     structure = PDBParser(QUIET=True).get_structure("synthetic", StringIO(pdb()))
     writer = MMCIFIO()
@@ -188,6 +234,7 @@ def test_missing_structure_never_auto_approves_or_calls_network(monkeypatch):
 
 def test_local_uploaded_resolver_keeps_review_false_and_checks_mapping(monkeypatch):
     import urllib.request
+
     from factorforge.structure.auto_resolver import auto_resolve_structure_for_protein
     def forbidden(*args, **kwargs):
         raise AssertionError("Unexpected external sequence transfer")

@@ -1,5 +1,9 @@
 """Unit tests for DNA Chisel vs FactorForge comparative benchmark."""
 
+import pytest
+
+pytest.importorskip("dnachisel", reason="Install the benchmark extra for cross-tool evaluation")
+
 from benchmarks.benchmark_dnachisel_vs_factorforge import run_benchmark
 
 ADALIMUMAB_VH = (
@@ -19,8 +23,8 @@ def test_dnachisel_vs_factorforge_benchmark_execution() -> None:
     )
 
     assert len(records) == 2  # 1 FactorForge + 1 DNA Chisel
-    ff_rec = [r for r in records if r["engine"] == "FactorForge DP"][0]
-    dc_rec = [r for r in records if r["engine"] == "DNA Chisel"][0]
+    ff_rec = next(r for r in records if r["engine"] == "FactorForge DP")
+    dc_rec = next(r for r in records if r["engine"] == "DNA Chisel")
 
     # FactorForge assertions: exact DP guarantees constraint feasibility
     assert ff_rec["status"] == "FEASIBLE"
