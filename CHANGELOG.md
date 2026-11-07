@@ -2,13 +2,15 @@
 
 ## [Unreleased]
 
+- Correct the public release-note summaries and historical privacy/availability wording; remove internal study/telemetry details and unsupported biological guarantees from the web modal. Product version and runtime behavior remain 3.5.12.
+
 ## [3.5.12] — 2026-11-06
 
 - Clarify built-in design/review criteria versus laboratory-approved SOPs; direct lab-specific configuration enquiries to the maintainer before confidential data sharing.
 - Separate software licensing from sequence-output rights. Research/training/publication/disclosure require explicit prior consent; rights, permitted use and retention/deletion are agreed separately.
 - Keep general web 3DP/4DP release on hold. Disable 3DP selection by default and fail closed on API structure actions unless a research deployment explicitly opts in. 1DP and local research implementations remain available; no engine objective changes.
 - Document CPU optimization separately from automatic structure prediction; GCP/GPU is not inherently required for optimization from prepared inputs.
-- Align Bioconda Linux/macOS/WSL instructions, record native Windows upstream non-support, and add installed-package provenance/DP smoke CI. Local Ubuntu replay passed; remote/macOS CI results remain pending.
+- Align Bioconda Linux/macOS/WSL instructions, record native Windows upstream non-support, and add installed-package provenance/DP smoke CI. Installed-distribution smoke checks passed on Ubuntu and macOS for the prior public 3.5.11 Bioconda package; that result does not certify a different artifact version.
 - Package indexes and archival records are published independently; use the exact installed version and artifact digest for reproduction. Historical entries below are not new biological claims.
 - Defer Blob URL cleanup until the browser has time to consume report/settings downloads. Remove automatic synthetic-baseline DNA from report accounting and structure comparison; retain known candidate codon counts while reference-dependent shifts remain unavailable without a real input CDS or recorded baseline candidate.
 - Raise the setuptools build requirement to 77.0.3 to match the existing SPDX license-expression metadata; older declared backends could not parse that metadata.
@@ -22,37 +24,24 @@
 - Correct public web processing/history and experimental-engine descriptions; distinguish collaboration enquiries from permission for research retention/reuse.
 - Make HPX offline Chromium regression portable and check page errors, exact selection and mature-coordinate mapping. These checks cover the tested browser configuration, not universal certification.
 
-## [3.5.11] — 2026-10-25 (DP v2.4.0 Tropical Transport & TASEP Kinetic Engine Release)
+## [3.5.11] — 2026-10-25 (experimental scoring maintenance)
 
-- **DP v2.4.0 Engine Integration**:
-  - Implemented `DPV240Optimizer` extending the unified dynamic programming trellis with Tropical Max-Plus semiring matrix representation:
-    $\mathbf{V}_i(s') = \bigoplus_{s \in S_{i-1}} (\mathbf{V}_{i-1}(s) \otimes \mathbf{A}_i(s, s'))$.
-  - Introduced TASEP-inspired upstream positional buffer smoothing ($W_{\text{tasep}} = 3$ codons, 9 nt) preceding annotated pauses to prevent artificial step-function deceleration shocks.
-  - Implemented 1D reciprocal-weight Wasserstein cadence distance ($W_1$) quantifying cumulative translational transit delay discrepancies between synonymous designs.
-- **Strict Backward Invariance & Bit-Identity**:
-  - Verified 100% bit-identical zero-parity invariant with 1DP and 3DP baselines when `enable_tasep_smoothing=False` across all test fixtures.
-  - Full backward compatibility across 1DP, 3DP, 4DP, and stem cell optimization pipelines (67/67 tests passing).
-- **Epistemic Classification**: Computational modeling proxy; UNVERIFIED_PUBLIC_CORPUS; Biological validation: NOT_AVAILABLE.
+- Retained experimental positional scoring and smoothing utilities and computational comparison checks. Their scores are not calibrated translation speeds, dwell times or biological outcomes.
+- Historical fixture-level compatibility checks do not establish universal equivalence. General 3DP/4DP web availability follows the current release policy.
 
-## 3.5.10 — 2026-10-24 (4DP Space-Time Exit-Tunnel DP, Equivalence-Preserving Local Codon Rewriter & GCP Training Telemetry; Git tag and PyPI publication confirmed2026-10-24)
+## 3.5.10 — 2026-10-24 (experimental positional scoring)
 
-- Experimental 4DP scoring applies a configurable positional offset (currently +35 aa) to selected pause windows. This is a modeling assumption, not calibrated translation kinetics or demonstrated folding/yield improvement.
-- `ConstrainedLocalRewriter` provides deterministic local synonymous rewrites and constraint audits under the configured DP objective. Separate DP replay counts do not establish matched execution budgets or end-to-end speedup. No independent hairpin-removal objective is claimed.
-- `TrainingTelemetryLogger` provides local JSONL/SQLite records with content hashes, numeric observations and explicit computational evidence labels. Configuration checks precede runner client creation; live AgentOS/ResearchOS/ValidationHub ingestion, remote persistence and authenticated human ownership are not established by these local tables.
-- Stage009 stores an exploratory public-corpus comparison: held-out NLL Frequency 1.113339, Bigram 1.128064, sLLM 1.132609. The neural model did not exceed the frequency baseline on this test. Biological validation: NOT_AVAILABLE.
+- Experimental scoring can apply a configured residue offset to reviewed positions. A +35-aa setting is a modeling choice, not a universal physical law or a demonstrated folding benefit.
+- Deterministic local synonymous rewrites remain subject to the configured objective and independent sequence checks. No independent hairpin-removal objective or biological-performance claim is established by this entry.
 
-## 3.5.9 — 2026-10-23 (Internal development milestone; consolidated into 3.5.10)
+## 3.5.9 — 2026-10-23 (consolidated development work)
 
-- Constrained Local Codon Rewriter (ConstrainedLocalRewriter v1.0.0): Implemented deterministic synonymous peephole ($w \in \{1,2,3\}$) and coupled 2-site GC-neutral swaps maintaining DP v2.3 objective parity.
-- 4DP Ribosome Exit-Tunnel Latency Formulation: Formulated $+35\text{ aa}$ modeling assumption ($i_{\text{ext}} = i_{\text{ptc}} + L_{\text{tunnel}}$) resolving structural exit-tunnel latency.
-- ML Stage 009 & Telemetry Scaffolding: Established leak-free evaluation benchmark partition (<40% BLOSUM62 homology) and hash-only telemetry contract. Consolidated into 3.5.10 public candidate.
+- No separate user-facing release is represented by this entry. Relevant experimental work was consolidated into 3.5.10; internal evaluation and telemetry records are not public product capabilities.
 
-## 3.5.8 — 2026-10-21 (DP v2.2/v2.3 forward recurrence & multi-class pause release; package publication pending)
+## 3.5.8 — 2026-10-21 (experimental scoring refactor)
 
-- DP v2.2 forward recurrence unification: Unified 1DP/3DP forward dynamic programming recurrence ($F_t(g, q)$), 5' translation initiation ramp ($K=15$ codons), and synonymous GC envelope clamping without expanding state dimensionality ($\mathcal{O}(N^2 |Q| B)$, $B \le 6$). Bit-identical zero parity invariant verified against DP v2.1.1 baseline when pause weight $\lambda=0$.
-- DP v2.3 multi-class structural pause & Nature problem engine: Integrated `StructuralPauseAnnotator` for automatic sub-10ms sequence-level detection of 5 biophysical domain classes (Signal Peptide cleavage, Cysteine networks, Transmembrane helices, N-Glycosylation, Flexible hinges). Class-specific penalty weights ($\lambda_k, \tau_k$) calibrated to mitigate translocon pore congestion, signal miscleavage, and non-native disulfide dimerization.
-- Stem cell prototype adapter: Rebased `StemCell3DPOptimizer` on the unified DP v2.2 core while preserving 37°C thermodynamic constraints, full-construct Type IIS / homopolymer checks, and stop codon handling.
-- Engine registry & manifest: Registered `dp_v2_2` and `dp_v2_3` in `version_manifest.json` and `factorforge.engines` lazy loader. Synchronized web/API deployment revisions to `v3.5.8-2026-10-21`.
+- Refactored baseline and position-conditioned scoring code and retained a host-context research adapter. Feature annotations and positional penalties are computational hypotheses, not calibrated folding, membrane-insertion or secretion controls.
+- No package-publication, model-evaluation or biological-validation conclusion follows from the implementation description alone.
 
 ## 3.5.7 — 2026-10-17 (web UI & stemcell engine patch; package publication pending)
 
@@ -62,7 +51,7 @@
 
 ## 3.5.6 — 2026-10-13 (web/API patch; package publication pending)
 
-- 1DP sequence optimization is established as the primary production default for peer-reviewed, reproducible plant CDS design. 3DP structure-conditioned design is categorized as In Development, with automated cloud GPU folding in progress and manual exact-match PDB/mmCIF uploads supported for research pilots.
+- 1DP is the standard public sequence-design workflow. Historical exact-match structure-upload pilots are experimental and currently default-disabled. Optimization using prepared structural inputs does not inherently require GCP/GPU; automatic structure prediction is a separate workload.
 - Web structure handling requires exact-match uploaded PDB/mmCIF coordinates and explicit reviewed positions. Automatic external folding, artificial structure/confidence fallback, and auto-approval are disabled. Structure metrics are synthetic reconstruction checks; independent public-structure/DSSP validation remains open.
 
 - Structural annotation: add offline structural annotation context and explicit conflict review; reject malformed sidecar binding and nonfinite scores, recompute merged-domain PAE, and report degenerate backbone geometry as unassigned.
@@ -929,7 +918,7 @@ Web/API deployed; Git tag and package publication pending.
 
 - **Disabled profile cards** — removed `pointer-events-none` so tooltips are accessible on hover; added "Pending wet-lab validation before enabling" notice to 5' Ramp and Viral Delivery cards.
 - **Viral Delivery tooltip** — corrected citation reference; updated to Peccoud et al. 2024 (PMC11718241).
-- **Analytics notice** — "Sequence content is not intentionally stored" → "Submitted sequences are not logged or stored" for clarity.
+- **Historical privacy wording corrected 2026-11-07** — submitted generation inputs are processed by the API; results may remain in browser history. This does not certify infrastructure-wide zero retention.
 
 ---
 
