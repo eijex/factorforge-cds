@@ -81,13 +81,14 @@ async function openApp(page) {
   expect(pageErrors).toEqual([]);
 }
 
-test('historical v3.5.2 release notes are populated', async ({ page }) => {
+test('selected release summaries link to the full software history', async ({ page }) => {
   await openApp(page);
-  const entry = page.locator('h3').filter({ hasText: /^v3\.5\.2$/ }).locator('..').locator('..');
-  await expect(entry.locator('li')).toHaveCount(4);
-  await expect(entry).toContainText('Optional codon balancing');
-  await expect(entry).toContainText('stable DP v2 as the default');
-  await expect(entry).toContainText('not biological validation');
+  await page.locator('#changelogBtn').click();
+  const modal = page.locator('#changelogModal');
+  await expect(modal).toContainText('Selected public changes');
+  await expect(modal.getByRole('link', { name: 'Full software change history (GitHub)' }))
+    .toHaveAttribute('href', 'https://github.com/eijex/factorforge-cds/blob/main/CHANGELOG.md');
+  await expect(modal).toContainText('not biological validation');
 });
 
 test('loads the main web UI', async ({ page }) => {
@@ -109,7 +110,7 @@ test('opens release notes and toggles dark mode', async ({ page }) => {
 
   await page.locator('#changelogBtn').click();
   await expect(page.locator('#changelogModal')).toBeVisible();
-  await expect(page.locator('#changelogModal')).toContainText('v3.5.0 — Discovery Slates');
+  await expect(page.locator('#changelogModal h3').first()).toHaveText('v3.5.12');
   await page.locator('#closeModal').click();
   await expect(page.locator('#changelogModal')).toBeHidden();
 });
