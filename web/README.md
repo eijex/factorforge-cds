@@ -2,6 +2,8 @@
 
 ## v3.5.12: current public policy
 
+The public What's New modal contains selected user-facing changes. Its 2026-11-07 wording update removes internal study/telemetry summaries and unsupported guarantees; it does not change engine behavior or the package version. Full historical software changes remain linked, with corrected privacy and availability wording.
+
 1DP is the public form's standard CPU design path. General 3DP/4DP access is
 paused pending evaluation and collaborator feedback. A research build can opt in
 with `ENABLE_EXPERIMENTAL_STRUCTURE_WEB`; the API separately requires

@@ -6,16 +6,17 @@ FactorForge v3.0+ is the current product line.
 
 ## v3.5.12 — policy, consent and installation maintenance (2026-11-06)
 
+Web-note clarification, 2026-11-07: selected public changes replace internal research summaries. Historical biological and zero-retention assertions are not supported current claims; runtime and package versions are unchanged.
+
 - Clarified default criteria, lab-specific SOP enquiries and explicit data-use consent.
 - General 3DP/4DP web access remains paused; retained 3DP web execution requires explicit research opt-in. Prepared-input CPU optimization is distinct from GPU structure prediction.
 - Added Bioconda installed-distribution smoke CI and Linux/macOS/WSL guidance. Package indexes and archival records publish independently; verify the exact version when reproducing a run.
 
-## v3.5.8 — DP v2.2/v2.3 forward recurrence & multi-class pause release (2026-10-21)
+## v3.5.8 — experimental scoring refactor (2026-10-21)
 
-- Integrated DP v2.2 forward recurrence: Unified 1DP/3DP forward dynamic programming recurrence ($F_t(g, q)$), 5' translation initiation ramp ($K=15$ codons), and synonymous GC envelope clamping without expanding state dimensionality ($\mathcal{O}(N^2 |Q| B)$, $B \le 6$). Zero parity invariant mathematically verified against baseline.
-- Integrated DP v2.3 multi-class pause & Nature problem engine: Automated sequence domain profiler (`StructuralPauseAnnotator`) detecting Signal Peptide cleavage sites (SP), Cysteine networks (Cys), Transmembrane helices (TM), N-Glycosylation sequons (Glyc), and Flexible hinges (Hinge). Class-specific pause penalties ($\lambda_k, 	au_k$) mitigate translocon congestion, signal miscleavage, and non-native disulfide dimerization.
-- Rebased `StemCell3DPOptimizer` on the unified DP v2.2/v2.3 core with full construct constraint checks.
-- Registered `dp_v2_2` and `dp_v2_3` in `version_manifest.json` and engine registry; synchronized web/API revisions to `v3.5.8-2026-10-21`.
+- Refactored baseline and position-conditioned scoring utilities and retained an experimental host-context adapter.
+- Sequence-feature annotations and positional penalties are computational hypotheses. They do not establish calibrated translation kinetics or mitigation of membrane-insertion, cleavage or disulfide-assembly failures.
+- Implementation and fixture checks do not establish universal equivalence or biological performance. Current public availability follows the v3.5.12 policy above.
 
 ## v3.5.7 — human stem cell prototype preview and web UI host update (2026-10-17)
 
@@ -26,13 +27,13 @@ FactorForge v3.0+ is the current product line.
 
 ## v3.5.6 — reviewed structure workflow repairs (2026-10-13)
 
-- 1DP sequence optimization is active as the primary production default for peer-reviewed plant CDS design.
-- 3DP structure-conditioned optimization is designated as In Development (cloud GPU auto-folding infrastructure in progress; exact-match PDB/mmCIF uploads supported for research pilots).
+- 1DP sequence optimization is the standard public plant CDS design workflow.
+- Historical exact-match structure-upload pilots are experimental and currently default-disabled. Prepared-input optimization is distinct from automatic structure prediction and does not inherently require GCP/GPU.
 - Interactive 3D cartoon ribbon viewer integrated with per-residue pLDDT confidence coloring and pause codon highlight tracks.
 - Web/API patch: exact-match uploaded structures and explicit position review are required for experimental 3DP.
 - Automatic external inference, artificial structure/confidence fallback and automatic approval are disabled.
 - Pre-synthesis RNA/MFE observations and candidate evidence exports retain computational limitations.
-- Package publication, Git tag and a new archival DOI are pending. Synthetic structure checks do not establish independent real-structure accuracy.
+- This historical entry does not establish a currently enabled public structure service. Synthetic structure checks do not establish independent real-structure accuracy.
 
 ## v3.5.4 — standalone and optional-persistence stability
 
@@ -322,7 +323,7 @@ self-describing and consumable by downstream tooling.
 ### Fixed
 - **Disabled profile cards** — tooltips now accessible; "Pending wet-lab validation" notice added to 5' Ramp and Viral Delivery
 - **Viral Delivery tooltip** — corrected citation reference; updated to Peccoud et al. 2024 (PMC11718241)
-- **Analytics notice** — clarified: "Submitted sequences are not logged or stored"
+- **Historical privacy wording corrected 2026-11-07** — generation inputs are sent to the API; results may remain in browser history. Infrastructure-wide zero retention is not certified.
 
 ## v3.1.2 — 2026-05-26
 
