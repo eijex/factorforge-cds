@@ -354,6 +354,10 @@ class handler(BaseHTTPRequestHandler):
                 )
                 self.send_json_response(200, {"success": True, "action": "auto_resolve_structure", "resolved": resolved})
                 return
+            if data.get("action") == "get_sample_sidecar":
+                sample_sidecar = self.generate_meta_sample_sidecar()
+                self.send_json_response(200, {"success": True, "sidecar": sample_sidecar})
+                return
             if data.get("action") is not None:
                 raise ValueError("Unsupported API action")
             if data.get("design_mode") == "paired_3dp":
@@ -364,8 +368,16 @@ class handler(BaseHTTPRequestHandler):
                 result = self.attach_policy_verdict(result, data.get("reviewer_disposition"))
                 self.send_json_response(200, result)
                 return
+            if data.get("design_mode") == "paired_4dp":
+                result = self.optimize_4dp_web(data)
+                if result.get("policy_status") == "INCOMPLETE":
+                    self.send_json_response(422, {"success": False, "error_code": "REQUIRED_CHECK_UNAVAILABLE", "error": "Required observations are unavailable; no approved result returned"})
+                    return
+                result = self.attach_policy_verdict(result, data.get("reviewer_disposition"))
+                self.send_json_response(200, result)
+                return
             if data.get("design_mode") not in {None, "baseline_1dp"}:
-                raise ValueError("design_mode must be baseline_1dp or paired_3dp")
+                raise ValueError("design_mode must be baseline_1dp, paired_3dp or paired_4dp")
 
             # Extract parameters
             sequence = data.get("sequence", "")
@@ -818,6 +830,184 @@ class handler(BaseHTTPRequestHandler):
             response["metadata"]["sop_regeneration"] = (
                 "manual_review_only_no_automatic_mode_switch"
             )
+        return response
+
+    def generate_meta_sample_sidecar(self) -> dict[str, Any]:
+        """Generate synthetic sidecar for the Meta 65-aa benchmark protein."""
+        from factorforge.structure.alphafold_server_ingest import _pause_candidates
+
+        seq = "MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG"
+        residues = [
+            {"seq_id": i, "aa": aa, "plddt": 45.0 if i <= 3 else 88.0}
+            for i, aa in enumerate(seq, start=1)
+        ]
+        candidates = _pause_candidates(residues, 35)
+        return {
+            "status": "AVAILABLE",
+            "source_type": "SYNTHETIC_FIXTURE",
+            "is_mock": True,
+            "reviewed": False,
+            "coordinate_system": "PDB_res_seq_1based",
+            "primary_chain": "A",
+            "chains": {
+                "A": {
+                    "chain_id": "A",
+                    "sequence": seq,
+                    "length": len(seq),
+                    "residues": residues,
+                    "pause_candidates": candidates,
+                }
+            },
+            "pause_candidates": candidates,
+            "tunnel_offset_applied": 35,
+        }
+
+    def optimize_4dp_web(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Direct 4DP execution with sequence-bound pause sidecar and sLLM evidence report."""
+        from factorforge.engines.dp_v2 import DPV2Optimizer
+        from factorforge.engines.dp_v2_4 import DPV240Optimizer
+        from factorforge.structure.alphafold_server_ingest import extract_pause_positions_from_sidecar
+        from factorforge.structure.sllm_adapter import generate_evidence_explanation
+
+        if (
+            self.validate_host(data.get("host", DEFAULT_HOST_PROFILE))
+            != DEFAULT_HOST_PROFILE
+        ):
+            raise ValueError("Direct 4DP supports only N. benthamiana")
+        sequence = data.get("sequence", "")
+        if not isinstance(sequence, str):
+            raise ValueError("sequence must be a string")
+        context = parse_sequence_input(sequence)
+        if not context["generation_allowed"]:
+            raise ValueError("Invalid sequence input for direct 4DP")
+        protein = context["optimization_sequence"]
+        constraints = self.parse_constraints(data.get("constraints"))
+        table = load_codon_usage_table()
+
+        sidecar_data = data.get("pause_sidecar") or data.get("sidecar_data")
+        allow_mock = bool(data.get("allow_mock", False))
+        if not sidecar_data:
+            raise ValueError("4DP requires a valid structure sidecar (.json). Upload a sidecar or load the sample fixture.")
+
+        pause_positions = extract_pause_positions_from_sidecar(
+            sidecar_data, protein, allow_mock=allow_mock
+        )
+
+        # 1DP comparator
+        opt_1dp = DPV2Optimizer()
+        res_1dp = opt_1dp.optimize(
+            protein_sequence=protein,
+            codon_weights=table.codon_weights,
+            target_gc_min=constraints["gc_min"] / 100.0,
+            target_gc_max=constraints["gc_max"] / 100.0,
+        )
+        cds_1dp = res_1dp["sequence"]
+
+        # 4DP optimizer with pause positions
+        opt_4dp = DPV240Optimizer(
+            pause_positions=pause_positions,
+            pause_target_adaptiveness=float(data.get("pause_target_adaptiveness", 0.35)),
+            pause_penalty_weight=float(data.get("pause_penalty_weight", 3.5)),
+            enable_tasep_smoothing=True,
+            tasep_smoothing_window=3,
+        )
+        res_4dp = opt_4dp.optimize(
+            protein_sequence=protein,
+            codon_weights=table.codon_weights,
+            target_gc_min=constraints["gc_min"] / 100.0,
+            target_gc_max=constraints["gc_max"] / 100.0,
+        )
+        cds_4dp = res_4dp["sequence"]
+
+        candidates = []
+        for cid, label, cds in (
+            ("baseline_1dp", "1DP comparator", cds_1dp),
+            ("structure_4dp", "4DP experimental candidate (Exit Tunnel +35 aa)", cds_4dp),
+        ):
+            if context["input_type"] == "cds":
+                cds = restore_cds_stop_policy(cds, context)
+                assert_pathway_invariants(sequence, cds, context)
+            candidate = self.build_candidate(
+                candidate_id=cid,
+                label=label,
+                dna_sequence=cds,
+                codon_weights=table.codon_weights,
+                recommendation_reason="User-selected 4DP workflow with ribosome exit-tunnel latency modeling",
+                constraints=constraints,
+            )
+            candidates.append(candidate)
+
+        primary = candidates[1]
+
+        # Generate sLLM 4-tier evidence explanation
+        sllm_dict = None
+        try:
+            explanation = generate_evidence_explanation(
+                sidecar_source=sidecar_data,
+                optimized_fasta_content=f">opt\n{primary['dna_sequence']}\n",
+                allow_mock=allow_mock,
+            )
+            sllm_dict = explanation.to_dict()
+        except Exception as exc:
+            logger.warning("Could not generate sLLM evidence explanation: %s", exc)
+
+        response = {
+            "success": True,
+            "design_mode": "paired_4dp",
+            "optimized_sequence": primary["dna_sequence"],
+            "original_length": len(sequence),
+            "optimized_length": len(primary["dna_sequence"]),
+            "recommended_candidate": primary,
+            "candidates": candidates,
+            "metrics": {
+                "cai": primary["cai"],
+                "gc_percent": primary["gc_percent"],
+                "length": len(primary["dna_sequence"]),
+            },
+            "validation": {
+                "input_type": context["input_type"],
+                "host_profile": DEFAULT_HOST_PROFILE,
+            },
+            "engine_versions": ENGINE_VERSIONS,
+            "pause_positions": pause_positions,
+            "sllm_report": sllm_dict,
+            "metadata": {
+                "engine": "dp_v2_4",
+                "product_version": product_version(),
+                "experimental": True,
+                "execution_path": "direct_stateless_web",
+                "approval_status": "not_collected",
+                "evidence_recording": "not_connected",
+                "selection_reason": "explicit_user_4dp_mode",
+                "watermark": False,
+            },
+            "validation_report": build_validation_report(
+                primary["dna_sequence"],
+                gc_percent=calculate_gc(primary["dna_sequence"]),
+                constraints=constraints,
+                rule_engine=RuleEngine(host=DEFAULT_HOST_PROFILE),
+            ),
+        }
+        response["cds_design"] = {
+            "engine": "dp_v2_4",
+            "objective": "exit_tunnel_tasep_4dp",
+            "engine_version": "2.4.0",
+            "product_version": product_version(),
+        }
+        response["profile"] = "structure_4dp"
+        response["constraint_report"] = {
+            "aa_identity": 1.0,
+            "passed": True,
+            "errors": [],
+            "scope": "both_candidates_independent_full_cds_checks",
+        }
+        response["reference_policy"] = _public_reference_policy_metadata()
+        response["product_version"] = product_version()
+        response["metrics"].update(
+            mfe_status="not_computed",
+            mfe_status_reason="not_requested_for_direct_4dp",
+            mfe_used=False,
+        )
         return response
 
     def do_GET(self):

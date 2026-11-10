@@ -488,6 +488,7 @@ const state = {
     customRestrictionSites: [],
     selectedTypeIisEnzymes: [],
     reviewerDisposition: null,
+    pauseSidecarData: null,
     results: null,
     reportData: null,
     isOptimizing: false,
@@ -612,8 +613,25 @@ const elements = {
     tabBtnComparison: document.getElementById('tabBtnComparison'),
     tabBtnDifferences: document.getElementById('tabBtnDifferences'),
     tabBtnTrace: document.getElementById('tabBtnTrace'),
+    tabBtnEvidence: document.getElementById('tabBtnEvidence'),
     tabPaneComparison: document.getElementById('tabPaneComparison'),
     tabPaneTrace: document.getElementById('tabPaneTrace'),
+    tabPaneEvidence: document.getElementById('tabPaneEvidence'),
+    structure4dpInputs: document.getElementById('structure4dpInputs'),
+    pauseSidecarFile: document.getElementById('pauseSidecarFile'),
+    loadSampleSidecarBtn: document.getElementById('loadSampleSidecarBtn'),
+    exitTunnelOffset: document.getElementById('exitTunnelOffset'),
+    allowMockSidecar: document.getElementById('allowMockSidecar'),
+    sidecarStatusBadge: document.getElementById('sidecarStatusBadge'),
+    pauseTrackEmpty: document.getElementById('pauseTrackEmpty'),
+    pauseTrackContent: document.getElementById('pauseTrackContent'),
+    pausePositionsBadges: document.getElementById('pausePositionsBadges'),
+    pauseTrackBar: document.getElementById('pauseTrackBar'),
+    sllmVerifiedFactsList: document.getElementById('sllmVerifiedFactsList'),
+    sllmPredictedMetricsList: document.getElementById('sllmPredictedMetricsList'),
+    sllmHypothesizedList: document.getElementById('sllmHypothesizedList'),
+    sllmActionPlanList: document.getElementById('sllmActionPlanList'),
+    evidenceEpistemicBadge: document.getElementById('evidenceEpistemicBadge'),
     stepInputBadge: document.getElementById('stepInputBadge'),
     stepPolicyBadge: document.getElementById('stepPolicyBadge'),
     stepResultsBadge: document.getElementById('stepResultsBadge'),
@@ -1287,18 +1305,32 @@ function initEventListeners() {
             checkedRadio.checked = false;
             document.querySelector('input[name="researchDesignMode"][value="baseline_1dp"]').checked = true;
             state.researchDesignMode = 'baseline_1dp';
-            document.getElementById('structureWebInputs').classList.add('hidden');
+            document.getElementById('structureWebInputs')?.classList.add('hidden');
+            document.getElementById('structure4dpInputs')?.classList.add('hidden');
             return;
         }
-        const structured = checkedRadio.value === 'paired_3dp';
-        state.researchDesignMode = checkedRadio.value;
-        elements.btnText.textContent = structured ? 'Generate 3DP (Pilot)' : 'Generate 1DP';
-        document.getElementById('structureWebInputs')?.classList.toggle('hidden', !structured);
+        const mode = checkedRadio.value;
+        state.researchDesignMode = mode;
+        const is3dp = mode === 'paired_3dp';
+        const is4dp = mode === 'paired_4dp';
+        if (is4dp) {
+            elements.btnText.textContent = 'Generate 4DP (Structure-Guided)';
+        } else if (is3dp) {
+            elements.btnText.textContent = 'Generate 3DP (Pilot)';
+        } else {
+            elements.btnText.textContent = 'Generate 1DP';
+        }
+        document.getElementById('structureWebInputs')?.classList.toggle('hidden', !is3dp);
+        document.getElementById('structure4dpInputs')?.classList.toggle('hidden', !is4dp);
         const noteEl = document.getElementById('selectedWorkflowNote');
         if (noteEl) {
-            noteEl.textContent = structured
-                ? '3DP (In Development): Experimental structure-conditioned design. Upload an exact-match PDB/mmCIF file.'
-                : '1DP selected: standard production sequence design.';
+            if (is4dp) {
+                noteEl.textContent = '4DP selected: Structure-guided exit tunnel design with sLLM epistemic evidence.';
+            } else if (is3dp) {
+                noteEl.textContent = '3DP (In Development): Experimental structure-conditioned design. Upload an exact-match PDB/mmCIF file.';
+            } else {
+                noteEl.textContent = '1DP selected: standard production sequence design.';
+            }
         }
         updateDesignBriefSummary();
         handleSequenceChange({ target: elements.sequenceInput });
@@ -1308,6 +1340,56 @@ function initEventListeners() {
         input.addEventListener('change', syncDesignModeUi);
     });
     syncDesignModeUi();
+
+    elements.loadSampleSidecarBtn?.addEventListener('click', async () => {
+        try {
+            showToast('Loading Meta 65-aa sample sidecar...', 'info');
+            const res = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'get_sample_sidecar' })
+            });
+            const data = await res.json();
+            if (data.success && data.sidecar) {
+                state.pauseSidecarData = data.sidecar;
+                const statusBadge = elements.sidecarStatusBadge || document.getElementById('sidecarStatusBadge');
+                if (statusBadge) {
+                    statusBadge.textContent = '✅ Meta 65-aa sample sidecar loaded (pause pos: 38)';
+                    statusBadge.classList.add('text-teal-600', 'font-bold');
+                }
+                const metaSeq = 'MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG';
+                if (!state.sequence || state.sequence.length < 10) {
+                    elements.sequenceInput.value = metaSeq;
+                    handleSequenceChange({ target: elements.sequenceInput });
+                }
+                showToast('Sample sidecar loaded successfully', 'success');
+            } else {
+                throw new Error(data.error || 'Failed to fetch sample sidecar');
+            }
+        } catch (err) {
+            console.error('Error loading sample sidecar:', err);
+            showToast(`Error: ${err.message}`, 'error');
+        }
+    });
+
+    elements.pauseSidecarFile?.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const text = await file.text();
+            const parsed = JSON.parse(text);
+            state.pauseSidecarData = parsed;
+            const statusBadge = elements.sidecarStatusBadge || document.getElementById('sidecarStatusBadge');
+            if (statusBadge) {
+                statusBadge.textContent = `✅ Loaded: ${file.name} (${text.length} bytes)`;
+                statusBadge.classList.add('text-teal-600', 'font-bold');
+            }
+            showToast(`Sidecar loaded: ${file.name}`, 'success');
+        } catch (err) {
+            console.error('Failed to parse sidecar JSON:', err);
+            showToast('Invalid JSON sidecar file', 'error');
+        }
+    });
 
     document.getElementById('openLocal3dViewerBtn')?.addEventListener('click', () => {
         const container = document.getElementById('structure3dViewerContainer');
@@ -1393,9 +1475,11 @@ function updateDesignBriefSummary() {
     if (elements.dinucToggle?.checked) requirements.push('TpA reduction');
     const requirementText = requirements.length ? ` · ${requirements.join(' · ')}` : '';
     const method = methodLabels[selectedObjective] || 'deterministic design';
-    elements.appliedPolicySummary.textContent = state.researchDesignMode === 'paired_3dp'
-        ? '3DP selected · direct experimental testing · uploaded structure and reviewed positions required · approval/evidence recording deferred'
-        : `1DP selected · ${host} · ${method}${requirementText}`;
+    elements.appliedPolicySummary.textContent = state.researchDesignMode === 'paired_4dp'
+        ? '4DP selected · Structure-guided exit tunnel design · sLLM 4-tier epistemic evidence'
+        : (state.researchDesignMode === 'paired_3dp'
+            ? '3DP selected · direct experimental testing · uploaded structure and reviewed positions required · approval/evidence recording deferred'
+            : `1DP selected · ${host} · ${method}${requirementText}`);
     const notice = document.getElementById('settingsChangeNotice');
     if (notice && state.results && !state.isOptimizing) notice.classList.remove('hidden');
 }
@@ -1764,6 +1848,17 @@ async function runOptimization() {
                 target_adaptiveness: Number(document.getElementById('structureWebTarget').value) || 0.40,
                 penalty_weight: Number(document.getElementById('structureWebPenalty').value) || 2.0
             };
+        }
+
+        if (state.researchDesignMode === 'paired_4dp') {
+            if (!state.pauseSidecarData) {
+                throw new Error('Please upload a pause sidecar file (.json) or click "Load Meta 65-aa Sample Sidecar".');
+            }
+            payload.design_mode = 'paired_4dp';
+            payload.sidecar_data = state.pauseSidecarData;
+            payload.allow_mock = Boolean(document.getElementById('allowMockSidecar')?.checked);
+            payload.exit_tunnel_offset = Number(document.getElementById('exitTunnelOffset')?.value) || 35;
+            payload.constraints = getGcRange(state.host);
         }
         payload.acceptance_criteria = getAcceptanceCriteriaPayload();
 
@@ -3025,6 +3120,7 @@ function renderResults() {
     renderMfeWarning(res);
     renderResultsReport(res, primary, gcTarget, state.reportData);
     renderComparisonDashboard(res);
+    render4dpAndEvidence(res);
 
     // PolyA color coding
     const polyaCount = primary.metrics.polya_signals;
@@ -3045,6 +3141,62 @@ function renderResults() {
 
     // JSON Details
     elements.jsonDetails.textContent = JSON.stringify(res, null, 2);
+}
+
+function render4dpAndEvidence(res) {
+    if (!res) return;
+    const is4dp = res.design_mode === 'paired_4dp';
+    const pausePositions = res.pause_positions || [];
+    const sllmReport = res.sllm_report || null;
+
+    const emptyEl = elements.pauseTrackEmpty || document.getElementById('pauseTrackEmpty');
+    const contentEl = elements.pauseTrackContent || document.getElementById('pauseTrackContent');
+    const badgesEl = elements.pausePositionsBadges || document.getElementById('pausePositionsBadges');
+    const barEl = elements.pauseTrackBar || document.getElementById('pauseTrackBar');
+
+    if (emptyEl && contentEl && badgesEl && barEl) {
+        if (is4dp && pausePositions.length > 0) {
+            emptyEl.classList.add('hidden');
+            contentEl.classList.remove('hidden');
+            badgesEl.innerHTML = pausePositions.map(pos =>
+                `<span class="px-2 py-0.5 rounded-md font-mono text-xs font-bold bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-200 border border-teal-300 dark:border-teal-700">Pos ${pos}</span>`
+            ).join('');
+
+            const totalCodons = res.optimized_length ? Math.floor(res.optimized_length / 3) : (state.sequence.length || 65);
+            barEl.innerHTML = '';
+            pausePositions.forEach(pos => {
+                const pct = Math.min(100, Math.max(0, (pos / totalCodons) * 100));
+                const marker = document.createElement('div');
+                marker.className = 'absolute top-0 bottom-0 w-2.5 bg-rose-500 rounded-sm shadow-sm transform -translate-x-1/2';
+                marker.style.left = `${pct}%`;
+                marker.title = `Ribosome Pause Codon: Position ${pos} (~${pct.toFixed(1)}%)`;
+                barEl.appendChild(marker);
+            });
+        } else {
+            emptyEl.classList.remove('hidden');
+            contentEl.classList.add('hidden');
+        }
+    }
+
+    const factsList = elements.sllmVerifiedFactsList || document.getElementById('sllmVerifiedFactsList');
+    const predList = elements.sllmPredictedMetricsList || document.getElementById('sllmPredictedMetricsList');
+    const hypList = elements.sllmHypothesizedList || document.getElementById('sllmHypothesizedList');
+    const actList = elements.sllmActionPlanList || document.getElementById('sllmActionPlanList');
+
+    if (sllmReport) {
+        if (factsList && Array.isArray(sllmReport.verified_facts)) {
+            factsList.innerHTML = sllmReport.verified_facts.map(f => `<li>${escapeHtml(f)}</li>`).join('');
+        }
+        if (predList && Array.isArray(sllmReport.predicted_metrics)) {
+            predList.innerHTML = sllmReport.predicted_metrics.map(p => `<li>${escapeHtml(p)}</li>`).join('');
+        }
+        if (hypList && Array.isArray(sllmReport.hypothesized_effects)) {
+            hypList.innerHTML = sllmReport.hypothesized_effects.map(h => `<li>${escapeHtml(h)}</li>`).join('');
+        }
+        if (actList && Array.isArray(sllmReport.wet_lab_validation_plan)) {
+            actList.innerHTML = sllmReport.wet_lab_validation_plan.map(a => `<li>${escapeHtml(a)}</li>`).join('');
+        }
+    }
 }
 
 // Report only response-backed evidence, never a fixed successful pipeline.
@@ -3321,7 +3473,9 @@ function getPrimaryResult(res) {
 const CANDIDATE_DESCRIPTIONS = {
     feasibility_best: 'Dynamic-programming candidate with maximum CAI inside the requested GC range when feasible.',
     gc_target: 'Profile-engine comparison that prioritizes proximity to the active host GC band.',
-    high_cai: 'Profile-engine comparison that favors high codon adaptation index.'
+    high_cai: 'Profile-engine comparison that favors high codon adaptation index.',
+    baseline_1dp: 'Baseline 1DP sequence candidate optimized for host codon usage.',
+    structure_4dp: '4DP candidate conditioned on ribosome exit tunnel pause intervals with sLLM evidence reporting.'
 };
 
 function renderCandidateComparison(res) {
@@ -3339,15 +3493,20 @@ function renderCandidateComparison(res) {
         structureSummary.className = 'mt-3 text-xs text-slate-600 dark:text-slate-300';
         elements.candidateComparisonContainer.appendChild(structureSummary);
     }
-    structureSummary.hidden = !res.structure_comparison;
-    if (res.structure_comparison) {
+    const is4dp = res.design_mode === 'paired_4dp';
+    structureSummary.hidden = !res.structure_comparison && !is4dp;
+    if (is4dp) {
+        structureSummary.textContent = `4DP structure-guided exit tunnel design: ${res.pause_positions?.length || 0} pause positions constrained (offset ${res.exit_tunnel_offset || 35} aa) · sLLM evidence report available in "4DP & Evidence" tab.`;
+    } else if (res.structure_comparison) {
         const comparison = res.structure_comparison;
         structureSummary.textContent = `3DP structure-aware design: ΔCAI ${Number(comparison.delta_1d_cai).toFixed(4)} · 3D codon fitness gain +${Number(comparison.delta_3d_gain).toFixed(4)} · Pause-modulated codons: ${comparison.total_edits}`;
     }
     const recommendedId = res.recommended_candidate ? res.recommended_candidate.id : res.candidates[0].id;
-    const visibleCandidates = res.design_mode === 'paired_3dp'
-        ? res.candidates.filter(c => c.id === 'structure_3dp' || c.id === recommendedId)
-        : res.candidates.filter(c => c.id === recommendedId);
+    const visibleCandidates = is4dp
+        ? res.candidates
+        : (res.design_mode === 'paired_3dp'
+            ? res.candidates.filter(c => c.id === 'structure_3dp' || c.id === recommendedId)
+            : res.candidates.filter(c => c.id === recommendedId));
     const rowsToRender = visibleCandidates.length ? visibleCandidates : [res.candidates[0]];
     elements.candidateComparisonBody.innerHTML = rowsToRender.map(candidate => {
         const isRecommended = candidate.id === recommendedId;
@@ -3357,9 +3516,10 @@ function renderCandidateComparison(res) {
         const nameCell = description
             ? `${escapeHtml(candidate.label || candidate.id)}<span class="tooltip-container"><span class="info-icon">i</span><span class="tooltip-text">${escapeHtml(description)}</span></span>`
             : escapeHtml(candidate.label || candidate.id);
+        const modeBadge = is4dp ? ' (4DP Selected)' : (res.design_mode === 'paired_3dp' ? ' (3DP Selected)' : ' (1DP Selected)');
         return `
             <tr class="${isRecommended ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-white dark:bg-slate-900'}">
-                <td class="px-3 py-2 font-bold text-slate-800 dark:text-slate-100">${nameCell}${isRecommended ? (res.design_mode === 'paired_3dp' ? ' (3DP Selected)' : ' (1DP Selected)') : ''}</td>
+                <td class="px-3 py-2 font-bold text-slate-800 dark:text-slate-100">${nameCell}${isRecommended ? modeBadge : ''}</td>
                 <td class="px-3 py-2">${Number(candidate.cai || 0).toFixed(3)}</td>
                 <td class="px-3 py-2">${Number(candidate.gc_percent || 0).toFixed(1)}</td>
                 <td class="px-3 py-2">${Number(candidate.gc_window_min || 0).toFixed(1)}-${Number(candidate.gc_window_max || 0).toFixed(1)}</td>
@@ -3992,6 +4152,16 @@ async function downloadEvidencePackageZip() {
             report_data: state.reportData || null,
         };
         zip.file("experiment.json", JSON.stringify(expJson, null, 2));
+
+        if (state.results?.sllm_report) {
+            zip.file("sllm_evidence_report.json", JSON.stringify(state.results.sllm_report, null, 2));
+        }
+        if (state.results?.pause_positions) {
+            zip.file("4dp_pause_positions.json", JSON.stringify({
+                pause_positions: state.results.pause_positions,
+                exit_tunnel_offset: state.results.exit_tunnel_offset || 35
+            }, null, 2));
+        }
 
         // 3. Markdown Design Dossier
         const mdDossier = evidenceDossierMarkdown(state.results, primary, targetName, timestamp);
@@ -4750,9 +4920,11 @@ function setWorkspaceState(viewState) {
     if (viewState === 'review' && elements.reviewConfigSummary) {
         const hostName = elements.hostSelect ? elements.hostSelect.options[elements.hostSelect.selectedIndex].text.split('(')[0].trim() : 'N. benthamiana';
         const presetName = elements.sopPresetSelect ? elements.sopPresetSelect.options[elements.sopPresetSelect.selectedIndex].text.split('(')[0].trim() : 'FactorForge Default';
-        elements.reviewConfigSummary.textContent = state.results?.design_mode === 'paired_3dp'
-            ? `Host: ${hostName} · 3DP experimental + 1DP comparator · direct testing, approval/evidence deferred`
-            : `Host: ${hostName} · Profile: ${presetName} · Standard Safety Baseline`;
+        elements.reviewConfigSummary.textContent = state.results?.design_mode === 'paired_4dp'
+            ? `Host: ${hostName} · 4DP Structure-Guided Exit Tunnel · sLLM Epistemic Evidence`
+            : (state.results?.design_mode === 'paired_3dp'
+                ? `Host: ${hostName} · 3DP experimental + 1DP comparator · direct testing, approval/evidence deferred`
+                : `Host: ${hostName} · Profile: ${presetName} · Standard Safety Baseline`);
     }
 }
 
@@ -4761,7 +4933,8 @@ function initWorkspaceTabs() {
         { btn: elements.tabBtnSummary, id: 'summary' },
         { btn: elements.tabBtnComparison, id: 'comparison' },
         { btn: elements.tabBtnDifferences, id: 'differences' },
-        { btn: elements.tabBtnTrace, id: 'trace' }
+        { btn: elements.tabBtnTrace, id: 'trace' },
+        { btn: elements.tabBtnEvidence, id: 'evidence' }
     ];
 
     function activateTab(tabId) {
@@ -4797,21 +4970,31 @@ function initWorkspaceTabs() {
             if (elements.tabPaneComparison) elements.tabPaneComparison.classList.add('hidden');
             if (elements.comparisonDashboard) elements.comparisonDashboard.classList.add('hidden');
             if (elements.tabPaneTrace) elements.tabPaneTrace.classList.add('hidden');
+            if (elements.tabPaneEvidence) elements.tabPaneEvidence.classList.add('hidden');
         } else if (tabId === 'comparison') {
             summarySections.forEach(s => s && s.classList.add('hidden'));
             if (elements.tabPaneComparison) elements.tabPaneComparison.classList.remove('hidden');
             if (elements.comparisonDashboard) elements.comparisonDashboard.classList.add('hidden');
             if (elements.tabPaneTrace) elements.tabPaneTrace.classList.add('hidden');
+            if (elements.tabPaneEvidence) elements.tabPaneEvidence.classList.add('hidden');
         } else if (tabId === 'differences') {
             summarySections.forEach(s => s && s.classList.add('hidden'));
             if (elements.tabPaneComparison) elements.tabPaneComparison.classList.add('hidden');
             if (elements.comparisonDashboard) elements.comparisonDashboard.classList.remove('hidden');
             if (elements.tabPaneTrace) elements.tabPaneTrace.classList.add('hidden');
+            if (elements.tabPaneEvidence) elements.tabPaneEvidence.classList.add('hidden');
         } else if (tabId === 'trace') {
             summarySections.forEach(s => s && s.classList.add('hidden'));
             if (elements.tabPaneComparison) elements.tabPaneComparison.classList.add('hidden');
             if (elements.comparisonDashboard) elements.comparisonDashboard.classList.add('hidden');
             if (elements.tabPaneTrace) elements.tabPaneTrace.classList.remove('hidden');
+            if (elements.tabPaneEvidence) elements.tabPaneEvidence.classList.add('hidden');
+        } else if (tabId === 'evidence') {
+            summarySections.forEach(s => s && s.classList.add('hidden'));
+            if (elements.tabPaneComparison) elements.tabPaneComparison.classList.add('hidden');
+            if (elements.comparisonDashboard) elements.comparisonDashboard.classList.add('hidden');
+            if (elements.tabPaneTrace) elements.tabPaneTrace.classList.add('hidden');
+            if (elements.tabPaneEvidence) elements.tabPaneEvidence.classList.remove('hidden');
         }
     }
 
