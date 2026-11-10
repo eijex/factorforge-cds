@@ -4,6 +4,15 @@
 
 - Correct the public release-note summaries and historical privacy/availability wording; remove internal study/telemetry details and unsupported biological guarantees from the web modal. Product version and runtime behavior remain 3.5.12.
 
+## [3.6.0] — 2026-11-10
+
+- Add local AlphaFold Server JSON export (`export-af3`) and local mmCIF ingestion (`ingest-af3`) to the CLI.
+- Add Meta ESMFold structure prediction CLI (`predict-esm`) with explicit `--allow-remote` network guardrail (14.22s on ESM Atlas public example) and `--allow-mock` synthetic test isolation.
+- Add evidence-aware structure-conditioned sLLM adapter CLI (`explain`) enforcing strict 4-tier epistemic segregation (Verified invariants, Predicted structures, Hypothesized pauses, Action-required wet-lab validation).
+- Add experimental 4DP (`--pause-sidecar`) with a single complete model chain matching the input protein and sequence-bound coordinate validation.
+- Add non-blocking PyPI update notifier and explicit `update --check` CLI command for installation status reporting without modifying local bytes.
+- General 3DP/4DP web access remains paused. Model offsets are computational hypotheses (Evidence classification: UNVERIFIED_PUBLIC_CORPUS, Biological validation: NOT_AVAILABLE).
+
 ## [3.5.12] — 2026-11-06
 
 - Clarify built-in design/review criteria versus laboratory-approved SOPs; direct lab-specific configuration enquiries to the maintainer before confidential data sharing.

@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <meta name="eijex-web-build" content="v3.5.12-2026-11-07-public-notes">
+    <meta name="eijex-web-build" content="v3.6.0-2026-11-10-local-cli">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FactorForge | N. benthamiana CDS Design</title>
@@ -90,7 +90,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.5.12 Release Notes
+                            v3.6.0 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -1437,7 +1437,20 @@
             <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
                 <p class="text-xs text-slate-600 dark:text-slate-400">Selected public changes. Notes reviewed 2026-11-07. Historical entries do not override the current availability or data-handling policy.</p>
                 <section class="relative pl-6 border-l-2 border-emerald-500">
-                    <div class="flex items-center space-x-2 mb-2"><span class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold rounded-md uppercase">Current</span>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.0</h3>
+                        <span class="text-slate-400 text-[10px]">2026-11-10</span>
+                        <span class="text-emerald-600 text-[10px] font-bold">CURRENT</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Structure CLI:</b> Export AlphaFold Server JSON (`export-af3`), ingest structures (`ingest-af3`), run ESMFold predictions with `--allow-remote` network guardrail (`predict-esm`), and generate evidence-aware reports with 4-tier epistemic segregation (`explain`).</li>
+                        <li><b>Experimental 4DP:</b> Optimize sequences using sequence-bound structure sidecars with model-offset hypotheses (`--pause-sidecar` and `--allow-mock`).</li>
+                        <li><b>Read-only update check:</b> Explicit version comparison without changing local installation bytes (`update --check`).</li>
+                        <li><b>Availability:</b> General 3DP/4DP web access remains paused. Model offsets are computational hypotheses (Evidence classification: UNVERIFIED_PUBLIC_CORPUS).</li>
+                    </ul>
+                </section>
+                <section class="relative pl-6 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center space-x-2 mb-2">
                         <h3 class="font-bold text-slate-800 dark:text-white">v3.5.12</h3>
                         <span class="text-slate-400 text-[10px]">2026-11-06</span>
                     </div>

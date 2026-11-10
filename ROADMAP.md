@@ -7,6 +7,10 @@ FactorForge development direction and planned work.
 
 ---
 
+## v3.6.0 local CLI
+
+Local AF3 export and ingestion support experimental 4DP with sequence-bound model coordinates. The read-only version check is explicit. See the [changelog](CHANGELOG.md) for scope.
+
 ## Maintenance release: v3.5.12
 
 Clarify default design/review criteria, lab-specific enquiries and prior explicit

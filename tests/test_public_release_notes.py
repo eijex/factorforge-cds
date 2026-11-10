@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+from factorforge.registry.versioning import product_version
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -36,8 +38,14 @@ def test_modal_excludes_internal_records_and_unbound_guarantees(phrase):
 
 def test_current_release_and_historical_boundary():
     text = modal()
-    assert re.search(r"<h3[^>]*>v3\.5\.12</h3>", text)
-    assert len(re.findall(r">Current</span>", text)) == 1
+    current = [
+        section
+        for section in re.findall(r"<section\b[^>]*>(.*?)</section>", text, re.S)
+        if re.search(r">Current</span>", section, re.I)
+    ]
+    assert len(re.findall(r">Current</span>", text, re.I)) == 1
+    assert len(current) == 1
+    assert re.search(rf"<h3[^>]*>v{re.escape(product_version())}</h3>", current[0])
     assert "Historical entries do not override" in text
     assert "General 3DP/4DP web access remains paused" in text
     assert "not a guarantee of infrastructure-wide zero retention" in text

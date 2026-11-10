@@ -16,9 +16,12 @@ import click
 
 from factorforge import __version__
 from factorforge.analysis.feasibility import DEFAULT_CAI_TARGET
+from factorforge.cli.structure_cli import structure_cli
+from factorforge.cli.updater import check_factorforge_update, format_update_report
 from factorforge.engines import register_builtin_engines
 from factorforge.engines.profile.utils import parse_fasta_records
 from factorforge.engines.registry import EngineRegistry
+from factorforge.nbfold.cli import nbfold_cli
 
 register_builtin_engines()
 
@@ -158,6 +161,7 @@ def _build_dp_result(
     cai_target: float = DEFAULT_CAI_TARGET,
     codon_table_path: Path | None = None,
     codon_reference_id: str | None = None,
+    pause_positions: list[int] | None = None,
 ):
     """Run the constraint-based DP feasibility engine for a single protein sequence."""
     if objective != "feasibility_best":
@@ -166,21 +170,44 @@ def _build_dp_result(
         raise ValueError("--gc-min must be <= --gc-max.")
 
     from factorforge.analysis.metrics import load_codon_usage_table
-    from factorforge.engines.dp_v2 import DPV2Optimizer
 
     table = load_codon_usage_table(path=codon_table_path)
-    dp_result = DPV2Optimizer().optimize(
-        protein_sequence=sequence,
-        codon_weights=table.codon_weights,
-        target_gc_min=gc_min,
-        target_gc_max=gc_max,
-    )
+    if pause_positions:
+        from factorforge.engines.dp_v2_4 import DPV240Optimizer
+
+        if not 0 <= gc_min <= gc_max <= 100:
+            raise ValueError("4DP GC bounds must be percentages between 0 and 100.")
+        dp_optimizer = DPV240Optimizer(
+            pause_positions=pause_positions,
+            pause_target_adaptiveness=0.35,
+            pause_penalty_weight=3.5,
+            enable_tasep_smoothing=True,
+            tasep_smoothing_window=3,
+        )
+        dp_result = dp_optimizer.optimize(
+            protein_sequence=sequence,
+            codon_weights=table.codon_weights,
+            target_gc_min=gc_min / 100.0,
+            target_gc_max=gc_max / 100.0,
+        )
+        engine_name = "dp_v2_4"
+    else:
+        from factorforge.engines.dp_v2 import DPV2Optimizer
+
+        dp_result = DPV2Optimizer().optimize(
+            protein_sequence=sequence,
+            codon_weights=table.codon_weights,
+            target_gc_min=gc_min,
+            target_gc_max=gc_max,
+        )
+        engine_name = "dp_v2"
+
     best = {
         "dna_sequence": dp_result["sequence"],
-        "cai": dp_result["cai"],
-        "gc": dp_result["gc_percent"],
+        "cai": dp_result.get("cai", dp_result.get("cai_global", 0.0)),
+        "gc": dp_result.get("gc_percent", dp_result.get("gc", 0.0)),
     }
-    feasible = bool(dp_result["gc_feasible"])
+    feasible = bool(dp_result.get("gc_feasible", dp_result.get("is_gc_feasible", True)))
     result = {
         "target": {
             "gc_low": gc_min,
@@ -188,8 +215,9 @@ def _build_dp_result(
             "cai": cai_target,
             "best_candidate": best if feasible else None,
         },
-        "engine": "dp_v2",
+        "engine": engine_name,
         "codon_reference_id": codon_reference_id,
+        "pause_positions": pause_positions,
     }
 
     reason = (
@@ -197,6 +225,8 @@ def _build_dp_result(
         if feasible
         else "Closest reachable GC band candidate; requested GC range was infeasible"
     )
+    if pause_positions:
+        reason = f"4DP score with {len(pause_positions)} model offset hypotheses under the requested constraints"
     return best, result, reason
 
 
@@ -206,9 +236,14 @@ def _format_dp_fasta(
     cai: float,
     gc: float,
     requested_cai_target: float | None = None,
+    pause_positions: list[int] | None = None,
 ) -> str:
     """Format a DP result as FASTA."""
-    header = f">{sequence_id}|engine=dp|objective=feasibility_best|cai={cai:.3f}|gc={gc:.2f}"
+    engine_tag = "dp_4dp" if pause_positions else "dp"
+    header = f">{sequence_id}|engine={engine_tag}|objective=feasibility_best|cai={cai:.3f}|gc={gc:.2f}"
+    if pause_positions:
+        pauses_str = ",".join(str(p) for p in pause_positions)
+        header = f"{header}|pauses={pauses_str}"
     if requested_cai_target is not None:
         header = f"{header}|target_cai={requested_cai_target:.3f}"
     return f"{header}\n{_wrap_sequence(dna_sequence)}\n"
@@ -339,6 +374,18 @@ def list_engines():
 @click.option("--scan-include", help="Comma-separated scanner names to include")
 @click.option("--scan-exclude", help="Comma-separated scanner names to exclude")
 @click.option("--save-db/--no-save-db", default=False, help="Save optimization result to PostgreSQL DB")
+@click.option(
+    "--pause-sidecar",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+    help="Local ingest-af3 JSON for experimental 4DP. Requires one complete chain matching the input protein.",
+)
+@click.option(
+    "--allow-mock",
+    is_flag=True,
+    default=False,
+    help="Allow synthetic/mock structure sidecars for testing. Blocked by default.",
+)
 def optimize(
     input_file,
     engine,
@@ -357,6 +404,8 @@ def optimize(
     scan_include,
     scan_exclude,
     save_db,
+    pause_sidecar,
+    allow_mock=False,
 ):
     """Optimize protein sequence"""
     compare_profile_list = _parse_csv_option(compare_profiles)
@@ -390,6 +439,9 @@ def optimize(
 
     if reference_table_path is not None and construct_template:
         raise click.UsageError("--reference-id is not supported with --template mode.")
+
+    if pause_sidecar is not None and engine != "dp":
+        raise click.UsageError("--pause-sidecar is only supported with --engine dp.")
 
     try:
         # Read file
@@ -503,6 +555,16 @@ def optimize(
             click.echo(f"Batch optimized: {len(results)} sequences")
             return
 
+        pause_positions = None
+        if pause_sidecar is not None:
+            from factorforge.structure.alphafold_server_ingest import (
+                extract_pause_positions_from_sidecar,
+            )
+            pause_positions = extract_pause_positions_from_sidecar(
+                pause_sidecar, sequence, allow_mock=allow_mock
+            )
+            click.echo(f"Loaded {len(pause_positions)} sequence-matched model offset positions: {pause_positions}")
+
         if engine == "dp":
             if construct_template:
                 raise ValueError("DP engine does not support --template mode.")
@@ -517,6 +579,7 @@ def optimize(
                 cai_target=cai_target,
                 codon_table_path=reference_table_path,
                 codon_reference_id=reference_id,
+                pause_positions=pause_positions,
             )
             dna_sequence = best["dna_sequence"]
             cai = float(best["cai"])
@@ -529,11 +592,15 @@ def optimize(
                 cai,
                 gc,
                 requested_cai_target=requested_cai_target,
+                pause_positions=pause_positions,
             )
 
-            click.echo("Optimizing with DP v2 exact constraint engine...")
+            if pause_positions:
+                click.echo("Optimizing with experimental DP v2.4 model offsets...")
+            else:
+                click.echo("Optimizing with DP v2 exact constraint engine...")
             if output:
-                with open(output, "w", encoding="utf-8") as f:
+                with open(output, "x" if pause_sidecar is not None else "w", encoding="utf-8") as f:
                     f.write(fasta)
                 click.echo(f"Saved to: {output}")
             else:
@@ -547,6 +614,8 @@ def optimize(
             if requested_cai_target is not None:
                 click.echo(f"  - target_cai: {float(feasibility['target']['cai']):.3f}")
             click.echo(f"  - target_feasible: {bool(feasibility['target']['best_candidate'])}")
+            if pause_positions:
+                click.echo(f"  - cotranslational_pauses: {pause_positions}")
             click.echo(f"  - recommendation_reason: {recommendation_reason}")
             return
 
@@ -997,11 +1066,29 @@ def audit(sequence_fasta, reference_codon_profile, exclude_region, output):
         click.echo(json.dumps(results, indent=2))
 
 
-from factorforge.nbfold.cli import nbfold_cli
-from factorforge.cli.structure_cli import structure_cli
-
 cli.add_command(nbfold_cli)
 cli.add_command(structure_cli)
+
+
+@cli.command("self-update")
+@click.option("--check", is_flag=True, help="Perform an explicit read-only update check.")
+@click.option("--json", "json_output", is_flag=True, default=False, help="Output structured update report as JSON.")
+@click.option("--timeout", default=2.0, type=float, help="Timeout in seconds for remote index query (default: 2.0).")
+def self_update_cmd(check: bool, json_output: bool, timeout: float) -> None:
+    """Explicit, read-only check for FactorForge distribution updates.
+
+    Compares eligible installs against public PyPI without running an installer.
+    """
+    if not check:
+        raise click.UsageError("Pass --check to request a read-only version comparison.")
+    if not 0 < timeout <= 30:
+        raise click.BadParameter("Expected a finite timeout in (0, 30] seconds.", param_hint="--timeout")
+    result = check_factorforge_update(timeout=timeout)
+    if json_output:
+        click.echo(json.dumps(result, indent=2))
+    else:
+        click.echo(format_update_report(result))
+
 
 
 if __name__ == "__main__":

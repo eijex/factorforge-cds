@@ -16,7 +16,7 @@ from collections.abc import Iterable
 from typing import Any, ClassVar
 
 from factorforge.analysis.metrics import STANDARD_GENETIC_CODE, detect_homopolymers
-from factorforge.constraints.type_iis import get_canonical_forbidden_motifs
+from factorforge.constraints.type_iis import TYPE_IIS_MOTIFS, resolve_restriction_site_motifs
 from factorforge.engines.dp_v2_3 import StructuralPauseAnnotator
 from factorforge.engines.profile.scoring import compute_5p_mfe_evidence
 from factorforge.engines.sllm.automaton import AutomatonCompiler, CompiledAutomaton
@@ -255,10 +255,24 @@ class DPV240Optimizer:
             raise TypeError("enable_tasep_smoothing must be bool")
         if type(tasep_smoothing_window) is not int or tasep_smoothing_window < 1:
             raise ValueError("tasep_smoothing_window must be a positive integer")
-        if forbidden_motifs is not None:
-            motifs = list(forbidden_motifs)
+        self.literal_motifs = (
+            tuple(sorted({motif.strip().upper() for motif in forbidden_motifs}))
+            if forbidden_motifs is not None
+            else None
+        )
+        if self.literal_motifs is not None:
+            if any(not motif or set(motif) - set("ACGT") for motif in self.literal_motifs):
+                raise ValueError("Forbidden motifs must be nonempty literal DNA strings")
+            self.enzyme_names = ()
+            self.resolved_enzyme_motifs = ()
         else:
-            motifs = get_canonical_forbidden_motifs(forbidden_enzymes)
+            self.enzyme_names = tuple(
+                TYPE_IIS_MOTIFS if forbidden_enzymes is None else forbidden_enzymes
+            )
+            self.resolved_enzyme_motifs = tuple(resolve_restriction_site_motifs(self.enzyme_names))
+        motifs = list(
+            self.resolved_enzyme_motifs if self.literal_motifs is None else self.literal_motifs
+        )
 
         self.homopolymer_max_run = homopolymer_max_run
         if self.homopolymer_max_run > 0:
@@ -267,8 +281,13 @@ class DPV240Optimizer:
                 if poly not in motifs:
                     motifs.append(poly)
 
+        self.include_reverse_complement = include_reverse_complement
+        effective_motifs = set(motifs)
+        if include_reverse_complement:
+            effective_motifs.update(AutomatonCompiler.reverse_complement(motif) for motif in motifs)
+        self.effective_motifs = tuple(sorted(effective_motifs))
         self.automaton: CompiledAutomaton = AutomatonCompiler.compile(
-            motifs, include_rc=include_reverse_complement
+            self.effective_motifs, include_rc=False
         )
         self.ramp_length_codons = ramp_length_codons
         self.alpha = alpha_harmonization
@@ -700,11 +719,9 @@ class DPV240Optimizer:
 
         # Full construct assembly & invariant verification
         full_construct = up_ctx_clean + optimized_dna + stop_clean + down_ctx_clean
-        for enz in ("BsaI", "BsmBI", "NotI"):
-            rec_seqs = get_canonical_forbidden_motifs([enz])
-            for motif in rec_seqs:
-                if motif in full_construct:
-                    raise AssertionError(f"Type IIS invariant violation: found {motif} ({enz})")
+        for motif in self.effective_motifs:
+            if motif in full_construct:
+                raise AssertionError(f"Forbidden motif invariant violation: found {motif}")
 
         # Metrics computation
         global_gc = sum(1 for b in optimized_dna if b in "GC") / float(total_nt)
@@ -792,6 +809,15 @@ class DPV240Optimizer:
             "total_nt": total_nt,
             "gc_percent": round(global_gc * 100.0, 2),
             "gc_feasible": gc_feasible,
+            "motif_policy": {
+                "enzyme_names": list(self.enzyme_names),
+                "resolved_enzyme_motifs": list(self.resolved_enzyme_motifs),
+                "literal_motifs": list(self.literal_motifs)
+                if self.literal_motifs is not None
+                else None,
+                "include_reverse_complement": self.include_reverse_complement,
+                "effective_motifs": list(self.effective_motifs),
+            },
             "gc_min_target": gc_min_frac,
             "gc_max_target": gc_max_frac,
             "initiation_gc_status": initiation_gc_status,

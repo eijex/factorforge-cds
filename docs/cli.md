@@ -97,4 +97,23 @@ factorforge optimize input.fasta --reference-id nbenthamiana_qld183_v103
 
 ### Direct experimental 3DP web API (paused by default)
 
-Version 3.5.12 disables general 3DP web access by default. Structure actions and `design_mode=paired_3dp` return HTTP 403 / `EXPERIMENTAL_STRUCTURE_DISABLED` unless the server explicitly sets `FACTORFORGE_EXPERIMENTAL_3DP_ENABLED=true`. The public browser build separately keeps 3DP selection disabled. In an enabled research deployment, POST `/api/optimize` with `design_mode=paired_3dp` and a reviewed `structure_context` object. See [experimental structure documentation](experimental-structure.md) for limits and mapping requirements. This stateless research path returns a 1DP/3DP pair without remote evidence recording. No new CLI command or MCP tool is implied.
+Version 3.5.12 disables general 3DP web access by default. Structure actions and `design_mode=paired_3dp` return HTTP 403 / `EXPERIMENTAL_STRUCTURE_DISABLED` unless the server explicitly sets `FACTORFORGE_EXPERIMENTAL_3DP_ENABLED=true`. The public browser build separately keeps 3DP selection disabled. In an enabled research deployment, POST `/api/optimize` with `design_mode=paired_3dp` and a reviewed `structure_context` object. See [experimental structure documentation](experimental-structure.md) for limits and mapping requirements. This stateless research path returns a 1DP/3DP pair without remote evidence recording. The separate local CLI is described below.
+
+## Local AlphaFold Server files and experimental 4DP
+
+```bash
+factorforge structure export-af3 -f protein.fasta -o job_request.json
+factorforge structure ingest-af3 -c model.cif --chain A -o model.json
+factorforge optimize protein.fasta --engine dp --pause-sidecar model.json -o design.fasta
+factorforge self-update --check
+```
+
+Export and ingestion run locally. The JSON can contain sequence data, so check
+sharing permission before using any external service. The experimental optimizer
+requires one complete chain with exact amino acid identity and consecutive
+one-based model numbering. An offset is a computational hypothesis. External
+structure prediction and biological validation are separate steps.
+
+The explicit update check compares eligible installations with public PyPI.
+For a Conda-managed installation, use the original Conda channel to check for
+updates. The command does not install packages.

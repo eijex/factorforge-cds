@@ -4,6 +4,10 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current product line.
 
+## v3.6.0 — local structure CLI and version check (2026-11-10)
+
+Adds offline AF3 export and ingestion, experimental 4DP with sequence-bound model positions, and an explicit read-only update check.
+
 ## v3.5.12 — policy, consent and installation maintenance (2026-11-06)
 
 Web-note clarification, 2026-11-07: selected public changes replace internal research summaries. Historical biological and zero-retention assertions are not supported current claims; runtime and package versions are unchanged.
