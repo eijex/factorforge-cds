@@ -4,6 +4,10 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current product line.
 
+## v3.6.2 — 3DP/4DP web UI bugfix & collaboration terms clarity (2026-11-11)
+
+Fixes public 3DP/4DP form validation and guidance (hiding synthetic fixture controls when disabled, marking PDB/mmCIF structure upload as required, clarifying confidence-source selection on upload, removing stale sample button copy) and aligns custom SOP collaboration wording with separate written data-sharing agreements.
+
 ## v3.6.1 — public 1DP/3DP/4DP web workflows & custom SOP policy (2026-11-11)
 
 Enables 3DP (PDB/mmCIF upload) and 4DP (prepared JSON sidecar upload) alongside 1DP on the public web interface using FactorForge's built-in default SOP, while gating synthetic test fixtures to explicit local loopback testing and documenting separate data-sharing terms for custom SOP sequence requests (`eijex.lab@gmail.com`).

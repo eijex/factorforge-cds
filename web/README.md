@@ -1,6 +1,6 @@
 # FactorForge Web Interface
 
-## v3.6.1: current public policy
+## v3.6.2: current public policy
 
 The public What's New modal contains selected user-facing changes. Historical entries do not override the current availability or data-handling policy.
 

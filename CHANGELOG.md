@@ -4,6 +4,12 @@
 
 - Correct the public release-note summaries and historical privacy/availability wording; remove internal study/telemetry details and unsupported biological guarantees from the web modal. Product version and runtime behavior remain 3.5.12.
 
+## [3.6.2] — 2026-11-11
+
+- Fix 3DP and 4DP public web UI defects: hide `#loadSampleSidecarBtn` when synthetic fixtures are disabled, rename the 3DP structure upload disclosure from `Optional:` to `Required:`, remove stale error copy referencing deleted sample buttons, add clear missing-sequence and confidence-source upload guidance, and remove `Local research preview` from public 4DP status text.
+- Separate GNU AGPL-3.0 software licensing from written data-sharing, confidentiality, and retention terms for custom SOP requests (`eijex.lab@gmail.com`).
+- Add regression Playwright checks covering hidden local-only 4DP fixture buttons and required 3DP upload validation.
+
 ## [3.6.1] — 2026-11-11
 
 - Enable 1DP (baseline), 3DP (PDB/mmCIF upload with reviewed positions), and 4DP (prepared JSON sidecar upload with reviewed model positions) publicly on the FactorForge web interface and `/api/optimize` (synthetic 4DP test fixtures remain gated behind local loopback opt-in).

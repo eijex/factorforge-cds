@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <meta name="eijex-web-build" content="v3.6.1-2026-11-11-public-modes">
+    <meta name="eijex-web-build" content="v3.6.2-2026-11-11-ui-bugfix">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FactorForge | N. benthamiana CDS Design</title>
@@ -90,7 +90,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.6.1 Release Notes
+                            v3.6.2 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -1552,9 +1552,20 @@
                 <p class="text-xs text-slate-600 dark:text-slate-400">Selected public changes. Notes reviewed 2026-11-11. Historical entries do not override the current availability or data-handling policy.</p>
                 <section class="relative pl-6 border-l-2 border-emerald-500">
                     <div class="flex items-center space-x-2 mb-2">
-                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.1</h3>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.2</h3>
                         <span class="text-slate-400 text-[10px]">2026-11-11</span>
                         <span class="text-emerald-600 text-[10px] font-bold">CURRENT</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>3DP &amp; 4DP Web Form Bugfixes:</b> Marked PDB/mmCIF upload as required, hid synthetic sidecar controls when local fixtures are disabled, removed stale sample button error text, and added clear guidance for confidence-source selection and sequence order.</li>
+                        <li><b>Custom SOP Collaboration Terms (GNU AGPL-3.0):</b> Software remains under GNU AGPL-3.0; written sharing, confidentiality, and retention terms apply separately for custom SOP requests via <code class="font-mono">eijex.lab@gmail.com</code>.</li>
+                        <li><b>Evidence &amp; Scientific Integrity:</b> Structural and exit-tunnel model-offset comparisons remain computational hypotheses classified as <code class="font-mono">UNVERIFIED_PUBLIC_CORPUS</code> (<code class="font-mono">Biological validation: NOT_AVAILABLE</code>).</li>
+                    </ul>
+                </section>
+                <section class="relative pl-6 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.1</h3>
+                        <span class="text-slate-400 text-[10px]">2026-11-11</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
                         <li><b>Public 1DP, 3DP, and 4DP Web Workflows:</b> Enabled 3DP (PDB/mmCIF upload with reviewed positions) and 4DP (prepared JSON sidecar upload with reviewed model positions) alongside 1DP on the public FactorForge web interface. Synthetic test fixtures remain restricted to explicit local testing.</li>

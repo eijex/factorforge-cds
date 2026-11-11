@@ -2,10 +2,14 @@
 
 FactorForge development direction and planned work.
 
-> Current release line: **v3.6.1**. Previous baseline: **v3.6.0** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current release line: **v3.6.2**. Previous baseline: **v3.6.1** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
+
+## v3.6.2 3DP/4DP Web UI bugfix & collaboration clarity
+
+Fixes public 3DP/4DP browser form usability (hiding synthetic sidecar buttons when fixtures are disabled, clarifying required PDB/mmCIF structure upload and confidence-source guidance, removing stale sample error copy, and separating GNU AGPL-3.0 software licensing from written custom-SOP data collaboration terms).
 
 ## v3.6.1 public 1DP / 3DP / 4DP web & custom SOP policy
 
