@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <meta name="eijex-web-build" content="v3.6.0-2026-11-10-local-cli">
+    <meta name="eijex-web-build" content="v3.6.1-2026-11-11-public-modes">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FactorForge | N. benthamiana CDS Design</title>
@@ -90,7 +90,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.6.0 Release Notes
+                            v3.6.1 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -243,17 +243,17 @@
                     </div>
 
                     <section id="researchTestingStatus" class="mb-6 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/30 p-4 text-xs leading-relaxed">
-                        <h3 class="font-bold text-teal-900 dark:text-teal-200">Design availability: 1DP standard; 3DP / 4DP research</h3>
-                        <p>1DP is available in this public form. General 3DP / 4DP web access is on hold pending evaluation and collaborator feedback. Ask about research collaboration below.</p>
+                        <h3 class="font-bold text-teal-900 dark:text-teal-200">Design availability: 1DP, 3DP, and 4DP enabled (FactorForge default SOP)</h3>
+                        <p>1DP (sequence baseline), 3DP (PDB/mmCIF upload with reviewed positions), and 4DP (prepared JSON sidecar upload with reviewed model positions) are enabled in this public form using FactorForge's built-in SOP. Need a custom SOP? Email <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold text-teal-800 dark:text-teal-300">eijex.lab@gmail.com</a> — under our GNU AGPL-3.0 license, all custom SOP configurations and resulting contents must be shared with Eijex and FactorForge.</p>
                         <fieldset class="mt-3 flex flex-wrap gap-4"><legend class="sr-only">Select design workflow</legend>
                             <label class="font-semibold cursor-pointer"><input type="radio" name="researchDesignMode" value="baseline_1dp" checked> 1DP · Baseline Design (Production)</label>
-                            <label class="flex items-center gap-1.5"><input type="radio" name="researchDesignMode" value="paired_3dp" disabled> <span>3DP · Structure-Aware Design</span> <span class="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-[10px] font-bold uppercase">Research · Not publicly enabled</span></label>
-                            <label class="flex items-center gap-1.5 font-semibold cursor-pointer"><input type="radio" name="researchDesignMode" value="paired_4dp"> <span>4DP · Structure-Guided Exit Tunnel Design</span> <span class="px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300 text-[10px] font-bold uppercase">v3.6.0 Feature</span></label>
+                            <label class="flex items-center gap-1.5 font-semibold cursor-pointer"><input type="radio" name="researchDesignMode" value="paired_3dp"> <span>3DP · Structure-Aware Design</span> <span class="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-[10px] font-bold uppercase">Experimental · PDB/mmCIF</span></label>
+                            <label class="flex items-center gap-1.5 font-semibold cursor-pointer"><input type="radio" name="researchDesignMode" value="paired_4dp"> <span>4DP · Structure-Guided Exit Tunnel Design</span> <span class="px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300 text-[10px] font-bold uppercase">Experimental · Sidecar JSON</span></label>
                         </fieldset>
                         <div id="structure4dpInputs" class="hidden mt-4 space-y-3">
                             <div class="rounded-lg border border-teal-300 dark:border-teal-700 bg-teal-50/80 dark:bg-teal-950/40 p-3 text-teal-900 dark:text-teal-200">
-                                <p class="font-bold flex items-center gap-1.5"><span>🔬</span> 4DP Structure-Guided Exit Tunnel Optimization (v3.6.0)</p>
-                                <p class="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Conditions synonymous codons on predicted ribosome exit tunnel pause intervals (ESMFold / AlphaFold 3 pause sidecar). Includes sLLM 4-tier epistemic evidence reporting with strict separation of invariants, model predictions, hypotheses, and required wet-lab validations.</p>
+                                <p class="font-bold flex items-center gap-1.5"><span>🔬</span> 4DP model-offset design (prepared sidecar)</p>
+                                <p class="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Uses FactorForge's built-in default SOP and the offset declared in your prepared pause sidecar JSON (max 100 aa, 100 KB). Review the model positions before generating (computational hypothesis; biological validation: NOT_AVAILABLE).</p>
                             </div>
                             <div class="rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900 space-y-3">
                                 <div>
@@ -261,21 +261,20 @@
                                     <input id="pauseSidecarFile" type="file" accept=".json" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <button id="loadSampleSidecarBtn" type="button" class="py-1.5 px-3 rounded-lg bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs shadow-sm flex items-center gap-1 transition-all">
-                                        <span>⚡</span> Load Meta 65-aa Sample Sidecar
+                                    <button id="loadSampleSidecarBtn" type="button" hidden class="py-1.5 px-3 rounded-lg bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs shadow-sm flex items-center gap-1 transition-all">
+                                        <span>⚡</span> Load synthetic test sidecar
                                     </button>
                                     <span id="sidecarStatusBadge" class="text-[11px] font-medium text-slate-600 dark:text-slate-400">No sidecar loaded</span>
                                 </div>
                                 <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                    <label class="text-xs text-slate-700 dark:text-slate-300 font-medium">Exit Tunnel Offset (aa)
-                                        <input id="exitTunnelOffset" type="number" min="20" max="50" value="35" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-1.5 text-xs font-mono">
+                                    <label class="text-xs">
+                                        <input id="review4dpPositions" type="checkbox">
+                                        I reviewed the sidecar positions for this input.
                                     </label>
-                                    <div class="flex items-center pt-4">
-                                        <label class="flex items-center gap-2 text-xs font-medium cursor-pointer text-slate-700 dark:text-slate-300">
-                                            <input id="allowMockSidecar" type="checkbox" checked class="rounded text-teal-600">
-                                            <span>Allow mock sidecar (--allow-mock)</span>
-                                        </label>
-                                    </div>
+                                    <label id="allowMockSidecarLabel" class="text-xs" hidden>
+                                        <input id="allowMockSidecar" type="checkbox">
+                                        Use synthetic fixture for testing
+                                    </label>
                                 </div>
                             </div>
                         </div>
@@ -470,7 +469,7 @@
                             </p>
                         </div>
 
-                        <p id="policyScopeNotice" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">FactorForge's built-in design and review criteria are applied. They are not a laboratory-approved SOP. Custom SOP upload, export and editing are paused in the public form. For lab-specific requirements, contact eijex.lab@gmail.com before sharing sequence data; feasibility and scope will be agreed before work begins.</p>
+                        <p id="policyScopeNotice" class="text-xs leading-relaxed text-slate-600 dark:text-slate-300">1DP, 3DP, and 4DP are all enabled on the web using FactorForge's built-in default SOP. They are not an approved laboratory SOP, and custom SOP editing is disabled in the public form. If you have your own custom SOP, email <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold">eijex.lab@gmail.com</a> to request sequence generation with your custom SOP; under our GNU AGPL-3.0 license, all custom SOP configurations, requests, and resulting contents must be shared with Eijex and FactorForge.</p>
                         <!-- Compact Actions Bar -->
                         <div class="flex items-center gap-1.5 pt-2 border-t border-slate-200/80 dark:border-slate-800">
                             <button id="uploadSopButton" type="button" class="flex-1 py-1.5 px-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-400 hover:text-emerald-600 transition-colors flex items-center justify-center gap-1 shadow-sm" title="Upload custom SOP (YAML or JSON)">
@@ -1280,7 +1279,7 @@
                                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
                                     <div>
                                         <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                                            <span>🔬</span> 4DP Structural Pause &amp; sLLM Evidence Report
+                                            <span>🔬</span> 4DP Model Positions &amp; Computational Evidence
                                         </h3>
                                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Structure-conditioned ribosome exit tunnel pause profiling and epistemic evidence classification.</p>
                                     </div>
@@ -1291,9 +1290,9 @@
 
                                 <!-- 4DP Pause Positions Visualization Track -->
                                 <div class="space-y-3">
-                                    <h4 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Ribosome Exit Tunnel Pause Track</h4>
+                                    <h4 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Configured Model Positions</h4>
                                     <div id="pauseTrackContainer" class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
-                                        <p id="pauseTrackEmpty" class="text-xs text-slate-500">Run 4DP optimization with a structure sidecar to inspect identified pause intervals.</p>
+                                        <p id="pauseTrackEmpty" class="text-xs text-slate-500">Run the local 4DP preview to inspect model offset positions.</p>
                                         <div id="pauseTrackContent" class="hidden space-y-3">
                                             <div class="flex flex-wrap items-center gap-3">
                                                 <span class="text-xs font-semibold text-slate-600 dark:text-slate-400">Pause Codons (Offset-Shifted):</span>
@@ -1306,59 +1305,50 @@
 
                                 <!-- sLLM 4-Tier Cards -->
                                 <div class="space-y-3">
-                                    <h4 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">sLLM 4-Tier Evidence Report</h4>
+                                    <h4 class="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Computational evidence</h4>
                                     <div id="sllmCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <!-- Verified Facts Card -->
                                         <div class="rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 space-y-2">
                                             <div class="flex items-center justify-between">
                                                 <span class="text-xs font-extrabold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-                                                    <span>🛡️</span> [VERIFIED] Mathematical Invariants
+                                                    <span>🛡️</span> Sequence checks
                                                 </span>
                                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">Fact</span>
                                             </div>
-                                            <ul id="sllmVerifiedFactsList" class="text-xs text-slate-700 dark:text-slate-300 space-y-1 list-disc list-inside">
-                                                <li>Exact amino acid sequence identity: 100% preserved</li>
-                                                <li>Exit tunnel offset calculation: mathematically proven</li>
-                                            </ul>
+                                            <ul id="sllmVerifiedFactsList" class="text-xs text-slate-700 dark:text-slate-300 space-y-1 list-disc list-inside"></ul>
                                         </div>
 
                                         <!-- Predicted Metrics Card -->
                                         <div class="rounded-xl border border-sky-300 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-950/20 p-4 space-y-2">
                                             <div class="flex items-center justify-between">
                                                 <span class="text-xs font-extrabold text-sky-800 dark:text-sky-300 flex items-center gap-1.5">
-                                                    <span>📊</span> [PREDICTED] Model Metrics
+                                                    <span>📊</span> Model confidence
                                                 </span>
                                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-200">Calculated</span>
                                             </div>
-                                            <ul id="sllmPredictedMetricsList" class="text-xs text-slate-700 dark:text-slate-300 space-y-1 list-disc list-inside">
-                                                <li>CAI &amp; GC content within target boundaries</li>
-                                            </ul>
+                                            <ul id="sllmPredictedMetricsList" class="text-xs text-slate-700 dark:text-slate-300 space-y-1 list-disc list-inside"></ul>
                                         </div>
 
                                         <!-- Hypothesized Effects Card -->
                                         <div class="rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-2">
                                             <div class="flex items-center justify-between">
                                                 <span class="text-xs font-extrabold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-                                                    <span>🧪</span> [HYPOTHESIZED] Biological Hypotheses
+                                                    <span>🧪</span> Model assumptions
                                                 </span>
                                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">Hypothesis</span>
                                             </div>
-                                            <ul id="sllmHypothesizedList" class="text-xs text-slate-700 dark:text-slate-300 space-y-1 list-disc list-inside">
-                                                <li>Co-translational folding pause assistance (in-silico conjecture)</li>
-                                            </ul>
+                                            <ul id="sllmHypothesizedList" class="text-xs text-slate-700 dark:text-slate-300 space-y-1 list-disc list-inside"></ul>
                                         </div>
 
                                         <!-- Wet-lab Validation Card -->
                                         <div class="rounded-xl border border-rose-300 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/20 p-4 space-y-2">
                                             <div class="flex items-center justify-between">
                                                 <span class="text-xs font-extrabold text-rose-800 dark:text-rose-300 flex items-center gap-1.5">
-                                                    <span>⚠️</span> [ACTION REQUIRED] Wet-Lab Validation Plan
+                                                    <span>⚠️</span> Experimental evidence
                                                 </span>
-                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200">Pre-synthesis Gate</span>
+                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200">Pending</span>
                                             </div>
-                                            <ul id="sllmActionPlanList" class="text-xs text-slate-700 dark:text-slate-300 space-y-1 list-disc list-inside">
-                                                <li>Perform ribosome profiling (Ribo-seq) to confirm pause kinetics</li>
-                                            </ul>
+                                            <ul id="sllmActionPlanList" class="text-xs text-slate-700 dark:text-slate-300 space-y-1 list-disc list-inside"></ul>
                                         </div>
                                     </div>
                                 </div>
@@ -1519,16 +1509,16 @@
                     </a>
                 </div>
                 <p class="text-emerald-950 dark:text-emerald-200/90 leading-relaxed">
-                    <b>1DP</b> is the standard sequence-only CPU design path. <b>3DP / 4DP</b> are experimental research implementations; general web access is on hold pending evaluation and collaborator feedback. Local research code may be included in the package; its presence is not a supported public web feature. Optimization from prepared structural inputs or reviewed boundaries does not inherently require GCP or a GPU.
+                    <b>1DP</b> (sequence-only baseline), <b>3DP</b> (prepared PDB/mmCIF structure upload with reviewed positions), and <b>4DP</b> (prepared pause sidecar JSON upload with reviewed model positions) are all enabled in this public interface. All three workflows run CPU optimization with FactorForge's built-in default SOP and classify structural/offset hypotheses as <code class="font-mono">UNVERIFIED_PUBLIC_CORPUS</code> (<code class="font-mono">Biological validation: NOT_AVAILABLE</code>). Optimization from prepared structural inputs or reviewed boundaries does not inherently require GCP or a GPU.
                 </p>
                 <p class="text-emerald-950 dark:text-emerald-200/90 leading-relaxed">
-                    <b>Compute boundary:</b> CPU optimization from prepared inputs is separate from automatic structure prediction, which may require a GPU service. Hosting the web interface on Vercel does not enable every research engine: web availability depends on deployed API support and execution limits. These implementations do not establish calibrated translation dynamics or demonstrated folding or expression benefits.
+                    <b>Compute boundary:</b> CPU optimization from prepared inputs is separate from automatic structure prediction, which may require a GPU service. Hosting the web interface on Vercel runs prepared-input 1DP/3DP/4DP optimization cleanly within CPU bounds without enabling server-side structure prediction.
                 </p>
                 <p class="text-emerald-950 dark:text-emerald-200/90 leading-relaxed">
-                    <b>Lab-specific design criteria:</b> FactorForge applies its own default design and review criteria, not an approved SOP for any named laboratory. To discuss your laboratory's SOP, candidate sequence generation or potential 3DP/4DP research collaboration, send a non-confidential enquiry to <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold text-emerald-700 dark:text-emerald-300 hover:text-emerald-600">eijex.lab@gmail.com</a>. Feasibility, scope and data handling must be agreed before work begins; do not include confidential or proprietary sequences in the initial email.
+                    <b>Custom SOP Policy &amp; Open-Source Sharing (GNU AGPL-3.0):</b> While 1DP, 3DP, and 4DP are publicly usable with FactorForge's own default SOP, custom SOP editing is disabled in the public form. If you have your own laboratory SOP and want candidate sequences generated with a custom SOP, email <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold text-emerald-700 dark:text-emerald-300 hover:text-emerald-600">eijex.lab@gmail.com</a>. <b>License &amp; Sharing Condition:</b> Because FactorForge is released under the GNU AGPL-3.0 open-source license, all custom SOP specifications, configurations, and related shared materials for custom-SOP generation must be shared with Eijex and FactorForge under AGPL-3.0 terms.
                 </p>
                 <div class="p-2.5 bg-white/70 dark:bg-slate-900/60 border border-emerald-300/60 dark:border-emerald-700/60 rounded-lg text-[11px] text-emerald-900 dark:text-emerald-300 space-y-1">
-                    <p><b>Sequence Rights &amp; Data Use:</b> Rights and permitted use of submitted sequences and generated candidates, access, retention and deletion terms must be agreed separately before data is shared. Research, model training, publication or public disclosure requires prior explicit consent covering the purpose and disclosure scope. An enquiry or generation request is not consent to those uses or a transfer of rights. The software license does not automatically transfer ownership of sequence outputs to Eijex.</p>
+                    <p><b>Sequence Rights &amp; Data Use:</b> Custom SOP configurations and custom-SOP generated contents provided through collaboration are governed by GNU AGPL-3.0 open-source sharing with Eijex and FactorForge; scope, confidentiality of non-SOP target metadata, retention and deletion terms should still be confirmed via <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold">eijex.lab@gmail.com</a> before sending sensitive materials.</p>
                 </div>
             </div>
         </div>
@@ -1558,18 +1548,29 @@
                     class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
             </div>
             <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
-                <p class="text-xs text-slate-600 dark:text-slate-400">Selected public changes. Notes reviewed 2026-11-07. Historical entries do not override the current availability or data-handling policy.</p>
+                <p class="text-xs text-slate-600 dark:text-slate-400">Selected public changes. Notes reviewed 2026-11-11. Historical entries do not override the current availability or data-handling policy.</p>
                 <section class="relative pl-6 border-l-2 border-emerald-500">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.1</h3>
+                        <span class="text-slate-400 text-[10px]">2026-11-11</span>
+                        <span class="text-emerald-600 text-[10px] font-bold">CURRENT</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Public 1DP, 3DP, and 4DP Web Workflows:</b> Enabled 3DP (PDB/mmCIF upload with reviewed positions) and 4DP (prepared JSON sidecar upload with reviewed model positions) alongside 1DP on the public FactorForge web interface. Synthetic test fixtures remain restricted to explicit local testing.</li>
+                        <li><b>Default FactorForge SOP &amp; Custom SOP Policy (GNU AGPL-3.0):</b> All web workflows run using FactorForge's built-in default SOP. Custom SOP sequence requests can be sent to <code class="font-mono">eijex.lab@gmail.com</code>; under the GNU AGPL-3.0 open-source license, all custom SOP configurations and resulting shared contents must be shared with Eijex and FactorForge.</li>
+                        <li><b>Evidence &amp; Scientific Integrity:</b> Structural and exit-tunnel model-offset comparisons remain computational hypotheses classified as <code class="font-mono">UNVERIFIED_PUBLIC_CORPUS</code> (<code class="font-mono">Biological validation: NOT_AVAILABLE</code>).</li>
+                    </ul>
+                </section>
+                <section class="relative pl-6 border-l-2 border-slate-200 dark:border-slate-700">
                     <div class="flex items-center space-x-2 mb-2">
                         <h3 class="font-bold text-slate-800 dark:text-white">v3.6.0</h3>
                         <span class="text-slate-400 text-[10px]">2026-11-10</span>
-                        <span class="text-emerald-600 text-[10px] font-bold">CURRENT</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
                         <li><b>Structure CLI:</b> Export AlphaFold Server JSON (`export-af3`), ingest structures (`ingest-af3`), run ESMFold predictions with `--allow-remote` network guardrail (`predict-esm`), and generate evidence-aware reports with 4-tier epistemic segregation (`explain`).</li>
                         <li><b>Experimental 4DP:</b> Optimize sequences using sequence-bound structure sidecars with model-offset hypotheses (`--pause-sidecar` and `--allow-mock`).</li>
                         <li><b>Read-only update check:</b> Explicit version comparison without changing local installation bytes (`update --check`).</li>
-                        <li><b>Availability:</b> General 3DP/4DP web access remains paused. Model offsets are computational hypotheses (Evidence classification: UNVERIFIED_PUBLIC_CORPUS).</li>
+                        <li><b>Historical Availability Note (v3.6.0):</b> Initial 3.6.0 release paused general 3DP/4DP web access prior to v3.6.1 public enablement.</li>
                     </ul>
                 </section>
                 <section class="relative pl-6 border-l-2 border-slate-200 dark:border-slate-700">

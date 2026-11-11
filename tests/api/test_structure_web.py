@@ -107,6 +107,23 @@ def test_public_capabilities_report_paused():
     assert capabilities["structure_recommendation"]["available"] is False
 
 
+def test_public_capabilities_default_enable_3dp_and_4dp():
+    h = object.__new__(handler)
+    h.path = "/api/optimize"
+    h.headers = {"Host": "factorforge.eijex.com"}
+    h.wfile = BytesIO()
+    h.send_response = lambda *a: None
+    h.send_header = lambda *a: None
+    h.end_headers = lambda: None
+    h.do_GET()
+    health = json.loads(h.wfile.getvalue())
+    capabilities = health["capabilities"]
+    assert capabilities["direct_structure"]["available"] is True
+    assert capabilities["direct_structure"]["status"] == "experimental"
+    assert capabilities["local_4dp"]["available"] is True
+    assert capabilities["local_4dp"]["fixtures"] is False
+
+
 def test_actual_paired_generation():
     status, r = post(request())
     assert status == 200, r

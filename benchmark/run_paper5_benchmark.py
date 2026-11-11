@@ -1,12 +1,7 @@
 # factorforge/benchmark/run_paper5_benchmark.py
-"""Paper 5 Multi-Engine Benchmark Runner.
+"""Archived illustrative prototype with unauthenticated solver and energy labels.
 
-Executes the 36-Protein Stratified Benchmark across 5 Solver Arms:
-  Arm A: FactorForge DP v2.1 (Exact joint solver with initiation proxy + harmonization)
-  Arm B: FactorForge DP v2.0 (Legacy exact solver without 5' proxy)
-  Arm C: Sequential Greedy Baseline (Multi-step local repair trajectory)
-  Arm D: DNA Chisel Comparator (Constraint satisfaction + local search)
-  Arm E: CoDOn Comparator (NSGA-II multi-objective genetic algorithm)
+The generation entry point is disabled. This source is retained for audit.
 """
 
 from __future__ import annotations
@@ -25,7 +20,6 @@ from factorforge.engines.dp_v2_1 import DPV21Optimizer
 # Paths
 CORPUS_PATH = Path("c:/Work/eijex/eijex-workspace/_papers/manuscripts/_prism/paper5-factorforge-assembly/corpus/36_proteins_benchmark.fasta")
 OUTPUT_DIR = Path("c:/Work/eijex/eijex-workspace/_papers/manuscripts/_prism/paper5-factorforge-assembly/data")
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 RESULTS_CSV = OUTPUT_DIR / "paper5_benchmark_results.csv"
 SUMMARY_JSON = OUTPUT_DIR / "paper5_benchmark_summary.json"
@@ -344,7 +338,7 @@ def run_arm_e_codon(aa_seq: str, upstream: str, downstream: str) -> str:
 # Main Benchmark Execution Loop
 # ---------------------------------------------------------------------------
 
-def run_benchmark() -> None:
+def _archived_run_benchmark() -> None:
     print(f"Loading 36-Protein Stratified Corpus from {CORPUS_PATH}...")
     corpus = parse_fasta(CORPUS_PATH)
     print(f"Loaded {len(corpus)} proteins.")
@@ -453,6 +447,10 @@ def run_benchmark() -> None:
 
     print("Benchmark run complete! Summary:")
     print(json.dumps(summary_stats["arm_metrics"], indent=2))
+
+
+def run_benchmark() -> None:
+    raise SystemExit("ARCHIVED_UNVERIFIED_EXPLORATORY: generation disabled")
 
 
 if __name__ == "__main__":

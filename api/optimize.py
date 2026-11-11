@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.6.0
+Product Version: 3.6.1
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -248,7 +248,7 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": product_version() if FACTORFORGE_AVAILABLE else "3.6.0",
+    "product": product_version() if FACTORFORGE_AVAILABLE else "3.6.1",
     "rule_engine": engine_version("profile") if FACTORFORGE_AVAILABLE else "1.0.0",
     "dp_engine": engine_version("dp") if FACTORFORGE_AVAILABLE else "2.0.1",
     "dp_v2_1_engine": (engine_version("dp_v2_1") if FACTORFORGE_AVAILABLE else "2.1.0-dev"),
@@ -257,7 +257,8 @@ ENGINE_VERSIONS = {
 }
 VALID_EXECUTION_MODES = ["profile", "slm", "dual_compare"]
 ML_PREVIEW_ENABLED = os.environ.get("FACTORFORGE_ML_PREVIEW_ENABLED", "false").lower() == "true"
-EXPERIMENTAL_3DP_ENABLED = os.environ.get("FACTORFORGE_EXPERIMENTAL_3DP_ENABLED", "false").lower() == "true"
+EXPERIMENTAL_3DP_ENABLED = os.environ.get("FACTORFORGE_EXPERIMENTAL_3DP_ENABLED", "true").lower() == "true"
+PUBLIC_4DP_ENABLED = os.environ.get("FACTORFORGE_PUBLIC_4DP_ENABLED", "true").lower() == "true"
 WEB_DB_SAVE_ENABLED = os.environ.get("FACTORFORGE_WEB_DB_SAVE_ENABLED", "false").lower() == "true"
 # Valid characters: ACGT (DNA) or standard 20 Amino Acids (Protein) + * (Stop)
 VALID_AA = "ACDEFGHIKLMNPQRSTVWY"
@@ -267,6 +268,27 @@ VALID_CHARS_PATTERN = re.compile(r"^[ACDEFGHIKLMNPQRSTVWY*]+$", re.IGNORECASE)
 def _generate_construct_id() -> str:
     now = datetime.now()
     return f"CF-{now.strftime('%Y%m%d-%H%M%S')}"
+
+
+def _local_4dp_fixtures_enabled(request):
+    from urllib.parse import urlsplit
+
+    headers = getattr(request, "headers", {})
+    host = headers.get("Host", "")
+    origin = headers.get("Origin")
+    try:
+        parsed = urlsplit(f"//{host}")
+    except ValueError:
+        return False
+    return (
+        os.environ.get("FACTORFORGE_LOCAL_4DP_FIXTURES") == "true"
+        and not os.environ.get("VERCEL")
+        and getattr(request, "client_address", (None,))[0] in {"127.0.0.1", "::1"}
+        and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+        and parsed.netloc == host
+        and parsed.username is None
+        and (origin is None or origin in {f"http://{host}", f"https://{host}"})
+    )
 
 
 class handler(BaseHTTPRequestHandler):
@@ -305,6 +327,25 @@ class handler(BaseHTTPRequestHandler):
             )
 
             request_path = self.path.split("?", 1)[0]
+            uses_4dp = (
+                data.get("design_mode") == "paired_4dp"
+                or data.get("action") == "get_sample_sidecar"
+                or bool({"pause_sidecar", "sidecar_data"} & data.keys())
+            )
+            if uses_4dp:
+                if not PUBLIC_4DP_ENABLED:
+                    self.send_json_response(403, {
+                        "success": False,
+                        "error_code": "EXPERIMENTAL_4DP_DISABLED",
+                        "error": "4DP web execution is disabled in this environment.",
+                    })
+                    return
+                if request_path != "/api/optimize" or (
+                    data.get("design_mode") != "paired_4dp"
+                    and data.get("action") != "get_sample_sidecar"
+                ):
+                    self.send_error_response(400, "4DP sidecars require the dedicated optimization mode.")
+                    return
             if request_path == "/api/optimize/compare":
                 status_code, result = self.handle_compare_request(data)
                 self.send_json_response(status_code, result)
@@ -355,6 +396,9 @@ class handler(BaseHTTPRequestHandler):
                 self.send_json_response(200, {"success": True, "action": "auto_resolve_structure", "resolved": resolved})
                 return
             if data.get("action") == "get_sample_sidecar":
+                if not _local_4dp_fixtures_enabled(self):
+                    self.send_error_response(403, "Synthetic fixtures are disabled.")
+                    return
                 sample_sidecar = self.generate_meta_sample_sidecar()
                 self.send_json_response(200, {"success": True, "sidecar": sample_sidecar})
                 return
@@ -369,7 +413,15 @@ class handler(BaseHTTPRequestHandler):
                 self.send_json_response(200, result)
                 return
             if data.get("design_mode") == "paired_4dp":
-                result = self.optimize_4dp_web(data)
+                from factorforge.utils.exceptions import UnsatisfiableDesignError
+                try:
+                    result = self.optimize_4dp_web(data)
+                except UnsatisfiableDesignError:
+                    self.send_json_response(422, {
+                        "success": False, "error_code": "4DP_INFEASIBLE",
+                        "error": "No 4DP comparison satisfies the requested constraints.",
+                    })
+                    return
                 if result.get("policy_status") == "INCOMPLETE":
                     self.send_json_response(422, {"success": False, "error_code": "REQUIRED_CHECK_UNAVAILABLE", "error": "Required observations are unavailable; no approved result returned"})
                     return
@@ -863,11 +915,14 @@ class handler(BaseHTTPRequestHandler):
         }
 
     def optimize_4dp_web(self, data: dict[str, Any]) -> dict[str, Any]:
-        """Direct 4DP execution with sequence-bound pause sidecar and sLLM evidence report."""
-        from factorforge.engines.dp_v2 import DPV2Optimizer
+        """Compare two DPV240 runs and report sequence checks and model positions."""
+        from math import ceil, floor
+
+        from Bio.Seq import Seq
+
+        from factorforge.constraints.type_iis import resolve_restriction_site_motifs
         from factorforge.engines.dp_v2_4 import DPV240Optimizer
         from factorforge.structure.alphafold_server_ingest import extract_pause_positions_from_sidecar
-        from factorforge.structure.sllm_adapter import generate_evidence_explanation
 
         if (
             self.validate_host(data.get("host", DEFAULT_HOST_PROFILE))
@@ -881,49 +936,68 @@ class handler(BaseHTTPRequestHandler):
         if not context["generation_allowed"]:
             raise ValueError("Invalid sequence input for direct 4DP")
         protein = context["optimization_sequence"]
+        if data.get("constraints") is not None and not isinstance(data["constraints"], dict):
+            raise ValueError("4DP constraints must be a JSON object.")
+        if data.get("mode", "profile") != "profile" or data.get("save_db"):
+            raise ValueError("4DP preview supports local deterministic design without database saving.")
         constraints = self.parse_constraints(data.get("constraints"))
         table = load_codon_usage_table()
 
-        sidecar_data = data.get("pause_sidecar") or data.get("sidecar_data")
-        allow_mock = bool(data.get("allow_mock", False))
-        if not sidecar_data:
-            raise ValueError("4DP requires a valid structure sidecar (.json). Upload a sidecar or load the sample fixture.")
-
+        if len(protein) > 100:
+            raise ValueError("The local 4DP preview is limited to 100 amino acids.")
+        if not 0 <= constraints["gc_min"] <= constraints["gc_max"] <= 100:
+            raise ValueError("4DP requires an ordered GC interval within 0–100%.")
+        if {"structure_context", "exit_tunnel_offset", "sidecar_data"} & data.keys():
+            raise ValueError("4DP accepts one prepared pause_sidecar and uses its declared offset.")
+        sidecar_data = data.get("pause_sidecar")
+        if not isinstance(sidecar_data, dict):
+            raise ValueError("4DP requires an inline JSON object for pause_sidecar.")
+        if len(json.dumps(sidecar_data).encode("utf-8")) > 100_000:
+            raise ValueError("4DP sidecar exceeds the 100 KB preview limit.")
+        if data.get("positions_reviewed") is not True:
+            raise ValueError("Review and acknowledge the sidecar positions before 4DP execution.")
+        allow_mock = (
+            _local_4dp_fixtures_enabled(self)
+            and data.get("allow_mock") is True
+        )
         pause_positions = extract_pause_positions_from_sidecar(
             sidecar_data, protein, allow_mock=allow_mock
         )
+        offset = sidecar_data["tunnel_offset_applied"]
+        motifs = resolve_restriction_site_motifs(("BsaI", "BsmBI", "BbsI", "SapI", "NotI")) + [
+            site["sequence"]
+            for site in self.parse_custom_restriction_sites(data.get("custom_restriction_sites"))
+        ]
+        forbidden = set(motifs) | {str(Seq(m).reverse_complement()) for m in motifs}
+        stop = context.get("terminal_stop_codon") or ""
+        gc_min, gc_max = (constraints[key] / 100 for key in ("gc_min", "gc_max"))
+        arguments = dict(
+            protein_sequence=protein, codon_weights=table.codon_weights,
+            target_gc_min=gc_min, target_gc_max=gc_max, stop_codon=stop,
+        )
 
-        # 1DP comparator
-        opt_1dp = DPV2Optimizer()
-        res_1dp = opt_1dp.optimize(
-            protein_sequence=protein,
-            codon_weights=table.codon_weights,
-            target_gc_min=constraints["gc_min"] / 100.0,
-            target_gc_max=constraints["gc_max"] / 100.0,
-        )
-        cds_1dp = res_1dp["sequence"]
-
-        # 4DP optimizer with pause positions
-        opt_4dp = DPV240Optimizer(
-            pause_positions=pause_positions,
-            pause_target_adaptiveness=float(data.get("pause_target_adaptiveness", 0.35)),
-            pause_penalty_weight=float(data.get("pause_penalty_weight", 3.5)),
-            enable_tasep_smoothing=True,
-            tasep_smoothing_window=3,
-        )
-        res_4dp = opt_4dp.optimize(
-            protein_sequence=protein,
-            codon_weights=table.codon_weights,
-            target_gc_min=constraints["gc_min"] / 100.0,
-            target_gc_max=constraints["gc_max"] / 100.0,
-        )
-        cds_4dp = res_4dp["sequence"]
+        # Both arms use the same engine and constraints. Only the offset penalty differs.
+        baseline = DPV240Optimizer(forbidden_motifs=motifs).optimize(**arguments)
+        shifted = DPV240Optimizer(
+            forbidden_motifs=motifs, pause_positions=pause_positions,
+            pause_target_adaptiveness=0.35, pause_penalty_weight=3.5,
+        ).optimize(**arguments)
+        cds_1dp = baseline["sequence"]
+        cds_4dp = shifted["sequence"]
 
         candidates = []
         for cid, label, cds in (
             ("baseline_1dp", "1DP comparator", cds_1dp),
-            ("structure_4dp", "4DP experimental candidate (Exit Tunnel +35 aa)", cds_4dp),
+            ("structure_4dp", "4DP experimental candidate", cds_4dp),
         ):
+            gc_count = cds.count("G") + cds.count("C")
+            if (
+                len(cds) != 3 * len(protein)
+                or str(Seq(cds).translate()) != protein
+                or not ceil(gc_min * len(cds)) <= gc_count <= floor(gc_max * len(cds))
+                or any(motif in cds + stop for motif in forbidden)
+            ):
+                raise ValueError("The generated candidate failed independent sequence checks.")
             if context["input_type"] == "cds":
                 cds = restore_cds_stop_policy(cds, context)
                 assert_pathway_invariants(sequence, cds, context)
@@ -939,17 +1013,24 @@ class handler(BaseHTTPRequestHandler):
 
         primary = candidates[1]
 
-        # Generate sLLM 4-tier evidence explanation
-        sllm_dict = None
-        try:
-            explanation = generate_evidence_explanation(
-                sidecar_source=sidecar_data,
-                optimized_fasta_content=f">opt\n{primary['dna_sequence']}\n",
-                allow_mock=allow_mock,
-            )
-            sllm_dict = explanation.to_dict()
-        except Exception as exc:
-            logger.warning("Could not generate sLLM evidence explanation: %s", exc)
+        is_mock = sidecar_data.get("is_mock") is True or sidecar_data.get("source_type") == "SYNTHETIC_FIXTURE"
+        chain = sidecar_data["chains"][sidecar_data["primary_chain"]]
+        mean_confidence = sum(residue["plddt"] for residue in chain["residues"]) / len(protein)
+        evidence = {
+            "verified_facts": [
+                "Both candidates preserve the input protein and pass the configured sense-CDS GC and recognition-string checks.",
+            ],
+            "predicted_metrics": [
+                f"Mean input CA confidence: {mean_confidence:.2f}/100"
+                + (" (synthetic fixture)." if is_mock else " (uploaded model)."),
+            ],
+            "hypothesized_effects": [
+                f"The declared {offset}-residue model offset gives positions {pause_positions}.",
+            ],
+            "wet_lab_validation_plan": [
+                "Biological interpretation requires an independently reviewed experimental comparison.",
+            ],
+        }
 
         response = {
             "success": True,
@@ -970,7 +1051,10 @@ class handler(BaseHTTPRequestHandler):
             },
             "engine_versions": ENGINE_VERSIONS,
             "pause_positions": pause_positions,
-            "sllm_report": sllm_dict,
+            "exit_tunnel_offset": offset,
+            "model_protein_length": len(protein),
+            "synthetic_fixture": is_mock,
+            "offset_evidence": evidence,
             "metadata": {
                 "engine": "dp_v2_4",
                 "product_version": product_version(),
@@ -990,7 +1074,7 @@ class handler(BaseHTTPRequestHandler):
         }
         response["cds_design"] = {
             "engine": "dp_v2_4",
-            "objective": "exit_tunnel_tasep_4dp",
+            "objective": "configured_offset_4dp",
             "engine_version": "2.4.0",
             "product_version": product_version(),
         }
@@ -999,7 +1083,7 @@ class handler(BaseHTTPRequestHandler):
             "aa_identity": 1.0,
             "passed": True,
             "errors": [],
-            "scope": "both_candidates_independent_full_cds_checks",
+            "scope": "both_candidates_translation_sense_gc_and_recognition_strings",
         }
         response["reference_policy"] = _public_reference_policy_metadata()
         response["product_version"] = product_version()
@@ -1055,6 +1139,10 @@ class handler(BaseHTTPRequestHandler):
             "host_metadata": host_metadata_with_gc,
             "supported_objectives": VALID_OBJECTIVES,
             "capabilities": {
+                "local_4dp": {
+                    "available": bool(FACTORFORGE_AVAILABLE and PUBLIC_4DP_ENABLED),
+                    "fixtures": bool(_local_4dp_fixtures_enabled(self)),
+                },
                 "structure_recommendation": {"available": bool(FACTORFORGE_AVAILABLE and EXPERIMENTAL_3DP_ENABLED), "requires_review": True},
                 "scientific_review": {"schema_version":"1.0","rna_scan":True,"mfe":"optional_local_tool"},
                 "direct_structure": {"available": bool(FACTORFORGE_AVAILABLE and EXPERIMENTAL_3DP_ENABLED), "status": "experimental" if EXPERIMENTAL_3DP_ENABLED else "paused", "max_protein_aa": 300, "max_structure_bytes": 250000, "approval_status": "not_collected", "evidence_recording": "not_connected"},

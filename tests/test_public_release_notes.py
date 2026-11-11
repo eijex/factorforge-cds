@@ -47,7 +47,9 @@ def test_current_release_and_historical_boundary():
     assert len(current) == 1
     assert re.search(rf"<h3[^>]*>v{re.escape(product_version())}</h3>", current[0])
     assert "Historical entries do not override" in text
-    assert "General 3DP/4DP web access remains paused" in text
+    assert "Public 1DP, 3DP, and 4DP Web Workflows" in text
+    assert "eijex.lab@gmail.com" in text
+    assert "GNU AGPL-3.0" in text
     assert "not a guarantee of infrastructure-wide zero retention" in text
     assert "No infrastructure retention" not in text
     assert "https://github.com/eijex/factorforge-cds/blob/main/CHANGELOG.md" in text

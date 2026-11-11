@@ -2,10 +2,14 @@
 
 FactorForge development direction and planned work.
 
-> Current maintenance line: **v3.5.12**. Previous baseline: **v3.5.11** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current release line: **v3.6.1**. Previous baseline: **v3.6.0** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
+
+## v3.6.1 public 1DP / 3DP / 4DP web & custom SOP policy
+
+Enables 1DP, 3DP (PDB/mmCIF upload), and 4DP (prepared JSON sidecar upload) publicly on the web UI under FactorForge's built-in default SOP, and clarifies GNU AGPL-3.0 sharing requirements for custom SOP sequence generation enquiries (`eijex.lab@gmail.com`).
 
 ## v3.6.0 local CLI
 

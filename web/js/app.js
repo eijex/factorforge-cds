@@ -54,8 +54,13 @@ let validationRegistry = [];
 const HISTORY_SCHEMA_VERSION = 3;
 // Custom SOP management is intentionally paused. Retained code can be re-enabled later.
 const ENABLE_CUSTOM_SOP = false;
-// General web access remains paused; research deployments must explicitly opt in.
-const ENABLE_EXPERIMENTAL_STRUCTURE_WEB = false;
+// 1DP, 3DP (PDB/mmCIF), and 4DP (prepared sidecar) are publicly enabled; synthetic fixtures remain local-only.
+const isPublic4dpAvailable = () => apiCapabilities.local_4dp?.available !== false;
+const isLocal4dpFixturesAvailable = () => (
+    ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
+    && apiCapabilities.local_4dp?.fixtures === true
+);
+const ENABLE_EXPERIMENTAL_STRUCTURE_WEB = true;
 const SOP_STORAGE_KEY = 'factorforge_active_sop_v2';
 const SOP_SCHEMA = 'factorforge-sop-v1';
 const SOP_MODES = Object.freeze(['required', 'preferred', 'ignored']);
@@ -829,6 +834,16 @@ async function loadApiMetadata() {
                 validationRegistry = data.validation_checks;
             }
             apiCapabilities = data.capabilities || {};
+            const enable3dp = ENABLE_EXPERIMENTAL_STRUCTURE_WEB
+                && apiCapabilities.direct_structure?.available !== false;
+            const radio3dp = document.querySelector('input[value="paired_3dp"]');
+            if (radio3dp) radio3dp.disabled = !enable3dp;
+            const enable4dp = isPublic4dpAvailable();
+            const radio4dp = document.querySelector('input[value="paired_4dp"]');
+            if (radio4dp) radio4dp.disabled = !enable4dp;
+            const fixtures = isLocal4dpFixturesAvailable();
+            document.getElementById('loadSampleSidecarBtn').hidden = !fixtures;
+            document.getElementById('allowMockSidecarLabel').hidden = !fixtures;
             const dpV21Available = Array.isArray(data.supported_objectives)
                 && data.supported_objectives.includes('dp_v2_1_1');
             const dpV21Radio = document.getElementById('dpV21Radio');
@@ -1301,7 +1316,8 @@ function initEventListeners() {
     const syncDesignModeUi = () => {
         const checkedRadio = document.querySelector('input[name="researchDesignMode"]:checked');
         if (!checkedRadio) return;
-        if (!ENABLE_EXPERIMENTAL_STRUCTURE_WEB && checkedRadio.value === 'paired_3dp') {
+        if ((!ENABLE_EXPERIMENTAL_STRUCTURE_WEB && checkedRadio.value === 'paired_3dp')
+            || (!isPublic4dpAvailable() && checkedRadio.value === 'paired_4dp')) {
             checkedRadio.checked = false;
             document.querySelector('input[name="researchDesignMode"][value="baseline_1dp"]').checked = true;
             state.researchDesignMode = 'baseline_1dp';
@@ -1325,11 +1341,11 @@ function initEventListeners() {
         const noteEl = document.getElementById('selectedWorkflowNote');
         if (noteEl) {
             if (is4dp) {
-                noteEl.textContent = '4DP selected: Structure-guided exit tunnel design with sLLM epistemic evidence.';
+                noteEl.textContent = '4DP selected: upload a prepared pause sidecar JSON and review the model positions before generating.';
             } else if (is3dp) {
-                noteEl.textContent = '3DP (In Development): Experimental structure-conditioned design. Upload an exact-match PDB/mmCIF file.';
+                noteEl.textContent = '3DP selected: experimental structure-conditioned design. Upload an exact-match PDB/mmCIF file and review positions.';
             } else {
-                noteEl.textContent = '1DP selected: standard production sequence design.';
+                noteEl.textContent = '1DP selected: standard baseline sequence design (FactorForge default SOP active).';
             }
         }
         updateDesignBriefSummary();
@@ -1341,25 +1357,33 @@ function initEventListeners() {
     });
     syncDesignModeUi();
 
+    const clear4dpReview = () => { document.getElementById('review4dpPositions').checked = false; };
+    elements.sequenceInput.addEventListener('input', clear4dpReview);
+    let sidecarReadRevision = 0;
     elements.loadSampleSidecarBtn?.addEventListener('click', async () => {
+        if (!isLocal4dpFixturesAvailable()) return;
+        const revision = ++sidecarReadRevision;
+        clear4dpReview();
         try {
-            showToast('Loading Meta 65-aa sample sidecar...', 'info');
+            showToast('Loading synthetic test sidecar...', 'info');
             const res = await fetch(API_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'get_sample_sidecar' })
             });
             const data = await res.json();
+            if (revision !== sidecarReadRevision) return;
             if (data.success && data.sidecar) {
+                clear4dpReview();
                 state.pauseSidecarData = data.sidecar;
                 const statusBadge = elements.sidecarStatusBadge || document.getElementById('sidecarStatusBadge');
                 if (statusBadge) {
-                    statusBadge.textContent = '✅ Meta 65-aa sample sidecar loaded (pause pos: 38)';
+                    statusBadge.textContent = 'Synthetic sidecar loaded. Model position: 38.';
                     statusBadge.classList.add('text-teal-600', 'font-bold');
                 }
-                const metaSeq = 'MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG';
-                if (!state.sequence || state.sequence.length < 10) {
-                    elements.sequenceInput.value = metaSeq;
+                const fixture = data.sidecar.chains[data.sidecar.primary_chain].sequence;
+                if (!state.sequence) {
+                    elements.sequenceInput.value = fixture;
                     handleSequenceChange({ target: elements.sequenceInput });
                 }
                 showToast('Sample sidecar loaded successfully', 'success');
@@ -1373,15 +1397,21 @@ function initEventListeners() {
     });
 
     elements.pauseSidecarFile?.addEventListener('change', async (e) => {
+        const revision = ++sidecarReadRevision;
+        state.pauseSidecarData = null;
+        clear4dpReview();
+        elements.sidecarStatusBadge.textContent = 'No sidecar loaded';
         const file = e.target.files?.[0];
         if (!file) return;
         try {
-            const text = await file.text();
-            const parsed = JSON.parse(text);
+            if (!isPublic4dpAvailable() || file.size > 100_000) throw new Error('Invalid sidecar size or mode');
+            const parsed = JSON.parse(await file.text());
+            if (revision !== sidecarReadRevision) return;
+            if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') throw new Error('Expected a JSON object');
             state.pauseSidecarData = parsed;
             const statusBadge = elements.sidecarStatusBadge || document.getElementById('sidecarStatusBadge');
             if (statusBadge) {
-                statusBadge.textContent = `✅ Loaded: ${file.name} (${text.length} bytes)`;
+                statusBadge.textContent = `✅ Loaded: ${file.name} (${file.size} bytes)`;
                 statusBadge.classList.add('text-teal-600', 'font-bold');
             }
             showToast(`Sidecar loaded: ${file.name}`, 'success');
@@ -1476,7 +1506,7 @@ function updateDesignBriefSummary() {
     const requirementText = requirements.length ? ` · ${requirements.join(' · ')}` : '';
     const method = methodLabels[selectedObjective] || 'deterministic design';
     elements.appliedPolicySummary.textContent = state.researchDesignMode === 'paired_4dp'
-        ? '4DP selected · Structure-guided exit tunnel design · sLLM 4-tier epistemic evidence'
+        ? '4DP selected · Configured model positions · Local research preview'
         : (state.researchDesignMode === 'paired_3dp'
             ? '3DP selected · direct experimental testing · uploaded structure and reviewed positions required · approval/evidence recording deferred'
             : `1DP selected · ${host} · ${method}${requirementText}`);
@@ -1597,7 +1627,9 @@ function handleSequenceChange(e) {
     }
 
     if (state.sequence !== (parseError ? '' : sequenceOnly)) invalidateStructureSuggestion();
-    state.sequence = parseError ? '' : sequenceOnly;
+    const newSequence = parseError ? '' : sequenceOnly;
+    if (newSequence !== state.sequence) document.getElementById('review4dpPositions').checked = false;
+    state.sequence = newSequence;
     const validInput = !parseError && sequenceOnly.length >= 3 && (isDNA || (isProtein && !isDNA));
     elements.optimizeBtn.disabled = !validInput || state.isOptimizing;
 
@@ -1778,7 +1810,7 @@ async function runOptimization() {
         const chainVal = document.getElementById('structureWebChain')?.value.trim() || state.sampleStructureChain || 'A';
         const modelVal = Number(document.getElementById('structureWebModel')?.value) || state.sampleStructureModel || 1;
 
-        if (uploadedText) try {
+        if (uploadedText && state.researchDesignMode === 'paired_3dp') try {
             const resolveResp = await fetch(API_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1851,14 +1883,17 @@ async function runOptimization() {
         }
 
         if (state.researchDesignMode === 'paired_4dp') {
-            if (!state.pauseSidecarData) {
-                throw new Error('Please upload a pause sidecar file (.json) or click "Load Meta 65-aa Sample Sidecar".');
-            }
+            if (!isPublic4dpAvailable()) throw new Error('4DP is unavailable on this backend.');
+            if (!state.pauseSidecarData) throw new Error('Upload a prepared JSON sidecar.');
+            if (!document.getElementById('review4dpPositions').checked) throw new Error('Review the sidecar positions first.');
             payload.design_mode = 'paired_4dp';
-            payload.sidecar_data = state.pauseSidecarData;
-            payload.allow_mock = Boolean(document.getElementById('allowMockSidecar')?.checked);
-            payload.exit_tunnel_offset = Number(document.getElementById('exitTunnelOffset')?.value) || 35;
-            payload.constraints = getGcRange(state.host);
+            payload.pause_sidecar = state.pauseSidecarData;
+            payload.positions_reviewed = true;
+            payload.allow_mock = isLocal4dpFixturesAvailable()
+                && document.getElementById('allowMockSidecar').checked;
+            delete payload.seed;
+            delete payload.profile;
+            delete payload.objective;
         }
         payload.acceptance_criteria = getAcceptanceCriteriaPayload();
 
@@ -1918,7 +1953,7 @@ async function runOptimization() {
         elements.emptyState.classList.toggle('hidden', Boolean(state.results));
         elements.resultsContainer.classList.toggle('hidden', !state.results);
 
-        if (ENABLE_MOCK && state.researchDesignMode !== 'paired_3dp') {
+        if (ENABLE_MOCK && !['paired_3dp', 'paired_4dp'].includes(state.researchDesignMode)) {
             showToast('Running mock optimization for demonstration...', 'info');
             await new Promise(r => setTimeout(r, 1500));
             state.results = getMockResult();
@@ -3146,8 +3181,11 @@ function renderResults() {
 function render4dpAndEvidence(res) {
     if (!res) return;
     const is4dp = res.design_mode === 'paired_4dp';
-    const pausePositions = res.pause_positions || [];
-    const sllmReport = res.sllm_report || null;
+    const length = res.model_protein_length;
+    const pausePositions = Array.isArray(res.pause_positions)
+        ? res.pause_positions.filter(pos => Number.isInteger(pos) && pos > 0 && pos <= length)
+        : [];
+    const offsetEvidence = res.offset_evidence || null;
 
     const emptyEl = elements.pauseTrackEmpty || document.getElementById('pauseTrackEmpty');
     const contentEl = elements.pauseTrackContent || document.getElementById('pauseTrackContent');
@@ -3162,14 +3200,14 @@ function render4dpAndEvidence(res) {
                 `<span class="px-2 py-0.5 rounded-md font-mono text-xs font-bold bg-teal-100 text-teal-800 dark:bg-teal-900/60 dark:text-teal-200 border border-teal-300 dark:border-teal-700">Pos ${pos}</span>`
             ).join('');
 
-            const totalCodons = res.optimized_length ? Math.floor(res.optimized_length / 3) : (state.sequence.length || 65);
+            const totalCodons = length;
             barEl.innerHTML = '';
             pausePositions.forEach(pos => {
                 const pct = Math.min(100, Math.max(0, (pos / totalCodons) * 100));
                 const marker = document.createElement('div');
                 marker.className = 'absolute top-0 bottom-0 w-2.5 bg-rose-500 rounded-sm shadow-sm transform -translate-x-1/2';
                 marker.style.left = `${pct}%`;
-                marker.title = `Ribosome Pause Codon: Position ${pos} (~${pct.toFixed(1)}%)`;
+                marker.title = `Model offset position ${pos} (~${pct.toFixed(1)}%)`;
                 barEl.appendChild(marker);
             });
         } else {
@@ -3183,18 +3221,21 @@ function render4dpAndEvidence(res) {
     const hypList = elements.sllmHypothesizedList || document.getElementById('sllmHypothesizedList');
     const actList = elements.sllmActionPlanList || document.getElementById('sllmActionPlanList');
 
-    if (sllmReport) {
-        if (factsList && Array.isArray(sllmReport.verified_facts)) {
-            factsList.innerHTML = sllmReport.verified_facts.map(f => `<li>${escapeHtml(f)}</li>`).join('');
+    [factsList, predList, hypList, actList].forEach(list => {
+        if (list) list.textContent = '';
+    });
+    if (is4dp && offsetEvidence) {
+        if (factsList && Array.isArray(offsetEvidence.verified_facts)) {
+            factsList.innerHTML = offsetEvidence.verified_facts.map(f => `<li>${escapeHtml(f)}</li>`).join('');
         }
-        if (predList && Array.isArray(sllmReport.predicted_metrics)) {
-            predList.innerHTML = sllmReport.predicted_metrics.map(p => `<li>${escapeHtml(p)}</li>`).join('');
+        if (predList && Array.isArray(offsetEvidence.predicted_metrics)) {
+            predList.innerHTML = offsetEvidence.predicted_metrics.map(p => `<li>${escapeHtml(p)}</li>`).join('');
         }
-        if (hypList && Array.isArray(sllmReport.hypothesized_effects)) {
-            hypList.innerHTML = sllmReport.hypothesized_effects.map(h => `<li>${escapeHtml(h)}</li>`).join('');
+        if (hypList && Array.isArray(offsetEvidence.hypothesized_effects)) {
+            hypList.innerHTML = offsetEvidence.hypothesized_effects.map(h => `<li>${escapeHtml(h)}</li>`).join('');
         }
-        if (actList && Array.isArray(sllmReport.wet_lab_validation_plan)) {
-            actList.innerHTML = sllmReport.wet_lab_validation_plan.map(a => `<li>${escapeHtml(a)}</li>`).join('');
+        if (actList && Array.isArray(offsetEvidence.wet_lab_validation_plan)) {
+            actList.innerHTML = offsetEvidence.wet_lab_validation_plan.map(a => `<li>${escapeHtml(a)}</li>`).join('');
         }
     }
 }
@@ -3475,7 +3516,7 @@ const CANDIDATE_DESCRIPTIONS = {
     gc_target: 'Profile-engine comparison that prioritizes proximity to the active host GC band.',
     high_cai: 'Profile-engine comparison that favors high codon adaptation index.',
     baseline_1dp: 'Baseline 1DP sequence candidate optimized for host codon usage.',
-    structure_4dp: '4DP candidate conditioned on ribosome exit tunnel pause intervals with sLLM evidence reporting.'
+    structure_4dp: '4DP candidate scored at configured model offset positions.'
 };
 
 function renderCandidateComparison(res) {
@@ -3496,7 +3537,7 @@ function renderCandidateComparison(res) {
     const is4dp = res.design_mode === 'paired_4dp';
     structureSummary.hidden = !res.structure_comparison && !is4dp;
     if (is4dp) {
-        structureSummary.textContent = `4DP structure-guided exit tunnel design: ${res.pause_positions?.length || 0} pause positions constrained (offset ${res.exit_tunnel_offset || 35} aa) · sLLM evidence report available in "4DP & Evidence" tab.`;
+        structureSummary.textContent = `4DP structure-guided exit tunnel design: ${res.pause_positions?.length || 0} model positions used (offset ${res.exit_tunnel_offset ?? 'not reported'} aa) · See "4DP & Evidence" for available observations.`;
     } else if (res.structure_comparison) {
         const comparison = res.structure_comparison;
         structureSummary.textContent = `3DP structure-aware design: ΔCAI ${Number(comparison.delta_1d_cai).toFixed(4)} · 3D codon fitness gain +${Number(comparison.delta_3d_gain).toFixed(4)} · Pause-modulated codons: ${comparison.total_edits}`;
@@ -4153,13 +4194,13 @@ async function downloadEvidencePackageZip() {
         };
         zip.file("experiment.json", JSON.stringify(expJson, null, 2));
 
-        if (state.results?.sllm_report) {
-            zip.file("sllm_evidence_report.json", JSON.stringify(state.results.sllm_report, null, 2));
+        if (state.results?.offset_evidence) {
+            zip.file("4dp_model_evidence.json", JSON.stringify(state.results.offset_evidence, null, 2));
         }
         if (state.results?.pause_positions) {
             zip.file("4dp_pause_positions.json", JSON.stringify({
                 pause_positions: state.results.pause_positions,
-                exit_tunnel_offset: state.results.exit_tunnel_offset || 35
+                exit_tunnel_offset: state.results.exit_tunnel_offset ?? null
             }, null, 2));
         }
 
@@ -4525,6 +4566,7 @@ function historyResultSnapshot(result, primary) {
 }
 
 function addToHistory(input, result) {
+    if (result?.design_mode === 'paired_4dp') return;
     const primary = getPrimaryResult(result);
     const item = {
         id: Date.now(),
@@ -4610,6 +4652,10 @@ function clearHistory() {
 
 function clearAll() {
     invalidateStructureSuggestion();
+    elements.pauseSidecarFile.value = '';
+    elements.pauseSidecarFile.dispatchEvent(new Event('change'));
+    state.pauseSidecarData = null;
+    document.getElementById('review4dpPositions').checked = false;
     elements.sequenceInput.value = '';
     elements.fileUpload.value = '';
     elements.customRestrictionSites.value = '';
@@ -4774,7 +4820,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.6.0';
+        const version = state.results.engine_versions?.product || '3.6.1';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }
@@ -4921,7 +4967,7 @@ function setWorkspaceState(viewState) {
         const hostName = elements.hostSelect ? elements.hostSelect.options[elements.hostSelect.selectedIndex].text.split('(')[0].trim() : 'N. benthamiana';
         const presetName = elements.sopPresetSelect ? elements.sopPresetSelect.options[elements.sopPresetSelect.selectedIndex].text.split('(')[0].trim() : 'FactorForge Default';
         elements.reviewConfigSummary.textContent = state.results?.design_mode === 'paired_4dp'
-            ? `Host: ${hostName} · 4DP Structure-Guided Exit Tunnel · sLLM Epistemic Evidence`
+            ? `Host: ${hostName} · 4DP Structure-Guided Exit Tunnel · Computational Evidence`
             : (state.results?.design_mode === 'paired_3dp'
                 ? `Host: ${hostName} · 3DP experimental + 1DP comparator · direct testing, approval/evidence deferred`
                 : `Host: ${hostName} · Profile: ${presetName} · Standard Safety Baseline`);

@@ -1,9 +1,7 @@
 # factorforge/benchmark/plot_paper5_figures.py
-"""Paper 5 Publication Figures Generator.
+"""Archived illustrative prototype with unauthenticated solver and energy labels.
 
-Generates:
-  Figure 2: The Biological Trilemma: Empirical Trade-offs & Sequential Greedy Distortion Trajectory
-  Figure 3: Comparative Benchmark Across 5 Solver Arms (Feasibility, MFE, Runtime)
+The generation entry point is disabled. This source is retained for audit.
 """
 
 from __future__ import annotations
@@ -15,7 +13,6 @@ import numpy as np
 
 DATA_DIR = Path("c:/Work/eijex/eijex-workspace/_papers/manuscripts/_prism/paper5-factorforge-assembly/data")
 FIGURES_DIR = Path("c:/Work/eijex/eijex-workspace/_papers/manuscripts/_prism/paper5-factorforge-assembly/figures")
-FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
 RESULTS_CSV = DATA_DIR / "paper5_benchmark_results.csv"
 TRAJECTORY_CSV = DATA_DIR / "greedy_distortion_trajectory.csv"
@@ -162,13 +159,17 @@ def plot_figure_3(results):
     print(f"Figure 3 saved to {FIG3_PATH}")
 
 
-def main():
+def _archived_main():
     print(f"Loading benchmark results from {RESULTS_CSV}...")
     results = load_results()
     trajectory = load_trajectory()
     plot_figure_2(results, trajectory)
     plot_figure_3(results)
     print("All Paper 5 figures generated successfully!")
+
+
+def main() -> None:
+    raise SystemExit("ARCHIVED_UNVERIFIED_EXPLORATORY: generation disabled")
 
 
 if __name__ == "__main__":

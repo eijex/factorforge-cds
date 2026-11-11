@@ -4,7 +4,7 @@ test('public UI keeps the default policy and ignores saved custom settings', asy
  await page.addInitScript(()=>localStorage.setItem('factorforge_active_sop_v2',JSON.stringify({profile_id:'saved_custom',workflow:{watermark:true}})));
  await page.route('**/api/optimize',r=>{
   if(r.request().method()==='POST'){payload=r.request().postDataJSON();return r.fulfill({status:400,json:{error:'Synthetic capture only'}});}
-  return r.fulfill({json:{supported_objectives:['dp_v2_1_1'],capabilities:{direct_structure:{available:true}},validation_checks:[]}});
+  return r.fulfill({json:{supported_objectives:['dp_v2_1_1'],capabilities:{direct_structure:{available:true},local_4dp:{available:true,fixtures:false}},validation_checks:[]}});
  });
  await page.goto('/');
  await expect(page.locator('#sopProfileName')).toHaveText('FactorForge default policy');
@@ -20,8 +20,10 @@ test('public UI keeps the default policy and ignores saved custom settings', asy
  expect(payload.sop_profile.rules['assembly.type_iis.bsai.v1']).toBe('HARD_FAIL');
  const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('factorforge_active_sop_v2')));
  expect(stored.profile_id).toBe('saved_custom');
- await expect(page.locator('input[name="researchDesignMode"][value="paired_3dp"]')).toBeDisabled();
+ await expect(page.locator('input[name="researchDesignMode"][value="paired_3dp"]')).toBeEnabled();
+ await expect(page.locator('input[name="researchDesignMode"][value="paired_4dp"]')).toBeEnabled();
  await expect(page.locator('#structureWebInputs')).toBeHidden();
  await expect(page.locator('#appliedPolicySummary')).toContainText('1DP selected');
- await expect(page.locator('#policyScopeNotice')).toContainText('not a laboratory-approved SOP');
+ await expect(page.locator('#policyScopeNotice')).toContainText('not an approved laboratory SOP');
+ await expect(page.locator('#policyScopeNotice')).toContainText('GNU AGPL-3.0');
 });

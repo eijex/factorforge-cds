@@ -15,7 +15,7 @@ authors:
 affiliations:
   - name: PlantForm Corporation, Toronto, Ontario, Canada
     index: 1
-date: 30 October 2026
+date: 03 November 2026
 bibliography: paper.bib
 ---
 
@@ -33,7 +33,7 @@ FactorForge addresses these needs through scriptable candidate generation, separ
 
 # State of the field
 
-Codon usage is relevant to heterologous expression, but computational adaptation metrics do not by themselves establish improved expression [@gustafsson2004]. JCat [@grote2005] and OPTIMIZER [@puigbo2007] support host-directed codon adaptation. GeneDesign [@richardson2010], D-Tailor [@guimaraes2014], and DNA Chisel [@zulkower2020] provide broader synthetic-sequence design capabilities. DNA Chisel combines local-search-based constraint resolution with objective optimization across diverse applications.
+Codon usage is relevant to heterologous expression, but computational adaptation metrics do not by themselves establish improved expression [@gustafsson2004]. JCat [@grote2005] and OPTIMIZER [@puigbo2007] support host-directed codon adaptation. GeneDesign [@richardson2010], D-Tailor [@guimaraes2014], and DNA Chisel [@zulkower2020] provide broader synthetic-sequence design capabilities. DNA Chisel combines local-search-based constraint resolution with objective optimization across diverse applications. In plant-specific exploratory work, Tekle [@tekle2025] investigated transformer-based autoregressive codon prediction integrating genomic, proteomic, and transcriptomic features in *Nicotiana benthamiana*.
 
 FactorForge's contribution is a plant-focused workflow combining versioned references, constrained synonymous generation, and inspectable review outputs. Rather than replace general-purpose frameworks, it packages these choices for plant CDS preparation and reproducibility. Its stable DP v2 implementation carries GC-count and motif-automaton state, rejecting configured forbidden motifs during search across codon junctions and supplied flanks. Exactness concerns the implemented reachable state space and supplied additive codon scores; it is not biological optimality. Constraint and fallback contracts remain execution-path specific. No cross-tool empirical superiority is claimed.
 
@@ -66,6 +66,6 @@ Generative AI tools, including OpenAI ChatGPT/Codex, Google Gemini, and Anthropi
 
 # Acknowledgements
 
-The author conceived the software architecture, developed the implementation, conducted the computational benchmarks, and wrote the manuscript. The author thanks Doug Cossar (PlantForm Corporation) for discussions of plant molecular pharming workflows. No dedicated external grant or institutional funding supported this work.
+The author conceived the software architecture, developed the implementation, conducted the computational benchmarks, and wrote the manuscript. The author thanks Doug Cossar (PlantForm Corporation) for discussions of plant molecular pharming workflows, and Thomas Tekle [@tekle2025] whose exploratory bioinformatics project on plant codon modeling at PlantForm Corporation helped motivate and initiate the FactorForge project. No dedicated external grant or institutional funding supported this work.
 
 # References

@@ -1,24 +1,12 @@
 # FactorForge Web Interface
 
-## v3.5.12: current public policy
+## v3.6.1: current public policy
 
-The public What's New modal contains selected user-facing changes. Its 2026-11-07 wording update removes internal study/telemetry summaries and unsupported guarantees; it does not change engine behavior or the package version. Full historical software changes remain linked, with corrected privacy and availability wording.
+The public What's New modal contains selected user-facing changes. Historical entries do not override the current availability or data-handling policy.
 
-1DP is the public form's standard CPU design path. General 3DP/4DP access is
-paused pending evaluation and collaborator feedback. A research build can opt in
-with `ENABLE_EXPERIMENTAL_STRUCTURE_WEB`; the API separately requires
-`FACTORFORGE_EXPERIMENTAL_3DP_ENABLED=true`. These are availability flags, not
-access authorization. Prepared-input CPU optimization does not inherently require
-GCP/GPU; automatic structure prediction is a different workload.
+1DP (sequence baseline), 3DP (PDB/mmCIF upload with reviewed positions), and 4DP (prepared pause sidecar JSON upload with reviewed model positions) are all publicly enabled in the web interface. Prepared-input CPU optimization runs with `FACTORFORGE_EXPERIMENTAL_3DP_ENABLED=true` and `FACTORFORGE_PUBLIC_4DP_ENABLED=true` by default; synthetic 4DP fixtures (`FACTORFORGE_LOCAL_4DP_FIXTURES=true`) remain restricted to explicit local loopback testing. Optimization from prepared structural inputs does not inherently require GCP or a GPU; automatic structure prediction is a separate workload. Structural and exit-tunnel model-offset comparisons are computational hypotheses (`UNVERIFIED_PUBLIC_CORPUS`, `Biological validation: NOT_AVAILABLE`).
 
-The built-in criteria are not an approved laboratory SOP. Custom SOP upload,
-export and editing remain disabled; the older sections below describe retained
-implementation, not current public controls. Lab-specific configuration and
-research collaboration enquiries go to eijex.lab@gmail.com, with no confidential
-sequences in the initial enquiry. Rights, permitted uses, retention and deletion
-are agreed separately; research, training, publication and public disclosure
-require prior explicit consent. The software license does not automatically
-transfer ownership of sequence outputs.
+FactorForge's built-in default SOP is applied automatically across 1DP, 3DP, and 4DP workflows. These built-in criteria are not an approved laboratory SOP, and custom SOP editing remains disabled in the public form. If you have your own custom SOP and want candidate sequences generated using it, email `eijex.lab@gmail.com`. Under the GNU AGPL-3.0 open-source license, all custom SOP specifications, configurations, and resulting custom-SOP contents must be shared with Eijex and FactorForge under AGPL-3.0 terms.
 
 The Arg/Ser, splice-remediation and 5-prime boundary comparison controls are
 not connected to web execution. They are unchecked, disabled and collapsed
@@ -238,7 +226,11 @@ This is stateless computational testing, with no external service dependencies o
 
 ## Current public policy UI (2026-10-12)
 
-Custom SOP management is paused. The built-in FactorForge default policy is applied; upload/export/preset/editing controls are hidden and disabled. Their code and previous browser configuration remain available for later reactivation through ENABLE_CUSTOM_SOP. Saved custom SOPs are ignored without deletion. 1DP/3DP mode selection and explicit structure inputs remain active. This supersedes the earlier public SOP upload/export instructions. Public API contracts are retained.
+Custom SOP management is paused. The public form applies the built-in FactorForge default policy and offers standard 1DP. General 3DP/4DP web access is paused.
+
+### Local 4DP preview
+
+For local development, bind the app and API to loopback and set `FACTORFORGE_LOCAL_4DP_PREVIEW=true`. The browser uses the server capability before enabling the control. Upload a prepared sidecar that matches the input protein and review its positions. The comparison uses its declared offset, with a preview limit of 100 amino acids and 100 KB for the sidecar. The optional synthetic test control requires `FACTORFORGE_LOCAL_4DP_FIXTURES=true` and an explicit test selection. Model positions and sequence checks are computational evidence. The 4DP preview has no biological outcome data.
 
 ### Scientific web observations
 

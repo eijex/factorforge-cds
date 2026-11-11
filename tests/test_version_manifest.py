@@ -6,9 +6,9 @@ from factorforge.registry.versioning import engine_version, public_version_metad
 def test_product_and_engine_versions_are_independently_declared() -> None:
     metadata = public_version_metadata()
 
-    assert __version__ == "3.6.0"
+    assert __version__ == "3.6.1"
     assert metadata["product"]["release_status"] == "released"
-    assert metadata["product"]["previous_stable_version"] == "3.5.12"
+    assert metadata["product"]["previous_stable_version"] == "3.6.0"
     assert metadata["engines"]["profile"]["generation"] == 1
     assert metadata["engines"]["dp"]["version"] == engine_version("dp")
     assert metadata["engines"]["dp_v2_2"]["version"] == "2.2.0"
