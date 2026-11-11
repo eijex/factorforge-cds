@@ -6,7 +6,7 @@ FactorForge v3.0+ is the current product line.
 
 ## v3.6.1 — public 1DP/3DP/4DP web workflows & custom SOP policy (2026-11-11)
 
-Enables 3DP (PDB/mmCIF upload) and 4DP (prepared JSON sidecar upload) alongside 1DP on the public web interface using FactorForge's built-in default SOP, while gating synthetic test fixtures to explicit local loopback testing and documenting GNU AGPL-3.0 open-source sharing requirements for custom SOP sequence requests (`eijex.lab@gmail.com`).
+Enables 3DP (PDB/mmCIF upload) and 4DP (prepared JSON sidecar upload) alongside 1DP on the public web interface using FactorForge's built-in default SOP, while gating synthetic test fixtures to explicit local loopback testing and documenting separate data-sharing terms for custom SOP sequence requests (`eijex.lab@gmail.com`).
 
 ## v3.6.0 — local structure CLI and version check (2026-11-10)
 

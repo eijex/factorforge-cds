@@ -55,7 +55,7 @@ const HISTORY_SCHEMA_VERSION = 3;
 // Custom SOP management is intentionally paused. Retained code can be re-enabled later.
 const ENABLE_CUSTOM_SOP = false;
 // 1DP, 3DP (PDB/mmCIF), and 4DP (prepared sidecar) are publicly enabled; synthetic fixtures remain local-only.
-const isPublic4dpAvailable = () => apiCapabilities.local_4dp?.available !== false;
+const isPublic4dpAvailable = () => apiCapabilities.local_4dp?.available === true;
 const isLocal4dpFixturesAvailable = () => (
     ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
     && apiCapabilities.local_4dp?.fixtures === true
@@ -842,8 +842,17 @@ async function loadApiMetadata() {
             const radio4dp = document.querySelector('input[value="paired_4dp"]');
             if (radio4dp) radio4dp.disabled = !enable4dp;
             const fixtures = isLocal4dpFixturesAvailable();
-            document.getElementById('loadSampleSidecarBtn').hidden = !fixtures;
-            document.getElementById('allowMockSidecarLabel').hidden = !fixtures;
+            const loadSampleBtn = document.getElementById('loadSampleSidecarBtn');
+            if (loadSampleBtn) {
+                loadSampleBtn.hidden = !fixtures;
+                loadSampleBtn.classList.toggle('hidden', !fixtures);
+                loadSampleBtn.classList.toggle('flex', fixtures);
+            }
+            const allowMockLabel = document.getElementById('allowMockSidecarLabel');
+            if (allowMockLabel) {
+                allowMockLabel.hidden = !fixtures;
+                allowMockLabel.classList.toggle('hidden', !fixtures);
+            }
             const dpV21Available = Array.isArray(data.supported_objectives)
                 && data.supported_objectives.includes('dp_v2_1_1');
             const dpV21Radio = document.getElementById('dpV21Radio');
@@ -1332,7 +1341,7 @@ function initEventListeners() {
         if (is4dp) {
             elements.btnText.textContent = 'Generate 4DP (Structure-Guided)';
         } else if (is3dp) {
-            elements.btnText.textContent = 'Generate 3DP (Pilot)';
+            elements.btnText.textContent = 'Generate 3DP (Structure-Aware)';
         } else {
             elements.btnText.textContent = 'Generate 1DP';
         }
@@ -1357,6 +1366,28 @@ function initEventListeners() {
     });
     syncDesignModeUi();
 
+    const showSidecarReview = sidecar => {
+        const review = document.getElementById('review4dpPositions');
+        const summary = document.getElementById('sidecarPositionReview');
+        const chainId = sidecar?.primary_chain;
+        const chain = sidecar?.chains?.[chainId];
+        const offset = sidecar?.tunnel_offset_applied;
+        const positions = Array.isArray(chain?.pause_candidates)
+            ? [...new Set(chain.pause_candidates
+                .filter(candidate => candidate?.within_structure_chain === true
+                    && Number.isInteger(candidate.tunnel_pause_position)
+                    && candidate.tunnel_pause_position > 0
+                    && candidate.tunnel_pause_position <= chain.length)
+                .map(candidate => candidate.tunnel_pause_position))].sort((a, b) => a - b)
+            : [];
+        review.checked = false;
+        review.disabled = typeof chainId !== 'string' || !Number.isInteger(offset)
+            || offset < 0 || positions.length === 0;
+        summary.textContent = review.disabled
+            ? (sidecar ? 'No reviewable model positions found in this sidecar.' : '')
+            : 'Chain ' + chainId + ' · Offset ' + offset
+                + ' residues · Model positions: ' + positions.join(', ');
+    };
     const clear4dpReview = () => { document.getElementById('review4dpPositions').checked = false; };
     elements.sequenceInput.addEventListener('input', clear4dpReview);
     let sidecarReadRevision = 0;
@@ -1376,6 +1407,7 @@ function initEventListeners() {
             if (data.success && data.sidecar) {
                 clear4dpReview();
                 state.pauseSidecarData = data.sidecar;
+                showSidecarReview(data.sidecar);
                 const statusBadge = elements.sidecarStatusBadge || document.getElementById('sidecarStatusBadge');
                 if (statusBadge) {
                     statusBadge.textContent = 'Synthetic sidecar loaded. Model position: 38.';
@@ -1399,7 +1431,7 @@ function initEventListeners() {
     elements.pauseSidecarFile?.addEventListener('change', async (e) => {
         const revision = ++sidecarReadRevision;
         state.pauseSidecarData = null;
-        clear4dpReview();
+        showSidecarReview(null);
         elements.sidecarStatusBadge.textContent = 'No sidecar loaded';
         const file = e.target.files?.[0];
         if (!file) return;
@@ -1409,6 +1441,7 @@ function initEventListeners() {
             if (revision !== sidecarReadRevision) return;
             if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') throw new Error('Expected a JSON object');
             state.pauseSidecarData = parsed;
+            showSidecarReview(parsed);
             const statusBadge = elements.sidecarStatusBadge || document.getElementById('sidecarStatusBadge');
             if (statusBadge) {
                 statusBadge.textContent = `✅ Loaded: ${file.name} (${file.size} bytes)`;
@@ -1506,9 +1539,9 @@ function updateDesignBriefSummary() {
     const requirementText = requirements.length ? ` · ${requirements.join(' · ')}` : '';
     const method = methodLabels[selectedObjective] || 'deterministic design';
     elements.appliedPolicySummary.textContent = state.researchDesignMode === 'paired_4dp'
-        ? '4DP selected · Configured model positions · Local research preview'
+        ? '4DP selected · Prepared JSON sidecar & reviewed model positions · FactorForge default SOP'
         : (state.researchDesignMode === 'paired_3dp'
-            ? '3DP selected · direct experimental testing · uploaded structure and reviewed positions required · approval/evidence recording deferred'
+            ? '3DP selected · Uploaded PDB/mmCIF structure & reviewed positions required · FactorForge default SOP'
             : `1DP selected · ${host} · ${method}${requirementText}`);
     const notice = document.getElementById('settingsChangeNotice');
     if (notice && state.results && !state.isOptimizing) notice.classList.remove('hidden');
@@ -1688,6 +1721,12 @@ async function recommendStructurePositions() {
         const file = document.getElementById('structureWebFile')?.files?.[0] || null;
         const validFile = file && file.size <= 250000 && /\.(pdb|cif|mmcif)$/i.test(file.name);
         if (!validFile) throw new Error('Upload an exact-match PDB/mmCIF file before requesting positions.');
+        if (!state.sequence) {
+            document.getElementById('acceptStructurePositions').disabled = true;
+            document.getElementById('structureWebReviewed').checked = false;
+            document.getElementById('structureRecommendationStatus').textContent = `File selected (${file.name}). Enter or upload a matching sequence first, then choose Confidence source or enter reviewed positions manually.`;
+            return;
+        }
         if (!apiCapabilities.structure_recommendation?.available) throw new Error('Recommendations are unavailable on this backend');
         const source = document.getElementById('structureWebSource').value;
         const response = await fetch(API_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'recommend_structure',sequence:state.sequence,structure_context:{content:await file.text(),format:/\.pdb$/i.test(file.name)?'pdb':'mmcif',chain:document.getElementById('structureWebChain').value.trim(),model:Number(document.getElementById('structureWebModel').value),is_alphafold:source==='unknown'?null:source==='alphafold'}})});
@@ -1699,7 +1738,12 @@ async function recommendStructurePositions() {
         structureSuggestion = ready ? {revision,suggestion} : null;
         document.getElementById('acceptStructurePositions').disabled = !ready;
         document.getElementById('structureWebReviewed').checked = false;
-        document.getElementById('structureRecommendationStatus').textContent = ready ? `Suggested protein positions: ${suggestion.recommended_positions.join(', ')}. Source: ${suggestion.provenance_basis}. Review before accepting; these are observation-based hypotheses, not confirmed pause/linker sites.` : `${suggestion.status}: ${suggestion.reason || 'No supported region'}. Manual reviewed positions remain available.`;
+        const statusMsg = ready
+            ? `Suggested protein positions (${file.name}): ${suggestion.recommended_positions.join(', ')}. Source: ${suggestion.provenance_basis}. Review before accepting; these are observation-based hypotheses, not confirmed pause/linker sites.`
+            : (source === 'unknown' && !suggestion.is_alphafold_provenance
+                ? `${suggestion.status} (${file.name}): ${suggestion.reason || 'Select Confidence source (AlphaFold pLDDT or Experimental B-factors) to auto-suggest positions'}. Or enter reviewed positions manually below.`
+                : `${suggestion.status} (${file.name}): ${suggestion.reason || 'No supported region'}. Manual reviewed positions remain available.`);
+        document.getElementById('structureRecommendationStatus').textContent = statusMsg;
     } catch(error) {
         if (revision !== structureRecommendationRevision) return;
         structureSuggestion = null;
@@ -1833,13 +1877,18 @@ async function runOptimization() {
         if (state.researchDesignMode === 'paired_3dp') {
             if (apiCapabilities.direct_structure?.available !== true) throw new Error('3DP is unavailable on this backend. Update the API and UI together.');
             const resolved = state.structureViewerData;
+            const contentToUse = uploadedText || resolved?.content;
+            const formatToUse = uploadedFormat || resolved?.format || 'pdb';
+            if (!contentToUse) {
+                throw new Error('Upload an exact-match PDB or mmCIF structure file before generating 3DP.');
+            }
             let rawPositions = document.getElementById('structureWebPositions').value.trim();
             if (!rawPositions && resolved?.positions?.length) {
                 rawPositions = resolved.positions.join(',');
                 document.getElementById('structureWebPositions').value = rawPositions;
             }
             if (!rawPositions) {
-                throw new Error('Please specify pause positions (e.g. 105,106,107) or upload a PDB file to auto-detect them.');
+                throw new Error('Specify reviewed one-based pause positions (e.g. 72,73,74) or click "Suggest positions for review".');
             }
             let positions = [];
             const tokens = rawPositions.split(',').map(value => value.trim()).filter(Boolean);
@@ -1849,11 +1898,6 @@ async function runOptimization() {
             positions = tokens.map(Number);
             if (!positions.length || positions.some(p => !Number.isSafeInteger(p) || p < 1) || new Set(positions).size !== positions.length) {
                 throw new Error('Positions must be unique residue numbers without duplicates (e.g. 105,106,107)');
-            }
-            const contentToUse = uploadedText || resolved?.content;
-            const formatToUse = uploadedFormat || resolved?.format || 'pdb';
-            if (!contentToUse) {
-                throw new Error('Please upload an exact-match PDB/mmCIF structure file or click "Load Adalimumab (Humira) 3DP Sample".');
             }
             if (!document.getElementById('structureWebReviewed').checked) {
                 document.getElementById('structureWebReviewed').checked = true;

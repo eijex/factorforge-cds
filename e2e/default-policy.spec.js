@@ -25,5 +25,5 @@ test('public UI keeps the default policy and ignores saved custom settings', asy
  await expect(page.locator('#structureWebInputs')).toBeHidden();
  await expect(page.locator('#appliedPolicySummary')).toContainText('1DP selected');
  await expect(page.locator('#policyScopeNotice')).toContainText('not an approved laboratory SOP');
- await expect(page.locator('#policyScopeNotice')).toContainText('GNU AGPL-3.0');
+ await expect(page.locator('#policyScopeNotice')).toContainText('Agree on sharing');
 });

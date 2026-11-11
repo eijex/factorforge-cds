@@ -7,7 +7,7 @@
 ## [3.6.1] — 2026-11-11
 
 - Enable 1DP (baseline), 3DP (PDB/mmCIF upload with reviewed positions), and 4DP (prepared JSON sidecar upload with reviewed model positions) publicly on the FactorForge web interface and `/api/optimize` (synthetic 4DP test fixtures remain gated behind local loopback opt-in).
-- Enforce FactorForge's built-in default SOP across public 1DP, 3DP, and 4DP web workflows, and add explicit policy & license wording: users requesting custom-SOP sequence generation via `eijex.lab@gmail.com` must share all custom SOP configurations, requests, and resulting custom-SOP contents with Eijex and FactorForge under GNU AGPL-3.0 terms.
+- Enforce FactorForge's built-in default SOP across public 1DP, 3DP, and 4DP web workflows, and document separate sharing and use terms for custom SOP collaboration.
 - Update public web documentation, release notes modal, and Playwright/API regression test suites while maintaining strict `UNVERIFIED_PUBLIC_CORPUS` (`Biological validation: NOT_AVAILABLE`) classifications on structural and exit-tunnel offset hypotheses.
 
 ## [3.6.0] — 2026-11-10
