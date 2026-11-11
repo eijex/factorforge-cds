@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <meta name="eijex-web-build" content="v3.6.2-2026-11-11-ui-bugfix">
+    <meta name="eijex-web-build" content="v3.6.3-2026-11-11-dragdrop-hotfix">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FactorForge | N. benthamiana CDS Design</title>
@@ -90,7 +90,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.6.2 Release Notes
+                            v3.6.3 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -121,11 +121,11 @@
                     <!-- File Upload -->
                     <div class="relative group">
                         <input type="file" id="fileUpload" accept=".fasta,.fa,.txt" class="hidden">
-                        <label for="fileUpload"
+                        <label id="sequenceUploadZone" for="fileUpload"
                             class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer bg-slate-50 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-400 transition-all group">
                             <div class="flex flex-col items-center justify-center pt-5 pb-6">
                                 <span class="text-3xl mb-2 group-hover:scale-110 transition-transform">📄</span>
-                                <p class="text-sm text-slate-600 font-medium">Click to upload FASTA</p>
+                                <p class="text-sm text-slate-600 font-medium">Click or drag &amp; drop FASTA</p>
                                 <p class="text-xs text-slate-400 mt-1">.fasta, .fa, .txt accepted</p>
                             </div>
                         </label>
@@ -255,9 +255,9 @@
                                 <p class="font-bold flex items-center gap-1.5"><span>🔬</span> 4DP model-offset design (prepared sidecar)</p>
                                 <p class="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Uses FactorForge's built-in default SOP and the offset declared in your prepared pause sidecar JSON (max 100 aa, 100 KB). Review the model positions before generating (computational hypothesis; biological validation: NOT_AVAILABLE).</p>
                             </div>
-                            <div class="rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900 space-y-3">
+                            <div id="sidecarDropZone" class="rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900 space-y-3 transition-all">
                                 <div>
-                                    <label class="block font-semibold text-xs text-slate-700 dark:text-slate-300 mb-1">Pause Sidecar File (JSON from AF3 / ESMFold)</label>
+                                    <label class="block font-semibold text-xs text-slate-700 dark:text-slate-300 mb-1">Pause Sidecar File (JSON from AF3 / ESMFold · click or drag &amp; drop)</label>
                                     <input id="pauseSidecarFile" type="file" accept=".json" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2">
@@ -287,7 +287,7 @@
                             <details open class="rounded-lg border border-slate-200 dark:border-slate-700 p-2.5">
                                 <summary class="cursor-pointer font-semibold text-slate-700 dark:text-slate-300">Required: PDB / mmCIF structure upload and position review</summary>
                                 <div class="mt-3 space-y-3">
-                                    <label class="block font-semibold">Structure file (PDB or mmCIF, max 250 KB, required)<input id="structureWebFile" type="file" accept=".pdb,.cif,.mmcif" class="mt-1 block w-full"></label>
+                                    <label id="structureWebDropZone" class="block font-semibold rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-2.5 transition-all">Structure file (PDB or mmCIF, max 250 KB, click or drag &amp; drop, required)<input id="structureWebFile" type="file" accept=".pdb,.cif,.mmcif" class="mt-1 block w-full"></label>
                                     <div class="grid grid-cols-2 gap-3">
                                         <label>Chain ID<input id="structureWebChain" value="A" maxlength="8" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-2"></label>
                                         <label>Model (one-based file order)<input id="structureWebModel" type="number" min="1" value="1" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-2"></label>
@@ -1552,9 +1552,18 @@
                 <p class="text-xs text-slate-600 dark:text-slate-400">Selected public changes. Notes reviewed 2026-11-11. Historical entries do not override the current availability or data-handling policy.</p>
                 <section class="relative pl-6 border-l-2 border-emerald-500">
                     <div class="flex items-center space-x-2 mb-2">
-                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.2</h3>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.3</h3>
                         <span class="text-slate-400 text-[10px]">2026-11-11</span>
                         <span class="text-emerald-600 text-[10px] font-bold">CURRENT</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Drag-and-Drop File Upload Hotfix:</b> Enabled drag-and-drop on Sequence Input (`.fasta`/`.fa`/`.txt`), 3DP structure upload (`.pdb`/`.cif`/`.mmcif`), and 4DP sidecar upload (`.json`), added explicit workflow guidance when mismatched file types are dropped, and prevented browser tab navigation on stray drops.</li>
+                    </ul>
+                </section>
+                <section class="relative pl-6 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.2</h3>
+                        <span class="text-slate-400 text-[10px]">2026-11-11</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
                         <li><b>3DP &amp; 4DP Web Form Bugfixes:</b> Marked PDB/mmCIF upload as required, hid synthetic sidecar controls when local fixtures are disabled, removed stale sample button error text, and added clear guidance for confidence-source selection and sequence order.</li>

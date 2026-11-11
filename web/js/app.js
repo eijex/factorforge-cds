@@ -1151,23 +1151,73 @@ function restoreDefaultSop() {
     showToast('Default conservative SOP restored.', 'success');
 }
 
+function bindFileDropZone(zone, onFileDrop) {
+    if (!zone) return;
+    ['dragenter', 'dragover'].forEach(type => zone.addEventListener(type, event => {
+        event.preventDefault();
+        event.stopPropagation();
+        zone.classList.add('ring-2', 'ring-emerald-500');
+    }));
+    zone.addEventListener('dragleave', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!event.relatedTarget || !zone.contains(event.relatedTarget)) {
+            zone.classList.remove('ring-2', 'ring-emerald-500');
+        }
+    });
+    zone.addEventListener('drop', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        zone.classList.remove('ring-2', 'ring-emerald-500');
+        const file = event.dataTransfer?.files?.[0];
+        if (file) onFileDrop(file);
+    });
+}
+
+function assignDroppedFileToInput(inputEl, file) {
+    if (!inputEl || !file) return;
+    if (typeof DataTransfer !== 'undefined') {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        inputEl.files = dt.files;
+    }
+    inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function handleDroppedStructureFile(file) {
+    if (!/\.(pdb|cif|mmcif)$/i.test(file.name)) {
+        showToast('Invalid structure file. Drop a .pdb, .cif, or .mmcif file here.', 'error');
+        return;
+    }
+    assignDroppedFileToInput(document.getElementById('structureWebFile'), file);
+}
+
+function handleDroppedSidecarFile(file) {
+    if (!/\.json$/i.test(file.name)) {
+        showToast('Invalid sidecar file. Drop a prepared .json sidecar file here.', 'error');
+        return;
+    }
+    assignDroppedFileToInput(elements.pauseSidecarFile, file);
+}
+
 function initEventListeners() {
+    // Prevent accidental browser file-open navigation when dropping files outside upload zones
+    ['dragover', 'drop'].forEach(type => document.addEventListener(type, event => {
+        event.preventDefault();
+    }));
+
     // Input Handling
     elements.fileUpload.addEventListener('change', handleFileUpload);
+    bindFileDropZone(document.getElementById('sequenceUploadZone'), applySequenceFile);
+    bindFileDropZone(elements.sequenceInput, applySequenceFile);
+    bindFileDropZone(document.getElementById('structureWebDropZone'), handleDroppedStructureFile);
+    bindFileDropZone(document.getElementById('sidecarDropZone'), handleDroppedSidecarFile);
     elements.sequenceInput.addEventListener('input', debounce(handleSequenceChange, 300));
     elements.clearBtn.addEventListener('click', clearAll);
     elements.downloadSopTemplate.addEventListener('click', downloadActiveSop);
     elements.uploadSopButton.addEventListener('click', () => elements.sopFileUpload.click());
     elements.sopUploadZone.addEventListener('click', () => elements.sopFileUpload.click());
-    ['dragenter', 'dragover'].forEach(type => elements.sopUploadZone.addEventListener(type, event => {
-        event.preventDefault();
-        elements.sopUploadZone.classList.add('ring-2', 'ring-emerald-500');
-    }));
-    ['dragleave', 'drop'].forEach(type => elements.sopUploadZone.addEventListener(type, event => {
-        event.preventDefault();
-        elements.sopUploadZone.classList.remove('ring-2', 'ring-emerald-500');
-    }));
-    elements.sopUploadZone.addEventListener('drop', event => applySopFile(event.dataTransfer?.files?.[0]));
+    bindFileDropZone(elements.sopUploadZone, applySopFile);
     elements.sopFileUpload.addEventListener('change', handleSopUpload);
     elements.resetSopProfile.addEventListener('click', restoreDefaultSop);
 
@@ -1585,9 +1635,20 @@ function toggleTheme() {
 }
 
 // Handler Functions
-function handleFileUpload(e) {
-    const file = e.target.files[0];
+function applySequenceFile(file) {
     if (!file) return;
+    if (/\.(pdb|cif|mmcif)$/i.test(file.name)) {
+        showToast('PDB/mmCIF structure files belong in 3DP → Structure file (select 3DP first).', 'error');
+        return;
+    }
+    if (/\.json$/i.test(file.name)) {
+        showToast('JSON sidecars belong in 4DP → Pause Sidecar File (select 4DP first).', 'error');
+        return;
+    }
+    if (!/\.(fasta|fa|txt)$/i.test(file.name)) {
+        showToast('Unsupported file type. Upload a .fasta, .fa, or .txt sequence file.', 'error');
+        return;
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -1598,6 +1659,10 @@ function handleFileUpload(e) {
     };
     reader.onerror = () => showToast('Error reading file', 'error');
     reader.readAsText(file);
+}
+
+function handleFileUpload(e) {
+    applySequenceFile(e.target.files?.[0]);
 }
 
 function handleSequenceChange(e) {
@@ -4864,7 +4929,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.6.2';
+        const version = state.results.engine_versions?.product || '3.6.3';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }

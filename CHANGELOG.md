@@ -4,6 +4,12 @@
 
 - Correct the public release-note summaries and historical privacy/availability wording; remove internal study/telemetry details and unsupported biological guarantees from the web modal. Product version and runtime behavior remain 3.5.12.
 
+## [3.6.3] — 2026-11-11
+
+- Fix web drag-and-drop file upload handling across `Sequence Input` (`.fasta`, `.fa`, `.txt`), 3DP structure upload (`#structureWebDropZone`, `.pdb`/`.cif`/`.mmcif`), and 4DP sidecar upload (`#sidecarDropZone`, `.json`) so dropped files load directly instead of opening in the browser tab.
+- Show explicit workflow guidance toasts if `.pdb`/`.cif`/`.mmcif` or `.json` files are dropped onto `Sequence Input`, and guard document-level `dragover`/`drop` events outside active upload zones.
+- Add Playwright E2E regression checks covering drag-and-drop FASTA/3DP/4DP uploads and mismatched-extension warnings.
+
 ## [3.6.2] — 2026-11-11
 
 - Fix 3DP and 4DP public web UI defects: hide `#loadSampleSidecarBtn` when synthetic fixtures are disabled, rename the 3DP structure upload disclosure from `Optional:` to `Required:`, remove stale error copy referencing deleted sample buttons, add clear missing-sequence and confidence-source upload guidance, and remove `Local research preview` from public 4DP status text.

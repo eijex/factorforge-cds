@@ -4,6 +4,10 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current product line.
 
+## v3.6.3 — Drag-and-drop upload hotfix across 1DP, 3DP, and 4DP web inputs (2026-11-11)
+
+Enables drag-and-drop file loading for `Sequence Input` (`.fasta`/`.fa`/`.txt`), 3DP structures (`.pdb`/`.cif`/`.mmcif`), and 4DP sidecars (`.json`), prevents accidental browser tab navigation on file drops, and displays explicit guidance when files are dropped onto the wrong workflow slot.
+
 ## v3.6.2 — 3DP/4DP web UI bugfix & collaboration terms clarity (2026-11-11)
 
 Fixes public 3DP/4DP form validation and guidance (hiding synthetic fixture controls when disabled, marking PDB/mmCIF structure upload as required, clarifying confidence-source selection on upload, removing stale sample button copy) and aligns custom SOP collaboration wording with separate written data-sharing agreements.

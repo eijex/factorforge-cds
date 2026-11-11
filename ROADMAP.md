@@ -2,10 +2,14 @@
 
 FactorForge development direction and planned work.
 
-> Current release line: **v3.6.2**. Previous baseline: **v3.6.1** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current release line: **v3.6.3**. Previous baseline: **v3.6.2** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
+
+## v3.6.3 Web drag-and-drop file upload hotfix
+
+Adds drag-and-drop file upload support on Sequence Input (`.fasta`, `.fa`, `.txt`), 3DP structure upload (`.pdb`, `.cif`, `.mmcif`), and 4DP sidecar upload (`.json`), prevents accidental browser tab navigation on stray drops, and guides mismatched extensions to their dedicated workflow inputs.
 
 ## v3.6.2 3DP/4DP Web UI bugfix & collaboration clarity
 
