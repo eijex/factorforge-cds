@@ -1403,9 +1403,7 @@ function initEventListeners() {
         try {
             await recommendStructurePositions();
             if (structureSuggestion?.suggestion?.recommended_positions?.length) {
-                document.getElementById('structureWebPositions').value = structureSuggestion.suggestion.recommended_positions.join(',');
-                document.getElementById('structureWebReviewed').checked = true;
-                document.getElementById('structureRecommendationStatus').textContent = `✅ Structure loaded. Recommended pause positions (${structureSuggestion.suggestion.recommended_positions.join(', ')}) auto-applied.`;
+                document.getElementById('structureRecommendationStatus').textContent = `Suggested positions (${structureSuggestion.suggestion.recommended_positions.join(', ')}) available. Click "Use suggested positions" or review manually before running 3DP.`;
             }
         } catch (err) {
             console.warn('Auto recommend on upload error:', err);
@@ -1467,18 +1465,7 @@ function initEventListeners() {
         const show4dpPanel = is4dp || (state.strategyMode === 'compare' && Boolean(state.pauseSidecarData));
         document.getElementById('structureWebInputs')?.classList.toggle('hidden', !show3dpPanel);
         document.getElementById('structure4dpInputs')?.classList.toggle('hidden', !show4dpPanel);
-        const noteEl = document.getElementById('selectedWorkflowNote');
-        if (noteEl) {
-            if (state.strategyMode === 'compare') {
-                noteEl.textContent = 'Compare mode: runs all checked eligible workflows (1DP / verified 3DP / approved 4DP) via bounded queue.';
-            } else if (is4dp) {
-                noteEl.textContent = '4DP selected: verify sidecar integrity (SHA-256, coordinates, pLDDT, provenance) and acknowledge the unverified hypothesis before generating.';
-            } else if (is3dp) {
-                noteEl.textContent = '3DP selected: structure-guided design. Upload an exact-match PDB/mmCIF chain and review positions.';
-            } else {
-                noteEl.textContent = '1DP selected: standard baseline CDS design (FactorForge default SOP active; no structure required).';
-            }
-        }
+        syncSelectedWorkflowNote();
         updateDesignBriefSummary();
         handleSequenceChange({ target: elements.sequenceInput });
     };
@@ -2110,7 +2097,7 @@ function renderStructureChainInspector() {
     }
     box.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-2">
         <span class="font-bold text-slate-800 dark:text-slate-100">${escapeHtml(insp.fileName)} · ${insp.chainCount} chain(s) · ${insp.modelCount} model(s)</span>
-        <span class="text-[10px] font-bold uppercase ${insp.eligible3dp ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}">${insp.eligible3dp ? 'Chain verified' : 'Chain confirmation required'}</span>
+        <span class="text-[10px] font-bold uppercase ${insp.eligible3dp ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}">${insp.eligible3dp ? 'Chain sequence-matched' : 'Chain confirmation required'}</span>
     </div>
     <div class="flex flex-wrap gap-2">${chips}</div>
     ${warnings.length ? `<p class="text-[11px] font-semibold text-amber-800 dark:text-amber-300">${warnings.map(escapeHtml).join(' ')}</p>` : ''}`;
@@ -2260,7 +2247,7 @@ function renderSidecarIntegrityUi(validation) {
     if (summary) {
         if (!state.pauseSidecarData) summary.textContent = '';
         else if (validation?.ok) {
-            summary.textContent = `Chain ${validation.chainId} · Offset ${validation.offset} residues · Verified positions: ${validation.positions.join(', ')}`;
+            summary.textContent = `Chain ${validation.chainId} · Offset ${validation.offset} residues · Sequence-matched / Schema-validated positions: ${validation.positions.join(', ')}`;
         } else {
             summary.textContent = `Blocked: ${validation?.reasons?.[0] || 'Sidecar failed verification.'}`;
         }
@@ -2379,6 +2366,49 @@ function initStrategyControls() {
     });
 }
 
+function syncSelectedWorkflowNote() {
+    const noteEl = document.getElementById('selectedWorkflowNote');
+    const modeNoteEl = document.getElementById('workflowSelectorModeNote');
+    const fieldset = document.getElementById('manualWorkflowFieldset');
+    const is3dp = state.researchDesignMode === 'paired_3dp';
+    const is4dp = state.researchDesignMode === 'paired_4dp';
+
+    if (fieldset) {
+        fieldset.classList.toggle('opacity-65', state.strategyMode !== 'manual');
+        fieldset.classList.toggle('opacity-100', state.strategyMode === 'manual');
+    }
+    document.querySelectorAll('#manualWorkflowFieldset > label').forEach(lbl => {
+        const inp = lbl.querySelector('input[name="researchDesignMode"]');
+        const isAutoHighlight = state.strategyMode === 'auto' && Boolean(inp?.checked);
+        lbl.classList.toggle('ring-2', isAutoHighlight);
+        lbl.classList.toggle('ring-emerald-500/70', isAutoHighlight);
+    });
+    if (modeNoteEl) {
+        if (state.strategyMode === 'auto') {
+            modeNoteEl.textContent = 'Controlled by Automatic strategy — click any workflow below only to switch to Choose manually.';
+        } else if (state.strategyMode === 'compare') {
+            modeNoteEl.textContent = 'Compare mode active — candidate selection is controlled by the Compare checkboxes above (click below to switch to Choose manually).';
+        } else {
+            modeNoteEl.textContent = 'Manual selection active — choose 1DP, 3DP, or 4DP directly below.';
+        }
+    }
+    if (noteEl) {
+        if (state.strategyMode === 'compare') {
+            noteEl.textContent = 'Compare mode: runs all checked eligible workflows (1DP / sequence-matched 3DP / approved 4DP) via bounded queue.';
+        } else if (state.strategyMode === 'auto') {
+            noteEl.textContent = is3dp
+                ? 'Automatic picked 3DP: sequence-matched structure detected. Review pause positions below before generating.'
+                : 'Automatic picked 1DP: standard baseline CDS design (no structure required).';
+        } else if (is4dp) {
+            noteEl.textContent = '4DP selected: validate sidecar schema/SHA-256 (coordinates, pLDDT, declared source) and acknowledge the unverified hypothesis before generating.';
+        } else if (is3dp) {
+            noteEl.textContent = '3DP selected: structure-guided design. Upload an exact-match PDB/mmCIF chain and review positions.';
+        } else {
+            noteEl.textContent = '1DP selected: standard baseline CDS design (FactorForge default SOP active; no structure required).';
+        }
+    }
+}
+
 function setStrategyMode(mode, { skipSync = false } = {}) {
     state.strategyMode = mode;
     document.querySelectorAll('.strategy-mode-btn').forEach(btn => {
@@ -2443,8 +2473,8 @@ function updateStrategyAndReadiness() {
             }
             if (state.sidecarValidation) {
                 items.push(sidecarReady
-                    ? '4DP Translation-Offset Hypothesis: Verified sidecar ready (requires researcher review + hypothesis acknowledgment; Biological validation: NOT_AVAILABLE).'
-                    : `4DP Translation-Offset: Blocked (${state.sidecarValidation.reasons[0] || 'verification failed'}).`);
+                    ? '4DP Translation-Offset Hypothesis: Schema-validated sidecar ready (origin not externally authenticated; requires researcher review + hypothesis acknowledgment; Biological validation: NOT_AVAILABLE).'
+                    : `4DP Translation-Offset: Blocked (${state.sidecarValidation.reasons[0] || 'schema validation failed'}).`);
             }
             if (proteinSeq.length > 300 && proteinSeq.length <= 500) {
                 items.push(`Length ${proteinSeq.length} aa is within the 500 aa 3DP/4DP target (subject to serverless verification).`);
@@ -2452,7 +2482,7 @@ function updateStrategyAndReadiness() {
                 items.push(`Length ${proteinSeq.length} aa exceeds the 500 aa web limit for 3DP/4DP (1DP remains available).`);
             }
             headlineEl.textContent = state.strategyMode === 'auto'
-                ? (structureReady ? 'Recommendation: 3DP (verified structure match)' : `Recommendation: 1DP Standard Design (${validCount} valid record${validCount === 1 ? '' : 's'})`)
+                ? (structureReady ? 'Recommendation: 3DP (sequence-matched structure)' : `Recommendation: 1DP Standard Design (${validCount} valid record${validCount === 1 ? '' : 's'})`)
                 : (state.strategyMode === 'compare' ? 'Compare Mode: Eligible candidates queued sequentially/bounded (max 2 concurrent)' : `Manual Mode: ${state.researchDesignMode}`);
             listEl.innerHTML = items.map(i => `<li>${escapeHtml(i)}</li>`).join('');
         }
@@ -2477,6 +2507,7 @@ function updateStrategyAndReadiness() {
 
     const anyValid = records.some(r => r.effectiveType !== 'invalid' && r.sequence.length >= 3);
     elements.optimizeBtn.disabled = !anyValid || state.isOptimizing;
+    syncSelectedWorkflowNote();
     updateDesignBriefSummary();
 }
 
@@ -2512,7 +2543,7 @@ async function applySidecarData(parsed, fileName) {
     const statusBadge = elements.sidecarStatusBadge || document.getElementById('sidecarStatusBadge');
     if (statusBadge) {
         statusBadge.textContent = state.sidecarValidation.ok
-            ? `✅ Verified: ${fileName} (SHA-256 matched · ${state.sidecarValidation.sourceType})`
+            ? `✅ Schema-validated & SHA-256 matched: ${fileName} (${state.sidecarValidation.sourceType})`
             : `⚠️ Loaded with gate warning: ${fileName} (${state.sidecarValidation.reasons[0] || 'check integrity'})`;
         statusBadge.classList.add('text-teal-600', 'font-bold');
     }
@@ -2897,7 +2928,7 @@ async function buildPayloadForRecordAndMode(record, targetMode) {
             throw new Error('Positions must be unique residue numbers without duplicates (e.g. 105,106,107)');
         }
         if (!document.getElementById('structureWebReviewed').checked) {
-            document.getElementById('structureWebReviewed').checked = true;
+            throw new Error('Review the pause positions against the selected structure and check "I reviewed these positions" before generating 3DP.');
         }
         if (resolvedViewer?.source_label) {
             document.getElementById('structureRecommendationStatus').textContent = `Structure source: ${resolvedViewer.source_label} · Chain ${stInfo.chain} · Pause positions (${positions.length}): ${positions.slice(0, 12).join(', ')}${positions.length > 12 ? '…' : ''}`;
@@ -2927,7 +2958,7 @@ async function buildPayloadForRecordAndMode(record, targetMode) {
         const allowMock = isLocal4dpFixturesAvailable() && Boolean(document.getElementById('allowMockSidecar')?.checked);
         const check = validateSidecarIntegrity(state.pauseSidecarData, getRecordProteinSequence(record), allowMock);
         if (!check.ok) throw new Error(check.reasons[0] || 'Sidecar failed integrity verification.');
-        if (!document.getElementById('review4dpPositions').checked) throw new Error('Review the verified sidecar positions first.');
+        if (!document.getElementById('review4dpPositions').checked) throw new Error('Review the sequence-matched sidecar positions first.');
         const ackEl = document.querySelector('[data-role="ack4dpHypothesis"]');
         if (ackEl && !ackEl.checked) throw new Error('Acknowledge that 4DP uses an unverified translation-offset hypothesis before generating.');
         payload.design_mode = 'paired_4dp';
@@ -4348,10 +4379,27 @@ function gcPercentOfWindow(seq, maxNt = 45) {
     return (((clean.match(/[GC]/g) || []).length / clean.length) * 100);
 }
 
+function evaluateTranslationIdentity(dnaSeq, expectedProtein, reportAaIdentity = undefined) {
+    if (reportAaIdentity !== undefined && reportAaIdentity !== 1.0) return false;
+    const cleanExpected = String(expectedProtein || '').replace(/[\s*]/g, '').toUpperCase();
+    const cleanDna = String(dnaSeq || '').replace(/\s/g, '').toUpperCase();
+    if (!cleanExpected || !cleanDna) return null;
+    if (!/^[ACGT]+$/.test(cleanDna) || cleanDna.length < 3 || cleanDna.length % 3 !== 0) return false;
+    const translated = translateDnaToProtein(cleanDna);
+    if (!translated) return false;
+    return translated === cleanExpected;
+}
+
 function getMatrixCandidatesForActive() {
     const activeEntry = state.projectResults[state.activeResultRecordIndex];
     const columns = [];
     const res = state.results;
+    const activeRecord = activeEntry?.record || getActiveProjectRecord();
+    const expectedProtein = activeRecord
+        ? getRecordProteinSequence(activeRecord)
+        : (res?.input_type === 'dna'
+            ? (translateDnaToProtein(res?.original_sequence || state.sequence) || '')
+            : String(res?.original_sequence || state.sequence || '').replace(/[\s*]/g, '').toUpperCase());
     if (activeEntry?.record?.effectiveType === 'dna') {
         const dna = activeEntry.record.sequence;
         columns.push({
@@ -4363,7 +4411,9 @@ function getMatrixCandidatesForActive() {
             gc: calculateGC(dna),
             typeIisClean: null,
             gcPass: null,
-            aaPass: true,
+            aaPass: evaluateTranslationIdentity(dna, expectedProtein),
+            pausePositions3dp: [],
+            pausePositions4dp: [],
         });
     }
     if (activeEntry && Object.keys(activeEntry.resultsByMode).length) {
@@ -4377,7 +4427,7 @@ function getMatrixCandidatesForActive() {
             const gcRow = crit.find(c => c.criterion === 'overall_gc');
             const typeClean = typeRow ? typeRow.result === 'PASS' : r.metrics?.type_iis_clean;
             const gcPass = gcRow ? gcRow.result === 'PASS' : (p.validation?.gc === 'PASS');
-            const aaPass = r.constraint_report?.aa_identity === undefined ? true : r.constraint_report.aa_identity === 1.0;
+            const aaPass = evaluateTranslationIdentity(p.optimized_sequence, expectedProtein, r.constraint_report?.aa_identity);
             columns.push({
                 key: mode,
                 label: titles[mode] || mode,
@@ -4388,7 +4438,8 @@ function getMatrixCandidatesForActive() {
                 typeIisClean: typeClean,
                 gcPass,
                 aaPass,
-                pausePositions: r.pause_positions || r.structure_viewer?.positions || [],
+                pausePositions3dp: mode === 'paired_3dp' ? (r.pause_positions || r.structure_viewer?.positions || []) : [],
+                pausePositions4dp: mode === 'paired_4dp' ? (r.pause_positions || []) : [],
                 decision: r.automated_decision || 'NOT_RECORDED',
             });
         });
@@ -4407,8 +4458,9 @@ function getMatrixCandidatesForActive() {
                 gc: finiteNumber(cand?.gc_percent ?? primary.metrics?.gc_percent),
                 typeIisClean: cand?.type_iis_clean ?? res.metrics?.type_iis_clean ?? null,
                 gcPass: cand?.gc_percent != null ? (cand.gc_percent >= primary.gc_window_min && cand.gc_percent <= primary.gc_window_max) : null,
-                aaPass: res.constraint_report?.aa_identity === undefined ? true : res.constraint_report.aa_identity === 1.0,
-                pausePositions: res.pause_positions || [],
+                aaPass: evaluateTranslationIdentity(dna, expectedProtein, res.constraint_report?.aa_identity),
+                pausePositions3dp: res.design_mode === 'paired_3dp' ? (res.pause_positions || res.structure_viewer?.positions || []) : [],
+                pausePositions4dp: res.design_mode === 'paired_4dp' ? (res.pause_positions || []) : [],
                 decision: cand?.automated_decision || res.automated_decision || 'NOT_RECORDED',
             });
         });
@@ -4452,8 +4504,12 @@ function renderMultiCandidateCodonDiff() {
     }
     container.classList.remove('hidden');
     const totalCodons = Math.max(...dnaCols.map(c => c.codons.length));
-    const pauseSet = new Set();
-    dnaCols.forEach(c => (c.pausePositions || []).forEach(p => pauseSet.add(p)));
+    const pause3dpSet = new Set();
+    const pause4dpSet = new Set();
+    dnaCols.forEach(c => {
+        (c.pausePositions3dp || []).forEach(p => pause3dpSet.add(p));
+        (c.pausePositions4dp || []).forEach(p => pause4dpSet.add(p));
+    });
 
     const rows = [];
     for (let i = 0; i < totalCodons; i++) {
@@ -4461,9 +4517,11 @@ function renderMultiCandidateCodonDiff() {
         const aa = CODON_TABLE[codonsAtPos.find(cd => cd !== '—')] || '?';
         const uniqueCodons = new Set(codonsAtPos.filter(cd => cd !== '—'));
         const isChanged = uniqueCodons.size > 1;
-        const isPauseTarget = pauseSet.has(i + 1);
+        const isPause3dp = pause3dpSet.has(i + 1);
+        const isPause4dp = pause4dpSet.has(i + 1);
+        const isPauseTarget = isPause3dp || isPause4dp;
         if (state.codonDiffFilterOnlyChanged && !isChanged && !isPauseTarget) continue;
-        rows.push({ pos: i + 1, aa, codonsAtPos, isChanged, isPauseTarget });
+        rows.push({ pos: i + 1, aa, codonsAtPos, isChanged, isPauseTarget, isPause3dp, isPause4dp });
     }
 
     const pageSize = 60;
@@ -4495,7 +4553,8 @@ function renderMultiCandidateCodonDiff() {
                     const note = [];
                     if (r.isChanged) note.push('Synonymous codon difference');
                     else note.push('Identical across shown candidates');
-                    if (r.isPauseTarget) note.push('Recorded structure/4DP pause target');
+                    if (r.isPause3dp) note.push('3DP pause position');
+                    if (r.isPause4dp) note.push('4DP translation-offset target');
                     if (r.pos <= 15) note.push('5′ initiation window (nt 1–45)');
                     return `<tr class="${r.isPauseTarget ? 'bg-amber-950/40' : (r.isChanged ? 'bg-emerald-950/20' : '')}">
                         <td class="px-2.5 py-1.5 font-bold">${r.pos} · ${escapeHtml(r.aa)}</td>

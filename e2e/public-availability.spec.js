@@ -78,7 +78,7 @@ test('4DP displays verified sidecar positions before review and clears review af
       }
     }
   });
-  await expect(page.locator('#sidecarPositionReview')).toHaveText('Chain A · Offset 0 residues · Verified positions: 38');
+  await expect(page.locator('#sidecarPositionReview')).toHaveText('Chain A · Offset 0 residues · Sequence-matched / Schema-validated positions: 38');
   await expect(review).toBeEnabled();
   await expect(ack).toBeEnabled();
   await review.check();
@@ -148,7 +148,7 @@ test('unified drag and drop loads FASTA, 3DP, and 4DP files cleanly without navi
       }
     }
   }));
-  await expect(page.locator('#sidecarPositionReview')).toHaveText('Chain A · Offset 10 residues · Verified positions: 12');
+  await expect(page.locator('#sidecarPositionReview')).toHaveText('Chain A · Offset 10 residues · Sequence-matched / Schema-validated positions: 12');
 });
 
 test('multi-FASTA, multi-chain PDB inspection, bounded Compare queue, and matrix labels work with synthetic fixtures', async ({ page }) => {
@@ -256,5 +256,137 @@ test('multi-FASTA, multi-chain PDB inspection, bounded Compare queue, and matrix
   await expect(page.locator('#matrixTableBody')).toContainText(/Biological validation\s*NOT AVAILABLE/);
   await expect(page.locator('#multiCandidateCodonDiffContainer')).toContainText(/2\s*·\s*A/);
   await expect(page.locator('#multiCandidateCodonDiffContainer')).toContainText('Synonymous codon difference');
-  await expect(page.locator('#multiCandidateCodonDiffContainer')).toContainText('Recorded structure/4DP pause target');
+  await expect(page.locator('#multiCandidateCodonDiffContainer')).toContainText('3DP pause position');
+});
+
+test('AF3 multi-chain mmCIF flags identical copies, enforces manual review checkbox, and Matrix verifies translation identity independently', async ({ page }) => {
+  const seqH = 'MASTWQHLEK';
+  const seqL = 'MKTVRQER';
+  const map1to3 = { A:'ALA',R:'ARG',N:'ASN',D:'ASP',C:'CYS',Q:'GLN',E:'GLU',G:'GLY',H:'HIS',I:'ILE',L:'LEU',K:'LYS',M:'MET',F:'PHE',P:'PRO',S:'SER',T:'THR',W:'TRP',Y:'TYR',V:'VAL' };
+  const cifHeader = [
+    'data_synthetic_h2l2',
+    'loop_',
+    '_atom_site.group_PDB',
+    '_atom_site.id',
+    '_atom_site.label_atom_id',
+    '_atom_site.label_comp_id',
+    '_atom_site.label_asym_id',
+    '_atom_site.auth_asym_id',
+    '_atom_site.label_seq_id',
+    '_atom_site.Cartn_x',
+    '_atom_site.Cartn_y',
+    '_atom_site.Cartn_z',
+    '_atom_site.occupancy',
+    '_atom_site.B_iso_or_equiv',
+    '_atom_site.pdbx_PDB_model_num',
+  ];
+  let atomId = 1;
+  const chainRows = (chainId, seq) => seq.split('').map((aa, i) => `ATOM ${atomId++} CA ${map1to3[aa]} ${chainId} ${chainId} ${i + 1} 1.0 0.0 0.0 1.00 88.00 1`);
+  const cifContent = [
+    ...cifHeader,
+    ...chainRows('A', seqH),
+    ...chainRows('B', seqL),
+    ...chainRows('C', seqH),
+    ...chainRows('D', seqL),
+    '#',
+  ].join('\n');
+
+  let optimizeCalls = 0;
+  await page.route('**/api/optimize', async route => {
+    const req = route.request();
+    if (req.method() === 'GET') {
+      return route.fulfill({
+        json: { capabilities: { direct_structure: { available: true, status: 'experimental' }, local_4dp: { available: true, fixtures: false } } }
+      });
+    }
+    const body = req.postDataJSON();
+    if (body.action === 'recommend_structure') {
+      return route.fulfill({
+        json: {
+          recommendation: {
+            status: 'AVAILABLE',
+            recommended_positions: [4, 5],
+            reviewed: false,
+            provenance_basis: 'Synthetic AlphaFold pLDDT fixture',
+          }
+        }
+      });
+    }
+    if (body.action === 'auto_resolve_structure') {
+      return route.fulfill({
+        json: { resolved: { positions: [4, 5], source_label: 'Synthetic test mmCIF' } }
+      });
+    }
+    optimizeCalls += 1;
+    // Deliberately omit constraint_report.aa_identity to verify client-side translation identity check!
+    // Return exact synonymous DNA for seqH for 1DP, and mutated mismatched DNA for 3DP
+    const mode = body.design_mode || '1dp';
+    const exactH = 'ATGGCTTCAACATGGCAACATTTGGAAAAG'; // encodes MASTWQHLEK
+    const brokenH = 'ATGGCTTCAACATGGCAGCATTTGGAAAGG'; // K -> R mismatch at pos 10
+    const dna = mode === 'paired_3dp' ? brokenH : exactH;
+    return route.fulfill({
+      json: {
+        success: true,
+        optimized_sequence: dna,
+        original_length: seqH.length,
+        optimized_length: dna.length,
+        input_type: 'protein',
+        metrics: { cai: 0.9, gc_percent: 43.3, polya_signals: 0, length: dna.length, mfe_kcal_mol: null, mfe_status: 'not_computed', mfe_used: false, requested_gc_min_percent: 40, requested_gc_max_percent: 47 },
+        profile: 'feasibility_best',
+        host_profile: 'nbenthamiana',
+        automated_decision: 'PASS',
+        validation: { input_type: 'protein', polya: 'PASS', moclo: 'PASS', gc: 'PASS' },
+        pause_positions: mode === 'paired_3dp' ? [4] : [],
+        design_mode: mode,
+      }
+    });
+  });
+
+  await page.goto('/');
+  await expect(page.locator('#workflowSelectorModeNote')).toContainText('Controlled by Automatic strategy');
+  await expect(page.locator('#manualWorkflowFieldset')).toHaveClass(/opacity-65/);
+  await expect(page.locator('#selectedWorkflowNote')).toContainText('Automatic picked 1DP');
+  await page.locator('#sequenceInput').fill(`>Heavy_Syn\n${seqH}\n>Light_Syn\n${seqL}`);
+  await page.locator('#sequenceInput').dispatchEvent('input');
+
+  await page.locator('#structureWebFile').setInputFiles({
+    name: 'synthetic_h2l2.mmcif', mimeType: 'chemical/x-mmcif', buffer: Buffer.from(cifContent)
+  });
+  await expect(page.locator('#structureChainInspector')).toContainText('4 chain(s) · 1 model(s)');
+  await expect(page.locator('#structureChainInspector')).toContainText('identical copy');
+  await expect(page.locator('#structureChainInspector')).toContainText('Chain confirmation required');
+
+  // Uploading & auto-recommending must NEVER auto-check #structureWebReviewed
+  await expect(page.locator('#structureWebReviewed')).not.toBeChecked();
+
+  // Select chain A explicitly -> resolves ambiguity to Chain sequence-matched
+  await page.locator('[data-select-chain="A"]').click();
+  await expect(page.locator('#structureChainInspector')).toContainText('Chain sequence-matched');
+
+  // Trying 3DP without checking #structureWebReviewed must fail cleanly before calling API
+  await page.locator('[data-strategy-mode="manual"]').click();
+  await page.locator('input[name="researchDesignMode"][value="paired_3dp"]').check();
+  await expect(page.locator('#manualWorkflowFieldset')).toHaveClass(/opacity-100/);
+  await expect(page.locator('#selectedWorkflowNote')).toContainText('3DP selected:');
+  await page.locator('#structureWebPositions').fill('4');
+  await expect(page.locator('#structureWebReviewed')).not.toBeChecked();
+  await page.locator('#optimizeBtn').click();
+  await expect(page.locator('body')).toContainText('I reviewed these positions');
+  expect(optimizeCalls).toBe(0);
+
+  // Switching back to Automatic must update #selectedWorkflowNote and mute manual fieldset cleanly
+  await page.locator('[data-strategy-mode="auto"]').click();
+  await expect(page.locator('#selectedWorkflowNote')).toContainText('Automatic picked 3DP');
+  await expect(page.locator('#manualWorkflowFieldset')).toHaveClass(/opacity-65/);
+
+  // Check review manually, switch to Compare, and verify independent Matrix translation identity
+  await page.locator('#structureWebReviewed').check();
+  await page.locator('[data-strategy-mode="compare"]').click();
+  await page.locator('#optimizeBtn').click();
+
+  await expect(page.locator('#resultsPanel')).toBeVisible();
+  const translationRow = page.locator('#matrixTableBody tr', { hasText: 'Translation identity' });
+  await expect(translationRow).toContainText('✓ PASS');
+  await expect(translationRow).toContainText('✕ FAIL');
+  await expect(page.locator('#multiCandidateCodonDiffContainer')).toContainText('3DP pause position');
 });

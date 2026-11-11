@@ -285,8 +285,8 @@
                             <p class="font-bold text-indigo-900 dark:text-indigo-200">Candidates to generate per sequence record (max 2 concurrent requests):</p>
                             <div class="flex flex-wrap gap-3">
                                 <label class="inline-flex items-center gap-1.5 font-semibold"><input type="checkbox" data-compare-method="baseline_1dp" checked> 1DP (Standard)</label>
-                                <label class="inline-flex items-center gap-1.5 font-semibold"><input type="checkbox" data-compare-method="paired_3dp" checked> 3DP (when verified structure ready)</label>
-                                <label class="inline-flex items-center gap-1.5 font-semibold"><input type="checkbox" data-compare-method="paired_4dp" checked> 4DP (when verified sidecar approved)</label>
+                                <label class="inline-flex items-center gap-1.5 font-semibold"><input type="checkbox" data-compare-method="paired_3dp" checked> 3DP (when sequence-matched structure ready)</label>
+                                <label class="inline-flex items-center gap-1.5 font-semibold"><input type="checkbox" data-compare-method="paired_4dp" checked> 4DP (when schema-validated sidecar approved)</label>
                             </div>
                         </div>
                         <div id="designReadinessPanel" class="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 text-xs space-y-1.5" aria-live="polite">
@@ -298,8 +298,9 @@
 
                     <section id="researchTestingStatus" class="mb-6 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/30 p-4 text-xs leading-relaxed">
                         <h3 class="font-bold text-teal-900 dark:text-teal-200">Design availability: 1DP, 3DP, and 4DP enabled (FactorForge default SOP)</h3>
-                        <p>1DP (Standard CDS optimization), 3DP (Structure-guided CDS design, up to 500 aa target subject to serverless limits), and 4DP (Translation-offset hypothesis with verified sidecar JSON, up to 500 aa) are enabled in this public form using FactorForge's built-in SOP. Need a custom SOP? Email <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold text-teal-800 dark:text-teal-300">eijex.lab@gmail.com</a>. Agree on sharing, confidentiality, and use in writing before sending materials.</p>
-                        <fieldset class="mt-3 space-y-2"><legend class="sr-only">Select design workflow</legend>
+                        <p>1DP (Standard CDS optimization), 3DP (Structure-guided CDS design, up to 500 aa target subject to serverless limits), and 4DP (Translation-offset hypothesis with schema-validated sidecar JSON, up to 500 aa) are enabled in this public form using FactorForge's built-in SOP. Need a custom SOP? Email <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold text-teal-800 dark:text-teal-300">eijex.lab@gmail.com</a>. Agree on sharing, confidentiality, and use in writing before sending materials.</p>
+                        <p id="workflowSelectorModeNote" class="mt-2 px-2.5 py-1.5 rounded-lg bg-white/80 dark:bg-slate-900/70 border border-teal-200 dark:border-teal-800 text-[11px] font-semibold text-teal-900 dark:text-teal-200">Controlled by Automatic strategy — click any workflow below only to switch to Choose manually.</p>
+                        <fieldset id="manualWorkflowFieldset" class="mt-3 space-y-2 transition-opacity opacity-65"><legend class="sr-only">Select design workflow</legend>
                             <label class="block rounded-lg border border-teal-200/80 dark:border-teal-800 bg-white/80 dark:bg-slate-900/70 p-2.5 cursor-pointer">
                                 <span class="flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100"><input type="radio" name="researchDesignMode" value="baseline_1dp" checked> <span>1DP · Standard CDS Optimization</span> <span class="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold uppercase">Baseline · No Structure Needed</span></span>
                                 <span class="block text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 pl-5">Optimize synonymous codons for your expression host while preserving the protein sequence and satisfying sequence-design constraints.</span>
@@ -310,13 +311,13 @@
                             </label>
                             <label class="block rounded-lg border border-teal-200/80 dark:border-teal-800/60 bg-white/80 dark:bg-slate-900/70 p-2.5 cursor-pointer">
                                 <span class="flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100"><input type="radio" name="researchDesignMode" value="paired_4dp" disabled> <span>4DP · Translation-Offset Guided Design</span> <span class="px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300 text-[10px] font-bold uppercase">Experimental Hypothesis · Sidecar JSON</span></span>
-                                <span class="block text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 pl-5">Explore synonymous codon placement using an unverified biological hypothesis about ribosome exit-tunnel emergence (verified sidecar JSON required; biological validation: NOT_AVAILABLE).</span>
+                                <span class="block text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 pl-5">Explore synonymous codon placement using an unverified biological hypothesis about ribosome exit-tunnel emergence (schema-validated sidecar JSON required; biological validation: NOT_AVAILABLE).</span>
                             </label>
                         </fieldset>
                         <div id="structure4dpInputs" class="hidden mt-4 space-y-3">
                             <div class="rounded-lg border border-teal-300 dark:border-teal-700 bg-teal-50/80 dark:bg-teal-950/40 p-3 text-teal-900 dark:text-teal-200">
                                 <p class="font-bold flex items-center gap-1.5"><span>🔬</span> 4DP translation-offset design (prepared sidecar)</p>
-                                <p class="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Uses FactorForge's built-in default SOP and the verified sidecar JSON (up to 500 aa target, max 250 KB). Sequence match, SHA-256, coordinates, pLDDT bounds, and source provenance are checked before approval (unverified hypothesis; biological validation: NOT_AVAILABLE).</p>
+                                <p class="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Uses FactorForge's built-in default SOP and a schema-validated sidecar JSON (up to 500 aa target, max 250 KB). Sequence match, SHA-256, coordinates, pLDDT bounds, and declared source fields are checked (origin is not externally authenticated; unverified hypothesis; biological validation: NOT_AVAILABLE).</p>
                             </div>
                             <div id="sidecarDropZone" class="rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900 space-y-3 transition-all">
                                 <div>
@@ -335,7 +336,7 @@
                                         <span id="sidecarPositionReview" class="block text-xs" aria-live="polite"></span>
                                         <label class="block text-xs">
                                             <input id="review4dpPositions" type="checkbox" disabled aria-describedby="sidecarPositionReview">
-                                            I reviewed the verified sidecar positions and integrity checks for this input.
+                                            I reviewed the sequence-matched sidecar positions and integrity checks for this input.
                                         </label>
                                         <label class="block text-xs text-slate-600 dark:text-slate-300">
                                             <input type="checkbox" data-role="ack4dpHypothesis" disabled>
