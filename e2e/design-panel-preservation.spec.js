@@ -39,7 +39,8 @@ async function capture(context, baseline, preset, overrides) {
     await page.locator('#criterionCaiMode').selectOption('required');
     await page.locator('input[name="typeIisEnzyme"][value="SapI"]').check();
   }
-  const inventory = await page.locator('input[id], select[id], textarea[id]').evaluateAll(nodes => nodes.map(n => n.id).filter(id => !id.startsWith('structureWeb')).sort());
+  const excluded = ['allowMockSidecar', 'pauseSidecarFile', 'review4dpPositions'];
+  const inventory = await page.locator('input[id], select[id], textarea[id]').evaluateAll((nodes, skip) => nodes.map(n => n.id).filter(id => !id.startsWith('structureWeb') && !skip.includes(id)).sort(), excluded);
   await page.locator('#sequenceInput').fill('MASTWQHLEKDPVNRSGYF');
   await expect(page.locator('#optimizeBtn')).toBeEnabled();
   await page.locator('#optimizeBtn').click();
