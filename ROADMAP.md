@@ -2,10 +2,14 @@
 
 FactorForge development direction and planned work.
 
-> Current release line: **v3.6.3**. Previous baseline: **v3.6.2** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
+> Current release line: **v3.6.4**. Previous baseline: **v3.6.3** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
 > GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
 
 ---
+
+## v3.6.4 Sequence-First, Evidence-Aware UX & DP Performance
+
+Adds a unified sequence/structure/sidecar dropzone, multi-FASTA chain handling, Auto / Manual / Compare workflows, multi-chain PDB/mmCIF validation, strict 4DP sidecar integrity and hypothesis-acknowledgment gates, bounded Compare queue execution, truthful comparison matrix and codon difference views, and hoisted DP inner loops targeting up to 500 aa inputs contingent on deployed verification.
 
 ## v3.6.3 Web drag-and-drop file upload hotfix
 

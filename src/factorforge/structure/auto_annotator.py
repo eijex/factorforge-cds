@@ -97,9 +97,9 @@ def recommend_structure_pause_regions(
     clean_prot = "".join(protein.upper().split()).rstrip("*")
     if set(clean_prot) - set("ACDEFGHIKLMNPQRSTVWY"):
         raise ValueError("Protein must contain unambiguous amino acids")
-    if not 3 <= len(clean_prot) <= 300:
+    if not 3 <= len(clean_prot) <= 500:
         raise ValueError(
-            "Structure recommendation supports sequences between 3 and 300 amino acids."
+            "Structure recommendation supports sequences between 3 and 500 amino acids."
         )
 
     fmt = format.lower()
@@ -109,9 +109,9 @@ def recommend_structure_pause_regions(
     if (
         not isinstance(structure_content, str)
         or not structure_content
-        or len(structure_content.encode("utf-8")) > 250000
+        or len(structure_content.encode("utf-8")) > 450000
     ):
-        raise ValueError("Structure must be a PDB/mmCIF text file within 250 KB")
+        raise ValueError("Structure must be a PDB/mmCIF text file within 450 KB")
     if (
         type(model_number) is not int
         or model_number < 1

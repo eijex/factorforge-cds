@@ -547,34 +547,46 @@ class DPV240Optimizer:
             dict[tuple[int, int], tuple[float, str | None, int | None, int | None, int]]
         ] = []
         dp_layers.append({(0, start_state): (TropicalSemiring.ONE, None, None, None, 0)})
+        step_codon = self.automaton.step_codon
+        step_cache: dict[int, dict[str, tuple[int, bool]]] = {}
 
         for i, aa in enumerate(clean_protein):
             current_layer = dp_layers[-1]
             next_layer: dict[
                 tuple[int, int], tuple[float, str | None, int | None, int | None, int]
             ] = {}
-            synonymous_codons = AA_TO_CODONS[aa]
+            codon_info = [
+                (
+                    codon,
+                    codon.count("G") + codon.count("C"),
+                    self.compute_codon_log_fitness(i, codon, codon_weights, active_pause_map),
+                )
+                for codon in AA_TO_CODONS[aa]
+            ]
             is_ramp_boundary = i == ramp_k - 1
 
             for (g, s), (score, _, _, _, prev_path_rank) in current_layer.items():
-                for codon in synonymous_codons:
-                    # 1. Automaton Veto
-                    next_s, is_forbidden = self.automaton.step_codon(s, codon)
+                s_trans = step_cache.get(s)
+                if s_trans is None:
+                    s_trans = {}
+                    step_cache[s] = s_trans
+                for codon, codon_gc, step_log_fitness in codon_info:
+                    # 1. Automaton Veto (cached per automaton state & codon)
+                    transition = s_trans.get(codon)
+                    if transition is None:
+                        transition = step_codon(s, codon)
+                        s_trans[codon] = transition
+                    next_s, is_forbidden = transition
                     if is_forbidden:
                         continue
 
-                    # 2. Cumulative GC count
-                    codon_gc = codon.count("G") + codon.count("C")
+                    # 2. Cumulative GC count and Tropical multiplication score
                     next_g = g + codon_gc
-
-                    # 3. Position-dependent structural fitness score via Tropical multiplication
-                    step_log_fitness = self.compute_codon_log_fitness(
-                        i, codon, codon_weights, active_pause_map
-                    )
                     next_score = TropicalSemiring.otimes(score, step_log_fitness)
 
                     state_key = (next_g, next_s)
-                    if state_key not in next_layer:
+                    existing = next_layer.get(state_key)
+                    if existing is None:
                         next_layer[state_key] = (next_score, codon, g, s, prev_path_rank)
                     else:
                         (
@@ -583,7 +595,7 @@ class DPV240Optimizer:
                             _existing_prev_g,
                             _existing_prev_s,
                             existing_prev_rank,
-                        ) = next_layer[state_key]
+                        ) = existing
                         if next_score > existing_score + 1e-12:
                             next_layer[state_key] = (next_score, codon, g, s, prev_path_rank)
                         elif abs(next_score - existing_score) <= 1e-12:

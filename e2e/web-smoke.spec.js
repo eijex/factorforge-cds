@@ -110,7 +110,7 @@ test('opens release notes and toggles dark mode', async ({ page }) => {
 
   await page.locator('#changelogBtn').click();
   await expect(page.locator('#changelogModal')).toBeVisible();
-  await expect(page.locator('#changelogModal h3').first()).toHaveText('v3.6.3');
+  await expect(page.locator('#changelogModal h3').first()).toHaveText('v3.6.4');
   await page.locator('#closeModal').click();
   await expect(page.locator('#changelogModal')).toBeHidden();
 });
@@ -294,7 +294,7 @@ test('updates sequence metadata for protein input', async ({ page }) => {
   await expect(page.locator('#sequencePreview')).toContainText(SAMPLE_PROTEIN);
 });
 
-test('shows CDS design review controls and rejects multi-FASTA input', async ({ page }) => {
+test('shows CDS design review controls and detects multi-FASTA records', async ({ page }) => {
   await openApp(page);
 
   const manualOverrides = page.locator('#manualSopOverrides');
@@ -307,7 +307,12 @@ test('shows CDS design review controls and rejects multi-FASTA input', async ({ 
   await expect(page.locator('#criterionCaiMode')).toBeVisible();
   await page.locator('#sequenceInput').fill('>one\nATGTCCAAG\n>two\nATGTCCAAG');
 
-  await expect(page.locator('#validationWarning')).toContainText('Multiple FASTA records detected');
+  await expect(page.locator('#projectRecordsPanel')).toBeVisible();
+  await expect(page.locator('#projectRecordsPanel')).toContainText('2 sequences detected');
+  await expect(page.locator('#optimizeBtn')).toBeEnabled();
+
+  await page.locator('#sequenceInput').fill('>bad\nATGTCC123');
+  await expect(page.locator('#validationWarning')).toContainText('Invalid characters');
   await expect(page.locator('#optimizeBtn')).toBeDisabled();
 });
 

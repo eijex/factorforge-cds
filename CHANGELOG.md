@@ -4,6 +4,13 @@
 
 - Correct the public release-note summaries and historical privacy/availability wording; remove internal study/telemetry details and unsupported biological guarantees from the web modal. Product version and runtime behavior remain 3.5.12.
 
+## [3.6.4] — 2026-11-11
+
+- **Sequence-First UX & Auto / Manual / Compare Strategies:** Unified file dropzone (`.fasta`, `.fa`, `.txt`, `.pdb`, `.cif`, `.mmcif`, `.json`), multi-FASTA detection and per-chain switching, and Automatic / Choose manually / Compare designs modes with evidence-tiered descriptions (`Standard CDS Optimization`, `Structure-Guided CDS Design`, `Translation-Offset Guided Design`).
+- **Multi-Chain Structure Inspection (P0-2) & Strict 4DP Sidecar Integrity Gate (P0-3):** Client-side inspection of all chains in `.pdb`/`.cif`/`.mmcif` uploads (identifying exact, duplicate, SP-cleaved, and partial matches) and strict 4DP sidecar validation (status, coordinate system, single-chain scope, sequence & SHA-256 identity, consecutive `1..N` coordinates, finite `[0, 100]` pLDDT, provenance, public mock restriction, and explicit hypothesis acknowledgment; `Biological validation: NOT_AVAILABLE`).
+- **Bounded Compare Queue (P1-4), Truthful Matrix & Codon Diff Viewer (P1-5):** Concurrency-bounded (`concurrency = 2`, max `6` records / `2,500` aa total) comparison queue preserving completed candidates on partial failure, factual run matrix (`Cryptic splice prediction: NOT RUN`, `Biological validation: NOT AVAILABLE`), and recorded engine codon difference inspection.
+- **DP Loop Hoisting & 500 aa Target Guardrail (P0-1):** Hoisted invariant codon table/fitness work in `dp_v2.py`, `structural_pause.py`, and `dp_v2_4.py` with verified exact reference equivalence, and raised configurable web limits to `500` aa (`450,000` byte structure uploads; `250,000` byte sidecar JSON) contingent on deployed serverless latency and memory checks.
+
 ## [3.6.3] — 2026-11-11
 
 - Fix web drag-and-drop file upload handling across `Sequence Input` (`.fasta`, `.fa`, `.txt`), 3DP structure upload (`#structureWebDropZone`, `.pdb`/`.cif`/`.mmcif`), and 4DP sidecar upload (`#sidecarDropZone`, `.json`) so dropped files load directly instead of opening in the browser tab.

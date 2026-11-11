@@ -221,7 +221,7 @@ def test_mmcif_input_actual_execution():
 
 
 @pytest.mark.parametrize(
-    "changes", [{"sequence": "M" * 301}, {"constraints": {"gc_min": float("nan"), "gc_max": 100}}]
+    "changes", [{"sequence": "M" * 501}, {"constraints": {"gc_min": float("nan"), "gc_max": 100}}]
 )
 def test_resource_and_nonfinite_gc_rejected(changes):
     assert post(request(**changes))[0] == 400
@@ -229,7 +229,7 @@ def test_resource_and_nonfinite_gc_rejected(changes):
 
 def test_structure_content_size_limit():
     data = request()
-    data["structure_context"]["content"] = " " * 250001
+    data["structure_context"]["content"] = " " * 450001
     assert post(data)[0] == 400
 
 

@@ -4,6 +4,10 @@ Full changelog: [CHANGELOG.md on GitHub](https://github.com/eijex/factorforge-cd
 
 FactorForge v3.0+ is the current product line.
 
+## v3.6.4 — Sequence-First UX, Auto/Manual/Compare, Multi-Chain & Sidecar Integrity Gates, and DP Loop Hoisting (2026-11-11)
+
+Replaces strict input-first ordering with a unified multi-file dropzone, multi-FASTA detection, and **Auto / Manual / Compare** design strategies; adds client-side multi-chain PDB/mmCIF inspection, strict 4DP sidecar integrity checks with explicit hypothesis acknowledgment, bounded Compare execution with partial-failure preservation, factual comparison matrix labels (`Cryptic splice prediction: NOT RUN`), and invariant DP loop hoisting targeting up to 500 aa inputs contingent on deployed latency verification.
+
 ## v3.6.3 — Drag-and-drop upload hotfix across 1DP, 3DP, and 4DP web inputs (2026-11-11)
 
 Enables drag-and-drop file loading for `Sequence Input` (`.fasta`/`.fa`/`.txt`), 3DP structures (`.pdb`/`.cif`/`.mmcif`), and 4DP sidecars (`.json`), prevents accidental browser tab navigation on file drops, and displays explicit guidance when files are dropped onto the wrong workflow slot.

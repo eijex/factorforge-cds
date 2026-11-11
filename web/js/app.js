@@ -477,9 +477,38 @@ function loadVersionedHistory() {
     return [];
 }
 
+const MAX_PROJECT_RECORDS = 6;
+const MAX_PROJECT_TOTAL_AA = 2500;
+const MAX_STRUCTURE_WEB_BYTES = 450000;
+const MAX_SIDECAR_WEB_BYTES = 250000;
+const THREE_TO_ONE_JS = Object.freeze({
+    ALA: 'A', CYS: 'C', ASP: 'D', GLU: 'E', PHE: 'F',
+    GLY: 'G', HIS: 'H', ILE: 'I', LYS: 'K', LEU: 'L',
+    MET: 'M', ASN: 'N', PRO: 'P', GLN: 'Q', ARG: 'R',
+    SER: 'S', THR: 'T', VAL: 'V', TRP: 'W', TYR: 'Y',
+    MSE: 'M',
+});
+
 // State Management
 const state = {
     sequence: '',
+    strategyMode: 'auto',
+    compareMethods: ['baseline_1dp', 'paired_3dp', 'paired_4dp'],
+    researchDesignMode: 'baseline_1dp',
+    projectRecords: [],
+    activeRecordIndex: 0,
+    parsedStructure: null,
+    structureInspection: null,
+    uploadedStructureFile: null,
+    uploadedStructureText: null,
+    uploadedStructureFormat: 'pdb',
+    userConfirmedStructureChain: false,
+    sidecarValidation: null,
+    sidecarFileName: null,
+    projectResults: [],
+    activeResultRecordIndex: 0,
+    codonDiffFilterOnlyChanged: false,
+    codonDiffPage: 0,
     engineMode: 'profile',
     objective: 'dp_v2_1_1',
     host: 'nbenthamiana',
@@ -875,6 +904,7 @@ async function loadApiMetadata() {
             elements.saveDbStatus.textContent = dbAvailable
                 ? 'Enabled for this deployment'
                 : 'Unavailable on this deployment';
+            if (typeof updateStrategyAndReadiness === 'function') updateStrategyAndReadiness();
         }
     } catch (_) {
         // Offline/dev fallback — getGcRange() uses OFFLINE_GC_RANGES;
@@ -1169,8 +1199,8 @@ function bindFileDropZone(zone, onFileDrop) {
         event.preventDefault();
         event.stopPropagation();
         zone.classList.remove('ring-2', 'ring-emerald-500');
-        const file = event.dataTransfer?.files?.[0];
-        if (file) onFileDrop(file);
+        const files = event.dataTransfer?.files;
+        if (files && files.length) onFileDrop(files.length > 1 && onFileDrop === applyDroppedFilesOrFile ? files : files[0]);
     });
 }
 
@@ -1208,10 +1238,17 @@ function initEventListeners() {
 
     // Input Handling
     elements.fileUpload.addEventListener('change', handleFileUpload);
-    bindFileDropZone(document.getElementById('sequenceUploadZone'), applySequenceFile);
-    bindFileDropZone(elements.sequenceInput, applySequenceFile);
+    bindFileDropZone(document.getElementById('sequenceUploadZone'), applyDroppedFilesOrFile);
+    bindFileDropZone(elements.sequenceInput, applyDroppedFilesOrFile);
     bindFileDropZone(document.getElementById('structureWebDropZone'), handleDroppedStructureFile);
     bindFileDropZone(document.getElementById('sidecarDropZone'), handleDroppedSidecarFile);
+    if (elements.designBriefPanel) {
+        bindFileDropZone(elements.designBriefPanel, applyDroppedFilesOrFile);
+    }
+    initStrategyControls();
+    document.querySelector('[data-role="ack4dpHypothesis"]')?.addEventListener('change', () => {
+        updateStrategyAndReadiness();
+    });
     elements.sequenceInput.addEventListener('input', debounce(handleSequenceChange, 300));
     elements.clearBtn.addEventListener('click', clearAll);
     elements.downloadSopTemplate.addEventListener('click', downloadActiveSop);
@@ -1344,10 +1381,24 @@ function initEventListeners() {
         const file = e.target.files?.[0];
         if (!file) return;
         state.sampleStructureText = null;
-        if (file.size > 250000) {
-            document.getElementById('structureRecommendationStatus').textContent = 'File too large (> 250 KB). Please select a file under 250 KB.';
+        if (file.size > MAX_STRUCTURE_WEB_BYTES) {
+            document.getElementById('structureRecommendationStatus').textContent = 'File too large (> 450 KB). Please select a file under 450 KB.';
             return;
         }
+        state.uploadedStructureFile = file;
+        state.uploadedStructureFormat = /\.pdb$/i.test(file.name) ? 'pdb' : 'mmcif';
+        state.userConfirmedStructureChain = false;
+        try {
+            state.uploadedStructureText = await file.text();
+            state.parsedStructure = parseStructureChainsClient(state.uploadedStructureText, state.uploadedStructureFormat, Number(document.getElementById('structureWebModel')?.value) || 1);
+            inspectStructureAgainstRecords();
+        } catch (parseErr) {
+            console.warn('Client structure inspect warning:', parseErr);
+            state.parsedStructure = null;
+            state.structureInspection = null;
+            renderStructureChainInspector();
+        }
+        updateStrategyAndReadiness();
         document.getElementById('structureRecommendationStatus').textContent = 'Analyzing structure coordinates and pause positions...';
         try {
             await recommendStructurePositions();
@@ -1368,7 +1419,17 @@ function initEventListeners() {
         document.getElementById('structureWebReviewed').checked=true;
         document.getElementById('structureRecommendationStatus').textContent='Suggested positions copied and ready for 3DP design.';
     });
-    ['structureWebChain','structureWebModel','structureWebSource'].forEach(id=>document.getElementById(id).addEventListener('change',invalidateStructureSuggestion));
+    ['structureWebChain','structureWebModel','structureWebSource'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{
+        invalidateStructureSuggestion();
+        if (state.uploadedStructureText) {
+            if (id === 'structureWebModel') {
+                state.parsedStructure = parseStructureChainsClient(state.uploadedStructureText, state.uploadedStructureFormat, Number(document.getElementById('structureWebModel')?.value) || 1);
+            }
+            if (id === 'structureWebChain') state.userConfirmedStructureChain = true;
+            inspectStructureAgainstRecords();
+            updateStrategyAndReadiness();
+        }
+    }));
     elements.sequenceInput.addEventListener('input',invalidateStructureSuggestion);
     document.getElementById('structureWebPositions').addEventListener('input',()=>{document.getElementById('structureWebReviewed').checked=false;});
 
@@ -1388,23 +1449,34 @@ function initEventListeners() {
         state.researchDesignMode = mode;
         const is3dp = mode === 'paired_3dp';
         const is4dp = mode === 'paired_4dp';
-        if (is4dp) {
-            elements.btnText.textContent = 'Generate 4DP (Structure-Guided)';
+        if (state.strategyMode === 'compare') {
+            const count = Math.max(1, state.projectRecords.length || 1);
+            elements.btnText.textContent = count > 1
+                ? `Compare Eligible Designs (${count} chains)`
+                : 'Compare Eligible Designs';
+        } else if (is4dp) {
+            elements.btnText.textContent = 'Generate 4DP (Translation-Offset)';
         } else if (is3dp) {
-            elements.btnText.textContent = 'Generate 3DP (Structure-Aware)';
+            elements.btnText.textContent = 'Generate 3DP (Structure-Guided)';
         } else {
-            elements.btnText.textContent = 'Generate 1DP';
+            elements.btnText.textContent = state.projectRecords.length > 1
+                ? `Generate 1DP Designs (${state.projectRecords.length} chains)`
+                : 'Generate 1DP (Standard CDS)';
         }
-        document.getElementById('structureWebInputs')?.classList.toggle('hidden', !is3dp);
-        document.getElementById('structure4dpInputs')?.classList.toggle('hidden', !is4dp);
+        const show3dpPanel = is3dp || (state.strategyMode === 'compare' && Boolean(state.uploadedStructureText));
+        const show4dpPanel = is4dp || (state.strategyMode === 'compare' && Boolean(state.pauseSidecarData));
+        document.getElementById('structureWebInputs')?.classList.toggle('hidden', !show3dpPanel);
+        document.getElementById('structure4dpInputs')?.classList.toggle('hidden', !show4dpPanel);
         const noteEl = document.getElementById('selectedWorkflowNote');
         if (noteEl) {
-            if (is4dp) {
-                noteEl.textContent = '4DP selected: upload a prepared pause sidecar JSON and review the model positions before generating.';
+            if (state.strategyMode === 'compare') {
+                noteEl.textContent = 'Compare mode: runs all checked eligible workflows (1DP / verified 3DP / approved 4DP) via bounded queue.';
+            } else if (is4dp) {
+                noteEl.textContent = '4DP selected: verify sidecar integrity (SHA-256, coordinates, pLDDT, provenance) and acknowledge the unverified hypothesis before generating.';
             } else if (is3dp) {
-                noteEl.textContent = '3DP selected: experimental structure-conditioned design. Upload an exact-match PDB/mmCIF file and review positions.';
+                noteEl.textContent = '3DP selected: structure-guided design. Upload an exact-match PDB/mmCIF chain and review positions.';
             } else {
-                noteEl.textContent = '1DP selected: standard baseline sequence design (FactorForge default SOP active).';
+                noteEl.textContent = '1DP selected: standard baseline CDS design (FactorForge default SOP active; no structure required).';
             }
         }
         updateDesignBriefSummary();
@@ -1412,34 +1484,37 @@ function initEventListeners() {
     };
     document.querySelectorAll('input[name="researchDesignMode"]').forEach(input => {
         if (input.value === 'paired_3dp') input.disabled = !ENABLE_EXPERIMENTAL_STRUCTURE_WEB;
-        input.addEventListener('change', syncDesignModeUi);
+        input.addEventListener('change', (e) => {
+            if (e.isTrusted && state.strategyMode !== 'manual') {
+                setStrategyMode('manual', { skipSync: true });
+            }
+            syncDesignModeUi();
+        });
     });
     syncDesignModeUi();
 
     const showSidecarReview = sidecar => {
-        const review = document.getElementById('review4dpPositions');
-        const summary = document.getElementById('sidecarPositionReview');
-        const chainId = sidecar?.primary_chain;
-        const chain = sidecar?.chains?.[chainId];
-        const offset = sidecar?.tunnel_offset_applied;
-        const positions = Array.isArray(chain?.pause_candidates)
-            ? [...new Set(chain.pause_candidates
-                .filter(candidate => candidate?.within_structure_chain === true
-                    && Number.isInteger(candidate.tunnel_pause_position)
-                    && candidate.tunnel_pause_position > 0
-                    && candidate.tunnel_pause_position <= chain.length)
-                .map(candidate => candidate.tunnel_pause_position))].sort((a, b) => a - b)
-            : [];
-        review.checked = false;
-        review.disabled = typeof chainId !== 'string' || !Number.isInteger(offset)
-            || offset < 0 || positions.length === 0;
-        summary.textContent = review.disabled
-            ? (sidecar ? 'No reviewable model positions found in this sidecar.' : '')
-            : 'Chain ' + chainId + ' · Offset ' + offset
-                + ' residues · Model positions: ' + positions.join(', ');
+        const activeRec = getActiveProjectRecord();
+        const proteinSeq = activeRec ? getRecordProteinSequence(activeRec) : '';
+        const allowMock = isLocal4dpFixturesAvailable() && Boolean(document.getElementById('allowMockSidecar')?.checked);
+        const validation = validateSidecarIntegrity(sidecar, proteinSeq, allowMock);
+        state.sidecarValidation = validation;
+        renderSidecarIntegrityUi(validation);
     };
-    const clear4dpReview = () => { document.getElementById('review4dpPositions').checked = false; };
-    elements.sequenceInput.addEventListener('input', clear4dpReview);
+    const clear4dpReview = () => {
+        const review = document.getElementById('review4dpPositions');
+        const ack = document.querySelector('[data-role="ack4dpHypothesis"]');
+        if (review) review.checked = false;
+        if (ack) ack.checked = false;
+    };
+    elements.sequenceInput.addEventListener('input', () => {
+        clear4dpReview();
+        if (state.pauseSidecarData) showSidecarReview(state.pauseSidecarData);
+    });
+    document.getElementById('allowMockSidecar')?.addEventListener('change', () => {
+        if (state.pauseSidecarData) showSidecarReview(state.pauseSidecarData);
+        updateStrategyAndReadiness();
+    });
     let sidecarReadRevision = 0;
     elements.loadSampleSidecarBtn?.addEventListener('click', async () => {
         if (!isLocal4dpFixturesAvailable()) return;
@@ -1457,17 +1532,19 @@ function initEventListeners() {
             if (data.success && data.sidecar) {
                 clear4dpReview();
                 state.pauseSidecarData = data.sidecar;
+                state.sidecarFileName = 'synthetic_sample_sidecar.json';
+                const fixture = data.sidecar.chains[data.sidecar.primary_chain].sequence;
+                if (!state.sequence) {
+                    elements.sequenceInput.value = fixture;
+                    handleSequenceChange({ target: elements.sequenceInput });
+                }
                 showSidecarReview(data.sidecar);
                 const statusBadge = elements.sidecarStatusBadge || document.getElementById('sidecarStatusBadge');
                 if (statusBadge) {
                     statusBadge.textContent = 'Synthetic sidecar loaded. Model position: 38.';
                     statusBadge.classList.add('text-teal-600', 'font-bold');
                 }
-                const fixture = data.sidecar.chains[data.sidecar.primary_chain].sequence;
-                if (!state.sequence) {
-                    elements.sequenceInput.value = fixture;
-                    handleSequenceChange({ target: elements.sequenceInput });
-                }
+                updateStrategyAndReadiness();
                 showToast('Sample sidecar loaded successfully', 'success');
             } else {
                 throw new Error(data.error || 'Failed to fetch sample sidecar');
@@ -1481,26 +1558,26 @@ function initEventListeners() {
     elements.pauseSidecarFile?.addEventListener('change', async (e) => {
         const revision = ++sidecarReadRevision;
         state.pauseSidecarData = null;
+        state.sidecarValidation = null;
         showSidecarReview(null);
         elements.sidecarStatusBadge.textContent = 'No sidecar loaded';
         const file = e.target.files?.[0];
-        if (!file) return;
+        if (!file) {
+            updateStrategyAndReadiness();
+            return;
+        }
         try {
-            if (!isPublic4dpAvailable() || file.size > 100_000) throw new Error('Invalid sidecar size or mode');
+            if (!isPublic4dpAvailable() || file.size > MAX_SIDECAR_WEB_BYTES) {
+                throw new Error('Sidecar file exceeds 250 KB limit or 4DP is unavailable');
+            }
             const parsed = JSON.parse(await file.text());
             if (revision !== sidecarReadRevision) return;
             if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') throw new Error('Expected a JSON object');
-            state.pauseSidecarData = parsed;
-            showSidecarReview(parsed);
-            const statusBadge = elements.sidecarStatusBadge || document.getElementById('sidecarStatusBadge');
-            if (statusBadge) {
-                statusBadge.textContent = `✅ Loaded: ${file.name} (${file.size} bytes)`;
-                statusBadge.classList.add('text-teal-600', 'font-bold');
-            }
-            showToast(`Sidecar loaded: ${file.name}`, 'success');
+            await applySidecarData(parsed, file.name);
         } catch (err) {
             console.error('Failed to parse sidecar JSON:', err);
-            showToast('Invalid JSON sidecar file', 'error');
+            showToast(err?.message || 'Invalid JSON sidecar file', 'error');
+            updateStrategyAndReadiness();
         }
     });
 
@@ -1588,11 +1665,15 @@ function updateDesignBriefSummary() {
     if (elements.dinucToggle?.checked) requirements.push('TpA reduction');
     const requirementText = requirements.length ? ` · ${requirements.join(' · ')}` : '';
     const method = methodLabels[selectedObjective] || 'deterministic design';
-    elements.appliedPolicySummary.textContent = state.researchDesignMode === 'paired_4dp'
+    const isMultiCompare = state.strategyMode === 'compare';
+    const baseText = state.researchDesignMode === 'paired_4dp'
         ? '4DP selected · Prepared JSON sidecar & reviewed model positions · FactorForge default SOP'
         : (state.researchDesignMode === 'paired_3dp'
             ? '3DP selected · Uploaded PDB/mmCIF structure & reviewed positions required · FactorForge default SOP'
             : `1DP selected · ${host} · ${method}${requirementText}`);
+    elements.appliedPolicySummary.textContent = isMultiCompare
+        ? `${baseText} · Compare designs`
+        : baseText;
     const notice = document.getElementById('settingsChangeNotice');
     if (notice && state.results && !state.isOptimizing) notice.classList.remove('hidden');
 }
@@ -1634,19 +1715,893 @@ function toggleTheme() {
     if (state.results) renderGCGraph(state.results.optimized_sequence, getResultHostProfile(state.results));
 }
 
+// Pure-JS synchronous SHA-256 hex digest for P0-3 sidecar verification
+function sha256HexSync(str) {
+    const bytes = new TextEncoder().encode(String(str || ''));
+    const K = [
+        0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+        0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+        0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+        0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+        0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+        0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+        0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+        0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+    ];
+    const H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    const bitLen = bytes.length * 8;
+    const padLen = Math.ceil((bytes.length + 9) / 64) * 64;
+    const padded = new Uint8Array(padLen);
+    padded.set(bytes);
+    padded[bytes.length] = 0x80;
+    const dv = new DataView(padded.buffer);
+    dv.setUint32(padLen - 4, bitLen >>> 0, false);
+    dv.setUint32(padLen - 8, Math.floor(bitLen / 0x100000000) >>> 0, false);
+    const r = (v, n) => (v >>> n) | (v << (32 - n));
+    const w = new Uint32Array(64);
+    for (let off = 0; off < padLen; off += 64) {
+        for (let i = 0; i < 16; i++) w[i] = dv.getUint32(off + i * 4, false);
+        for (let i = 16; i < 64; i++) {
+            const s0 = r(w[i - 15], 7) ^ r(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+            const s1 = r(w[i - 2], 17) ^ r(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+            w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+        }
+        let [a, b, c, d, e, f, g, h] = H;
+        for (let i = 0; i < 64; i++) {
+            const S1 = r(e, 6) ^ r(e, 11) ^ r(e, 25);
+            const ch = (e & f) ^ (~e & g);
+            const t1 = (h + S1 + ch + K[i] + w[i]) >>> 0;
+            const S0 = r(a, 2) ^ r(a, 13) ^ r(a, 22);
+            const maj = (a & b) ^ (a & c) ^ (b & c);
+            const t2 = (S0 + maj) >>> 0;
+            h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+        }
+        H[0] = (H[0] + a) >>> 0; H[1] = (H[1] + b) >>> 0; H[2] = (H[2] + c) >>> 0; H[3] = (H[3] + d) >>> 0;
+        H[4] = (H[4] + e) >>> 0; H[5] = (H[5] + f) >>> 0; H[6] = (H[6] + g) >>> 0; H[7] = (H[7] + h) >>> 0;
+    }
+    return H.map(v => v.toString(16).padStart(8, '0')).join('');
+}
+
+function translateDnaToProtein(dnaSeq) {
+    const clean = String(dnaSeq || '').replace(/\s/g, '').toUpperCase();
+    if (!/^[ACGT]+$/.test(clean) || clean.length < 3 || clean.length % 3 !== 0) return null;
+    let aa = '';
+    for (let i = 0; i < clean.length; i += 3) {
+        const codon = clean.slice(i, i + 3);
+        const res = CODON_TABLE[codon];
+        if (!res) return null;
+        if (res === '*') {
+            if (i === clean.length - 3) break;
+            return null;
+        }
+        aa += res;
+    }
+    return aa;
+}
+
+function classifySequenceType(seq, prevOverride = null) {
+    const dnaRegex = /^[ACGT]+$/;
+    const proteinRegex = /^[ACDEFGHIKLMNPQRSTVWY*]+$/;
+    const isDNA = dnaRegex.test(seq);
+    const isProtein = proteinRegex.test(seq);
+    const ambiguousAcgt = isDNA && seq.length >= 3 && seq.length <= 120;
+    let effectiveType = 'invalid';
+    if (isDNA && isProtein) {
+        effectiveType = prevOverride === 'protein' ? 'protein' : 'dna';
+    } else if (isDNA) {
+        effectiveType = 'dna';
+    } else if (isProtein) {
+        effectiveType = 'protein';
+    }
+    return { isDNA, isProtein, ambiguousAcgt, effectiveType };
+}
+
+function parseFastaRecords(rawValue, previousRecords = []) {
+    const text = String(rawValue || '').replace(/\r/g, '');
+    const nonEmpty = text.split('\n').map(l => l.trim()).filter(Boolean);
+    if (!nonEmpty.length) return { records: [], parseError: '' };
+    const prevMap = new Map(previousRecords.map(r => [`${r.header}::${r.sequence}`, r.userOverrideType]));
+    const firstHeaderIdx = nonEmpty.findIndex(l => l.startsWith('>'));
+    if (firstHeaderIdx > 0) {
+        return { records: [], parseError: 'FASTA header must be the first non-empty line.' };
+    }
+    const rawRecords = [];
+    if (firstHeaderIdx === -1) {
+        rawRecords.push({ header: 'Sequence 1', seq: nonEmpty.join('').replace(/\s/g, '').toUpperCase() });
+    } else {
+        let current = null;
+        for (const line of nonEmpty) {
+            if (line.startsWith('>')) {
+                if (current) rawRecords.push(current);
+                current = { header: line.slice(1).trim() || `Sequence ${rawRecords.length + 1}`, seqParts: [] };
+            } else if (current) {
+                current.seqParts.push(line);
+            }
+        }
+        if (current) rawRecords.push(current);
+        for (const rec of rawRecords) {
+            rec.seq = rec.seqParts.join('').replace(/\s/g, '').toUpperCase();
+        }
+    }
+    if (rawRecords.some(r => !r.seq)) {
+        return { records: [], parseError: 'Empty FASTA record detected. Each >header must contain a sequence.' };
+    }
+    const records = rawRecords.map((rec, index) => {
+        const override = prevMap.get(`${rec.header}::${rec.seq}`) || null;
+        const cls = classifySequenceType(rec.seq, override);
+        const proteinSequence = cls.effectiveType === 'dna'
+            ? (translateDnaToProtein(rec.seq) || '')
+            : (cls.effectiveType === 'protein' ? rec.seq.replace(/\*+$/, '') : '');
+        const aaLength = cls.effectiveType === 'dna'
+            ? (proteinSequence ? proteinSequence.length : Math.floor(rec.seq.length / 3))
+            : rec.seq.replace(/\*+$/, '').length;
+        return {
+            index,
+            header: rec.header,
+            sequence: rec.seq,
+            isDNA: cls.isDNA,
+            isProtein: cls.isProtein,
+            ambiguousAcgt: cls.ambiguousAcgt,
+            userOverrideType: override,
+            effectiveType: cls.effectiveType,
+            proteinSequence,
+            aaLength,
+            bpLength: rec.seq.length,
+        };
+    });
+    return { records, parseError: '' };
+}
+
+function getActiveProjectRecord() {
+    if (!state.projectRecords.length) return null;
+    const idx = Math.max(0, Math.min(state.activeRecordIndex, state.projectRecords.length - 1));
+    return state.projectRecords[idx] || null;
+}
+
+function getRecordProteinSequence(record) {
+    if (!record) return '';
+    if (record.effectiveType === 'dna') return record.proteinSequence || '';
+    if (record.effectiveType === 'protein') return record.sequence.replace(/\*+$/, '');
+    return '';
+}
+
+function parseCifTokens(line) {
+    const tokens = [];
+    const re = /'([^']*)'|"([^"]*)"|(\S+)/g;
+    let m;
+    while ((m = re.exec(line)) !== null) {
+        tokens.push(m[1] ?? m[2] ?? m[3]);
+    }
+    return tokens;
+}
+
+function parseStructureChainsClient(text, format, requestedModel = 1) {
+    const chains = {};
+    let modelCount = 1;
+    if (format === 'pdb') {
+        const lines = String(text || '').split(/\r?\n/);
+        const modelNumbers = [];
+        let activeModel = null;
+        const seenPerChain = {};
+        for (const line of lines) {
+            if (line.startsWith('MODEL')) {
+                const num = parseInt(line.slice(10).trim(), 10);
+                if (Number.isFinite(num)) modelNumbers.push(num);
+                activeModel = Number.isFinite(num) ? num : modelNumbers.length;
+                continue;
+            }
+            if (line.startsWith('ENDMDL')) {
+                activeModel = null;
+                continue;
+            }
+            if (!line.startsWith('ATOM  ')) continue;
+            if (modelNumbers.length > 0 && activeModel !== requestedModel) continue;
+            const atomName = line.slice(12, 16).trim();
+            if (atomName !== 'CA') continue;
+            const altLoc = line[16] || ' ';
+            if (altLoc !== ' ' && altLoc !== 'A') continue;
+            const resName = line.slice(17, 20).trim().toUpperCase();
+            const chainId = (line[21] || 'A').trim() || 'A';
+            const resSeq = parseInt(line.slice(22, 26).trim(), 10);
+            const bFactor = parseFloat(line.slice(60, 66).trim());
+            const aa = THREE_TO_ONE_JS[resName] || 'X';
+            if (!Number.isFinite(resSeq)) continue;
+            if (!seenPerChain[chainId]) seenPerChain[chainId] = new Set();
+            if (seenPerChain[chainId].has(resSeq)) continue;
+            seenPerChain[chainId].add(resSeq);
+            if (!chains[chainId]) chains[chainId] = [];
+            chains[chainId].push({ resSeq, aa, bFactor: Number.isFinite(bFactor) ? bFactor : null });
+        }
+        modelCount = Math.max(1, modelNumbers.length);
+    } else {
+        const lines = String(text || '').split(/\r?\n/);
+        const cols = [];
+        const rows = [];
+        let inAtomLoop = false;
+        let collectingHeaders = false;
+        for (const raw of lines) {
+            const line = raw.trim();
+            if (!line || line.startsWith('#')) continue;
+            if (line === 'loop_') {
+                inAtomLoop = false;
+                collectingHeaders = true;
+                cols.length = 0;
+                continue;
+            }
+            if (collectingHeaders && line.startsWith('_atom_site.')) {
+                cols.push(line);
+                inAtomLoop = true;
+                continue;
+            }
+            if (line.startsWith('_')) {
+                collectingHeaders = false;
+                inAtomLoop = false;
+                continue;
+            }
+            collectingHeaders = false;
+            if (inAtomLoop) {
+                if (line.startsWith('ATOM') || line.startsWith('HETATM')) {
+                    rows.push(parseCifTokens(line));
+                } else if (!line.startsWith('_')) {
+                    inAtomLoop = false;
+                }
+            }
+        }
+        const idx = name => cols.indexOf(`_atom_site.${name}`);
+        const iAtom = idx('label_atom_id');
+        const iGroup = idx('group_PDB');
+        const iChain = idx('auth_asym_id') >= 0 ? idx('auth_asym_id') : idx('label_asym_id');
+        const iSeq = idx('label_seq_id') >= 0 ? idx('label_seq_id') : idx('auth_seq_id');
+        const iComp = idx('label_comp_id');
+        const iB = idx('B_iso_or_equiv');
+        const iModel = idx('pdbx_PDB_model_num');
+        const models = new Set();
+        const seen = new Set();
+        for (const r of rows) {
+            const group = iGroup >= 0 ? r[iGroup] : 'ATOM';
+            const atom = iAtom >= 0 ? r[iAtom] : '';
+            if (group !== 'ATOM' || atom !== 'CA') continue;
+            const mod = iModel >= 0 ? parseInt(r[iModel], 10) : 1;
+            if (Number.isFinite(mod)) models.add(mod);
+            if (iModel >= 0 && Number.isFinite(mod) && mod !== requestedModel) continue;
+            const chainId = (iChain >= 0 ? r[iChain] : 'A') || 'A';
+            const resSeq = parseInt(iSeq >= 0 ? r[iSeq] : '', 10);
+            const comp = (iComp >= 0 ? r[iComp] : '').toUpperCase();
+            const b = iB >= 0 ? parseFloat(r[iB]) : NaN;
+            if (!Number.isFinite(resSeq)) continue;
+            const key = `${chainId}:${resSeq}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            if (!chains[chainId]) chains[chainId] = [];
+            chains[chainId].push({ resSeq, aa: THREE_TO_ONE_JS[comp] || 'X', bFactor: Number.isFinite(b) ? b : null });
+        }
+        modelCount = Math.max(1, models.size);
+    }
+    const summary = {};
+    for (const [chainId, resList] of Object.entries(chains)) {
+        resList.sort((a, b) => a.resSeq - b.resSeq);
+        const gaps = [];
+        for (let i = 1; i < resList.length; i++) {
+            if (resList[i].resSeq - resList[i - 1].resSeq > 1) {
+                gaps.push(`${resList[i - 1].resSeq + 1}–${resList[i].resSeq - 1}`);
+            }
+        }
+        summary[chainId] = {
+            chainId,
+            sequence: resList.map(r => r.aa).join(''),
+            length: resList.length,
+            firstResSeq: resList[0]?.resSeq ?? 1,
+            lastResSeq: resList[resList.length - 1]?.resSeq ?? 0,
+            gaps,
+            resSeqs: resList.map(r => r.resSeq),
+            bFactors: resList.map(r => r.bFactor),
+        };
+    }
+    return { chainCount: Object.keys(summary).length, modelCount, chains: summary };
+}
+
+function matchProteinToChain(proteinSeq, chainObj) {
+    if (!proteinSeq || !chainObj?.sequence) {
+        return { status: 'NO_SEQUENCE', eligible3dp: false, label: 'Enter sequence to check match' };
+    }
+    const p = proteinSeq.toUpperCase();
+    const c = chainObj.sequence.toUpperCase();
+    if (c === p && chainObj.gaps.length === 0) {
+        return { status: 'EXACT_MATCH', eligible3dp: true, label: `Exact match (${c.length} aa)` };
+    }
+    if (c === p && chainObj.gaps.length > 0) {
+        return {
+            status: 'GAPPED_SEQUENCE',
+            eligible3dp: false,
+            label: `Missing residues at numbering gap (${chainObj.gaps.join(', ')})`,
+        };
+    }
+    if (p.endsWith(c) && p.length > c.length) {
+        const spOffset = p.length - c.length;
+        return {
+            status: 'SIGNAL_PEPTIDE_OFFSET',
+            eligible3dp: false,
+            spOffset,
+            label: `Mature chain only (N-terminal ${spOffset} aa / signal peptide omitted vs input ${p.length} aa)`,
+        };
+    }
+    if (p.includes(c) || c.includes(p)) {
+        return {
+            status: 'PARTIAL_SUBSTRING',
+            eligible3dp: false,
+            label: `Partial overlap (structure ${c.length} aa vs input ${p.length} aa; exact match required for 3DP)`,
+        };
+    }
+    const cmpLen = Math.min(p.length, c.length);
+    let matches = 0;
+    for (let i = 0; i < cmpLen; i++) if (p[i] === c[i]) matches += 1;
+    const pct = cmpLen ? ((matches / Math.max(p.length, c.length)) * 100).toFixed(1) : '0.0';
+    return {
+        status: 'MISMATCH',
+        eligible3dp: false,
+        label: `Sequence mismatch (${c.length} aa vs input ${p.length} aa · ${pct}% positional agreement)`,
+    };
+}
+
+function inspectStructureAgainstRecords() {
+    const parsed = state.parsedStructure;
+    const activeRec = getActiveProjectRecord();
+    if (!parsed || !parsed.chainCount) {
+        state.structureInspection = null;
+        renderStructureChainInspector();
+        return null;
+    }
+    const proteinSeq = activeRec ? getRecordProteinSequence(activeRec) : '';
+    const selectedChainId = (document.getElementById('structureWebChain')?.value || '').trim();
+    const chainRows = Object.values(parsed.chains).map(ch => {
+        const match = matchProteinToChain(proteinSeq, ch);
+        const dupCount = Object.values(parsed.chains).filter(other => other.sequence === ch.sequence).length;
+        return { ...ch, match, isDuplicateSeq: dupCount > 1 };
+    });
+    const exactChains = chainRows.filter(r => r.match.eligible3dp);
+    const activeRow = chainRows.find(r => r.chainId === selectedChainId) || exactChains[0] || chainRows[0] || null;
+    if (activeRow && !selectedChainId) {
+        const chainInput = document.getElementById('structureWebChain');
+        if (chainInput) chainInput.value = activeRow.chainId;
+    }
+    const ambiguous = exactChains.length > 1 && !state.userConfirmedStructureChain;
+    const inspection = {
+        fileName: state.uploadedStructureFile?.name || 'Uploaded structure',
+        modelCount: parsed.modelCount,
+        chainCount: parsed.chainCount,
+        chains: chainRows,
+        exactChains,
+        selectedChain: chainRows.find(r => r.chainId === (document.getElementById('structureWebChain')?.value || '').trim()) || activeRow,
+        ambiguous,
+        eligible3dp: Boolean(proteinSeq && activeRow?.match?.eligible3dp && !ambiguous),
+    };
+    state.structureInspection = inspection;
+    renderStructureChainInspector();
+    return inspection;
+}
+
+function renderStructureChainInspector() {
+    const box = document.getElementById('structureChainInspector');
+    if (!box) return;
+    const insp = state.structureInspection;
+    if (!insp) {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+        return;
+    }
+    box.classList.remove('hidden');
+    const selectedId = (document.getElementById('structureWebChain')?.value || '').trim();
+    const chips = insp.chains.map(ch => {
+        const isSel = ch.chainId === selectedId;
+        const badgeCls = ch.match.eligible3dp
+            ? (isSel ? 'border-emerald-600 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-900 dark:text-emerald-100' : 'border-emerald-300 bg-white dark:bg-slate-800 text-emerald-800 dark:text-emerald-200')
+            : (isSel ? 'border-amber-500 bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-100' : 'border-slate-300 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300');
+        return `<button type="button" data-select-chain="${escapeHtml(ch.chainId)}" class="px-2.5 py-1.5 rounded-lg border text-left transition-all ${badgeCls}">
+            <span class="font-bold">Chain ${escapeHtml(ch.chainId)} (${ch.length} aa)</span>
+            ${ch.isDuplicateSeq ? '<span class="ml-1 text-[10px] font-semibold opacity-75">· identical copy</span>' : ''}
+            <span class="block text-[10px]">${escapeHtml(ch.match.label)}</span>
+        </button>`;
+    }).join('');
+    const warnings = [];
+    if (insp.modelCount > 1) warnings.push(`File has ${insp.modelCount} NMR/ensemble models (inspecting Model ${Number(document.getElementById('structureWebModel')?.value) || 1}).`);
+    if (insp.ambiguous) warnings.push(`Multiple chains (${insp.exactChains.map(c => c.chainId).join(', ')}) match this sequence identically. Click a chain button below to confirm which chain to use.`);
+    if (insp.selectedChain && !insp.selectedChain.match.eligible3dp && insp.selectedChain.match.status !== 'NO_SEQUENCE') {
+        warnings.push(`Selected Chain ${insp.selectedChain.chainId}: ${insp.selectedChain.match.label}. Exact full-length residue correspondence is required for 3DP.`);
+    }
+    box.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="font-bold text-slate-800 dark:text-slate-100">${escapeHtml(insp.fileName)} · ${insp.chainCount} chain(s) · ${insp.modelCount} model(s)</span>
+        <span class="text-[10px] font-bold uppercase ${insp.eligible3dp ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}">${insp.eligible3dp ? 'Chain verified' : 'Chain confirmation required'}</span>
+    </div>
+    <div class="flex flex-wrap gap-2">${chips}</div>
+    ${warnings.length ? `<p class="text-[11px] font-semibold text-amber-800 dark:text-amber-300">${warnings.map(escapeHtml).join(' ')}</p>` : ''}`;
+    box.querySelectorAll('[data-select-chain]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const chainInput = document.getElementById('structureWebChain');
+            if (chainInput) chainInput.value = btn.getAttribute('data-select-chain');
+            state.userConfirmedStructureChain = true;
+            invalidateStructureSuggestion();
+            inspectStructureAgainstRecords();
+            updateStrategyAndReadiness();
+        });
+    });
+}
+
+function validateSidecarIntegrity(sidecar, proteinSeq, allowMock) {
+    if (!sidecar || typeof sidecar !== 'object' || Array.isArray(sidecar)) {
+        return { ok: false, checks: [], reasons: ['No valid JSON sidecar object loaded.'], positions: [] };
+    }
+    const reasons = [];
+    const checks = [];
+    const statusOk = sidecar.status === 'AVAILABLE';
+    checks.push({ label: 'Sidecar status', pass: statusOk, detail: String(sidecar.status || 'MISSING') });
+    if (!statusOk) reasons.push('Sidecar status is not AVAILABLE.');
+
+    const coordSys = sidecar.coordinate_system;
+    const coordOk = coordSys === 'mmCIF_label_seq_id_1based' || coordSys === 'PDB_res_seq_1based';
+    checks.push({ label: 'Coordinate system', pass: coordOk, detail: String(coordSys || 'UNKNOWN') });
+    if (!coordOk) reasons.push('Unsupported coordinate system.');
+
+    const isMock = sidecar.is_mock === true || sidecar.source_type === 'SYNTHETIC_FIXTURE';
+    const sourceType = sidecar.source_type || sidecar.model_source || (isMock ? 'SYNTHETIC_FIXTURE' : 'UNSPECIFIED');
+    const mockAllowed = !isMock || (isLocal4dpFixturesAvailable() && allowMock);
+    checks.push({
+        label: 'Model provenance',
+        pass: mockAllowed,
+        detail: `${sourceType}${isMock ? (mockAllowed ? ' (Mock allowed locally)' : ' (Mock blocked on public deployment)') : ''}`,
+    });
+    if (!mockAllowed) reasons.push('Synthetic/mock sidecar blocked on public server (prepared AF3/ESMFold model required).');
+
+    const chains = sidecar.chains;
+    const chainId = sidecar.primary_chain;
+    const chainKeys = chains && typeof chains === 'object' ? Object.keys(chains) : [];
+    const singleChainOk = chainKeys.length === 1 && typeof chainId === 'string' && Boolean(chains[chainId]);
+    checks.push({
+        label: 'Single-chain scope',
+        pass: singleChainOk,
+        detail: singleChainOk ? `Chain ${chainId}` : `Found ${chainKeys.length} chains; single selected chain required`,
+    });
+    if (!singleChainOk) reasons.push('Sidecar must contain exactly one selected chain.');
+
+    const chain = singleChainOk ? chains[chainId] : null;
+    const chainSeq = String(chain?.sequence || '').replace(/\s/g, '').toUpperCase().replace(/\*+$/, '');
+    const normInput = String(proteinSeq || '').replace(/\s/g, '').toUpperCase().replace(/\*+$/, '');
+    const sidecarSha = chainSeq ? sha256HexSync(chainSeq) : '';
+    const inputSha = normInput ? sha256HexSync(normInput) : '';
+    let seqMatchOk = false;
+    let seqDetail = 'No active sequence uploaded';
+    if (!normInput) {
+        reasons.push('Upload or paste the matching target sequence first.');
+    } else if (!chainSeq || chainSeq !== normInput) {
+        seqDetail = `Mismatch (sidecar ${chainSeq.length} aa · SHA ${sidecarSha.slice(0, 8)} vs input ${normInput.length} aa · SHA ${inputSha.slice(0, 8)})`;
+        reasons.push('Protein sequence / SHA-256 mismatch against sidecar chain.');
+    } else {
+        seqMatchOk = true;
+        seqDetail = `Exact match (${chainSeq.length} aa · SHA-256 ${sidecarSha.slice(0, 12)}…)`;
+    }
+    checks.push({ label: 'Sequence & SHA-256', pass: seqMatchOk, detail: seqDetail });
+
+    const residues = Array.isArray(chain?.residues) ? chain.residues : [];
+    let coordsOk = Boolean(chainSeq && residues.length === chainSeq.length && chain?.length === chainSeq.length);
+    let plddtOk = residues.length > 0;
+    if (coordsOk) {
+        for (let i = 0; i < residues.length; i++) {
+            const res = residues[i];
+            if (!res || res.seq_id !== i + 1 || res.aa !== chainSeq[i]) {
+                coordsOk = false;
+                break;
+            }
+            const plddt = res.plddt;
+            if (typeof plddt !== 'number' || !Number.isFinite(plddt) || plddt < 0 || plddt > 100) {
+                plddtOk = false;
+            }
+        }
+    } else {
+        plddtOk = false;
+    }
+    checks.push({
+        label: 'Residue coordinate mapping',
+        pass: coordsOk,
+        detail: coordsOk ? `1..${residues.length} consecutive seq_id` : 'Incomplete or non-consecutive residue mapping',
+    });
+    if (!coordsOk) reasons.push('Complete 1-based consecutive residue coordinate mapping required.');
+    checks.push({
+        label: 'pLDDT confidence bounds',
+        pass: plddtOk,
+        detail: plddtOk ? 'All finite [0, 100]' : 'Invalid or non-finite pLDDT values detected',
+    });
+    if (!plddtOk) reasons.push('Invalid pLDDT confidence scores in sidecar.');
+
+    const offset = sidecar.tunnel_offset_applied;
+    const offsetOk = Number.isInteger(offset) && offset >= 0;
+    const positions = Array.isArray(chain?.pause_candidates)
+        ? [...new Set(chain.pause_candidates
+            .filter(c => c?.within_structure_chain === true
+                && Number.isInteger(c.tunnel_pause_position)
+                && c.tunnel_pause_position >= 1
+                && c.tunnel_pause_position <= (chain?.length || 0))
+            .map(c => c.tunnel_pause_position))].sort((a, b) => a - b)
+        : [];
+    const posOk = offsetOk && positions.length > 0;
+    checks.push({
+        label: 'Offset & candidate bounds',
+        pass: posOk,
+        detail: posOk ? `Offset ${offset} · Pos ${positions.join(', ')}` : 'No valid in-bounds pause positions',
+    });
+    if (!posOk) reasons.push('No valid in-bounds tunnel pause candidates found.');
+
+    return {
+        ok: reasons.length === 0,
+        checks,
+        reasons,
+        chainId,
+        offset,
+        positions,
+        sourceType,
+        isMock,
+        sidecarSha,
+        inputSha,
+        length: chainSeq.length,
+    };
+}
+
+function renderSidecarIntegrityUi(validation) {
+    const review = document.getElementById('review4dpPositions');
+    const ack = document.querySelector('[data-role="ack4dpHypothesis"]');
+    const summary = document.getElementById('sidecarPositionReview');
+    const checklist = document.getElementById('sidecarIntegrityChecklist');
+    if (review) {
+        review.checked = false;
+        review.disabled = !validation?.ok;
+    }
+    if (ack) {
+        ack.checked = false;
+        ack.disabled = !validation?.ok;
+    }
+    if (summary) {
+        if (!state.pauseSidecarData) summary.textContent = '';
+        else if (validation?.ok) {
+            summary.textContent = `Chain ${validation.chainId} · Offset ${validation.offset} residues · Verified positions: ${validation.positions.join(', ')}`;
+        } else {
+            summary.textContent = `Blocked: ${validation?.reasons?.[0] || 'Sidecar failed verification.'}`;
+        }
+    }
+    if (checklist) {
+        if (!state.pauseSidecarData || !validation?.checks?.length) {
+            checklist.classList.add('hidden');
+            checklist.innerHTML = '';
+        } else {
+            checklist.classList.remove('hidden');
+            checklist.innerHTML = `<p class="font-bold text-slate-800 dark:text-slate-100">Sidecar Integrity &amp; Provenance Gate (P0-3):</p>` +
+                validation.checks.map(c => `<div class="flex items-start justify-between gap-2 ${c.pass ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}">
+                    <span>${c.pass ? '✓' : '✕'} <b>${escapeHtml(c.label)}</b></span>
+                    <span class="font-mono text-right">${escapeHtml(c.detail)}</span>
+                </div>`).join('');
+        }
+    }
+}
+
+function renderProjectRecordsPanel() {
+    const panel = document.getElementById('projectRecordsPanel');
+    const countEl = document.getElementById('projectRecordsCount');
+    const listEl = document.getElementById('projectRecordsList');
+    const ambigEl = document.getElementById('sequenceAmbiguityPrompt');
+    if (!panel || !listEl || !countEl) return;
+    const records = state.projectRecords || [];
+    if (!records.length) {
+        panel.classList.add('hidden');
+        ambigEl?.classList.add('hidden');
+        return;
+    }
+    panel.classList.remove('hidden');
+    const totalAa = records.reduce((s, r) => s + (r.aaLength || 0), 0);
+    countEl.textContent = `${records.length} sequence${records.length > 1 ? 's' : ''} detected · ${totalAa} aa total`;
+    listEl.innerHTML = records.map((rec, idx) => {
+        const isActive = idx === state.activeRecordIndex;
+        const typeLabel = rec.effectiveType === 'dna'
+            ? 'DNA CDS'
+            : (rec.effectiveType === 'protein' ? 'Protein AA (no Original DNA)' : 'Invalid chars');
+        const lenLabel = rec.effectiveType === 'dna' ? `${rec.bpLength} bp (${rec.aaLength} aa)` : `${rec.aaLength} aa`;
+        return `<button type="button" data-select-record="${idx}" class="w-full text-left px-3 py-2 rounded-lg border transition-all flex items-center justify-between gap-2 ${isActive ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/30' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-400'}">
+            <div class="min-w-0">
+                <span class="block text-xs font-bold text-slate-900 dark:text-slate-100 truncate">${escapeHtml(rec.header)}</span>
+                <span class="block text-[10px] text-slate-500 dark:text-slate-400">${escapeHtml(typeLabel)} · ${escapeHtml(lenLabel)}</span>
+            </div>
+            <span class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase ${isActive ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}">${isActive ? 'Active' : 'Inspect'}</span>
+        </button>`;
+    }).join('');
+    listEl.querySelectorAll('[data-select-record]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            state.activeRecordIndex = Number(btn.getAttribute('data-select-record')) || 0;
+            syncActiveRecordState();
+        });
+    });
+    const active = getActiveProjectRecord();
+    if (ambigEl) {
+        const showAmbig = Boolean(active && active.ambiguousAcgt);
+        ambigEl.classList.toggle('hidden', !showAmbig);
+        ambigEl.querySelectorAll('[data-role="confirmSeqType"]').forEach(btn => {
+            btn.onclick = () => {
+                if (!active) return;
+                const chosen = btn.getAttribute('data-seq-type');
+                active.userOverrideType = chosen;
+                const cls = classifySequenceType(active.sequence, chosen);
+                active.effectiveType = cls.effectiveType;
+                active.proteinSequence = chosen === 'dna'
+                    ? (translateDnaToProtein(active.sequence) || '')
+                    : active.sequence.replace(/\*+$/, '');
+                active.aaLength = chosen === 'dna'
+                    ? (active.proteinSequence ? active.proteinSequence.length : Math.floor(active.sequence.length / 3))
+                    : active.sequence.replace(/\*+$/, '').length;
+                syncActiveRecordState();
+            };
+        });
+    }
+}
+
+function syncActiveRecordState() {
+    const active = getActiveProjectRecord();
+    const newSeq = active && active.effectiveType !== 'invalid' ? active.sequence : '';
+    if (newSeq !== state.sequence) {
+        invalidateStructureSuggestion();
+    }
+    state.sequence = newSeq;
+    const isProt = active?.effectiveType === 'protein';
+    updateInputStats(newSeq, isProt);
+    if (newSeq.length > 0) {
+        elements.previewContainer.classList.remove('hidden');
+        elements.sequencePreview.textContent = newSeq.substring(0, 150) + (newSeq.length > 150 ? '...' : '');
+    } else {
+        elements.previewContainer.classList.add('hidden');
+    }
+    if (state.uploadedStructureText) inspectStructureAgainstRecords();
+    if (state.pauseSidecarData) {
+        const allowMock = isLocal4dpFixturesAvailable() && Boolean(document.getElementById('allowMockSidecar')?.checked);
+        state.sidecarValidation = validateSidecarIntegrity(state.pauseSidecarData, active ? getRecordProteinSequence(active) : '', allowMock);
+        renderSidecarIntegrityUi(state.sidecarValidation);
+    }
+    renderProjectRecordsPanel();
+    updateStrategyAndReadiness();
+}
+
+function initStrategyControls() {
+    document.querySelectorAll('.strategy-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.getAttribute('data-strategy-mode') || 'auto';
+            setStrategyMode(mode);
+        });
+    });
+    document.querySelectorAll('[data-compare-method]').forEach(cb => {
+        cb.addEventListener('change', () => {
+            state.compareMethods = Array.from(document.querySelectorAll('[data-compare-method]:checked'))
+                .map(el => el.getAttribute('data-compare-method'));
+            updateStrategyAndReadiness();
+        });
+    });
+}
+
+function setStrategyMode(mode, { skipSync = false } = {}) {
+    state.strategyMode = mode;
+    document.querySelectorAll('.strategy-mode-btn').forEach(btn => {
+        const active = btn.getAttribute('data-strategy-mode') === mode;
+        btn.classList.toggle('border-2', active);
+        btn.classList.toggle('border-emerald-500', active && mode === 'auto');
+        btn.classList.toggle('border-slate-900', active && mode === 'manual');
+        btn.classList.toggle('border-indigo-500', active && mode === 'compare');
+        btn.classList.toggle('border', !active);
+        btn.classList.toggle('border-slate-200', !active);
+    });
+    document.getElementById('compareMethodsBar')?.classList.toggle('hidden', mode !== 'compare');
+    if (!skipSync) updateStrategyAndReadiness();
+}
+
+function updateStrategyAndReadiness() {
+    const headlineEl = document.getElementById('designReadinessHeadline');
+    const listEl = document.getElementById('designReadinessList');
+    const badgeEl = document.getElementById('strategyRecommendedBadge');
+    const records = state.projectRecords || [];
+    const active = getActiveProjectRecord();
+    const proteinSeq = active ? getRecordProteinSequence(active) : '';
+    const structureReady = Boolean(state.structureInspection?.eligible3dp);
+    const sidecarReady = Boolean(state.sidecarValidation?.ok);
+
+    if (state.strategyMode === 'auto') {
+        const targetRadioVal = structureReady ? 'paired_3dp' : 'baseline_1dp';
+        const radio = document.querySelector(`input[name="researchDesignMode"][value="${targetRadioVal}"]`);
+        if (radio && !radio.disabled && (!radio.checked || state.researchDesignMode !== targetRadioVal)) {
+            radio.checked = true;
+            state.researchDesignMode = targetRadioVal;
+        }
+        if (badgeEl) {
+            badgeEl.textContent = structureReady ? 'Auto → 3DP Ready' : 'Auto → 1DP Ready';
+        }
+    } else if (badgeEl) {
+        badgeEl.textContent = state.strategyMode === 'compare'
+            ? 'Compare Eligible Designs'
+            : `Manual · ${state.researchDesignMode === 'paired_3dp' ? '3DP' : state.researchDesignMode === 'paired_4dp' ? '4DP' : '1DP'}`;
+    }
+
+    if (headlineEl && listEl) {
+        if (!records.length) {
+            headlineEl.textContent = state.uploadedStructureFile
+                ? `Structure loaded (${state.uploadedStructureFile.name}) — upload a matching sequence/FASTA to verify chains.`
+                : (state.pauseSidecarData ? 'Sidecar JSON loaded — upload the matching sequence/FASTA to verify SHA-256.' : 'Upload a sequence to check available methods and required inputs.');
+            listEl.innerHTML = '';
+        } else {
+            const validCount = records.filter(r => r.effectiveType !== 'invalid').length;
+            const totalAa = records.reduce((s, r) => s + (r.aaLength || 0), 0);
+            const items = [];
+            if (records.length > 1) items.push(`${records.length} sequences detected (${totalAa} aa total; limit 6 records / 2,500 aa).`);
+            if (active?.effectiveType === 'protein') items.push('Protein sequence input (Original DNA not provided — novel CDS will be designed).');
+            else if (active?.effectiveType === 'dna') items.push(`Coding DNA detected (${active.bpLength} bp → ${active.aaLength} aa protein preserved).`);
+            items.push('1DP Standard CDS Optimization: Ready.');
+            if (state.structureInspection) {
+                items.push(structureReady
+                    ? `3DP Structure-Guided: Ready (Chain ${state.structureInspection.selectedChain?.chainId || 'A'} exact match).`
+                    : `3DP Structure-Guided: Attention needed (${state.structureInspection.ambiguous ? 'select between duplicate chains' : (state.structureInspection.selectedChain?.match?.label || 'chain mismatch')}).`);
+            } else {
+                items.push('3DP Structure-Guided: Add a PDB/mmCIF structure to enable.');
+            }
+            if (state.sidecarValidation) {
+                items.push(sidecarReady
+                    ? '4DP Translation-Offset Hypothesis: Verified sidecar ready (requires researcher review + hypothesis acknowledgment; Biological validation: NOT_AVAILABLE).'
+                    : `4DP Translation-Offset: Blocked (${state.sidecarValidation.reasons[0] || 'verification failed'}).`);
+            }
+            if (proteinSeq.length > 300 && proteinSeq.length <= 500) {
+                items.push(`Length ${proteinSeq.length} aa is within the 500 aa 3DP/4DP target (subject to serverless verification).`);
+            } else if (proteinSeq.length > 500) {
+                items.push(`Length ${proteinSeq.length} aa exceeds the 500 aa web limit for 3DP/4DP (1DP remains available).`);
+            }
+            headlineEl.textContent = state.strategyMode === 'auto'
+                ? (structureReady ? 'Recommendation: 3DP (verified structure match)' : `Recommendation: 1DP Standard Design (${validCount} valid record${validCount === 1 ? '' : 's'})`)
+                : (state.strategyMode === 'compare' ? 'Compare Mode: Eligible candidates queued sequentially/bounded (max 2 concurrent)' : `Manual Mode: ${state.researchDesignMode}`);
+            listEl.innerHTML = items.map(i => `<li>${escapeHtml(i)}</li>`).join('');
+        }
+    }
+
+    const is3dp = state.researchDesignMode === 'paired_3dp';
+    const is4dp = state.researchDesignMode === 'paired_4dp';
+    if (state.strategyMode === 'compare') {
+        const n = Math.max(1, records.length);
+        elements.btnText.textContent = n > 1 ? `Compare Eligible Designs (${n} chains)` : 'Compare Eligible Designs';
+    } else if (is4dp) {
+        elements.btnText.textContent = 'Generate 4DP (Translation-Offset)';
+    } else if (is3dp) {
+        elements.btnText.textContent = 'Generate 3DP (Structure-Guided)';
+    } else {
+        elements.btnText.textContent = records.length > 1 ? `Generate 1DP Designs (${records.length} chains)` : 'Generate 1DP (Standard CDS)';
+    }
+    const show3dp = is3dp || (state.strategyMode === 'auto' && Boolean(state.uploadedStructureText)) || (state.strategyMode === 'compare' && Boolean(state.uploadedStructureText));
+    const show4dp = is4dp || (state.strategyMode === 'compare' && Boolean(state.pauseSidecarData)) || (state.strategyMode === 'auto' && Boolean(state.pauseSidecarData));
+    document.getElementById('structureWebInputs')?.classList.toggle('hidden', !show3dp);
+    document.getElementById('structure4dpInputs')?.classList.toggle('hidden', !show4dp);
+
+    const anyValid = records.some(r => r.effectiveType !== 'invalid' && r.sequence.length >= 3);
+    elements.optimizeBtn.disabled = !anyValid || state.isOptimizing;
+    updateDesignBriefSummary();
+}
+
+async function applyStructureFile(file) {
+    if (!file) return;
+    if (!ENABLE_EXPERIMENTAL_STRUCTURE_WEB || apiCapabilities.direct_structure?.available === false) {
+        showToast('3DP structure design is currently disabled on this backend.', 'error');
+        return;
+    }
+    if (file.size > MAX_STRUCTURE_WEB_BYTES) {
+        showToast('Structure file too large (max 450 KB).', 'error');
+        return;
+    }
+    assignDroppedFileToInput(document.getElementById('structureWebFile'), file);
+    if (state.strategyMode === 'manual' && state.researchDesignMode !== 'paired_3dp') {
+        const radio3 = document.querySelector('input[name="researchDesignMode"][value="paired_3dp"]');
+        if (radio3 && !radio3.disabled) {
+            radio3.checked = true;
+            state.researchDesignMode = 'paired_3dp';
+        }
+    }
+    showToast(`Structure loaded: ${file.name}`, 'success');
+}
+
+async function applySidecarData(parsed, fileName) {
+    state.pauseSidecarData = parsed;
+    state.sidecarFileName = fileName;
+    const activeRec = getActiveProjectRecord();
+    const proteinSeq = activeRec ? getRecordProteinSequence(activeRec) : '';
+    const allowMock = isLocal4dpFixturesAvailable() && Boolean(document.getElementById('allowMockSidecar')?.checked);
+    state.sidecarValidation = validateSidecarIntegrity(parsed, proteinSeq, allowMock);
+    renderSidecarIntegrityUi(state.sidecarValidation);
+    const statusBadge = elements.sidecarStatusBadge || document.getElementById('sidecarStatusBadge');
+    if (statusBadge) {
+        statusBadge.textContent = state.sidecarValidation.ok
+            ? `✅ Verified: ${fileName} (SHA-256 matched · ${state.sidecarValidation.sourceType})`
+            : `⚠️ Loaded with gate warning: ${fileName} (${state.sidecarValidation.reasons[0] || 'check integrity'})`;
+        statusBadge.classList.add('text-teal-600', 'font-bold');
+    }
+    if (state.strategyMode === 'manual' && state.researchDesignMode !== 'paired_4dp') {
+        const radio4 = document.querySelector('input[name="researchDesignMode"][value="paired_4dp"]');
+        if (radio4 && !radio4.disabled) {
+            radio4.checked = true;
+            state.researchDesignMode = 'paired_4dp';
+        }
+    }
+    updateStrategyAndReadiness();
+    showToast(`Sidecar loaded: ${fileName}`, state.sidecarValidation.ok ? 'success' : 'info');
+}
+
+async function applySidecarFile(file) {
+    if (!file) return;
+    if (!isPublic4dpAvailable()) {
+        showToast('4DP sidecar upload is unavailable on this backend.', 'error');
+        return;
+    }
+    if (file.size > MAX_SIDECAR_WEB_BYTES) {
+        showToast('Sidecar JSON exceeds 250 KB limit.', 'error');
+        return;
+    }
+    assignDroppedFileToInput(elements.pauseSidecarFile, file);
+}
+
+async function applyDroppedFilesOrFile(input) {
+    const files = input instanceof FileList ? Array.from(input) : (Array.isArray(input) ? input : [input].filter(Boolean));
+    for (const file of files) {
+        if (/\.(pdb|cif|mmcif)$/i.test(file.name)) {
+            await applyStructureFile(file);
+        } else if (/\.json$/i.test(file.name)) {
+            await applySidecarFile(file);
+        } else if (/\.(fasta|fa|txt)$/i.test(file.name)) {
+            applySequenceFile(file);
+        } else {
+            showToast(`Unsupported file type (${file.name}). Drop .fasta/.fa/.txt, .pdb/.cif/.mmcif, or .json.`, 'error');
+        }
+    }
+}
+
+async function runBoundedQueue(jobs, concurrency = 2, onUpdate = () => {}) {
+    const results = new Array(jobs.length);
+    let cursor = 0;
+    async function worker() {
+        while (cursor < jobs.length) {
+            const idx = cursor++;
+            const job = jobs[idx];
+            onUpdate(idx, { status: 'running' });
+            const started = performance.now();
+            try {
+                const resp = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(job.payload),
+                });
+                const body = await resp.json().catch(() => ({}));
+                if (!resp.ok || body.success === false) {
+                    throw new Error(body.error || `API request failed (${resp.status})`);
+                }
+                const elapsedMs = Math.round(performance.now() - started);
+                results[idx] = { ok: true, data: body, elapsedMs };
+                onUpdate(idx, { status: 'done', elapsedMs, data: body });
+            } catch (err) {
+                const elapsedMs = Math.round(performance.now() - started);
+                results[idx] = { ok: false, error: err?.message || 'Request failed', elapsedMs };
+                onUpdate(idx, { status: 'failed', error: err?.message || 'Request failed', elapsedMs });
+            }
+        }
+    }
+    const workers = Array.from({ length: Math.min(concurrency, Math.max(1, jobs.length)) }, () => worker());
+    await Promise.all(workers);
+    return results;
+}
+
 // Handler Functions
 function applySequenceFile(file) {
     if (!file) return;
     if (/\.(pdb|cif|mmcif)$/i.test(file.name)) {
-        showToast('PDB/mmCIF structure files belong in 3DP → Structure file (select 3DP first).', 'error');
+        applyStructureFile(file);
         return;
     }
     if (/\.json$/i.test(file.name)) {
-        showToast('JSON sidecars belong in 4DP → Pause Sidecar File (select 4DP first).', 'error');
+        applySidecarFile(file);
         return;
     }
     if (!/\.(fasta|fa|txt)$/i.test(file.name)) {
-        showToast('Unsupported file type. Upload a .fasta, .fa, or .txt sequence file.', 'error');
+        showToast('Unsupported file type. Upload a .fasta, .fa, .txt, .pdb, .cif, .mmcif, or .json file.', 'error');
         return;
     }
 
@@ -1655,58 +2610,41 @@ function applySequenceFile(file) {
         const content = event.target.result;
         elements.sequenceInput.value = content;
         handleSequenceChange({ target: { value: content } });
-        showToast('File uploaded successfully', 'success');
+        showToast('Sequence file uploaded successfully', 'success');
     };
     reader.onerror = () => showToast('Error reading file', 'error');
     reader.readAsText(file);
 }
 
 function handleFileUpload(e) {
-    applySequenceFile(e.target.files?.[0]);
+    applyDroppedFilesOrFile(e.target.files);
 }
 
 function handleSequenceChange(e) {
-    let rawValue = e.target.value;
+    const rawValue = e?.target ? e.target.value : elements.sequenceInput.value;
+    const { records, parseError } = parseFastaRecords(rawValue, state.projectRecords);
+    state.projectRecords = records;
+    if (state.activeRecordIndex >= records.length) state.activeRecordIndex = 0;
 
-    // Normalize exactly one FASTA record and preserve invalid characters so
-    // they can be reported instead of silently deleted.
-    const lines = rawValue.replace(/\r/g, '').split('\n').map(line => line.trim()).filter(Boolean);
-    const headerIndexes = lines.map((line, index) => line.startsWith('>') ? index : -1).filter(index => index >= 0);
-    let sequenceOnly = '';
-    let parseError = '';
-    if (headerIndexes.length > 1) {
-        parseError = 'Multiple FASTA records detected. Upload one sequence at a time.';
-    } else if (headerIndexes.length === 1 && headerIndexes[0] !== 0) {
-        parseError = 'FASTA header must be the first non-empty line.';
-    } else {
-        sequenceOnly = (headerIndexes.length === 1 ? lines.slice(1) : lines).join('');
-        sequenceOnly = sequenceOnly.replace(/\s/g, '').toUpperCase();
-    }
-
-    // Detection Regex
-    const dnaRegex = /^[ACGTacgt]+$/;
-    const proteinRegex = /^[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*]+$/;
-
-    const isDNA = dnaRegex.test(sequenceOnly);
-    const isProtein = proteinRegex.test(sequenceOnly);
-
-    // Update Badge & Warning
+    const active = getActiveProjectRecord();
+    const sequenceOnly = active ? active.sequence : '';
     const dnaInputWarning = document.getElementById('dnaInputWarning');
-    if (sequenceOnly.length > 0 || parseError) {
+
+    if (parseError || records.length > 0) {
         elements.inputTypeBadge.classList.remove('hidden');
         if (parseError) {
             elements.inputTypeBadge.textContent = 'Invalid FASTA';
             elements.inputTypeBadge.className = 'ml-2 px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 font-bold text-[9px] uppercase';
             elements.validationWarning.classList.remove('hidden');
-            elements.validationWarning.innerHTML = `<span class="mr-2">⚠️</span> ${parseError}`;
+            elements.validationWarning.innerHTML = `<span class="mr-2">⚠️</span> ${escapeHtml(parseError)}`;
             if (dnaInputWarning) dnaInputWarning.classList.add('hidden');
-        } else if (isDNA) {
-            elements.inputTypeBadge.textContent = 'DNA';
+        } else if (active.effectiveType === 'dna') {
+            elements.inputTypeBadge.textContent = records.length > 1 ? `DNA · ${records.length} seqs` : 'DNA';
             elements.inputTypeBadge.className = 'ml-2 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-semibold text-[9px] uppercase';
             elements.validationWarning.classList.add('hidden');
             if (dnaInputWarning) dnaInputWarning.classList.remove('hidden');
-        } else if (isProtein) {
-            elements.inputTypeBadge.textContent = 'Protein';
+        } else if (active.effectiveType === 'protein') {
+            elements.inputTypeBadge.textContent = records.length > 1 ? `Protein · ${records.length} seqs` : 'Protein';
             elements.inputTypeBadge.className = 'ml-2 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 font-semibold text-[9px] uppercase';
             elements.validationWarning.classList.add('hidden');
             if (dnaInputWarning) dnaInputWarning.classList.add('hidden');
@@ -1724,23 +2662,7 @@ function handleSequenceChange(e) {
         if (dnaInputWarning) dnaInputWarning.classList.add('hidden');
     }
 
-    if (state.sequence !== (parseError ? '' : sequenceOnly)) invalidateStructureSuggestion();
-    const newSequence = parseError ? '' : sequenceOnly;
-    if (newSequence !== state.sequence) document.getElementById('review4dpPositions').checked = false;
-    state.sequence = newSequence;
-    const validInput = !parseError && sequenceOnly.length >= 3 && (isDNA || (isProtein && !isDNA));
-    elements.optimizeBtn.disabled = !validInput || state.isOptimizing;
-
-    // Update Stats (only treat as protein if it's NOT also valid DNA)
-    updateInputStats(state.sequence, isProtein && !isDNA);
-
-    // Update Preview
-    if (state.sequence.length > 0) {
-        elements.previewContainer.classList.remove('hidden');
-        elements.sequencePreview.textContent = state.sequence.substring(0, 150) + (state.sequence.length > 150 ? '...' : '');
-    } else {
-        elements.previewContainer.classList.add('hidden');
-    }
+    syncActiveRecordState();
 }
 
 function updateInputStats(seq, isProtein = false) {
@@ -1783,18 +2705,26 @@ async function recommendStructurePositions() {
     try {
         handleSequenceChange({target:elements.sequenceInput});
         revision = structureRecommendationRevision;
-        const file = document.getElementById('structureWebFile')?.files?.[0] || null;
-        const validFile = file && file.size <= 250000 && /\.(pdb|cif|mmcif)$/i.test(file.name);
-        if (!validFile) throw new Error('Upload an exact-match PDB/mmCIF file before requesting positions.');
+        const file = document.getElementById('structureWebFile')?.files?.[0] || state.uploadedStructureFile || null;
+        const validFile = file && file.size <= MAX_STRUCTURE_WEB_BYTES && /\.(pdb|cif|mmcif)$/i.test(file.name);
+        if (!validFile && !state.uploadedStructureText) throw new Error('Upload an exact-match PDB/mmCIF file before requesting positions.');
         if (!state.sequence) {
             document.getElementById('acceptStructurePositions').disabled = true;
             document.getElementById('structureWebReviewed').checked = false;
-            document.getElementById('structureRecommendationStatus').textContent = `File selected (${file.name}). Enter or upload a matching sequence first, then choose Confidence source or enter reviewed positions manually.`;
+            document.getElementById('structureRecommendationStatus').textContent = `File selected (${file?.name || 'structure'}). Enter or upload a matching sequence first, then choose Confidence source or enter reviewed positions manually.`;
             return;
+        }
+        if (state.structureInspection && !state.structureInspection.eligible3dp) {
+            const msg = state.structureInspection.ambiguous
+                ? 'Select which identical chain to use above before requesting 3DP pause positions.'
+                : (state.structureInspection.selectedChain?.match?.label || 'Uploaded structure chain does not match input sequence.');
+            throw new Error(msg);
         }
         if (!apiCapabilities.structure_recommendation?.available) throw new Error('Recommendations are unavailable on this backend');
         const source = document.getElementById('structureWebSource').value;
-        const response = await fetch(API_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'recommend_structure',sequence:state.sequence,structure_context:{content:await file.text(),format:/\.pdb$/i.test(file.name)?'pdb':'mmcif',chain:document.getElementById('structureWebChain').value.trim(),model:Number(document.getElementById('structureWebModel').value),is_alphafold:source==='unknown'?null:source==='alphafold'}})});
+        const contentText = file ? await file.text() : state.uploadedStructureText;
+        const format = file ? (/\.pdb$/i.test(file.name) ? 'pdb' : 'mmcif') : state.uploadedStructureFormat;
+        const response = await fetch(API_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'recommend_structure',sequence:state.sequence,structure_context:{content:contentText,format,chain:document.getElementById('structureWebChain').value.trim(),model:Number(document.getElementById('structureWebModel').value),is_alphafold:source==='unknown'?null:source==='alphafold'}})});
         const data = await response.json();
         if (!response.ok || !data.recommendation) throw new Error(data.error || 'Recommendation failed');
         if (revision!==structureRecommendationRevision) return;
@@ -1803,11 +2733,12 @@ async function recommendStructurePositions() {
         structureSuggestion = ready ? {revision,suggestion} : null;
         document.getElementById('acceptStructurePositions').disabled = !ready;
         document.getElementById('structureWebReviewed').checked = false;
+        const fname = file?.name || state.uploadedStructureFile?.name || 'structure';
         const statusMsg = ready
-            ? `Suggested protein positions (${file.name}): ${suggestion.recommended_positions.join(', ')}. Source: ${suggestion.provenance_basis}. Review before accepting; these are observation-based hypotheses, not confirmed pause/linker sites.`
+            ? `Suggested protein positions (${fname}): ${suggestion.recommended_positions.join(', ')}. Source: ${suggestion.provenance_basis}. Review before accepting; these are observation-based hypotheses, not confirmed pause/linker sites.`
             : (source === 'unknown' && !suggestion.is_alphafold_provenance
-                ? `${suggestion.status} (${file.name}): ${suggestion.reason || 'Select Confidence source (AlphaFold pLDDT or Experimental B-factors) to auto-suggest positions'}. Or enter reviewed positions manually below.`
-                : `${suggestion.status} (${file.name}): ${suggestion.reason || 'No supported region'}. Manual reviewed positions remain available.`);
+                ? `${suggestion.status} (${fname}): ${suggestion.reason || 'Select Confidence source (AlphaFold pLDDT or Experimental B-factors) to auto-suggest positions'}. Or enter reviewed positions manually below.`
+                : `${suggestion.status} (${fname}): ${suggestion.reason || 'No supported region'}. Manual reviewed positions remain available.`);
         document.getElementById('structureRecommendationStatus').textContent = statusMsg;
     } catch(error) {
         if (revision !== structureRecommendationRevision) return;
@@ -1839,17 +2770,229 @@ function renderScientificReview(result) {
     panel.hidden=!result.scientific_review;
 }
 
+function resolveStructureForRecord(record) {
+    const uploadedText = state.uploadedStructureText || state.sampleStructureText || null;
+    if (!uploadedText) return { ok: false, reason: 'Upload an exact-match PDB or mmCIF structure file before generating 3DP.' };
+    const format = state.uploadedStructureFile ? state.uploadedStructureFormat : (state.sampleStructureFormat || 'pdb');
+    const proteinSeq = getRecordProteinSequence(record);
+    const preferredChain = document.getElementById('structureWebChain')?.value.trim() || state.sampleStructureChain || '';
+    if (state.parsedStructure?.chainCount) {
+        const candidates = Object.values(state.parsedStructure.chains);
+        const preferredObj = candidates.find(c => c.chainId === preferredChain);
+        const exactMatches = candidates.filter(c => matchProteinToChain(proteinSeq, c).eligible3dp);
+        const chosen = (preferredObj && matchProteinToChain(proteinSeq, preferredObj).eligible3dp)
+            ? preferredObj
+            : (exactMatches.length === 1 ? exactMatches[0] : (preferredObj || candidates[0]));
+        if (!chosen) return { ok: false, reason: 'No valid polymer chains found in uploaded structure.' };
+        const match = matchProteinToChain(proteinSeq, chosen);
+        if (!match.eligible3dp) {
+            return { ok: false, reason: `3DP requires exact residue correspondence (${match.label}).` };
+        }
+        if (exactMatches.length > 1 && !state.userConfirmedStructureChain && (!preferredObj || preferredObj.chainId !== chosen.chainId)) {
+            return { ok: false, reason: `Multiple chains (${exactMatches.map(c => c.chainId).join(', ')}) match ${record.header}. Confirm a chain ID first.` };
+        }
+        return {
+            ok: true,
+            content: uploadedText,
+            format,
+            chain: chosen.chainId,
+            model: Number(document.getElementById('structureWebModel')?.value) || state.sampleStructureModel || 1,
+        };
+    }
+    return {
+        ok: true,
+        content: uploadedText,
+        format,
+        chain: preferredChain || 'A',
+        model: Number(document.getElementById('structureWebModel')?.value) || state.sampleStructureModel || 1,
+    };
+}
+
+async function buildPayloadForRecordAndMode(record, targetMode) {
+    const payload = {
+        sequence: record.sequence,
+        host: state.host,
+        mode: state.engineMode,
+        save_db: state.saveDb,
+        use_template: state.useTemplate,
+        kozak: state.kozak,
+        dinuc: state.dinuc,
+        return_candidates: true,
+        sop_profile: state.activeSop,
+    };
+    if (record.userOverrideType) {
+        payload.input_type = record.userOverrideType;
+    }
+    if (state.engineMode !== 'profile') {
+        payload.profile = 'balanced';
+    } else if (['feasibility_best', 'dp_v2_1_1'].includes(state.objective) && state.host === 'nbenthamiana') {
+        payload.objective = state.objective;
+        payload.host_profile = state.host;
+        payload.constraints = getGcRange(state.host);
+    } else {
+        payload.profile = ['feasibility_best', 'dp_v2_1_1'].includes(state.objective) ? 'balanced' : state.objective;
+    }
+    const seedValue = elements.optimizationSeed.value.trim();
+    if (seedValue !== '') {
+        const seed = Number(seedValue);
+        if (!Number.isInteger(seed)) throw new Error('Seed must be an integer');
+        payload.seed = seed;
+    }
+    const selectedTypeIisEnzymes = Array.from(elements.typeIisEnzymes)
+        .filter(input => input.checked)
+        .map(input => input.value);
+    const customRestrictionSites = mergeRestrictionSitePresets(
+        parseCustomRestrictionSites(elements.customRestrictionSites.value),
+        selectedTypeIisEnzymes
+    );
+    state.customRestrictionSites = customRestrictionSites;
+    state.selectedTypeIisEnzymes = selectedTypeIisEnzymes;
+    if (customRestrictionSites.length > 0) {
+        payload.custom_restriction_sites = customRestrictionSites;
+    }
+
+    let resolvedViewer = null;
+    if (targetMode === 'paired_3dp') {
+        if (apiCapabilities.direct_structure?.available !== true) {
+            throw new Error('3DP is unavailable on this backend. Update the API and UI together.');
+        }
+        const stInfo = resolveStructureForRecord(record);
+        if (!stInfo.ok) throw new Error(stInfo.reason);
+        try {
+            const resolveResp = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'auto_resolve_structure',
+                    sequence: record.sequence,
+                    structure_context: {
+                        content: stInfo.content,
+                        format: stInfo.format,
+                        chain: stInfo.chain,
+                        model: stInfo.model,
+                    }
+                })
+            });
+            if (resolveResp.ok) {
+                const resolveJson = await resolveResp.json();
+                if (resolveJson?.resolved) resolvedViewer = resolveJson.resolved;
+            }
+        } catch (resolveErr) {
+            console.warn('Auto structure resolution warning:', resolveErr);
+        }
+        let rawPositions = document.getElementById('structureWebPositions').value.trim();
+        if (!rawPositions && resolvedViewer?.positions?.length) {
+            rawPositions = resolvedViewer.positions.join(',');
+            document.getElementById('structureWebPositions').value = rawPositions;
+        }
+        if (!rawPositions) {
+            throw new Error('Specify reviewed one-based pause positions (e.g. 72,73,74) or click "Suggest positions for review".');
+        }
+        const tokens = rawPositions.split(',').map(value => value.trim()).filter(Boolean);
+        if (tokens.some(value => !/^\d+$/.test(value))) {
+            throw new Error('Positions must be comma-separated residue numbers (e.g. 105,106,107)');
+        }
+        const positions = tokens.map(Number);
+        if (!positions.length || positions.some(p => !Number.isSafeInteger(p) || p < 1) || new Set(positions).size !== positions.length) {
+            throw new Error('Positions must be unique residue numbers without duplicates (e.g. 105,106,107)');
+        }
+        if (!document.getElementById('structureWebReviewed').checked) {
+            document.getElementById('structureWebReviewed').checked = true;
+        }
+        if (resolvedViewer?.source_label) {
+            document.getElementById('structureRecommendationStatus').textContent = `Structure source: ${resolvedViewer.source_label} · Chain ${stInfo.chain} · Pause positions (${positions.length}): ${positions.slice(0, 12).join(', ')}${positions.length > 12 ? '…' : ''}`;
+        }
+        payload.design_mode = 'paired_3dp';
+        payload.mode = 'profile';
+        payload.save_db = false;
+        payload.kozak = false;
+        payload.dinuc = false;
+        payload.use_template = false;
+        payload.constraints = getGcRange(state.host);
+        delete payload.objective;
+        delete payload.seed;
+        payload.structure_context = {
+            content: stInfo.content,
+            format: stInfo.format,
+            chain: stInfo.chain,
+            model: stInfo.model,
+            positions,
+            positions_reviewed: true,
+            target_adaptiveness: Number(document.getElementById('structureWebTarget').value) || 0.40,
+            penalty_weight: Number(document.getElementById('structureWebPenalty').value) || 2.0
+        };
+    } else if (targetMode === 'paired_4dp') {
+        if (!isPublic4dpAvailable()) throw new Error('4DP is unavailable on this backend.');
+        if (!state.pauseSidecarData) throw new Error('Upload a prepared JSON sidecar.');
+        const allowMock = isLocal4dpFixturesAvailable() && Boolean(document.getElementById('allowMockSidecar')?.checked);
+        const check = validateSidecarIntegrity(state.pauseSidecarData, getRecordProteinSequence(record), allowMock);
+        if (!check.ok) throw new Error(check.reasons[0] || 'Sidecar failed integrity verification.');
+        if (!document.getElementById('review4dpPositions').checked) throw new Error('Review the verified sidecar positions first.');
+        const ackEl = document.querySelector('[data-role="ack4dpHypothesis"]');
+        if (ackEl && !ackEl.checked) throw new Error('Acknowledge that 4DP uses an unverified translation-offset hypothesis before generating.');
+        payload.design_mode = 'paired_4dp';
+        payload.pause_sidecar = state.pauseSidecarData;
+        payload.positions_reviewed = true;
+        payload.allow_mock = allowMock;
+        delete payload.seed;
+        delete payload.profile;
+        delete payload.objective;
+    }
+    payload.acceptance_criteria = getAcceptanceCriteriaPayload();
+    return { payload, resolvedViewer };
+}
+
+function renderCompareQueueBanner(jobStates) {
+    const banner = document.getElementById('compareQueueStatus');
+    if (!banner) return;
+    if (!jobStates.length) {
+        banner.classList.add('hidden');
+        banner.innerHTML = '';
+        return;
+    }
+    banner.classList.remove('hidden');
+    const modeLabel = m => (m === 'paired_3dp' ? '3DP' : m === 'paired_4dp' ? '4DP' : '1DP');
+    const badges = jobStates.map(j => {
+        const cls = j.status === 'done'
+            ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-200'
+            : (j.status === 'failed'
+                ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-900/40 dark:text-rose-200'
+                : (j.status === 'running'
+                    ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/40 dark:text-amber-200 animate-pulse'
+                    : (j.status === 'skipped'
+                        ? 'bg-slate-100 text-slate-500 border-slate-300 dark:bg-slate-800 dark:text-slate-400'
+                        : 'bg-white text-slate-700 border-slate-200 dark:bg-slate-900 dark:text-slate-300')));
+        const stText = j.status === 'done'
+            ? `✓ ${j.elapsedMs}ms`
+            : (j.status === 'failed'
+                ? `✕ ${j.error}`
+                : (j.status === 'running' ? '⏳ Running' : (j.status === 'skipped' ? `– ${j.error}` : 'Queued')));
+        return `<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-semibold ${cls}">
+            <b>${escapeHtml(j.recordName)} · ${modeLabel(j.mode)}</b>: ${escapeHtml(stText)}
+        </span>`;
+    }).join('');
+    banner.innerHTML = `<div class="flex items-center justify-between gap-2"><span class="font-bold text-indigo-900 dark:text-indigo-200">Execution Queue (max 2 concurrent)</span><span class="text-[10px] text-slate-500">${jobStates.filter(j => j.status === 'done').length}/${jobStates.length} done</span></div><div class="flex flex-wrap gap-1.5">${badges}</div>`;
+}
+
 async function runOptimization() {
-    // Flush the debounced input handler so an immediate click after paste/type
-    // optimizes the current textarea value instead of stale state.
     const checkedDesignMode = document.querySelector('input[name="researchDesignMode"]:checked')?.value;
     if (checkedDesignMode) {
         state.researchDesignMode = checkedDesignMode;
     }
     handleSequenceChange({ target: elements.sequenceInput });
 
-    if (!state.sequence || state.sequence.length < 3) {
-        showToast('Please enter a valid DNA sequence', 'error');
+    const records = state.projectRecords.filter(r => r.effectiveType !== 'invalid' && r.sequence.length >= 3);
+    if (!records.length) {
+        showToast('Please enter at least one valid DNA or protein sequence', 'error');
+        return;
+    }
+    if (records.length > MAX_PROJECT_RECORDS) {
+        showToast(`Project exceeds ${MAX_PROJECT_RECORDS} sequence record limit (${records.length} detected). Split into smaller batches.`, 'error');
+        return;
+    }
+    const totalAa = records.reduce((s, r) => s + (r.aaLength || 0), 0);
+    if (totalAa > MAX_PROJECT_TOTAL_AA) {
+        showToast(`Project exceeds ${MAX_PROJECT_TOTAL_AA} total aa limit (${totalAa} aa detected).`, 'error');
         return;
     }
 
@@ -1869,212 +3012,189 @@ async function runOptimization() {
 
     try {
         captureSopFromUi();
-        // Prepare Request
-        const payload = {
-            sequence: state.sequence,
-            host: state.host,
-            mode: state.engineMode,
-            save_db: state.saveDb,
-            use_template: state.useTemplate,
-            kozak: state.kozak,
-            dinuc: state.dinuc,
-            return_candidates: true,
-            sop_profile: state.activeSop
-        };
-        if (state.engineMode !== 'profile') {
-            payload.profile = 'balanced';
-        } else if (['feasibility_best', 'dp_v2_1_1'].includes(state.objective) && state.host === 'nbenthamiana') {
-            payload.objective = state.objective;
-            payload.host_profile = state.host;
-            // Host-aware default (v3.3.0) — previously hardcoded to
-            // the legacy 55-65 band, which silently overrode the server's
-            // resolve_host_gc_range() default for every feasibility_best run.
-            payload.constraints = getGcRange(state.host);
-        } else {
-            payload.profile = ['feasibility_best', 'dp_v2_1_1'].includes(state.objective) ? 'balanced' : state.objective;
-        }
-        const seedValue = elements.optimizationSeed.value.trim();
-        if (seedValue !== '') {
-            const seed = Number(seedValue);
-            if (!Number.isInteger(seed)) throw new Error('Seed must be an integer');
-            payload.seed = seed;
-        }
-        const selectedTypeIisEnzymes = Array.from(elements.typeIisEnzymes)
-            .filter(input => input.checked)
-            .map(input => input.value);
-        const customRestrictionSites = mergeRestrictionSitePresets(
-            parseCustomRestrictionSites(elements.customRestrictionSites.value),
-            selectedTypeIisEnzymes
-        );
-        state.customRestrictionSites = customRestrictionSites;
-        state.selectedTypeIisEnzymes = selectedTypeIisEnzymes;
-        if (customRestrictionSites.length > 0) {
-            payload.custom_restriction_sites = customRestrictionSites;
-        }
-        state.structureViewerData = null;
-        const rawFile = document.getElementById('structureWebFile')?.files?.[0] || null;
-        const file = (rawFile && rawFile.size > 0 && rawFile.size <= 250000 && /\.(pdb|cif|mmcif)$/i.test(rawFile.name)) ? rawFile : null;
-        const uploadedText = file ? await file.text() : (state.sampleStructureText || null);
-        const uploadedFormat = file ? (/\.pdb$/i.test(file.name) ? 'pdb' : 'mmcif') : (state.sampleStructureFormat || 'pdb');
-        const chainVal = document.getElementById('structureWebChain')?.value.trim() || state.sampleStructureChain || 'A';
-        const modelVal = Number(document.getElementById('structureWebModel')?.value) || state.sampleStructureModel || 1;
+        const isCompare = state.strategyMode === 'compare';
+        const requestedModes = isCompare
+            ? (state.compareMethods.length ? state.compareMethods : ['baseline_1dp'])
+            : [state.researchDesignMode || 'baseline_1dp'];
 
-        if (uploadedText && state.researchDesignMode === 'paired_3dp') try {
-            const resolveResp = await fetch(API_ENDPOINT, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'auto_resolve_structure',
-                    sequence: state.sequence,
-                    structure_context: uploadedText ? { content: uploadedText, format: uploadedFormat, chain: chainVal, model: modelVal } : null
-                })
-            });
-            if (resolveResp.ok) {
-                const resolveJson = await resolveResp.json();
-                if (resolveJson?.resolved) {
-                    state.structureViewerData = resolveJson.resolved;
+        const jobs = [];
+        const preSkipped = [];
+        for (const rec of records) {
+            for (const mode of requestedModes) {
+                try {
+                    const { payload, resolvedViewer } = await buildPayloadForRecordAndMode(rec, mode);
+                    jobs.push({
+                        recordIndex: rec.index,
+                        recordName: rec.header,
+                        record: rec,
+                        mode,
+                        payload,
+                        resolvedViewer,
+                    });
+                } catch (prepErr) {
+                    if (!isCompare && records.length === 1) {
+                        throw prepErr;
+                    }
+                    preSkipped.push({
+                        recordIndex: rec.index,
+                        recordName: rec.header,
+                        mode,
+                        status: 'skipped',
+                        error: prepErr.message,
+                    });
                 }
             }
-        } catch (resolveErr) {
-            console.warn('Auto structure resolution warning:', resolveErr);
         }
 
-        if (state.researchDesignMode === 'paired_3dp') {
-            if (apiCapabilities.direct_structure?.available !== true) throw new Error('3DP is unavailable on this backend. Update the API and UI together.');
-            const resolved = state.structureViewerData;
-            const contentToUse = uploadedText || resolved?.content;
-            const formatToUse = uploadedFormat || resolved?.format || 'pdb';
-            if (!contentToUse) {
-                throw new Error('Upload an exact-match PDB or mmCIF structure file before generating 3DP.');
-            }
-            let rawPositions = document.getElementById('structureWebPositions').value.trim();
-            if (!rawPositions && resolved?.positions?.length) {
-                rawPositions = resolved.positions.join(',');
-                document.getElementById('structureWebPositions').value = rawPositions;
-            }
-            if (!rawPositions) {
-                throw new Error('Specify reviewed one-based pause positions (e.g. 72,73,74) or click "Suggest positions for review".');
-            }
-            let positions = [];
-            const tokens = rawPositions.split(',').map(value => value.trim()).filter(Boolean);
-            if (tokens.some(value => !/^\d+$/.test(value))) {
-                throw new Error('Positions must be comma-separated residue numbers (e.g. 105,106,107)');
-            }
-            positions = tokens.map(Number);
-            if (!positions.length || positions.some(p => !Number.isSafeInteger(p) || p < 1) || new Set(positions).size !== positions.length) {
-                throw new Error('Positions must be unique residue numbers without duplicates (e.g. 105,106,107)');
-            }
-            if (!document.getElementById('structureWebReviewed').checked) {
-                document.getElementById('structureWebReviewed').checked = true;
-            }
-            if (resolved?.source_label) {
-                document.getElementById('structureRecommendationStatus').textContent = `Structure source: ${resolved.source_label} · Pause positions (${positions.length}): ${positions.slice(0, 12).join(', ')}${positions.length > 12 ? '…' : ''}`;
-            }
-            payload.design_mode = 'paired_3dp';
-            payload.mode = 'profile';
-            payload.save_db = false;
-            payload.kozak = false;
-            payload.dinuc = false;
-            payload.use_template = false;
-            payload.constraints = getGcRange(state.host);
-            delete payload.objective;
-            delete payload.seed;
-            payload.structure_context = {
-                content: contentToUse,
-                format: formatToUse,
-                chain: chainVal,
-                model: modelVal,
-                positions,
-                positions_reviewed: true,
-                target_adaptiveness: Number(document.getElementById('structureWebTarget').value) || 0.40,
-                penalty_weight: Number(document.getElementById('structureWebPenalty').value) || 2.0
-            };
+        if (!jobs.length) {
+            renderCompareQueueBanner(preSkipped);
+            throw new Error(preSkipped[0]?.error || 'No eligible jobs could be prepared.');
         }
 
-        if (state.researchDesignMode === 'paired_4dp') {
-            if (!isPublic4dpAvailable()) throw new Error('4DP is unavailable on this backend.');
-            if (!state.pauseSidecarData) throw new Error('Upload a prepared JSON sidecar.');
-            if (!document.getElementById('review4dpPositions').checked) throw new Error('Review the sidecar positions first.');
-            payload.design_mode = 'paired_4dp';
-            payload.pause_sidecar = state.pauseSidecarData;
-            payload.positions_reviewed = true;
-            payload.allow_mock = isLocal4dpFixturesAvailable()
-                && document.getElementById('allowMockSidecar').checked;
-            delete payload.seed;
-            delete payload.profile;
-            delete payload.objective;
-        }
-        payload.acceptance_criteria = getAcceptanceCriteriaPayload();
+        const liveStates = [
+            ...jobs.map(j => ({ recordIndex: j.recordIndex, recordName: j.recordName, mode: j.mode, status: 'queued', elapsedMs: 0, error: '' })),
+            ...preSkipped,
+        ];
+        renderCompareQueueBanner(liveStates);
 
-        let response;
-        try {
-            response = await fetch(API_ENDPOINT, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+        const queueResults = await runBoundedQueue(jobs, 2, (jobIdx, patch) => {
+            Object.assign(liveStates[jobIdx], patch);
+            renderCompareQueueBanner(liveStates);
+        });
+
+        const byRecord = new Map();
+        for (const rec of records) {
+            byRecord.set(rec.index, {
+                recordIndex: rec.index,
+                recordName: rec.header,
+                record: rec,
+                resultsByMode: {},
+                errorsByMode: {},
+                elapsedByMode: {},
+                primaryMode: null,
             });
-        } catch (f) {
-            console.warn('Network error or CORS issue', f);
-            throw new Error('Network request failed');
         }
+        preSkipped.forEach(sk => {
+            const entry = byRecord.get(sk.recordIndex);
+            if (entry) entry.errorsByMode[sk.mode] = sk.error;
+        });
 
-        let data;
-        if (response.ok) {
-            data = await response.json();
-        } else {
-            let message = `API request failed (${response.status})`;
-            try {
-                const errorBody = await response.json();
-                if (errorBody && errorBody.error) message = errorBody.error;
-            } catch (parseError) {
-                console.warn('Unable to parse API error response', parseError);
+        let anySuccess = false;
+        let lastError = '';
+        jobs.forEach((job, idx) => {
+            const outcome = queueResults[idx];
+            const entry = byRecord.get(job.recordIndex);
+            if (!outcome || !outcome.ok) {
+                const msg = outcome?.error || 'Request failed';
+                lastError = msg;
+                if (entry) entry.errorsByMode[job.mode] = msg;
+                return;
             }
-            throw new Error(message);
+            anySuccess = true;
+            const data = outcome.data;
+            if (job.resolvedViewer) {
+                data.structure_viewer = {
+                    source_type: job.resolvedViewer.source_type,
+                    source_label: job.resolvedViewer.source_label,
+                    positions: job.resolvedViewer.positions || [],
+                    ca_trace: job.resolvedViewer.ca_trace || [],
+                    cartoon_pdb: job.resolvedViewer.cartoon_pdb || null,
+                };
+            }
+            data.input_sequence = job.record.sequence;
+            data.record_header = job.record.header;
+            data.elapsed_ms = outcome.elapsedMs;
+            entry.resultsByMode[job.mode] = data;
+            entry.elapsedByMode[job.mode] = outcome.elapsedMs;
+            if (job.mode === 'paired_4dp' || (job.mode === 'paired_3dp' && entry.primaryMode !== 'paired_4dp') || !entry.primaryMode) {
+                entry.primaryMode = job.mode;
+            }
+        });
+
+        if (!anySuccess) {
+            if (ENABLE_MOCK && !['paired_3dp', 'paired_4dp'].includes(state.researchDesignMode)) {
+                showToast('Running mock optimization for demonstration...', 'info');
+                await new Promise(r => setTimeout(r, 1500));
+                state.results = getMockResult();
+                state.projectResults = [];
+                renderResults();
+                showToast('Showing simulated results', 'success');
+                return;
+            }
+            throw new Error(lastError || 'All optimization requests failed.');
         }
 
-        if (state.structureViewerData) {
-            data.structure_viewer = {
-                source_type: state.structureViewerData.source_type,
-                source_label: state.structureViewerData.source_label,
-                positions: state.structureViewerData.positions || [],
-                ca_trace: state.structureViewerData.ca_trace || [],
-                cartoon_pdb: state.structureViewerData.cartoon_pdb || null,
-            };
-        }
-        data.input_sequence = state.sequence || '';
-        state.results = data;
-        addToHistory(state.sequence, data);
+        state.projectResults = Array.from(byRecord.values()).map(entry => {
+            const modes = ['baseline_1dp', 'paired_3dp', 'paired_4dp'];
+            const mergedCandidates = [];
+            modes.forEach(m => {
+                const r = entry.resultsByMode[m];
+                if (!r) return;
+                const cand = r.recommended_candidate || {
+                    id: m === 'paired_3dp' ? 'structure_3dp' : m === 'paired_4dp' ? 'structure_4dp' : 'baseline_1dp',
+                    label: m === 'paired_3dp' ? '3DP · Structure-Guided' : m === 'paired_4dp' ? '4DP · Translation-Offset' : '1DP · Standard',
+                    dna_sequence: r.optimized_sequence,
+                    cai: r.metrics?.cai,
+                    gc_percent: r.metrics?.gc_percent,
+                    polya_signals: r.metrics?.polya_signals,
+                    automated_decision: r.automated_decision,
+                    acceptance_evaluation: r.acceptance_evaluation,
+                    constraint_report: r.constraint_report,
+                    pause_positions: r.pause_positions,
+                    elapsed_ms: r.elapsed_ms,
+                };
+                mergedCandidates.push({
+                    ...cand,
+                    workflow_mode: m,
+                    metrics: r.metrics,
+                    automated_decision: r.automated_decision,
+                    acceptance_evaluation: r.acceptance_evaluation,
+                    constraint_report: r.constraint_report,
+                    pause_positions: r.pause_positions,
+                    elapsed_ms: r.elapsed_ms,
+                });
+            });
+            const activeResult = entry.resultsByMode[entry.primaryMode];
+            if (activeResult && mergedCandidates.length > 1) {
+                activeResult.compare_candidates = mergedCandidates;
+            }
+            return { ...entry, mergedCandidates };
+        });
+
+        state.activeResultRecordIndex = Math.max(0, state.projectResults.findIndex(e => Boolean(e.primaryMode)));
+        if (state.activeResultRecordIndex < 0) state.activeResultRecordIndex = 0;
+        const activeEntry = state.projectResults[state.activeResultRecordIndex];
+        state.sequence = activeEntry.record.sequence;
+        state.structureViewerData = activeEntry.resultsByMode[activeEntry.primaryMode]?.structure_viewer || null;
+        state.results = activeEntry.resultsByMode[activeEntry.primaryMode];
+        addToHistory(state.sequence, state.results);
         renderResults();
-        showToast('Optimization complete!', 'success');
-        const primary = getPrimaryResult(data);
+
+        const failedCount = liveStates.filter(j => j.status === 'failed').length;
+        if (failedCount > 0) {
+            showToast(`Completed with partial failures (${failedCount} failed, succeeded results preserved).`, 'info');
+        } else {
+            showToast('Optimization complete!', 'success');
+        }
+        const primary = getPrimaryResult(state.results);
         if (primary?.metrics) {
             trackEvent('optimization_result', {
                 objective: state.objective,
-                host: getResultHostProfile(data),
+                host: getResultHostProfile(state.results),
                 cai_bucket: caiBucket(primary.metrics.cai ?? 0),
-                gc_bucket: gcBucket(primary.metrics.gc_percent ?? 0, getResultHostProfile(data)),
+                gc_bucket: gcBucket(primary.metrics.gc_percent ?? 0, getResultHostProfile(state.results)),
                 success: true,
             });
         }
-
     } catch (error) {
         console.error('Optimization Failed:', error);
         elements.emptyState.classList.toggle('hidden', Boolean(state.results));
         elements.resultsContainer.classList.toggle('hidden', !state.results);
-
-        if (ENABLE_MOCK && !['paired_3dp', 'paired_4dp'].includes(state.researchDesignMode)) {
-            showToast('Running mock optimization for demonstration...', 'info');
-            await new Promise(r => setTimeout(r, 1500));
-            state.results = getMockResult();
-            renderResults();
-            showToast('Showing simulated results', 'success');
-        } else {
-            if (ENABLE_CUSTOM_SOP) {
-                document.getElementById('manualSopOverrides').open = true;
-                document.getElementById('profileManagement').open = true;
-            }
-            showToast(`Optimization failed: ${error.message}`, 'error');
+        if (ENABLE_CUSTOM_SOP) {
+            document.getElementById('manualSopOverrides').open = true;
+            document.getElementById('profileManagement').open = true;
         }
+        showToast(`Optimization failed: ${error.message}`, 'error');
     } finally {
         setLoading(false);
     }
@@ -3151,12 +4271,269 @@ function renderStructure3dViewer(res, primary) {
     }
 }
 
+function renderProjectChainTabs() {
+    const container = document.getElementById('projectChainTabs');
+    if (!container) return;
+    const entries = state.projectResults || [];
+    if (!entries.length) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+    }
+    const showTabs = entries.length > 1 || Object.keys(entries[0]?.resultsByMode || {}).length > 1 || Object.keys(entries[0]?.errorsByMode || {}).length > 0;
+    if (!showTabs) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+    }
+    container.classList.remove('hidden');
+    const modeTitle = m => (m === 'paired_3dp' ? '3DP' : m === 'paired_4dp' ? '4DP' : '1DP');
+    const chainButtons = entries.map((entry, idx) => {
+        const active = idx === state.activeResultRecordIndex;
+        const doneModes = Object.keys(entry.resultsByMode).map(modeTitle).join(' + ') || 'Failed';
+        return `<button type="button" data-result-record="${idx}" class="px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${active ? 'border-emerald-600 bg-emerald-600 text-white shadow-xs' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200'}">
+            ${escapeHtml(entry.recordName)} <span class="opacity-80 font-normal">(${escapeHtml(doneModes)})</span>
+        </button>`;
+    }).join('');
+    const activeEntry = entries[state.activeResultRecordIndex];
+    const modeButtons = activeEntry
+        ? ['baseline_1dp', 'paired_3dp', 'paired_4dp']
+            .filter(m => activeEntry.resultsByMode[m] || activeEntry.errorsByMode[m])
+            .map(m => {
+                const res = activeEntry.resultsByMode[m];
+                const err = activeEntry.errorsByMode[m];
+                const isSel = activeEntry.primaryMode === m;
+                if (!res) {
+                    return `<span class="px-2 py-1 rounded-lg border border-rose-200 bg-rose-50 dark:bg-rose-950/30 dark:border-rose-800 text-[11px] font-semibold text-rose-700 dark:text-rose-300">${modeTitle(m)}: Unavailable (${escapeHtml(err)})</span>`;
+                }
+                return `<button type="button" data-result-mode="${m}" class="px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all ${isSel ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200'}">${modeTitle(m)}${res.elapsed_ms ? ` · ${res.elapsed_ms}ms` : ''}</button>`;
+            }).join('')
+        : '';
+    container.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Project Chains &amp; Completed Candidates</span>
+        <div class="flex flex-wrap gap-1.5">${chainButtons}</div>
+    </div>
+    ${modeButtons ? `<div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-200 dark:border-slate-700"><span class="text-[10px] font-bold text-slate-500 mr-1">Focus candidate:</span>${modeButtons}</div>` : ''}`;
+    container.querySelectorAll('[data-result-record]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = Number(btn.getAttribute('data-result-record')) || 0;
+            state.activeResultRecordIndex = idx;
+            const entry = state.projectResults[idx];
+            if (entry && entry.primaryMode && entry.resultsByMode[entry.primaryMode]) {
+                state.sequence = entry.record.sequence;
+                state.structureViewerData = entry.resultsByMode[entry.primaryMode].structure_viewer || null;
+                state.results = entry.resultsByMode[entry.primaryMode];
+                state.codonDiffPage = 0;
+                renderResults();
+            }
+        });
+    });
+    container.querySelectorAll('[data-result-mode]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const m = btn.getAttribute('data-result-mode');
+            const entry = state.projectResults[state.activeResultRecordIndex];
+            if (entry && entry.resultsByMode[m]) {
+                entry.primaryMode = m;
+                state.structureViewerData = entry.resultsByMode[m].structure_viewer || null;
+                state.results = entry.resultsByMode[m];
+                renderResults();
+            }
+        });
+    });
+}
+
+function gcPercentOfWindow(seq, maxNt = 45) {
+    const clean = normalizedDna(seq).slice(0, maxNt);
+    if (!clean) return null;
+    return (((clean.match(/[GC]/g) || []).length / clean.length) * 100);
+}
+
+function getMatrixCandidatesForActive() {
+    const activeEntry = state.projectResults[state.activeResultRecordIndex];
+    const columns = [];
+    const res = state.results;
+    if (activeEntry?.record?.effectiveType === 'dna') {
+        const dna = activeEntry.record.sequence;
+        columns.push({
+            key: 'original',
+            label: 'Original CDS',
+            subtitle: 'Uploaded reference',
+            dna,
+            cai: res?.acceptance_evaluation?.original?.criteria?.find(c => c.criterion === 'cai')?.observed ?? null,
+            gc: calculateGC(dna),
+            typeIisClean: null,
+            gcPass: null,
+            aaPass: true,
+        });
+    }
+    if (activeEntry && Object.keys(activeEntry.resultsByMode).length) {
+        const titles = { baseline_1dp: '1DP · Standard', paired_3dp: '3DP · Structure-Guided', paired_4dp: '4DP · Translation-Offset' };
+        ['baseline_1dp', 'paired_3dp', 'paired_4dp'].forEach(mode => {
+            const r = activeEntry.resultsByMode[mode];
+            if (!r) return;
+            const p = getPrimaryResult(r);
+            const crit = r.acceptance_evaluation?.optimized?.criteria || [];
+            const typeRow = crit.find(c => c.criterion === 'type_iis');
+            const gcRow = crit.find(c => c.criterion === 'overall_gc');
+            const typeClean = typeRow ? typeRow.result === 'PASS' : r.metrics?.type_iis_clean;
+            const gcPass = gcRow ? gcRow.result === 'PASS' : (p.validation?.gc === 'PASS');
+            const aaPass = r.constraint_report?.aa_identity === undefined ? true : r.constraint_report.aa_identity === 1.0;
+            columns.push({
+                key: mode,
+                label: titles[mode] || mode,
+                subtitle: mode === 'paired_4dp' ? 'Unverified hypothesis' : (mode === 'paired_3dp' ? 'Experimental structure' : 'Baseline engine'),
+                dna: p.optimized_sequence,
+                cai: p.metrics?.cai ?? null,
+                gc: p.metrics?.gc_percent ?? calculateGC(p.optimized_sequence),
+                typeIisClean: typeClean,
+                gcPass,
+                aaPass,
+                pausePositions: r.pause_positions || r.structure_viewer?.positions || [],
+                decision: r.automated_decision || 'NOT_RECORDED',
+            });
+        });
+    } else if (res) {
+        const primary = getPrimaryResult(res);
+        const rawList = Array.isArray(res.candidates) && res.candidates.length ? res.candidates : [null];
+        rawList.forEach((cand, idx) => {
+            const dna = cand ? cand.dna_sequence : primary.optimized_sequence;
+            if (!dna) return;
+            columns.push({
+                key: cand?.id || `cand_${idx}`,
+                label: cand?.label || cand?.id || '1DP · Standard',
+                subtitle: res.design_mode === 'paired_4dp' ? '4DP run' : (res.design_mode === 'paired_3dp' ? '3DP run' : 'Baseline'),
+                dna,
+                cai: finiteNumber(cand?.cai ?? primary.metrics?.cai),
+                gc: finiteNumber(cand?.gc_percent ?? primary.metrics?.gc_percent),
+                typeIisClean: cand?.type_iis_clean ?? res.metrics?.type_iis_clean ?? null,
+                gcPass: cand?.gc_percent != null ? (cand.gc_percent >= primary.gc_window_min && cand.gc_percent <= primary.gc_window_max) : null,
+                aaPass: res.constraint_report?.aa_identity === undefined ? true : res.constraint_report.aa_identity === 1.0,
+                pausePositions: res.pause_positions || [],
+                decision: cand?.automated_decision || res.automated_decision || 'NOT_RECORDED',
+            });
+        });
+    }
+    return columns;
+}
+
+function renderMultiCandidateMatrix() {
+    const head = document.getElementById('matrixTableHead');
+    const body = document.getElementById('matrixTableBody');
+    if (!head || !body) return;
+    const cols = getMatrixCandidatesForActive();
+    if (!cols.length) return;
+    head.innerHTML = `<tr><th class="p-3 border-b border-slate-200 dark:border-slate-800">Feature / Metric</th>${cols.map(c => `<th class="p-3 border-b border-slate-200 dark:border-slate-800"><div class="font-bold text-slate-900 dark:text-slate-100">${escapeHtml(c.label)}</div><div class="text-[10px] text-slate-500 font-normal">${escapeHtml(c.subtitle)}</div></th>`).join('')}</tr>`;
+    const fmtStatus = (val, passText = 'PASS', failText = 'FAIL') => {
+        if (val === true) return `<span class="text-emerald-600 font-bold">✓ ${passText}</span>`;
+        if (val === false) return `<span class="text-rose-600 font-bold">✕ ${failText}</span>`;
+        return `<span class="text-slate-500">Not evaluated</span>`;
+    };
+    const rows = [
+        ['Translation identity', c => fmtStatus(c.aaPass)],
+        ['CAI / Global GC%', c => `<span class="font-mono">${c.cai == null ? 'Unavailable' : c.cai.toFixed(3)} / ${c.gc == null ? 'N/A' : Number(c.gc).toFixed(1) + '%'}</span>`],
+        ['5′ boundary GC (nt 1–45)', c => { const g = gcPercentOfWindow(c.dna, 45); return `<span class="font-mono">${g == null ? 'N/A' : g.toFixed(1) + '%'}</span>`; }],
+        ['Type IIS motifs', c => fmtStatus(c.typeIisClean)],
+        ['GC constraints', c => fmtStatus(c.gcPass)],
+        ['Cryptic splice prediction', () => `<span class="font-semibold text-amber-700 dark:text-amber-300">NOT RUN</span>`],
+        ['Biological validation', () => `<span class="font-semibold text-slate-600 dark:text-slate-400">NOT AVAILABLE</span>`],
+    ];
+    body.innerHTML = rows.map(([metric, cellFn]) => `<tr><td class="p-3 text-slate-600 dark:text-slate-400 font-bold">${escapeHtml(metric)}</td>${cols.map(c => `<td class="p-3">${cellFn(c)}</td>`).join('')}</tr>`).join('');
+}
+
+function renderMultiCandidateCodonDiff() {
+    const container = document.getElementById('multiCandidateCodonDiffContainer');
+    if (!container) return;
+    const cols = getMatrixCandidatesForActive().filter(c => c.dna);
+    const dnaCols = cols.map(c => ({ ...c, codons: codonsWithoutTerminalStop(c.dna).codons })).filter(c => c.codons.length > 0);
+    if (!dnaCols.length) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+    }
+    container.classList.remove('hidden');
+    const totalCodons = Math.max(...dnaCols.map(c => c.codons.length));
+    const pauseSet = new Set();
+    dnaCols.forEach(c => (c.pausePositions || []).forEach(p => pauseSet.add(p)));
+
+    const rows = [];
+    for (let i = 0; i < totalCodons; i++) {
+        const codonsAtPos = dnaCols.map(c => c.codons[i] || '—');
+        const aa = CODON_TABLE[codonsAtPos.find(cd => cd !== '—')] || '?';
+        const uniqueCodons = new Set(codonsAtPos.filter(cd => cd !== '—'));
+        const isChanged = uniqueCodons.size > 1;
+        const isPauseTarget = pauseSet.has(i + 1);
+        if (state.codonDiffFilterOnlyChanged && !isChanged && !isPauseTarget) continue;
+        rows.push({ pos: i + 1, aa, codonsAtPos, isChanged, isPauseTarget });
+    }
+
+    const pageSize = 60;
+    const maxPage = Math.max(0, Math.ceil(rows.length / pageSize) - 1);
+    if (state.codonDiffPage > maxPage) state.codonDiffPage = maxPage;
+    const slice = rows.slice(state.codonDiffPage * pageSize, (state.codonDiffPage + 1) * pageSize);
+
+    container.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+            <h4 class="text-sm font-extrabold text-white">Codon Difference Viewer (Recorded Engine Differences Only)</h4>
+            <p class="text-[10px] text-slate-400">Showing ${rows.length ? `${state.codonDiffPage * pageSize + 1}–${Math.min(rows.length, (state.codonDiffPage + 1) * pageSize)} of ${rows.length}` : '0'} positions · Only engine-recorded pause positions and codon choices are cited.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <label class="text-[11px] text-slate-200 font-semibold inline-flex items-center gap-1.5 cursor-pointer">
+                <input type="checkbox" data-role="toggleChangedOnly" ${state.codonDiffFilterOnlyChanged ? 'checked' : ''}>
+                Changed / annotated positions only
+            </label>
+            <button type="button" data-role="codonDiffPrev" class="alignment-nav" ${state.codonDiffPage === 0 ? 'disabled' : ''}>← Prev</button>
+            <button type="button" data-role="codonDiffNext" class="alignment-nav" ${state.codonDiffPage >= maxPage ? 'disabled' : ''}>Next →</button>
+        </div>
+    </div>
+    <div class="overflow-x-auto rounded-xl border border-slate-800">
+        <table class="w-full text-[11px] font-mono text-left text-slate-200">
+            <thead class="bg-slate-900 text-slate-400 uppercase text-[10px]">
+                <tr><th class="px-2.5 py-2">Pos / AA</th>${dnaCols.map(c => `<th class="px-2.5 py-2">${escapeHtml(c.label)}</th>`).join('')}<th class="px-2.5 py-2">Recorded Annotation</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/80">
+                ${slice.map(r => {
+                    const note = [];
+                    if (r.isChanged) note.push('Synonymous codon difference');
+                    else note.push('Identical across shown candidates');
+                    if (r.isPauseTarget) note.push('Recorded structure/4DP pause target');
+                    if (r.pos <= 15) note.push('5′ initiation window (nt 1–45)');
+                    return `<tr class="${r.isPauseTarget ? 'bg-amber-950/40' : (r.isChanged ? 'bg-emerald-950/20' : '')}">
+                        <td class="px-2.5 py-1.5 font-bold">${r.pos} · ${escapeHtml(r.aa)}</td>
+                        ${r.codonsAtPos.map((cd, cIdx) => `<td class="px-2.5 py-1.5 ${cIdx > 0 && cd !== r.codonsAtPos[0] ? 'text-emerald-400 font-bold' : ''}">${escapeHtml(cd)}</td>`).join('')}
+                        <td class="px-2.5 py-1.5 font-sans text-[10px] text-slate-300">${escapeHtml(note.join(' · '))}</td>
+                    </tr>`;
+                }).join('') || '<tr><td colspan="6" class="px-3 py-3 text-slate-400">No positions match current filter.</td></tr>'}
+            </tbody>
+        </table>
+    </div>`;
+    container.querySelector('[data-role="toggleChangedOnly"]')?.addEventListener('change', (ev) => {
+        state.codonDiffFilterOnlyChanged = Boolean(ev.target.checked);
+        state.codonDiffPage = 0;
+        renderMultiCandidateCodonDiff();
+    });
+    container.querySelector('[data-role="codonDiffPrev"]')?.addEventListener('click', () => {
+        if (state.codonDiffPage > 0) {
+            state.codonDiffPage -= 1;
+            renderMultiCandidateCodonDiff();
+        }
+    });
+    container.querySelector('[data-role="codonDiffNext"]')?.addEventListener('click', () => {
+        if (state.codonDiffPage < maxPage) {
+            state.codonDiffPage += 1;
+            renderMultiCandidateCodonDiff();
+        }
+    });
+}
+
 function renderResults() {
+    renderProjectChainTabs();
     renderScientificReview(state.results || {});
     const res = state.results;
     if (!res) return;
     const primary = getPrimaryResult(res);
     renderExecutionEvidence(res);
+    renderMultiCandidateMatrix();
+    renderMultiCandidateCodonDiff();
 
     elements.emptyState.classList.add('hidden');
     elements.resultsContainer.classList.remove('hidden');
@@ -4764,7 +6141,25 @@ function clearAll() {
     elements.pauseSidecarFile.value = '';
     elements.pauseSidecarFile.dispatchEvent(new Event('change'));
     state.pauseSidecarData = null;
+    state.sidecarValidation = null;
+    state.sidecarFileName = null;
+    state.parsedStructure = null;
+    state.structureInspection = null;
+    state.uploadedStructureFile = null;
+    state.uploadedStructureText = null;
+    state.userConfirmedStructureChain = false;
+    state.projectRecords = [];
+    state.activeRecordIndex = 0;
+    state.projectResults = [];
+    state.activeResultRecordIndex = 0;
+    const structFileInput = document.getElementById('structureWebFile');
+    if (structFileInput) structFileInput.value = '';
+    renderStructureChainInspector();
+    renderCompareQueueBanner([]);
+    renderProjectChainTabs();
     document.getElementById('review4dpPositions').checked = false;
+    const ack4 = document.querySelector('[data-role="ack4dpHypothesis"]');
+    if (ack4) ack4.checked = false;
     elements.sequenceInput.value = '';
     elements.fileUpload.value = '';
     elements.customRestrictionSites.value = '';
@@ -4787,7 +6182,8 @@ function clearAll() {
     elements.validationStatus.classList.add('hidden');
     elements.canvasOriginalTrack?.classList.remove('has-track');
     elements.canvasOptimizedTrack?.classList.remove('has-track');
-    updateDesignBriefSummary();
+    renderProjectRecordsPanel();
+    updateStrategyAndReadiness();
 
     showToast('Input cleared', 'info');
 }
@@ -4883,6 +6279,24 @@ function downloadFile(format) {
     if (!state.results) return;
     trackEvent('file_download', { format });
 
+    const projectEntries = (state.projectResults || []).filter(e => Object.keys(e.resultsByMode || {}).length > 0);
+    const completedItems = [];
+    if (projectEntries.length > 0) {
+        projectEntries.forEach(entry => {
+            ['baseline_1dp', 'paired_3dp', 'paired_4dp'].forEach(mode => {
+                const res = entry.resultsByMode[mode];
+                if (!res) return;
+                const p = getPrimaryResult(res);
+                completedItems.push({
+                    header: `${entry.recordName}_${mode === 'paired_3dp' ? '3DP' : mode === 'paired_4dp' ? '4DP' : '1DP'}`,
+                    mode: mode === 'paired_3dp' ? 'structure_3dp' : (mode === 'paired_4dp' ? 'paired_4dp' : state.objective),
+                    cai: p.metrics.cai,
+                    dna: p.optimized_sequence,
+                });
+            });
+        });
+    }
+
     let content = '';
     let fileName = '';
     const primary = getPrimaryResult(state.results);
@@ -4890,20 +6304,22 @@ function downloadFile(format) {
     const exportObjective = state.results.design_mode === 'paired_3dp' ? 'structure_3dp' : state.objective;
 
     if (format === 'fasta') {
-        content = `>FactorForge_Optimized | Objective: ${exportObjective} | CAI: ${primary.metrics.cai}\n${seq}`;
+        content = completedItems.length > 1
+            ? completedItems.map(it => `>${it.header.replace(/\s+/g, '_')} | Objective: ${it.mode} | CAI: ${it.cai}\n${it.dna}`).join('\n')
+            : `>FactorForge_Optimized | Objective: ${exportObjective} | CAI: ${primary.metrics.cai}\n${seq}`;
         fileName = `optimized_sequence_${Date.now()}.fasta`;
     } else {
-        // Basic GenBank template
-        content = `LOCUS       Exported                ${seq.length} bp    DNA     linear   \n`;
+        const exportSeq = completedItems.length === 1 ? completedItems[0].dna : seq;
+        content = `LOCUS       Exported                ${exportSeq.length} bp    DNA     linear   \n`;
         const hostLabel = HOST_LABELS[state.host] || 'N. benthamiana';
         content += `DEFINITION  FactorForge Optimized Sequence for ${hostLabel}\n`;
         content += `FEATURES             Location/Qualifiers\n`;
-        content += `     CDS             1..${seq.length}\n`;
+        content += `     CDS             1..${exportSeq.length}\n`;
         content += `                     /label="Optimized_CDS"\n`;
         content += `                     /note="Objective: ${exportObjective}"\n`;
         content += `ORIGIN      \n`;
 
-        const lines = seq.toLowerCase().match(/.{1,60}/g);
+        const lines = exportSeq.toLowerCase().match(/.{1,60}/g);
         lines.forEach((line, i) => {
             const start = (i * 60) + 1;
             const groups = line.match(/.{1,10}/g).join(' ');
@@ -4929,7 +6345,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.6.3';
+        const version = state.results.engine_versions?.product || '3.6.4';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }

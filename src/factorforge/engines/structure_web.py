@@ -7,8 +7,8 @@ from Bio.PDB import PDBParser, MMCIFParser
 from Bio.SeqUtils import seq1
 from factorforge.validation.tradeoff_suite import compute_tradeoff_comparison
 
-MAX_STRUCTURE_BYTES = 250_000
-MAX_STRUCTURE_PROTEIN_AA = 300
+MAX_STRUCTURE_BYTES = 450_000
+MAX_STRUCTURE_PROTEIN_AA = 500
 
 
 def run_structure_web(protein, context, weights, gc_min, gc_max, forbidden_motifs):
@@ -16,13 +16,13 @@ def run_structure_web(protein, context, weights, gc_min, gc_max, forbidden_motif
         raise ValueError("3DP requires a structure_context object")
     if not 3 <= len(protein) <= MAX_STRUCTURE_PROTEIN_AA:
         raise ValueError(
-            "Direct 3DP testing supports 3-300 amino acids; use local reviewed workflows for larger inputs"
+            "Direct 3DP testing supports 3-500 amino acids; use local reviewed workflows for larger inputs"
         )
     if context.get("positions_reviewed") is not True:
         raise ValueError("Confirm that the structure positions have been reviewed")
     text = context.get("content")
     if not isinstance(text, str) or not text or len(text.encode("utf-8")) > MAX_STRUCTURE_BYTES:
-        raise ValueError("Upload a PDB/mmCIF structure of at most 250 KB")
+        raise ValueError("Upload a PDB/mmCIF structure of at most 450 KB")
     fmt = context.get("format")
     if fmt not in {"pdb", "mmcif"}:
         raise ValueError("Structure format must be pdb or mmcif")

@@ -154,6 +154,7 @@ def test_preview_rejects_non_inline_and_wrong_route(local_preview):
     {"positions_reviewed": False},
     {"exit_tunnel_offset": 42},
     {"sequence": "A" + META_PROTEIN[1:]},
+    {"sequence": "M" * 501},
     {"allow_mock": "true"},
     {"constraints": {"gc_min": 90, "gc_max": 10}},
 ])
@@ -165,3 +166,49 @@ def test_preview_rejects_invalid_or_unreviewed_input(local_preview, changes):
     status, result = post({**fields, **changes})
     assert status == 400
     assert result["success"] is False
+
+
+def test_4dp_web_accepts_472aa_synthetic_sequence(monkeypatch):
+    from factorforge.structure.alphafold_server_ingest import _pause_candidates
+
+    monkeypatch.delenv("FACTORFORGE_LOCAL_4DP_FIXTURES", raising=False)
+    protein_472 = "M" + ("ACDEFGHIKLMNPQRSTVWY" * 23) + "GALMQRSTVWY"
+    residues = [
+        {"seq_id": i, "aa": aa, "plddt": 45.0 if 100 <= i <= 115 else 92.0}
+        for i, aa in enumerate(protein_472, 1)
+    ]
+    pause_candidates = _pause_candidates(residues, 35)
+    assert pause_candidates
+    sidecar = {
+        "status": "AVAILABLE",
+        "source_type": "ESMFOLD_PREPARED",
+        "is_mock": False,
+        "reviewed": False,
+        "coordinate_system": "PDB_res_seq_1based",
+        "primary_chain": "A",
+        "tunnel_offset_applied": 35,
+        "pause_candidates": pause_candidates,
+        "chains": {
+            "A": {
+                "chain_id": "A",
+                "sequence": protein_472,
+                "length": 472,
+                "residues": residues,
+                "pause_candidates": pause_candidates,
+            }
+        },
+    }
+    code, res = post(
+        {
+            "sequence": protein_472,
+            "design_mode": "paired_4dp",
+            "pause_sidecar": sidecar,
+            "positions_reviewed": True,
+            "constraints": {"gc_min": 35, "gc_max": 55},
+        },
+        address="192.0.2.1",
+        headers={"Host": "factorforge.eijex.com"},
+    )
+    assert code == 200, res
+    assert res["model_protein_length"] == 472
+    assert len(res["recommended_candidate"]["dna_sequence"]) == 472 * 3

@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <meta name="eijex-web-build" content="v3.6.3-2026-11-11-dragdrop-hotfix">
+    <meta name="eijex-web-build" content="v3.6.4-2026-11-11-sequence-first-ux">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FactorForge | N. benthamiana CDS Design</title>
@@ -90,7 +90,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.6.3 Release Notes
+                            v3.6.4 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -120,13 +120,14 @@
 
                     <!-- File Upload -->
                     <div class="relative group">
-                        <input type="file" id="fileUpload" accept=".fasta,.fa,.txt" class="hidden">
+                        <input type="file" id="fileUpload" accept=".fasta,.fa,.txt,.pdb,.cif,.mmcif,.json" multiple class="hidden">
                         <label id="sequenceUploadZone" for="fileUpload"
-                            class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer bg-slate-50 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-400 transition-all group">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl cursor-pointer bg-slate-50 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-400 transition-all group px-4 text-center">
+                            <div class="flex flex-col items-center justify-center py-4">
                                 <span class="text-3xl mb-2 group-hover:scale-110 transition-transform">📄</span>
-                                <p class="text-sm text-slate-600 font-medium">Click or drag &amp; drop FASTA</p>
-                                <p class="text-xs text-slate-400 mt-1">.fasta, .fa, .txt accepted</p>
+                                <p class="text-sm text-slate-700 dark:text-slate-200 font-semibold">Click or drag &amp; drop FASTA, PDB/mmCIF, or 4DP JSON</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">.fasta, .fa, .txt · .pdb, .cif, .mmcif (≤450 KB) · .json sidecar (≤250 KB)</p>
+                                <p class="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold mt-1">Multiple FASTA records &amp; H2L2 multi-chain structures supported</p>
                             </div>
                         </label>
                     </div>
@@ -186,6 +187,22 @@
                             </div>
                         </div>
 
+                        <!-- Multi-FASTA / Active Record Cards -->
+                        <section id="projectRecordsPanel" class="hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-900/70 p-3 space-y-2.5" aria-live="polite">
+                            <div class="flex items-center justify-between gap-2">
+                                <span id="projectRecordsCount" class="text-xs font-extrabold text-slate-800 dark:text-slate-100">1 sequence detected</span>
+                                <span id="projectRecordsCapNote" class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Up to 6 records · ≤ 2,500 total aa</span>
+                            </div>
+                            <div id="projectRecordsList" class="space-y-1.5 max-h-44 overflow-y-auto custom-scrollbar"></div>
+                            <div id="sequenceAmbiguityPrompt" class="hidden rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-2.5 text-[11px] text-amber-900 dark:text-amber-200 flex flex-wrap items-center justify-between gap-2">
+                                <span>Contains only A/C/G/T characters — confirm sequence type:</span>
+                                <div class="flex gap-1.5">
+                                    <button type="button" data-role="confirmSeqType" data-seq-type="dna" class="px-2 py-1 rounded bg-blue-600 text-white font-bold text-[10px]">Treat as DNA CDS</button>
+                                    <button type="button" data-role="confirmSeqType" data-seq-type="protein" class="px-2 py-1 rounded bg-emerald-600 text-white font-bold text-[10px]">Treat as Protein AA</button>
+                                </div>
+                            </div>
+                        </section>
+
                         <button id="clearBtn"
                             class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-xl transition-all flex items-center justify-center space-x-2">
                             <span>🗑️</span>
@@ -242,18 +259,64 @@
                         </div>
                     </div>
 
+                    <section id="designStrategySection" class="mb-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-900/60 p-4 space-y-3" aria-label="Design strategy">
+                        <div class="flex items-center justify-between gap-2">
+                            <h3 class="text-xs font-extrabold uppercase tracking-widest text-slate-700 dark:text-slate-200">Design Strategy</h3>
+                            <span id="strategyRecommendedBadge" class="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold">Auto · Recommended</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" role="group" aria-label="Strategy mode selector">
+                            <button type="button" data-strategy-mode="auto" class="strategy-mode-btn text-left p-3 rounded-xl border-2 border-emerald-500 bg-white dark:bg-slate-800 shadow-xs transition-all">
+                                <span class="block text-xs font-extrabold text-slate-900 dark:text-slate-100">Automatic</span>
+                                <span class="block text-[10px] text-emerald-700 dark:text-emerald-300 font-bold">Recommended</span>
+                                <span class="block text-[10px] text-slate-500 dark:text-slate-400 mt-1">Inspect uploaded evidence &amp; pick suitable workflow</span>
+                            </button>
+                            <button type="button" data-strategy-mode="manual" class="strategy-mode-btn text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900 hover:border-slate-400 transition-all">
+                                <span class="block text-xs font-extrabold text-slate-900 dark:text-slate-100">Choose manually</span>
+                                <span class="block text-[10px] text-slate-500 font-bold">1DP · 3DP · 4DP</span>
+                                <span class="block text-[10px] text-slate-500 dark:text-slate-400 mt-1">Select a specific engine directly</span>
+                            </button>
+                            <button type="button" data-strategy-mode="compare" class="strategy-mode-btn text-left p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900 hover:border-slate-400 transition-all">
+                                <span class="block text-xs font-extrabold text-slate-900 dark:text-slate-100">Compare designs</span>
+                                <span class="block text-[10px] text-indigo-600 dark:text-indigo-300 font-bold">Side-by-side</span>
+                                <span class="block text-[10px] text-slate-500 dark:text-slate-400 mt-1">Run eligible 1DP/3DP/4DP candidates in bounded queue</span>
+                            </button>
+                        </div>
+                        <div id="compareMethodsBar" class="hidden rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/30 p-3 text-xs space-y-2">
+                            <p class="font-bold text-indigo-900 dark:text-indigo-200">Candidates to generate per sequence record (max 2 concurrent requests):</p>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="inline-flex items-center gap-1.5 font-semibold"><input type="checkbox" data-compare-method="baseline_1dp" checked> 1DP (Standard)</label>
+                                <label class="inline-flex items-center gap-1.5 font-semibold"><input type="checkbox" data-compare-method="paired_3dp" checked> 3DP (when verified structure ready)</label>
+                                <label class="inline-flex items-center gap-1.5 font-semibold"><input type="checkbox" data-compare-method="paired_4dp" checked> 4DP (when verified sidecar approved)</label>
+                            </div>
+                        </div>
+                        <div id="designReadinessPanel" class="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 text-xs space-y-1.5" aria-live="polite">
+                            <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Design readiness</p>
+                            <p id="designReadinessHeadline" class="font-bold text-slate-800 dark:text-slate-100">Upload a FASTA/sequence to check available methods and required inputs.</p>
+                            <ul id="designReadinessList" class="text-[11px] text-slate-600 dark:text-slate-300 list-disc pl-4 space-y-0.5"></ul>
+                        </div>
+                    </section>
+
                     <section id="researchTestingStatus" class="mb-6 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/30 p-4 text-xs leading-relaxed">
                         <h3 class="font-bold text-teal-900 dark:text-teal-200">Design availability: 1DP, 3DP, and 4DP enabled (FactorForge default SOP)</h3>
-                        <p>1DP (sequence baseline), 3DP (PDB/mmCIF upload with reviewed positions), and 4DP (prepared JSON sidecar upload with reviewed model positions) are enabled in this public form using FactorForge's built-in SOP. Need a custom SOP? Email <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold text-teal-800 dark:text-teal-300">eijex.lab@gmail.com</a>. Agree on sharing, confidentiality, and use in writing before sending materials.</p>
-                        <fieldset class="mt-3 flex flex-wrap gap-4"><legend class="sr-only">Select design workflow</legend>
-                            <label class="font-semibold cursor-pointer"><input type="radio" name="researchDesignMode" value="baseline_1dp" checked> 1DP · Baseline Design (Production)</label>
-                            <label class="flex items-center gap-1.5 font-semibold cursor-pointer"><input type="radio" name="researchDesignMode" value="paired_3dp"> <span>3DP · Structure-Aware Design</span> <span class="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-[10px] font-bold uppercase">Experimental · PDB/mmCIF</span></label>
-                            <label class="flex items-center gap-1.5 font-semibold cursor-pointer"><input type="radio" name="researchDesignMode" value="paired_4dp" disabled> <span>4DP · Structure-Guided Exit Tunnel Design</span> <span class="px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300 text-[10px] font-bold uppercase">Experimental · Sidecar JSON</span></label>
+                        <p>1DP (Standard CDS optimization), 3DP (Structure-guided CDS design, up to 500 aa target subject to serverless limits), and 4DP (Translation-offset hypothesis with verified sidecar JSON, up to 500 aa) are enabled in this public form using FactorForge's built-in SOP. Need a custom SOP? Email <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold text-teal-800 dark:text-teal-300">eijex.lab@gmail.com</a>. Agree on sharing, confidentiality, and use in writing before sending materials.</p>
+                        <fieldset class="mt-3 space-y-2"><legend class="sr-only">Select design workflow</legend>
+                            <label class="block rounded-lg border border-teal-200/80 dark:border-teal-800 bg-white/80 dark:bg-slate-900/70 p-2.5 cursor-pointer">
+                                <span class="flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100"><input type="radio" name="researchDesignMode" value="baseline_1dp" checked> <span>1DP · Standard CDS Optimization</span> <span class="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold uppercase">Baseline · No Structure Needed</span></span>
+                                <span class="block text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 pl-5">Optimize synonymous codons for your expression host while preserving the protein sequence and satisfying sequence-design constraints.</span>
+                            </label>
+                            <label class="block rounded-lg border border-amber-200/80 dark:border-amber-800/60 bg-white/80 dark:bg-slate-900/70 p-2.5 cursor-pointer">
+                                <span class="flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100"><input type="radio" name="researchDesignMode" value="paired_3dp"> <span>3DP · Structure-Guided CDS Design</span> <span class="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-[10px] font-bold uppercase">Experimental · PDB/mmCIF Required</span></span>
+                                <span class="block text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 pl-5">Use predicted or experimental protein structure coordinates (exact-match PDB/mmCIF chain) to guide codon choices near annotated boundaries.</span>
+                            </label>
+                            <label class="block rounded-lg border border-teal-200/80 dark:border-teal-800/60 bg-white/80 dark:bg-slate-900/70 p-2.5 cursor-pointer">
+                                <span class="flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100"><input type="radio" name="researchDesignMode" value="paired_4dp" disabled> <span>4DP · Translation-Offset Guided Design</span> <span class="px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300 text-[10px] font-bold uppercase">Experimental Hypothesis · Sidecar JSON</span></span>
+                                <span class="block text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 pl-5">Explore synonymous codon placement using an unverified biological hypothesis about ribosome exit-tunnel emergence (verified sidecar JSON required; biological validation: NOT_AVAILABLE).</span>
+                            </label>
                         </fieldset>
                         <div id="structure4dpInputs" class="hidden mt-4 space-y-3">
                             <div class="rounded-lg border border-teal-300 dark:border-teal-700 bg-teal-50/80 dark:bg-teal-950/40 p-3 text-teal-900 dark:text-teal-200">
-                                <p class="font-bold flex items-center gap-1.5"><span>🔬</span> 4DP model-offset design (prepared sidecar)</p>
-                                <p class="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Uses FactorForge's built-in default SOP and the offset declared in your prepared pause sidecar JSON (max 100 aa, 100 KB). Review the model positions before generating (computational hypothesis; biological validation: NOT_AVAILABLE).</p>
+                                <p class="font-bold flex items-center gap-1.5"><span>🔬</span> 4DP translation-offset design (prepared sidecar)</p>
+                                <p class="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Uses FactorForge's built-in default SOP and the verified sidecar JSON (up to 500 aa target, max 250 KB). Sequence match, SHA-256, coordinates, pLDDT bounds, and source provenance are checked before approval (unverified hypothesis; biological validation: NOT_AVAILABLE).</p>
                             </div>
                             <div id="sidecarDropZone" class="rounded-lg border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-900 space-y-3 transition-all">
                                 <div>
@@ -266,12 +329,19 @@
                                     </button>
                                     <span id="sidecarStatusBadge" class="text-[11px] font-medium text-slate-600 dark:text-slate-400">No sidecar loaded</span>
                                 </div>
-                                <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-                                    <label class="text-xs">
-                                        <span id="sidecarPositionReview" class="block mb-2" aria-live="polite"></span>
-                                        <input id="review4dpPositions" type="checkbox" disabled aria-describedby="sidecarPositionReview">
-                                        I reviewed the sidecar positions for this input.
-                                    </label>
+                                <div id="sidecarIntegrityChecklist" class="hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/50 p-2.5 text-[11px] space-y-1"></div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                    <div class="space-y-2">
+                                        <span id="sidecarPositionReview" class="block text-xs" aria-live="polite"></span>
+                                        <label class="block text-xs">
+                                            <input id="review4dpPositions" type="checkbox" disabled aria-describedby="sidecarPositionReview">
+                                            I reviewed the verified sidecar positions and integrity checks for this input.
+                                        </label>
+                                        <label class="block text-xs text-slate-600 dark:text-slate-300">
+                                            <input type="checkbox" data-role="ack4dpHypothesis" disabled>
+                                            I understand 4DP uses an unverified translation-offset hypothesis (Biological validation: NOT_AVAILABLE).
+                                        </label>
+                                    </div>
                                     <label id="allowMockSidecarLabel" class="text-xs" hidden>
                                         <input id="allowMockSidecar" type="checkbox">
                                         Use synthetic fixture for testing
@@ -281,13 +351,14 @@
                         </div>
                         <div id="structureWebInputs" class="hidden mt-4 space-y-3">
                             <div class="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50/80 dark:bg-amber-950/40 p-3 text-amber-900 dark:text-amber-200">
-                                <p class="font-bold flex items-center gap-1"><span>🔬</span> Experimental structure-conditioned design</p>
-                                <p class="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Prepared exact-match PDB/mmCIF input and reviewed positions can support CPU optimization in an explicitly enabled research deployment. Automatic structure prediction is separate; GCP is not a prerequisite for the optimization calculation.</p>
+                                <p class="font-bold flex items-center gap-1"><span>🔬</span> Experimental structure-guided design (3DP)</p>
+                                <p class="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Prepared exact-match PDB/mmCIF input (≤450 KB, up to 500 aa target subject to serverless limits) and reviewed positions support CPU optimization. Multi-chain complexes (e.g. AF3 H2L2) are inspected per chain before matching.</p>
                             </div>
                             <details open class="rounded-lg border border-slate-200 dark:border-slate-700 p-2.5">
-                                <summary class="cursor-pointer font-semibold text-slate-700 dark:text-slate-300">Required: PDB / mmCIF structure upload and position review</summary>
+                                <summary class="cursor-pointer font-semibold text-slate-700 dark:text-slate-300">Required: PDB / mmCIF structure upload and chain/position review</summary>
                                 <div class="mt-3 space-y-3">
-                                    <label id="structureWebDropZone" class="block font-semibold rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-2.5 transition-all">Structure file (PDB or mmCIF, max 250 KB, click or drag &amp; drop, required)<input id="structureWebFile" type="file" accept=".pdb,.cif,.mmcif" class="mt-1 block w-full"></label>
+                                    <label id="structureWebDropZone" class="block font-semibold rounded-lg border border-dashed border-slate-300 dark:border-slate-600 p-2.5 transition-all">Structure file (PDB or mmCIF, max 450 KB, click or drag &amp; drop, required)<input id="structureWebFile" type="file" accept=".pdb,.cif,.mmcif" class="mt-1 block w-full"></label>
+                                    <div id="structureChainInspector" class="hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/70 p-2.5 text-[11px] space-y-2" aria-live="polite"></div>
                                     <div class="grid grid-cols-2 gap-3">
                                         <label>Chain ID<input id="structureWebChain" value="A" maxlength="8" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-2"></label>
                                         <label>Model (one-based file order)<input id="structureWebModel" type="number" min="1" value="1" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-2"></label>
@@ -298,7 +369,7 @@
                                         </select>
                                     </label>
                                     <div class="flex flex-wrap gap-2"><button id="recommendStructurePositions" type="button" class="rounded border border-teal-400 p-2 font-semibold">Suggest positions for review</button><button id="acceptStructurePositions" type="button" disabled class="rounded border border-teal-400 p-2 font-semibold disabled:opacity-50">Use suggested positions</button></div>
-                                    <p id="structureRecommendationStatus" role="status">Upload a structure, request suggestions if available, and review your selected positions.</p>
+                                    <p id="structureRecommendationStatus" role="status">Upload a structure, verify chain mapping, request suggestions if available, and review your selected positions.</p>
                                     <label class="block">Reviewed protein positions (one-based, comma-separated, required)<input id="structureWebPositions" placeholder="e.g. 12,13,14 · review suggestions or enter manually" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-2"></label>
                                     <div class="grid grid-cols-2 gap-3">
                                         <label>Target adaptiveness<input id="structureWebTarget" type="number" min="0.01" max="1" step="0.01" value="0.40" class="mt-1 w-full rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 p-2"></label>
@@ -308,7 +379,7 @@
                                 </div>
                             </details>
                         </div>
-                        <p id="selectedWorkflowNote" class="mt-2 font-semibold">1DP selected: standard production sequence design.</p>
+                        <p id="selectedWorkflowNote" class="mt-2 font-semibold">1DP selected: standard baseline sequence design.</p>
                     </section>
 
                     <div class="hidden mb-8" id="engineSelector">
@@ -768,6 +839,9 @@
                             </div>
                         </label>
                     </div>
+                    <!-- Batch / Compare Queue Progress -->
+                    <div id="compareQueueStatus" class="hidden mb-4 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/30 p-3 text-xs space-y-1.5" aria-live="polite"></div>
+
                     <!-- Action Button -->
                     <button id="optimizeBtn" disabled
                         class="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-blue-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-emerald-200 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
@@ -838,6 +912,8 @@
                     <!-- Success State -->
                     <div id="resultsContainer"
                         class="hidden flex-grow flex flex-col animate-in fade-in zoom-in-95 duration-500">
+                        <!-- Multi-FASTA / Compare Project Status & Chain Selector -->
+                        <div id="projectChainTabs" class="hidden mb-4 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/70 space-y-2" aria-live="polite"></div>
                         <!-- Review Top Banner with Edit Settings button -->
                         <div id="reviewTopBar" class="mb-6 p-4 rounded-2xl bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg border border-slate-800 animate-in fade-in duration-300">
                             <div class="flex items-center space-x-3">
@@ -1108,6 +1184,7 @@
                                 </div>
                                 <div id="codonAlignmentViewer" class="codon-alignment font-mono overflow-x-auto custom-scrollbar" tabindex="0" aria-label="Codon-by-codon alignment"></div>
                             </div>
+                            <div id="multiCandidateCodonDiffContainer" class="hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-950 p-4 space-y-3"></div>
                         </section>
 
                         <!-- Optimized Sequence -->
@@ -1137,75 +1214,44 @@
                                             <span>Multi-Candidate Comparison Matrix</span>
                                         </h3>
                                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                            Comparative metrics across standard baseline, distribution-tuned, and splice-remediated candidates.
+                                            Real-time side-by-side comparison of Original CDS (if provided) vs completed 1DP, 3DP, and 4DP candidates.
                                         </p>
                                     </div>
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                                        Multi-Candidate Evaluation
+                                        Computed In-Silico Evidence
                                     </span>
                                 </div>
                                 <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
                                     <table class="w-full text-xs text-left border-collapse">
-                                        <thead class="bg-slate-50 dark:bg-slate-800/60 font-extrabold text-slate-700 dark:text-slate-300">
+                                        <thead id="matrixTableHead" class="bg-slate-50 dark:bg-slate-800/60 font-extrabold text-slate-700 dark:text-slate-300">
                                             <tr>
-                                                <th class="p-3 border-b border-slate-200 dark:border-slate-800 w-1/4">Feature / Metric</th>
-                                                <th class="p-3 border-b border-slate-200 dark:border-slate-800 w-1/4">
-                                                    <div class="font-bold text-slate-900 dark:text-slate-100">Baseline Candidate</div>
-                                                    <div class="text-[10px] text-slate-500 font-normal">Standard N. benthamiana optimization</div>
-                                                </th>
-                                                <th class="p-3 border-b border-slate-200 dark:border-slate-800 w-1/4">
-                                                    <div class="font-bold text-blue-600 dark:text-blue-400">Distribution-Tuned</div>
-                                                    <div class="text-[10px] text-slate-500 font-normal">Balanced Arg/Ser allocation</div>
-                                                </th>
-                                                <th class="p-3 border-b border-slate-200 dark:border-slate-800 w-1/4">
-                                                    <div class="font-bold text-emerald-600 dark:text-emerald-400">Splice-Remediated</div>
-                                                    <div class="text-[10px] text-slate-500 font-normal">Synonymous splice site removal</div>
-                                                </th>
+                                                <th class="p-3 border-b border-slate-200 dark:border-slate-800">Feature / Metric</th>
+                                                <th class="p-3 border-b border-slate-200 dark:border-slate-800">1DP · Standard</th>
                                             </tr>
                                         </thead>
                                         <tbody id="matrixTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
                                             <tr>
-                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">Protein Identity</td>
-                                                <td class="p-3 text-emerald-600 font-bold" id="matrixCellIdentityBase">100% (Identity Preserved)</td>
-                                                <td class="p-3 text-emerald-600 font-bold" id="matrixCellIdentityDist">100% (Identity Preserved)</td>
-                                                <td class="p-3 text-emerald-600 font-bold" id="matrixCellIdentityRem">100% (Identity Preserved)</td>
+                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">Translation Identity</td>
+                                                <td class="p-3 text-slate-500">Run design to populate</td>
                                             </tr>
                                             <tr>
-                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">Arg &amp; Ser Codon Balance</td>
-                                                <td class="p-3 text-slate-700 dark:text-slate-300" id="matrixCellArgSerBase">Standard Weights (Host Frequency)</td>
-                                                <td class="p-3 text-blue-600 dark:text-blue-400 font-bold" id="matrixCellArgSerDist">Equal Quota (AGA 50% / AGG 50%)</td>
-                                                <td class="p-3 text-emerald-600 dark:text-emerald-400 font-bold" id="matrixCellArgSerRem">Equal Quota (5-way Ser 20%)</td>
+                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">Type IIS motifs</td>
+                                                <td class="p-3 text-slate-500">Run design to populate</td>
                                             </tr>
                                             <tr>
-                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">Splice Motifs Detected</td>
-                                                <td class="p-3 text-amber-600 font-bold" id="matrixCellSpliceBase">2 flagged (Advisory only)</td>
-                                                <td class="p-3 text-amber-600 font-bold" id="matrixCellSpliceDist">2 flagged (Advisory only)</td>
-                                                <td class="p-3 text-emerald-600 font-bold" id="matrixCellSpliceRem">0 flagged (Synonymous remediation)</td>
+                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">Cryptic splice prediction</td>
+                                                <td class="p-3 font-semibold text-amber-700 dark:text-amber-300">NOT RUN</td>
                                             </tr>
                                             <tr>
-                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">GC % / CAI Score</td>
-                                                <td class="p-3 font-mono text-slate-700 dark:text-slate-300" id="matrixCellGcCaiBase">42.5% / 0.72</td>
-                                                <td class="p-3 font-mono text-blue-600 dark:text-blue-400 font-bold" id="matrixCellGcCaiDist">41.8% / 0.70</td>
-                                                <td class="p-3 font-mono text-emerald-600 dark:text-emerald-400 font-bold" id="matrixCellGcCaiRem">43.1% / 0.71</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">5′ Boundary (nt 1–45)</td>
-                                                <td class="p-3 text-slate-700 dark:text-slate-300" id="matrixCellFivePrimeBase">Low-GC initiation clamp</td>
-                                                <td class="p-3 text-slate-700 dark:text-slate-300" id="matrixCellFivePrimeDist">Low-GC initiation clamp</td>
-                                                <td class="p-3 text-emerald-600 dark:text-emerald-400 font-bold" id="matrixCellFivePrimeRem">Low-GC initiation clamp</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">SOP Policy Disposition</td>
-                                                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">⚠️ ADVISORY</span></td>
-                                                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">⚠️ ADVISORY</span></td>
-                                                <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">✅ PASS</span></td>
+                                                <td class="p-3 text-slate-600 dark:text-slate-400 font-bold">Biological validation</td>
+                                                <td class="p-3 font-semibold text-slate-600 dark:text-slate-400">NOT AVAILABLE</td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
                                 <div class="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 text-[11px] text-blue-800 dark:text-blue-300 mt-4 flex items-center gap-2">
                                     <span>ℹ️</span>
-                                    <span>All metrics above are in-silico computational predictions and do not guarantee in-vivo expression level, folding, or translation yield.</span>
+                                    <span>Cryptic splice prediction is NOT RUN in the public web form; biological validation is NOT AVAILABLE. All metrics reflect deterministic in-silico sequence checks only.</span>
                                 </div>
                             </div>
                         </div>
@@ -1552,9 +1598,21 @@
                 <p class="text-xs text-slate-600 dark:text-slate-400">Selected public changes. Notes reviewed 2026-11-11. Historical entries do not override the current availability or data-handling policy.</p>
                 <section class="relative pl-6 border-l-2 border-emerald-500">
                     <div class="flex items-center space-x-2 mb-2">
-                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.3</h3>
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.4</h3>
                         <span class="text-slate-400 text-[10px]">2026-11-11</span>
                         <span class="text-emerald-600 text-[10px] font-bold">CURRENT</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Sequence-First UX &amp; Evidence-Aware Modes:</b> Replaced rigid input ordering with a unified multi-file dropzone (<code class="font-mono">.fasta</code>, <code class="font-mono">.fa</code>, <code class="font-mono">.txt</code>, <code class="font-mono">.pdb</code>, <code class="font-mono">.cif</code>, <code class="font-mono">.mmcif</code>, <code class="font-mono">.json</code>), multi-FASTA detection, and <b>Auto / Manual / Compare</b> design strategies (<code class="font-mono">Standard CDS Optimization</code>, <code class="font-mono">Structure-Guided CDS Design</code>, <code class="font-mono">Translation-Offset Guided Design</code>).</li>
+                        <li><b>AF3 / Multi-Chain &amp; 4DP Sidecar Integrity Gates:</b> Added client-side multi-chain <code class="font-mono">.pdb</code>/<code class="font-mono">.cif</code>/<code class="font-mono">.mmcif</code> inspection (exact, duplicate, SP-cleaved, and partial match warnings) and strict 4DP sidecar checks (sequence/SHA-256 match, <code class="font-mono">1..N</code> coordinates, finite <code class="font-mono">[0, 100]</code> pLDDT, provenance, and explicit hypothesis acknowledgment; <code class="font-mono">Biological validation: NOT_AVAILABLE</code>).</li>
+                        <li><b>Bounded Compare Queue &amp; Results Matrix:</b> Added concurrency-bounded (<code class="font-mono">concurrency = 2</code>) multi-record/multi-method execution preserving completed candidates on partial failure, factual run matrix (<code class="font-mono">Cryptic splice prediction: NOT RUN</code>), and recorded engine codon difference inspection.</li>
+                        <li><b>DP Loop Hoisting &amp; 500 aa Target Limit:</b> Hoisted invariant DP table/fitness work in backend engines and raised configurable web guardrails up to <code class="font-mono">500</code> aa (<code class="font-mono">450,000</code> byte structure uploads; <code class="font-mono">250,000</code> byte sidecar JSON), contingent on deployed latency and memory verification.</li>
+                    </ul>
+                </section>
+                <section class="relative pl-6 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.3</h3>
+                        <span class="text-slate-400 text-[10px]">2026-11-11</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
                         <li><b>Drag-and-Drop File Upload Hotfix:</b> Enabled drag-and-drop on Sequence Input (`.fasta`/`.fa`/`.txt`), 3DP structure upload (`.pdb`/`.cif`/`.mmcif`), and 4DP sidecar upload (`.json`), added explicit workflow guidance when mismatched file types are dropped, and prevented browser tab navigation on stray drops.</li>

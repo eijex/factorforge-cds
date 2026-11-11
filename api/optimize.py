@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.6.3
+Product Version: 3.6.4
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -248,7 +248,7 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": product_version() if FACTORFORGE_AVAILABLE else "3.6.3",
+    "product": product_version() if FACTORFORGE_AVAILABLE else "3.6.4",
     "rule_engine": engine_version("profile") if FACTORFORGE_AVAILABLE else "1.0.0",
     "dp_engine": engine_version("dp") if FACTORFORGE_AVAILABLE else "2.0.1",
     "dp_v2_1_engine": (engine_version("dp_v2_1") if FACTORFORGE_AVAILABLE else "2.1.0-dev"),
@@ -943,8 +943,8 @@ class handler(BaseHTTPRequestHandler):
         constraints = self.parse_constraints(data.get("constraints"))
         table = load_codon_usage_table()
 
-        if len(protein) > 100:
-            raise ValueError("The local 4DP preview is limited to 100 amino acids.")
+        if len(protein) > 500:
+            raise ValueError("The 4DP web design path supports up to 500 amino acids.")
         if not 0 <= constraints["gc_min"] <= constraints["gc_max"] <= 100:
             raise ValueError("4DP requires an ordered GC interval within 0–100%.")
         if {"structure_context", "exit_tunnel_offset", "sidecar_data"} & data.keys():
@@ -952,8 +952,8 @@ class handler(BaseHTTPRequestHandler):
         sidecar_data = data.get("pause_sidecar")
         if not isinstance(sidecar_data, dict):
             raise ValueError("4DP requires an inline JSON object for pause_sidecar.")
-        if len(json.dumps(sidecar_data).encode("utf-8")) > 100_000:
-            raise ValueError("4DP sidecar exceeds the 100 KB preview limit.")
+        if len(json.dumps(sidecar_data).encode("utf-8")) > 250_000:
+            raise ValueError("4DP sidecar exceeds the 250 KB web limit.")
         if data.get("positions_reviewed") is not True:
             raise ValueError("Review and acknowledge the sidecar positions before 4DP execution.")
         allow_mock = (

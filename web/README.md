@@ -1,6 +1,8 @@
 # FactorForge Web Interface
 
-## v3.6.3: current public policy
+## v3.6.4: current public policy
+
+1DP, 3DP, and 4DP are enabled in the public web interface under FactorForge's built-in default SOP, using a sequence-first unified upload zone (`.fasta`, `.fa`, `.txt`, `.pdb`, `.cif`, `.mmcif`, `.json`), multi-FASTA detection, and **Auto / Manual / Compare** design strategies (`max 500 aa`, `450,000` bytes structure upload, `250,000` bytes sidecar JSON — contingent on deployed latency/memory checks). Multi-chain PDB/mmCIF inputs require chain mapping inspection, and 4DP requires sidecar integrity verification, reviewed positions, and explicit hypothesis acknowledgment (`Biological validation: NOT_AVAILABLE`). Local synthetic 4DP fixture loading remains gated to loopback development unless explicitly opted in.
 
 The public What's New modal contains selected user-facing changes. Historical entries do not override the current availability or data-handling policy.
 

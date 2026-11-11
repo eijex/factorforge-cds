@@ -78,34 +78,47 @@ class DPV2Optimizer:
         # dp_layers[i] contains reachable states after emitting i codons.
         dp_layers: List[Dict[Tuple[int, int], Tuple[float, Optional[str], Optional[int], Optional[int]]]] = []
         dp_layers.append({(0, s0): (0.0, None, None, None)})
+        step_codon = self.automaton.step_codon
+        step_cache: Dict[int, Dict[str, Tuple[int, bool]]] = {}
 
         for i, aa in enumerate(protein):
             current_layer = dp_layers[-1]
             next_layer: Dict[Tuple[int, int], Tuple[float, Optional[str], Optional[int], Optional[int]]] = {}
-            synonymous_codons = AA_TO_CODONS[aa]
+            codon_info = [
+                (
+                    codon,
+                    codon.count("G") + codon.count("C"),
+                    math.log(max(codon_weights.get(codon, 1e-4), 1e-6)),
+                )
+                for codon in AA_TO_CODONS[aa]
+            ]
 
             for (g, s), (score, _, _, _) in current_layer.items():
-                for codon in synonymous_codons:
-                    # 1. Check Automaton Veto
-                    next_s, is_forbidden = self.automaton.step_codon(s, codon)
+                s_trans = step_cache.get(s)
+                if s_trans is None:
+                    s_trans = {}
+                    step_cache[s] = s_trans
+                for codon, codon_gc, log_w in codon_info:
+                    # 1. Check Automaton Veto (cached per automaton state & codon)
+                    transition = s_trans.get(codon)
+                    if transition is None:
+                        transition = step_codon(s, codon)
+                        s_trans[codon] = transition
+                    next_s, is_forbidden = transition
                     if is_forbidden:
                         continue  # Hard Constraint: Skip invalid transition
 
-                    # 2. Update GC Count
-                    codon_gc = codon.count("G") + codon.count("C")
+                    # 2. Update GC Count and Log CAI Score
                     next_g = g + codon_gc
-
-                    # 3. Update Log CAI Score
-                    w = codon_weights.get(codon, 1e-4)
-                    log_w = math.log(max(w, 1e-6))
                     next_score = score + log_w
 
-                    # 4. DP State Relaxation (Maximize Score with deterministic tie-breaking)
+                    # 3. DP State Relaxation (Maximize Score with deterministic tie-breaking)
                     state_key = (next_g, next_s)
-                    if state_key not in next_layer:
+                    existing = next_layer.get(state_key)
+                    if existing is None:
                         next_layer[state_key] = (next_score, codon, g, s)
                     else:
-                        existing_score, existing_codon, _, _ = next_layer[state_key]
+                        existing_score, existing_codon, _, _ = existing
                         if next_score > existing_score + 1e-12:
                             next_layer[state_key] = (next_score, codon, g, s)
                         elif abs(next_score - existing_score) <= 1e-12:
