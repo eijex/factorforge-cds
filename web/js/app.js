@@ -4398,9 +4398,9 @@ function extractRnaScanSummary(rnaRisks) {
     if (status !== 'CLEAN_SCAN' && status !== 'ADVISORY_FINDINGS') {
         return { ran: false, spliceHits: null, polyaHits: null };
     }
-    const spliceHits = finiteNumber(rnaRisks.donor_count);
-    const polyaHits = finiteNumber(rnaRisks.polya_count);
-    if (spliceHits == null || polyaHits == null) {
+    const spliceHits = rnaRisks.donor_count;
+    const polyaHits = rnaRisks.polya_count;
+    if (![spliceHits, polyaHits].every(count => Number.isSafeInteger(count) && count >= 0)) {
         return { ran: false, spliceHits: null, polyaHits: null };
     }
     return { ran: true, spliceHits, polyaHits };
@@ -4452,7 +4452,8 @@ function getMatrixCandidatesForActive() {
                 ? recommended?.scientific_review?.rna_risks : null;
             const rnaRisks = matchedCand?.scientific_review?.rna_risks
                 ?? recommendedRisks
-                ?? r.scientific_review?.rna_risks;
+                ?? (p.optimized_sequence && r.optimized_sequence === p.optimized_sequence
+                    ? r.scientific_review?.rna_risks : null);
             const rnaScan = extractRnaScanSummary(rnaRisks);
             columns.push({
                 key: mode,
@@ -4480,7 +4481,7 @@ function getMatrixCandidatesForActive() {
             if (!dna) return;
             const candRnaRisks = cand
                 ? (cand.scientific_review?.rna_risks
-                    ?? (cand.dna_sequence === primary.optimized_sequence ? res.scientific_review?.rna_risks : null))
+                    ?? (cand.dna_sequence === res.optimized_sequence ? res.scientific_review?.rna_risks : null))
                 : res.scientific_review?.rna_risks;
             const rnaScan = extractRnaScanSummary(candRnaRisks);
             columns.push({
