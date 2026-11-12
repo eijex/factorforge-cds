@@ -120,6 +120,8 @@ def test_public_capabilities_default_enable_3dp_and_4dp():
     capabilities = health["capabilities"]
     assert capabilities["direct_structure"]["available"] is True
     assert capabilities["direct_structure"]["status"] == "experimental"
+    assert capabilities["direct_structure"]["max_protein_aa"] == 500
+    assert capabilities["direct_structure"]["max_structure_bytes"] == 450_000
     assert capabilities["local_4dp"]["available"] is True
     assert capabilities["local_4dp"]["fixtures"] is False
 

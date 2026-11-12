@@ -63,6 +63,7 @@ try:
     from factorforge.engines.dp_v2 import DPV2Optimizer
     from factorforge.engines.dp_v2_1 import DPV21Optimizer
     from factorforge.engines.dp_v2_1_1 import DPV211Optimizer
+    from factorforge.engines.structure_web import MAX_STRUCTURE_BYTES, MAX_STRUCTURE_PROTEIN_AA
     from factorforge.engines.profile.rules.domesticator import Domesticator
     from factorforge.engines.profile.rules.rule_engine import RuleEngine
     from factorforge.engines.profile.scoring import resolve_host_gc_range
@@ -1092,6 +1093,7 @@ class handler(BaseHTTPRequestHandler):
             mfe_status_reason="not_requested_for_direct_4dp",
             mfe_used=False,
         )
+        response = self.attach_scientific_observations(response, expected_protein=protein)
         return response
 
     def do_GET(self):
@@ -1145,7 +1147,7 @@ class handler(BaseHTTPRequestHandler):
                 },
                 "structure_recommendation": {"available": bool(FACTORFORGE_AVAILABLE and EXPERIMENTAL_3DP_ENABLED), "requires_review": True},
                 "scientific_review": {"schema_version":"1.0","rna_scan":True,"mfe":"optional_local_tool"},
-                "direct_structure": {"available": bool(FACTORFORGE_AVAILABLE and EXPERIMENTAL_3DP_ENABLED), "status": "experimental" if EXPERIMENTAL_3DP_ENABLED else "paused", "max_protein_aa": 300, "max_structure_bytes": 250000, "approval_status": "not_collected", "evidence_recording": "not_connected"},
+                "direct_structure": {"available": bool(FACTORFORGE_AVAILABLE and EXPERIMENTAL_3DP_ENABLED), "status": "experimental" if EXPERIMENTAL_3DP_ENABLED else "paused", "max_protein_aa": MAX_STRUCTURE_PROTEIN_AA if FACTORFORGE_AVAILABLE else None, "max_structure_bytes": MAX_STRUCTURE_BYTES if FACTORFORGE_AVAILABLE else None, "approval_status": "not_collected", "evidence_recording": "not_connected"},
                 "execution_modes": (VALID_EXECUTION_MODES if ML_PREVIEW_ENABLED else ["profile"]),
                 "ml_preview": {
                     "available": bool(FACTORFORGE_AVAILABLE and ML_PREVIEW_ENABLED),

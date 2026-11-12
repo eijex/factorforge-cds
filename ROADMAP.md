@@ -1,220 +1,71 @@
-# Roadmap
+# FactorForge — Research & Development Roadmap
 
-FactorForge development direction and planned work.
+Baseline: November 2026 · Current public release: **v3.6.4**
 
-> Current release line: **v3.6.4**. Previous baseline: **v3.6.3** — [Changelog](CHANGELOG.md) · [Releases](https://github.com/eijex/factorforge-cds/releases)
-> GitHub Milestones: [github.com/eijex/factorforge-cds/milestones](https://github.com/eijex/factorforge-cds/milestones)
-
----
-
-## v3.6.4 Sequence-First, Evidence-Aware UX & DP Performance
-
-Adds a unified sequence/structure/sidecar dropzone, multi-FASTA chain handling, Auto / Manual / Compare workflows, multi-chain PDB/mmCIF validation, strict 4DP sidecar integrity and hypothesis-acknowledgment gates, bounded Compare queue execution, truthful comparison matrix and codon difference views, and hoisted DP inner loops targeting up to 500 aa inputs contingent on deployed verification.
-
-## v3.6.3 Web drag-and-drop file upload hotfix
-
-Adds drag-and-drop file upload support on Sequence Input (`.fasta`, `.fa`, `.txt`), 3DP structure upload (`.pdb`, `.cif`, `.mmcif`), and 4DP sidecar upload (`.json`), prevents accidental browser tab navigation on stray drops, and guides mismatched extensions to their dedicated workflow inputs.
-
-## v3.6.2 3DP/4DP Web UI bugfix & collaboration clarity
-
-Fixes public 3DP/4DP browser form usability (hiding synthetic sidecar buttons when fixtures are disabled, clarifying required PDB/mmCIF structure upload and confidence-source guidance, removing stale sample error copy, and separating GNU AGPL-3.0 software licensing from written custom-SOP data collaboration terms).
-
-## v3.6.1 public 1DP / 3DP / 4DP web & custom SOP policy
-
-Enables 1DP, 3DP (PDB/mmCIF upload), and 4DP (prepared JSON sidecar upload) publicly on the web UI under FactorForge's built-in default SOP, and clarifies GNU AGPL-3.0 sharing requirements for custom SOP sequence generation enquiries (`eijex.lab@gmail.com`).
-
-## v3.6.0 local CLI
-
-Local AF3 export and ingestion support experimental 4DP with sequence-bound model coordinates. The read-only version check is explicit. See the [changelog](CHANGELOG.md) for scope.
-
-## Maintenance release: v3.5.12
-
-Clarify default design/review criteria, lab-specific enquiries and prior explicit
-consent for research/training/disclosure. General 3DP/4DP web access is on hold;
-the public form uses 1DP and the retained 3DP API requires explicit research
-deployment opt-in. Custom SOP management remains paused. Bioconda installation
-guidance and installed-package CI are included. Package index and archival
-versions publish independently of the code; check their exact artifact identity.
-
-## Previous baseline: v3.5.11
-
-FactorForge v3.5.11 retains the web/API product line with versioned Sequence
-Policy Profiles (internally retained as `SopProfile` for compatibility), an
-editable browser-local policy workflow and SOP Builder, Top-K discovery slates,
-an explicit DP v2.1.1 path, constrained-sLLM research integration, and adaptive
-partial-DP rescue while retaining stable DP v2 as the default. The preceding v3.4.5 release
-completed the interface-reliability patch line: browser
-interactions were restored, release checks were strengthened, and product,
-API, engine, registry, documentation, and fixture version surfaces were
-synchronized. The supported public boundary remains deterministic in-silico
-CDS design and pre-synthesis sequence review. sLLM Gen 3 remains a separate,
-feature-gated research preview and does not imply a trained production model or
-biological validation. The v3.5.4 maintenance release isolates optional database
-dependencies and improves packaging and private provenance retrieval. Shared
-persistence remains separately provisioned and experimental; production database
-migration and legacy-record conversion are not performed by this release.
-
-DP v2.1.1 (`2.1.1`) is the current explicit Gen 2 research candidate.
-It adds a 45-nt initiation-GC active layer and >=6-nt homopolymer automaton
-guard without adding a DP state dimension. Target-mAb-A calibration is complete;
-the frozen 36-protein holdout gate remains pending, so stable DP v2 `2.0.1`
-continues as the default feasibility path.
-
-Current maintenance and evidence priorities are:
-
-- Public surface wording audit across README, docs, web UI, package metadata, Docker/GHCR references, and citation archives
-- Wet-lab feedback review and public-safe validation summaries
-- Raw-sequence logging and benchmark-summary leakage checks
-- Codon-usage table provenance notes and checksums for public datasets
-- Bug fixes and metric corrections based on community reports
-- Documentation improvements
+> [Changelog](CHANGELOG.md) · [Validation Log](VALIDATION.md) · [Releases](https://github.com/eijex/factorforge-cds/releases) · [Milestones](https://github.com/eijex/factorforge-cds/milestones) · [Web App](https://factorforge.eijex.com)
 
 ---
 
-## v3.2 — Accessibility + Foundation
+## Mission
 
-| Feature | Description |
-|---------|-------------|
-| **Bioconda package** | Conda install support for bioinformatics users |
-| **Batch optimization API** | Multi-sequence input for pipeline use cases |
-| **Profile comparison mode** | Side-by-side results across multiple profiles for the same input |
-| **Additional plant hosts** | BY-2 cells + further host additions based on host-context and codon-source research |
-| **Tutorial / worked example** | At least one end-to-end worked example in documentation |
-| **CODE_OF_CONDUCT.md** | Community guidelines |
-| **Pre-submission hardening checklist** | Version-aligned public surfaces, benchmark reproducibility, security wording, and codon-table provenance |
+FactorForge develops reproducible, constraint-aware coding sequence (CDS) design and pre-synthesis review methods for plant-based protein expression, with primary focus on *Nicotiana benthamiana*.
+
+Our priority is scientific validation and reproducibility across existing design strategies (`1DP`, `3DP`, `4DP`), not expansion into unrelated AI models or biological design domains. Historical release details are maintained in [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
-## Future — Algorithm Depth (version TBD)
+## Phase 1 — Core Reliability *(Current priority)*
 
-> Not part of the released v3.3.0. v3.3.0 shipped reference-policy guardrails,
-> production codon-reference activation (NbeV1.1), and related evidence-field
-> additions — see [Changelog](CHANGELOG.md). The items below remain planned
-> for a future release once scheduled.
+Maintain and improve the deterministic CDS optimization engine (`1DP`) and pre-synthesis review workflow:
 
-| Feature | Description |
-|---------|-------------|
-| **tAI support** | tRNA Adaptation Index as alternative/complement to CAI |
-| **5' UTR mRNA folding** | Optional MFE-aware review around the start codon when dependencies are available |
-| **Codon pair bias** | Detection and adjustment of unfavorable adjacent codon pairs |
-| **Kozak context** | Optimization of nucleotides flanking the ATG (-3, +4 positions) |
+- Strengthen constraint correctness, computational efficiency, reproducible benchmarks, and host-specific codon references for *N. benthamiana*.
+- Maintain and calibrate deterministic sequence-level quality checks (rule-based plant cryptic splice, poly-A, and ARE motif screening, with splice-like and poly-A scans surfaced in the 1DP/3DP/4DP comparison matrix) without adding heavy foundation model dependencies.
+- Complete independent holdout evaluation before promoting any experimental optimizer to a production default.
 
-> **Extended DP engine** (DP feasibility parameters exposed via CLI and
-> API) shipped — see [Changelog](CHANGELOG.md). Removed from the table
-> above; it is no longer a planned item.
+**Success criteria:** Verified constraint satisfaction, reproducible results, and documented performance against established baselines.
 
 ---
 
-## v3.4 — CDS Design Review
+## Phase 2 — Structure & Translation-Aware Research *(Experimental research)*
 
-| Feature | Description |
-|---------|-------------|
-| **DNA/CDS semantic workflow** | Classify DNA/CDS separately from protein input; preserve translated protein and nucleotide length during synonymous redesign |
-| **Acceptance criteria** | Required / Preferred / Ignored controls for CAI, global/local GC, Type IIS, repeats, homopolymers, and forbidden motifs |
-| **Automated decision** | Deterministic PASS / CONDITIONAL PASS / FAIL with candidate-level QC matrix |
-| **Reviewer disposition** | Record human accept, exception, redesign, or reject decisions without overwriting automated results |
-| **Review provenance** | Versioned criteria snapshots, result identifiers, decision history, and reproducible design metadata |
+Evaluate the existing structure-guided (`3DP`) and translation-offset (`4DP`) design approaches already exposed as research workflows:
 
-> This release remains an in-silico CDS design and pre-synthesis review workflow. It does not claim expression, yield, synthesis acceptance, or experimental validation.
+- Use externally generated protein structures (AlphaFold 3, ESMFold), explicitly reviewed structural annotations, and literature-supported hypotheses.
+- Benchmark codon harmonization, local translation features, and `1DP` vs. `3DP` vs. `4DP` sequence differences without introducing additional foundation models by default.
+- Pre-existing experimental `learning/` and `sllm/` research adapters in the repository remain isolated prototypes and are not promoted to production defaults or promised features.
 
-## Future — Protein Type Expansion (version TBD)
-
-| Feature | Description |
-|---------|-------------|
-| **Membrane protein profile** | TMD detection; local codon-usage review around transmembrane domains |
-| **Secreted protein profile** | Signal peptide recognition; separate optimization of SP region; detection of tandem/duplicated signal peptides |
-| **Chloroplast-targeted profile** | Transit peptide-aware optimization |
-| **PTGS silencing risk** | Flag sequences with similarity to plant endogenous genes |
+**Success criteria:** Reproducible computational comparisons, transparent assumptions, and clearly documented limitations.
 
 ---
 
-## v3.5 — Multi-Engine Version Governance and Sequence Policy Profiles *(web/API deployed)*
+## Phase 3 — Wet-Lab Validation *(Dependent on experimental collaboration)*
 
-| Feature | Description |
-|---------|-------------|
-| **Gen 1 — Rule** | Stable profile engine, independently versioned as 1.x |
-| **Gen 2 — DP v2** | Exact GC-state and configured-motif automaton constraints, independently versioned as 2.x |
-| **Gen 2 — DP v2.1.1** | Explicit local-composition development candidate; calibration complete, 36-protein holdout pending |
-| **Gen 3 — sLLM Hybrid** | Feature-gated 0.x research preview; no trained production-model claim |
-| **Version manifest** | One machine-readable product/engine source of truth exposed by the API |
-| **Sequence Policy Profiles** | Upload-first versioned review-policy examples with YAML export, YAML/JSON browser-local upload, persistence, reset, provenance, and collapsed manual overrides. FactorForge applies user-defined policy; it does not define, approve, or validate a laboratory SOP. |
+Test whether `3DP` and `4DP` provide measurable biological benefits over baseline and `1DP` CDS designs:
 
-## Future — Validation-Driven Activation (version TBD)
+- Compare baseline CDS designs against `1DP`, `3DP`, and `4DP` candidates using matched experimental systems in *N. benthamiana*.
+- Prioritize a limited number of biologically relevant constructs, including therapeutic proteins (such as Adalimumab) where suitable collaboration and permissions exist.
+- Record expression, yield, and relevant protein-quality measurements using predefined experimental endpoints (see [VALIDATION.md](VALIDATION.md)).
 
-- Activate 5' ramp, viral-delivery, or tissue-specific profiles only after reviewed evidence supports each capability.
+**Collaboration & Feedback:** Public-safe summaries may be submitted via [GitHub Issues](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) under the [Wet-lab Validation](https://github.com/eijex/factorforge-cds/milestone/9) milestone. Private or confidential experimental feedback should be sent to `eijex.lab@gmail.com` instead of public issues.
+
+**Success criteria:** Reproducible experimental evidence establishing whether particular design approaches offer measurable benefits under tested conditions.
 
 ---
 
-## v3.6 — Host Expansion
+## Phase 4 — Evidence-Driven Improvement *(Conditional future development)*
 
-| Feature | Description |
-|---------|-------------|
-| **Insect host profiles (Sf9, Tni)** | Baculovirus/BEVS host-context research and codon-source review |
-| **Additional plant hosts** | Arabidopsis, tomato, Lemna, Wolffia globosa |
-| **Documentation finalized** | Final docs pass |
+Pursue model or host expansion only when empirical evidence and data readiness justify it:
 
----
+- Refine design objectives and host-specific policies using validated experimental evidence.
+- Explore learned ranking or constrained machine-learning methods only when suitable training data and independent holdout evaluation datasets are available, without weakening deterministic sequence constraints.
+- **Host scope & BY-2 status:** *N. benthamiana* is the sole active plant target. Existing `BY-2` / *Nicotiana tabacum* aliases remain frozen for backward compatibility only (using proxy codon tables with no active host calibration or validation investment). Broader host expansion (`Sf9`, `Tni`, *Arabidopsis*, tomato, *Lemna*, *Wolffia*) is deferred indefinitely unless supported by curated reference data and validation capacity.
 
-## v3.7 — Release Readiness
-
-- Full API docstring coverage
-- Reproducible benchmark scripts
-- Extended tutorial
-- State-of-the-field comparison plan (JCat, OPTIMIZER, Codon Harmonizer, IDT) using documented, reproducible metrics only
+**Success criteria:** Demonstrated improvements supported by independent validation, preserving strict deterministic invariants.
 
 ---
 
-## v3.8 — Stable Release
+## Scope Boundaries
 
-- All profiles have documented validation status; experimental profiles remain gated unless reviewed evidence supports activation
-- Full documentation audit
-- Final polish
-
----
-
-## Future — Trained ML Engine *(version TBD; data-conditional)*
-
-No public ML engine is scheduled until sufficient, non-confidential validation data and benchmark evidence are available.
-
-- ML engine exposed only after compatibility, cost, reproducibility, and claim-boundary review
-- Training pipeline based on curated, non-confidential wet-lab validation summaries
-- Rule-based vs ML benchmark comparison using documented public metrics
-- No committed timeline — depends on wet-lab data accumulation
-
----
-
-## Product Roadmap Themes *(claim-bounded)*
-
-Beyond version-bound engineering work, FactorForge is being shaped as a pre-synthesis review harness for plant CDS design workflows. The product journey builds on the paper/research-software track: reproducible in-silico candidate generation first, then broader review artifacts for synthesis, cloning, and experimental planning.
-
-- **Experimental speed** — deterministic assembly checks, sequence-complexity warnings, multi-gene assembly review, and reproducible design packages.
-- **Production-quality review** — host/profile maturity labels and quality-risk-aware design annotations for expert review.
-- **Regulatory and safety boundaries** — privacy-aware review workflows, local-first safety screening hooks, and public-safe feedback processes.
-
-These themes are intended to improve reviewability and reproducibility. They do not guarantee expression, glycosylation, folding, yield, synthesis acceptance, biosecurity compliance, regulatory approval, or downstream biological performance.
-
----
-
-## Wet-lab Validation *(ongoing — not version-bound)*
-
-Wet-lab validation is an ongoing, open-ended process independent of software versioning.
-Public-safe summaries may be tracked as GitHub Issues under the [Wet-lab Validation](https://github.com/eijex/factorforge-cds/milestone/9) milestone. Private or sensitive feedback should not be submitted through public GitHub Issues.
-
-- Submit only public-safe, non-confidential summaries via public [GitHub Issue](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml). Send sensitive or private summaries by email instead.
-- See [VALIDATION.md](VALIDATION.md) for submission format and current status
-
----
-
-## Out of Scope
-
-- Animal or clinical expression systems
-- Protein structure prediction (use AlphaFold / ESMFold directly)
-- CDS design for microbial hosts (E. coli, yeast)
-
-## Web deployment — 2026-10-12
-
-The current web build is based on the FactorForge 3.5.5 source line, independently tracked from Git tags/package publication. It supports explicit 1DP/experimental direct 3DP browser testing with uploaded exact-match structure and reviewed positions. Custom SOP management is paused; the built-in default policy is active. Existing approval/evidence integrations remain available for later use. No new package release or biological validation is implied.
-
-## 2026-10-12 scientific web checkpoint
-
-Direct 1DP/3DP browser testing integrates RNA motif scans and available initiation-window MFE into results/reports/history. Structure confidence observations can suggest positions for explicit acceptance and review. Missing required checks block policy approval; unsupported structure evidence creates no arbitrary fallback positions. Generation objectives and codon reference are unchanged. This is a web build on source 3.5.5, separately tracked from the verified public Git tag 3.5.4, package publication and biological validation.
+- FactorForge is **not** intended to replace protein structure prediction systems (use AlphaFold / ESMFold directly), train or deploy general-purpose biological foundation models, perform *de novo* therapeutic discovery, support animal/stem-cell or microbial (`E. coli`, yeast) expression systems, or control laboratory robotics.
+- External AI tools may assist exploratory research (or separate PRISM research tracks), but are not core FactorForge product dependencies.
+- All computational outputs remain in-silico research candidates (`UNVERIFIED_PUBLIC_CORPUS`, `Biological validation: NOT_AVAILABLE`) unless supported by relevant experimental validation.

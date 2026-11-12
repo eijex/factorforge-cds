@@ -70,8 +70,10 @@ def _check_reading_frame(sequence: str, context: Dict[str, Any]) -> Dict[str, An
 
 def _check_cryptic_splice(sequence: str, context: Dict[str, Any]) -> Dict[str, Any]:
     """Plant/Eukaryotic canonical splice donor consensus motif ([A/C]AGGT[A/G]AGT)."""
-    seq_upper = sequence.upper()
-    donor_matches = [m.start() for m in re.finditer(r"[AC]AGGT[AG]AGT", seq_upper)]
+    from factorforge.guards.plant_rna_guards import CRYPTIC_SPLICE_DONOR_PATTERN
+
+    seq_clean = "".join(sequence.upper().split())
+    donor_matches = [m.start() for m in CRYPTIC_SPLICE_DONOR_PATTERN.finditer(seq_clean)]
     return {
         "passed": len(donor_matches) == 0,
         "risk_count": len(donor_matches),
@@ -81,8 +83,10 @@ def _check_cryptic_splice(sequence: str, context: Dict[str, Any]) -> Dict[str, A
 
 def _check_polya_signals(sequence: str, context: Dict[str, Any]) -> Dict[str, Any]:
     """Premature polyadenylation signals (AATAAA, ATTAAA, AATAAT)."""
-    seq_upper = sequence.upper()
-    polya_matches = [m.start() for m in re.finditer(r"(AATAAA|ATTAAA|AATAAT)", seq_upper)]
+    from factorforge.guards.plant_rna_guards import PREMATURE_POLYA_PATTERN
+
+    seq_clean = "".join(sequence.upper().split())
+    polya_matches = [m.start() for m in PREMATURE_POLYA_PATTERN.finditer(seq_clean)]
     return {
         "passed": len(polya_matches) == 0,
         "count": len(polya_matches),
@@ -92,8 +96,10 @@ def _check_polya_signals(sequence: str, context: Dict[str, Any]) -> Dict[str, An
 
 def _check_au_rich_elements(sequence: str, context: Dict[str, Any]) -> Dict[str, Any]:
     """AU-rich mRNA destabilizing elements (ATTTA / AUUUA)."""
-    seq_upper = sequence.upper()
-    are_matches = [m.start() for m in re.finditer(r"ATTTA", seq_upper)]
+    from factorforge.guards.plant_rna_guards import ARE_PATTERN
+
+    seq_clean = "".join(sequence.upper().split())
+    are_matches = [m.start() for m in ARE_PATTERN.finditer(seq_clean)]
     return {
         "passed": len(are_matches) == 0,
         "count": len(are_matches),

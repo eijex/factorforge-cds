@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
-- Correct the public release-note summaries and historical privacy/availability wording; remove internal study/telemetry details and unsupported biological guarantees from the web modal. Product version and runtime behavior remain 3.5.12.
+- Fix 1DP/3DP/4DP comparison matrix candidate-to-QC mapping (`recommended_candidate` / `dna_sequence` match instead of reading `candidates[0]` for 3DP/4DP), restrict `extractRnaScanSummary()` to `CLEAN_SCAN` / `ADVISORY_FINDINGS` allowlist, and add Chromium Playwright E2E regression tests (`e2e/multi-candidate-matrix-rna-qc.spec.js`).
+- Unify canonical plant RNA motif scanning (`plant_rna_guards.py` `DETECTOR_VERSION` `1.1.0` and `RuleRegistry`) with overlapping-aware lookahead patterns (`CRYPTIC_SPLICE_DONOR_PATTERN`, `PREMATURE_POLYA_PATTERN`, `ARE_PATTERN`) and surface `Splice-like motif scan` and `Poly-A motif scan` (`RUN — N hits` / `NOT RUN`, without claiming `PASS` on `0 hits`) in the 1DP/3DP/4DP web comparison matrix while keeping `Cryptic splice prediction: NOT RUN` and `Biological validation: NOT AVAILABLE`.
+- Refocus `ROADMAP.md` on four validation-centered phases anchored to `v3.6.4`, moving historical release summaries to `CHANGELOG.md` and marking `BY-2` as a frozen legacy host alias.
 
 ## [3.6.4] — 2026-11-11
 
@@ -40,6 +42,7 @@
 
 ## [3.5.12] — 2026-11-06
 
+- Post-release public-note clarification (2026-11-07): Correct public release-note summaries and historical privacy/availability wording; remove internal study/telemetry details and unsupported biological guarantees from the web modal without changing `3.5.12` runtime behavior.
 - Clarify built-in design/review criteria versus laboratory-approved SOPs; direct lab-specific configuration enquiries to the maintainer before confidential data sharing.
 - Separate software licensing from sequence-output rights. Research/training/publication/disclosure require explicit prior consent; rights, permitted use and retention/deletion are agreed separately.
 - Keep general web 3DP/4DP release on hold. Disable 3DP selection by default and fail closed on API structure actions unless a research deployment explicitly opts in. 1DP and local research implementations remain available; no engine objective changes.

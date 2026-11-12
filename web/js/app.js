@@ -4390,6 +4390,22 @@ function evaluateTranslationIdentity(dnaSeq, expectedProtein, reportAaIdentity =
     return translated === cleanExpected;
 }
 
+function extractRnaScanSummary(rnaRisks) {
+    if (!rnaRisks || typeof rnaRisks !== 'object') {
+        return { ran: false, spliceHits: null, polyaHits: null };
+    }
+    const status = String(rnaRisks.summary_status || '').toUpperCase();
+    if (status !== 'CLEAN_SCAN' && status !== 'ADVISORY_FINDINGS') {
+        return { ran: false, spliceHits: null, polyaHits: null };
+    }
+    const spliceHits = finiteNumber(rnaRisks.donor_count);
+    const polyaHits = finiteNumber(rnaRisks.polya_count);
+    if (spliceHits == null || polyaHits == null) {
+        return { ran: false, spliceHits: null, polyaHits: null };
+    }
+    return { ran: true, spliceHits, polyaHits };
+}
+
 function getMatrixCandidatesForActive() {
     const activeEntry = state.projectResults[state.activeResultRecordIndex];
     const columns = [];
@@ -4428,6 +4444,16 @@ function getMatrixCandidatesForActive() {
             const typeClean = typeRow ? typeRow.result === 'PASS' : r.metrics?.type_iis_clean;
             const gcPass = gcRow ? gcRow.result === 'PASS' : (p.validation?.gc === 'PASS');
             const aaPass = evaluateTranslationIdentity(p.optimized_sequence, expectedProtein, r.constraint_report?.aa_identity);
+            const matchedCand = Array.isArray(r.candidates)
+                ? r.candidates.find(c => c?.dna_sequence && c.dna_sequence === p.optimized_sequence && c?.scientific_review?.rna_risks)
+                : null;
+            const recommended = r.recommended_candidate;
+            const recommendedRisks = recommended?.dna_sequence === p.optimized_sequence
+                ? recommended?.scientific_review?.rna_risks : null;
+            const rnaRisks = matchedCand?.scientific_review?.rna_risks
+                ?? recommendedRisks
+                ?? r.scientific_review?.rna_risks;
+            const rnaScan = extractRnaScanSummary(rnaRisks);
             columns.push({
                 key: mode,
                 label: titles[mode] || mode,
@@ -4438,6 +4464,9 @@ function getMatrixCandidatesForActive() {
                 typeIisClean: typeClean,
                 gcPass,
                 aaPass,
+                rnaScanRan: rnaScan.ran,
+                spliceHits: rnaScan.spliceHits,
+                polyaHits: rnaScan.polyaHits,
                 pausePositions3dp: mode === 'paired_3dp' ? (r.pause_positions || r.structure_viewer?.positions || []) : [],
                 pausePositions4dp: mode === 'paired_4dp' ? (r.pause_positions || []) : [],
                 decision: r.automated_decision || 'NOT_RECORDED',
@@ -4449,6 +4478,11 @@ function getMatrixCandidatesForActive() {
         rawList.forEach((cand, idx) => {
             const dna = cand ? cand.dna_sequence : primary.optimized_sequence;
             if (!dna) return;
+            const candRnaRisks = cand
+                ? (cand.scientific_review?.rna_risks
+                    ?? (cand.dna_sequence === primary.optimized_sequence ? res.scientific_review?.rna_risks : null))
+                : res.scientific_review?.rna_risks;
+            const rnaScan = extractRnaScanSummary(candRnaRisks);
             columns.push({
                 key: cand?.id || `cand_${idx}`,
                 label: cand?.label || cand?.id || '1DP · Standard',
@@ -4459,6 +4493,9 @@ function getMatrixCandidatesForActive() {
                 typeIisClean: cand?.type_iis_clean ?? res.metrics?.type_iis_clean ?? null,
                 gcPass: cand?.gc_percent != null ? (cand.gc_percent >= primary.gc_window_min && cand.gc_percent <= primary.gc_window_max) : null,
                 aaPass: evaluateTranslationIdentity(dna, expectedProtein, res.constraint_report?.aa_identity),
+                rnaScanRan: rnaScan.ran,
+                spliceHits: rnaScan.spliceHits,
+                polyaHits: rnaScan.polyaHits,
                 pausePositions3dp: res.design_mode === 'paired_3dp' ? (res.pause_positions || res.structure_viewer?.positions || []) : [],
                 pausePositions4dp: res.design_mode === 'paired_4dp' ? (res.pause_positions || []) : [],
                 decision: cand?.automated_decision || res.automated_decision || 'NOT_RECORDED',
@@ -4480,12 +4517,24 @@ function renderMultiCandidateMatrix() {
         if (val === false) return `<span class="text-rose-600 font-bold">✕ ${failText}</span>`;
         return `<span class="text-slate-500">Not evaluated</span>`;
     };
+    const fmtMotifScan = (ran, hits) => {
+        if (!ran || hits == null) {
+            return `<span class="font-semibold text-amber-700 dark:text-amber-300">NOT RUN</span>`;
+        }
+        const unit = hits === 1 ? 'hit' : 'hits';
+        const tone = hits === 0
+            ? 'text-slate-700 dark:text-slate-200'
+            : 'font-semibold text-amber-700 dark:text-amber-300';
+        return `<span class="font-mono ${tone}">RUN — ${hits} ${unit}</span>`;
+    };
     const rows = [
         ['Translation identity', c => fmtStatus(c.aaPass)],
         ['CAI / Global GC%', c => `<span class="font-mono">${c.cai == null ? 'Unavailable' : c.cai.toFixed(3)} / ${c.gc == null ? 'N/A' : Number(c.gc).toFixed(1) + '%'}</span>`],
         ['5′ boundary GC (nt 1–45)', c => { const g = gcPercentOfWindow(c.dna, 45); return `<span class="font-mono">${g == null ? 'N/A' : g.toFixed(1) + '%'}</span>`; }],
         ['Type IIS motifs', c => fmtStatus(c.typeIisClean)],
         ['GC constraints', c => fmtStatus(c.gcPass)],
+        ['Splice-like motif scan', c => fmtMotifScan(c.rnaScanRan, c.spliceHits)],
+        ['Poly-A motif scan', c => fmtMotifScan(c.rnaScanRan, c.polyaHits)],
         ['Cryptic splice prediction', () => `<span class="font-semibold text-amber-700 dark:text-amber-300">NOT RUN</span>`],
         ['Biological validation', () => `<span class="font-semibold text-slate-600 dark:text-slate-400">NOT AVAILABLE</span>`],
     ];

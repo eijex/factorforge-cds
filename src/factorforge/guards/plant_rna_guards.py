@@ -21,9 +21,14 @@ from factorforge.analysis.metrics import STANDARD_GENETIC_CODE
 from factorforge.constraints.type_iis import get_canonical_forbidden_motifs
 
 
-DETECTOR_VERSION = "1.0.0"
+DETECTOR_VERSION = "1.1.0"
 SENSE_SCOPE = "sense_transcript"
 EVIDENCE_CLASS = "SEQUENCE_SCAN"
+
+# Overlapping-aware lookahead patterns so adjacent/nested hits are never missed.
+CRYPTIC_SPLICE_DONOR_PATTERN = re.compile(r"(?=([AC]AGGT[AG]AGT))")
+PREMATURE_POLYA_PATTERN = re.compile(r"(?=(AATAAA|ATTAAA|AATAAT))")
+ARE_PATTERN = re.compile(r"(?=(ATTTA))")
 
 TRUTHFULNESS_NOTICE = (
     "A sequence scan hit indicates a motif pattern match on the sense transcript, "
@@ -92,45 +97,45 @@ def scan_plant_rna_risks(sequence: str) -> PlantRNAScanResult:
     n = len(seq_clean)
     findings: List[PlantRNAScanFinding] = []
 
-    # 1. Cryptic Splice Donor Consensus: [AC]AGGT[AG]AGT
-    donor_pattern = re.compile(r"[AC]AGGT[AG]AGT")
-    donor_matches = list(donor_pattern.finditer(seq_clean))
+    # 1. Cryptic Splice Donor Consensus: [AC]AGGT[AG]AGT (overlapping-aware)
+    donor_matches = list(CRYPTIC_SPLICE_DONOR_PATTERN.finditer(seq_clean))
     for m in donor_matches:
+        matched = m.group(1)
         findings.append(
             PlantRNAScanFinding(
                 rule_id="rna.cryptic_splice.v1",
                 name="Cryptic Splice Donor",
                 start_0based=m.start(),
-                end_exclusive=m.end(),
-                matched_sequence=m.group(),
+                end_exclusive=m.start() + len(matched),
+                matched_sequence=matched,
             )
         )
 
-    # 2. Premature Polyadenylation Signals: AATAAA | ATTAAA | AATAAT
-    polya_pattern = re.compile(r"(AATAAA|ATTAAA|AATAAT)")
-    polya_matches = list(polya_pattern.finditer(seq_clean))
+    # 2. Premature Polyadenylation Signals: AATAAA | ATTAAA | AATAAT (overlapping-aware)
+    polya_matches = list(PREMATURE_POLYA_PATTERN.finditer(seq_clean))
     for m in polya_matches:
+        matched = m.group(1)
         findings.append(
             PlantRNAScanFinding(
                 rule_id="rna.polya_motifs.v1",
                 name="Premature PolyA Signal",
                 start_0based=m.start(),
-                end_exclusive=m.end(),
-                matched_sequence=m.group(),
+                end_exclusive=m.start() + len(matched),
+                matched_sequence=matched,
             )
         )
 
-    # 3. AU-rich mRNA Destabilizing Elements (ARE): ATTTA
-    are_pattern = re.compile(r"ATTTA")
-    are_matches = list(are_pattern.finditer(seq_clean))
+    # 3. AU-rich mRNA Destabilizing Elements (ARE): ATTTA (overlapping-aware)
+    are_matches = list(ARE_PATTERN.finditer(seq_clean))
     for m in are_matches:
+        matched = m.group(1)
         findings.append(
             PlantRNAScanFinding(
                 rule_id="rna.au_rich_elements.v1",
                 name="AU-rich Element (ARE)",
                 start_0based=m.start(),
-                end_exclusive=m.end(),
-                matched_sequence=m.group(),
+                end_exclusive=m.start() + len(matched),
+                matched_sequence=matched,
             )
         )
 
