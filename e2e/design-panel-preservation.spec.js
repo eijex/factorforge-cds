@@ -7,8 +7,8 @@ test.beforeEach(async ({page}) => {
 });
 const { execFileSync } = require('node:child_process');
 
-const baselineJs = execFileSync('git', ['show', 'caa405c:web/js/app.js'], { encoding: 'utf8' });
-const baselineHtml = execFileSync('git', ['show', 'caa405c:web/index.html'], { encoding: 'utf8' });
+const baselineJs = execFileSync('git', ['show', 'f01c17d:web/js/app.js'], { encoding: 'utf8' });
+const baselineHtml = execFileSync('git', ['show', 'f01c17d:web/index.html'], { encoding: 'utf8' });
 
 async function capture(context, baseline, preset, overrides) {
   const page = await context.newPage();
@@ -39,12 +39,13 @@ async function capture(context, baseline, preset, overrides) {
     await page.locator('#criterionCaiMode').selectOption('required');
     await page.locator('input[name="typeIisEnzyme"][value="SapI"]').check();
   }
-  const excluded = ['allowMockSidecar', 'pauseSidecarFile', 'review4dpPositions'];
+  const excluded = ['allowMockSidecar', 'pauseSidecarFile', 'preserveSignalPeptide', 'review4dpPositions'];
   const inventory = await page.locator('input[id], select[id], textarea[id]').evaluateAll((nodes, skip) => nodes.map(n => n.id).filter(id => !id.startsWith('structureWeb') && !skip.includes(id)).sort(), excluded);
   await page.locator('#sequenceInput').fill('MASTWQHLEKDPVNRSGYF');
   await expect(page.locator('#optimizeBtn')).toBeEnabled();
   await page.locator('#optimizeBtn').click();
   await expect.poll(() => payload).toBeTruthy();
+  if (!baseline && payload) delete payload.preserve_signal_peptide;
   await page.close();
   return { payload, inventory };
 }

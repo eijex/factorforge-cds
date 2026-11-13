@@ -1373,6 +1373,7 @@ class handler(BaseHTTPRequestHandler):
         constraints: dict[str, Any],
         custom_restriction_sites: list[dict[str, Any]],
         seed: int | None,
+        preserve_signal_peptide: bool = True,
     ) -> dict[str, Any]:
         """Compare original CDS (when supplied), rule output, and the ML preview."""
         rule = self.optimize_sequence(
@@ -1388,6 +1389,7 @@ class handler(BaseHTTPRequestHandler):
             constraints=constraints,
             custom_restriction_sites=custom_restriction_sites,
             seed=seed,
+            preserve_signal_peptide=preserve_signal_peptide,
         )
         ml = self.optimize_ml_preview(
             input_context=input_context,
