@@ -1,6 +1,6 @@
 """
 FactorForge REST API — /api/optimize endpoint
-Product Version: 3.6.4
+Product Version: 3.6.8
 Default objective: feasibility_best (DP feasibility / constraint-based CDS design)
 Profile comparison engine: constraint-aware rule-based profiles
 """
@@ -51,6 +51,8 @@ try:
         detect_repeats,
         load_codon_usage_table,
     )
+    from factorforge.codon.sop_balancer import apply_default_sop_refinement
+    from factorforge.constraints.type_iis import get_canonical_forbidden_motifs
     from factorforge.design_review import (
         apply_reviewer_disposition,
         assert_pathway_invariants,
@@ -249,7 +251,7 @@ def _default_gc_constraints(internal_host: str = DEFAULT_HOST_PROFILE) -> dict[s
 
 ENABLE_MOCK = os.environ.get("FACTORFORGE_ENABLE_MOCK", "false").lower() == "true"
 ENGINE_VERSIONS = {
-    "product": product_version() if FACTORFORGE_AVAILABLE else "3.6.4",
+    "product": product_version() if FACTORFORGE_AVAILABLE else "3.6.8",
     "rule_engine": engine_version("profile") if FACTORFORGE_AVAILABLE else "1.0.0",
     "dp_engine": engine_version("dp") if FACTORFORGE_AVAILABLE else "2.0.1",
     "dp_v2_1_engine": (engine_version("dp_v2_1") if FACTORFORGE_AVAILABLE else "2.1.0-dev"),
@@ -393,6 +395,7 @@ class handler(BaseHTTPRequestHandler):
                     uploaded_format=structure.get("format"),
                     chain_id=structure.get("chain", "A") or "A",
                     model_number=int(structure.get("model", 1) or 1),
+                    allow_remote=bool(data.get("allow_remote", False)),
                 )
                 self.send_json_response(200, {"success": True, "action": "auto_resolve_structure", "resolved": resolved})
                 return
@@ -429,8 +432,53 @@ class handler(BaseHTTPRequestHandler):
                 result = self.attach_policy_verdict(result, data.get("reviewer_disposition"))
                 self.send_json_response(200, result)
                 return
+            if data.get("design_mode") == "experimental_2dp":
+                from factorforge.engines.dp_2dp import DP2DPOptimizer
+                from factorforge.utils.exceptions import UnsatisfiableDesignError
+                context = parse_sequence_input(data.get("sequence", ""))
+                if not context["generation_allowed"]:
+                    raise ValueError("Invalid sequence input for 2DP optimization")
+                protein = context["optimization_sequence"]
+                if len(protein) > 500:
+                    raise ValueError("The 2DP web design path supports up to 500 amino acids.")
+                constraints = self.parse_constraints(data.get("constraints"))
+                table = load_codon_usage_table()
+                stop = context.get("terminal_stop_codon") or "TGA"
+                try:
+                    res = DP2DPOptimizer().optimize(
+                        protein_sequence=protein,
+                        codon_weights=table.codon_weights,
+                        target_gc_min=constraints["gc_min"] / 100.0,
+                        target_gc_max=constraints["gc_max"] / 100.0,
+                        stop_codon=stop,
+                    )
+                except UnsatisfiableDesignError:
+                    self.send_json_response(422, {"success": False, "error_code": "2DP_INFEASIBLE", "error": "No 2DP candidate satisfies the requested constraints."})
+                    return
+                self.send_json_response(200, {
+                    "success": True,
+                    "design_mode": "experimental_2dp",
+                    "epistemic_status": "UNVERIFIED_PUBLIC_CORPUS",
+                    "biological_validation": "NOT_AVAILABLE",
+                    "optimized_sequence": res["sequence"],
+                    "cds_only": res["cds_only"],
+                    "metrics": {
+                        "gc_content": res["gc_content"],
+                        "cpg_count": res["cpg_count"],
+                        "tpa_count": res["tpa_count"],
+                        "cpg_junction_count": res["cpg_junction_count"],
+                        "tpa_junction_count": res["tpa_junction_count"],
+                        "mfe_5p": res["mfe_5p"],
+                        "score": res["score"],
+                    },
+                    "candidates": [{"id": "2dp_cpg_tpa_penalty", "label": "2DP · CpG/TpA Dinucleotide Penalty (Experimental)", "sequence": res["sequence"], "gc": res["gc_content"], "cpg_count": res["cpg_count"], "tpa_count": res["tpa_count"]}],
+                })
+                return
+            if data.get("design_mode") == "experimental_5dp":
+                self.send_error_response(403, "This design mode is unavailable.")
+                return
             if data.get("design_mode") not in {None, "baseline_1dp"}:
-                raise ValueError("design_mode must be baseline_1dp, paired_3dp or paired_4dp")
+                raise ValueError("design_mode must be baseline_1dp, experimental_2dp, paired_3dp, or paired_4dp")
 
             # Extract parameters
             sequence = data.get("sequence", "")
@@ -558,6 +606,7 @@ class handler(BaseHTTPRequestHandler):
             use_template = data.get("use_template", False)
             kozak = data.get("kozak", False)
             dinuc = data.get("dinuc", False)
+            preserve_signal_peptide = bool(data.get("preserve_signal_peptide", True))
             custom_restriction_sites = self.parse_custom_restriction_sites(
                 data.get("custom_restriction_sites")
             )
@@ -610,6 +659,7 @@ class handler(BaseHTTPRequestHandler):
                         constraints=constraints,
                         custom_restriction_sites=custom_restriction_sites,
                         seed=seed,
+                        preserve_signal_peptide=preserve_signal_peptide,
                     )
                 else:
                     result = self.optimize_sequence(
@@ -625,6 +675,7 @@ class handler(BaseHTTPRequestHandler):
                         constraints=constraints,
                         custom_restriction_sites=custom_restriction_sites,
                         seed=seed,
+                        preserve_signal_peptide=preserve_signal_peptide,
                     )
                 result = self.attach_design_review(
                     result,
@@ -760,6 +811,7 @@ class handler(BaseHTTPRequestHandler):
             constraints["gc_max"] / 100,
             motifs,
         )
+        preserve_sp = bool(data.get("preserve_signal_peptide", True))
         candidates = []
         for cid, label, cds in (
             ("baseline_1dp", "1DP comparator", comparison.cds_1dp),
@@ -767,6 +819,21 @@ class handler(BaseHTTPRequestHandler):
         ):
             if context["input_type"] == "cds":
                 cds = restore_cds_stop_policy(cds, context)
+            protected_pos = (
+                {p - 1 for p in (mapping.get("positions") or []) if isinstance(p, int) and p >= 1}
+                if cid == "structure_3dp"
+                else None
+            )
+            cds = apply_default_sop_refinement(
+                cds,
+                original_dna=context["normalized_sequence"] if context["input_type"] == "cds" else None,
+                preserve_signal_peptide=preserve_sp,
+                gc_min=float(constraints["gc_min"]),
+                gc_max=float(constraints["gc_max"]),
+                forbidden_motifs=motifs,
+                protected_codon_indices=protected_pos,
+            )
+            if context["input_type"] == "cds":
                 assert_pathway_invariants(sequence, cds, context)
             import math
 
@@ -986,6 +1053,7 @@ class handler(BaseHTTPRequestHandler):
         cds_1dp = baseline["sequence"]
         cds_4dp = shifted["sequence"]
 
+        preserve_sp = bool(data.get("preserve_signal_peptide", True))
         candidates = []
         for cid, label, cds in (
             ("baseline_1dp", "1DP comparator", cds_1dp),
@@ -1001,6 +1069,21 @@ class handler(BaseHTTPRequestHandler):
                 raise ValueError("The generated candidate failed independent sequence checks.")
             if context["input_type"] == "cds":
                 cds = restore_cds_stop_policy(cds, context)
+            protected_pos = (
+                {p - 1 for p in pause_positions if isinstance(p, int) and p >= 1}
+                if cid == "structure_4dp"
+                else None
+            )
+            cds = apply_default_sop_refinement(
+                cds,
+                original_dna=context["normalized_sequence"] if context["input_type"] == "cds" else None,
+                preserve_signal_peptide=preserve_sp,
+                gc_min=float(constraints["gc_min"]),
+                gc_max=float(constraints["gc_max"]),
+                forbidden_motifs=motifs,
+                protected_codon_indices=protected_pos,
+            )
+            if context["input_type"] == "cds":
                 assert_pathway_invariants(sequence, cds, context)
             candidate = self.build_candidate(
                 candidate_id=cid,
@@ -1915,7 +1998,7 @@ class handler(BaseHTTPRequestHandler):
         # Convert to uppercase
         return cleaned.upper()
 
-    def optimize_sequence(self, sequence, profile, use_template, kozak, dinuc, objective=None, host_profile=DEFAULT_HOST_PROFILE, host=DEFAULT_HOST_PROFILE, return_candidates=False, constraints=None, custom_restriction_sites=None, seed=None, sop_profile=None):
+    def optimize_sequence(self, sequence, profile, use_template, kozak, dinuc, objective=None, host_profile=DEFAULT_HOST_PROFILE, host=DEFAULT_HOST_PROFILE, return_candidates=False, constraints=None, custom_restriction_sites=None, seed=None, sop_profile=None, preserve_signal_peptide=True):
         """Run actual FactorForge v3.x profile optimization."""
         try:
             constraints = self.parse_constraints(constraints, host=host)
@@ -1931,6 +2014,7 @@ class handler(BaseHTTPRequestHandler):
                     return_candidates=return_candidates,
                     custom_restriction_sites=custom_restriction_sites,
                     seed=seed,
+                    preserve_signal_peptide=preserve_signal_peptide,
                 )
             elif objective == "balanced_cai":
                 return self.optimize_feasibility_best(
@@ -1944,7 +2028,8 @@ class handler(BaseHTTPRequestHandler):
                     return_candidates=return_candidates,
                     custom_restriction_sites=custom_restriction_sites,
                     seed=seed,
-                    use_balanced_engine=True
+                    use_balanced_engine=True,
+                    preserve_signal_peptide=preserve_signal_peptide,
                 )
             if objective in {"dp_v2_1", "dp_v2_1_1"}:
                 return self.optimize_dp_v2_1(
@@ -1959,6 +2044,7 @@ class handler(BaseHTTPRequestHandler):
                     custom_restriction_sites=custom_restriction_sites,
                     seed=seed,
                     objective=objective,
+                    preserve_signal_peptide=preserve_signal_peptide,
                 )
 
             # Get profile-based optimizer
@@ -2122,6 +2208,7 @@ class handler(BaseHTTPRequestHandler):
         custom_restriction_sites=None,
         seed=None,
         use_balanced_engine=False,
+        preserve_signal_peptide=True,
     ):
         """Run feasibility_best contract and add profile comparison candidates."""
         constraints = self.parse_constraints(constraints, host=host)
@@ -2158,16 +2245,25 @@ class handler(BaseHTTPRequestHandler):
                 target_gc_max=constraints["gc_max"],
             )
         best = {"dna_sequence": dp_result["sequence"], "cai": dp_result["cai"]}
+        best_dna = (
+            restore_cds_stop_policy(best["dna_sequence"], input_context)
+            if is_cds
+            else best["dna_sequence"]
+        )
+        best_dna = apply_default_sop_refinement(
+            best_dna,
+            original_dna=input_context["normalized_sequence"] if is_cds else None,
+            preserve_signal_peptide=preserve_signal_peptide,
+            gc_min=float(constraints["gc_min"]),
+            gc_max=float(constraints["gc_max"]),
+            forbidden_motifs=get_canonical_forbidden_motifs(),
+        )
 
         candidates = [
             self.build_candidate(
                 candidate_id="feasibility_best",
                 label="Feasibility Best",
-                dna_sequence=(
-                    restore_cds_stop_policy(best["dna_sequence"], input_context)
-                    if is_cds
-                    else best["dna_sequence"]
-                ),
+                dna_sequence=best_dna,
                 codon_weights=table.codon_weights,
                 profile_cai=float(best["cai"]),
                 recommendation_reason=(
@@ -2292,6 +2388,7 @@ class handler(BaseHTTPRequestHandler):
         custom_restriction_sites=None,
         seed=None,
         objective="dp_v2_1",
+        preserve_signal_peptide=True,
     ):
         """Run an explicit initiation-aware DP development candidate."""
         constraints = self.parse_constraints(constraints, host=host)
@@ -2315,6 +2412,14 @@ class handler(BaseHTTPRequestHandler):
             restore_cds_stop_policy(dp_result["sequence"], input_context)
             if is_cds
             else dp_result["sequence"]
+        )
+        primary_dna = apply_default_sop_refinement(
+            primary_dna,
+            original_dna=input_context["normalized_sequence"] if is_cds else None,
+            preserve_signal_peptide=preserve_signal_peptide,
+            gc_min=float(constraints["gc_min"]),
+            gc_max=float(constraints["gc_max"]),
+            forbidden_motifs=get_canonical_forbidden_motifs(),
         )
         candidate = self.build_candidate(
             candidate_id=engine_id,
@@ -2349,10 +2454,10 @@ class handler(BaseHTTPRequestHandler):
             "engine_versions": ENGINE_VERSIONS,
             "seed": seed,
             "metrics": {
-                "cai": float(dp_result["cai"]),
+                "cai": float(candidate["cai"]),
                 "cai_5p_ramp": float(dp_result["cai_5p_ramp"]),
                 "cai_body": float(dp_result["cai_body"]),
-                "gc_percent": float(dp_result["gc_percent"]),
+                "gc_percent": float(candidate["gc_percent"]),
                 "gc_5p_ramp_percent": float(dp_result["gc_5p_ramp_percent"]),
                 "gc_body_percent": float(dp_result["gc_body_percent"]),
                 "gc_target_reached": bool(dp_result["gc_feasible"]),

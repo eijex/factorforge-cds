@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <meta name="eijex-web-build" content="v3.6.4-2026-11-11-sequence-first-ux">
+    <meta name="eijex-web-build" content="v3.6.8-2026-11-13-sop-full-alignment">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FactorForge | N. benthamiana CDS Design</title>
@@ -90,7 +90,7 @@
                     <div class="hidden sm:flex items-center space-x-2">
                         <button id="changelogBtn"
                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm hover:bg-emerald-200 transition-colors cursor-help">
-                            v3.6.4 Release Notes
+                            v3.6.8 Release Notes
                         </button>
                     </div>
                     <!-- Theme Toggle -->
@@ -105,6 +105,15 @@
 
     <!-- Main Dashboard -->
     <main class="flex-grow max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Privacy & Zero-Retention Trust Banner -->
+        <div class="mb-6 p-3.5 bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-xl flex items-center justify-between gap-3 text-xs text-emerald-950 dark:text-emerald-200">
+            <div class="flex items-center gap-2.5">
+                <span class="text-base">🛡️</span>
+                <span><b>Zero Server-Side Storage:</b> Sequences are processed strictly in ephemeral memory and never saved to Vercel or cloud databases. All design history is retained locally in your browser only.</span>
+            </div>
+            <a href="#privacy" class="shrink-0 underline font-semibold hover:text-emerald-700 dark:hover:text-emerald-300">Privacy Notice ↘</a>
+        </div>
+
         <div id="designWorkspace" class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start" data-view-state="configure">
 
             <!-- Panel 1: Input -->
@@ -245,7 +254,7 @@
                         <label class="text-xs font-bold text-slate-600 dark:text-slate-300">Expression host
                             <select id="hostSelect" class="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 text-slate-800 dark:text-slate-100">
                                 <option value="nbenthamiana" selected>N. benthamiana (primary plant host)</option>
-                                <option value="human_stemcell">Human Stem Cell (hMSC / iPSC) · In Development</option>
+                                <option value="human_stemcell">Mammalian / Human Stem Cell (hMSC / iPSC) · In Development</option>
                             </select>
                         </label>
                         <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-800/50 dark:bg-emerald-900/20">
@@ -293,27 +302,83 @@
                             <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 dark:text-slate-400">Design readiness</p>
                             <p id="designReadinessHeadline" class="font-bold text-slate-800 dark:text-slate-100">Upload a FASTA/sequence to check available methods and required inputs.</p>
                             <ul id="designReadinessList" class="text-[11px] text-slate-600 dark:text-slate-300 list-disc pl-4 space-y-0.5"></ul>
+                            <div id="autoStructureActionBar" class="hidden pt-2 mt-1 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-2">
+                                <button id="autoResolveEsmBtn" type="button" class="py-1.5 px-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] shadow-sm inline-flex items-center gap-1 transition-all">
+                                    <span>⚡</span> Auto-Predict 3D Structure (ESMFold)
+                                </button>
+                                <button id="copyAf3JsonBtn" type="button" class="hidden py-1.5 px-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-[11px] inline-flex items-center gap-1 transition-all">
+                                    <span>📋</span> Copy AlphaFold 3 Server JSON
+                                </button>
+                                <span id="autoStructureStatus" class="text-[11px] text-slate-500 dark:text-slate-400"></span>
+                            </div>
                         </div>
                     </section>
 
-                    <section id="researchTestingStatus" class="mb-6 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/30 p-4 text-xs leading-relaxed">
-                        <h3 class="font-bold text-teal-900 dark:text-teal-200">Design availability: 1DP, 3DP, and 4DP enabled (FactorForge default SOP)</h3>
-                        <p>1DP (Standard CDS optimization), 3DP (Structure-guided CDS design, up to 500 aa target subject to serverless limits), and 4DP (Translation-offset hypothesis with schema-validated sidecar JSON, up to 500 aa) are enabled in this public form using FactorForge's built-in SOP. Need a custom SOP? Email <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold text-teal-800 dark:text-teal-300">eijex.lab@gmail.com</a>. Agree on sharing, confidentiality, and use in writing before sending materials.</p>
-                        <p id="workflowSelectorModeNote" class="mt-2 px-2.5 py-1.5 rounded-lg bg-white/80 dark:bg-slate-900/70 border border-teal-200 dark:border-teal-800 text-[11px] font-semibold text-teal-900 dark:text-teal-200">Controlled by Automatic strategy — click any workflow below only to switch to Choose manually.</p>
-                        <fieldset id="manualWorkflowFieldset" class="mt-3 space-y-2 transition-opacity opacity-65"><legend class="sr-only">Select design workflow</legend>
+                    <section id="researchTestingStatus" class="mb-4 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/30 p-3.5 text-xs leading-relaxed">
+                        <div class="flex items-center justify-between gap-2">
+                            <h3 class="font-bold text-teal-900 dark:text-teal-200">Design availability: 1DP, 3DP, and 4DP enabled (FactorForge default SOP)</h3>
+                            <span class="tooltip-container shrink-0">
+                                <span class="info-icon cursor-help">i</span>
+                                <span class="tooltip-text">1DP (baseline CDS), 3DP (structure-guided, up to 500 aa), and 4DP (translation-offset sidecar, up to 500 aa) run with FactorForge's built-in SOP. Email eijex.lab@gmail.com for custom SOPs.</span>
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-teal-800/90 dark:text-teal-300/90 mt-1">1DP, 3DP, and 4DP (up to 500 aa) run with FactorForge's built-in SOP. Custom SOPs: <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold">eijex.lab@gmail.com</a>.</p>
+                        <p id="workflowSelectorModeNote" class="mt-2 px-2.5 py-1.5 rounded-lg bg-white/80 dark:bg-slate-900/70 border border-teal-200 dark:border-teal-800 text-[11px] font-semibold text-teal-900 dark:text-teal-200">Controlled by Automatic strategy — manual options below are locked. Switch to &ldquo;Choose manually&rdquo; above to override.</p>
+                        <fieldset id="manualWorkflowFieldset" disabled class="mt-3 space-y-2 transition-opacity opacity-65"><legend class="sr-only">Select design workflow</legend>
                             <label class="block rounded-lg border border-teal-200/80 dark:border-teal-800 bg-white/80 dark:bg-slate-900/70 p-2.5 cursor-pointer">
-                                <span class="flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100"><input type="radio" name="researchDesignMode" value="baseline_1dp" checked> <span>1DP · Standard CDS Optimization</span> <span class="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold uppercase">Baseline · No Structure Needed</span></span>
+                                <span class="flex items-center justify-between font-bold text-slate-900 dark:text-slate-100">
+                                    <span class="flex items-center gap-1.5"><input type="radio" name="researchDesignMode" value="baseline_1dp" checked> <span>1DP · Standard CDS Optimization</span> <span class="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold uppercase">Baseline · No Structure Needed</span></span>
+                                    <span class="tooltip-container ml-1 inline-flex shrink-0">
+                                        <span class="info-icon cursor-help">i</span>
+                                        <span class="tooltip-text">Application: Industrial enzymes, single-domain proteins, reporter genes &amp; metabolic pathway constructs.</span>
+                                    </span>
+                                </span>
                                 <span class="block text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 pl-5">Optimize synonymous codons for your expression host while preserving the protein sequence and satisfying sequence-design constraints.</span>
                             </label>
+                            <label class="block rounded-lg border border-sky-200/80 dark:border-sky-800/60 bg-white/80 dark:bg-slate-900/70 p-2.5 cursor-pointer">
+                                <span class="flex items-center justify-between font-bold text-slate-900 dark:text-slate-100">
+                                    <span class="flex items-center gap-1.5"><input type="radio" name="researchDesignMode" value="experimental_2dp"> <span>2DP · Dinucleotide &amp; Codon-Pair Guard</span> <span class="px-1.5 py-0.5 rounded bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-300 text-[10px] font-bold uppercase">Experimental · CpG/TpA Guard</span></span>
+                                    <span class="tooltip-container ml-1 inline-flex shrink-0">
+                                        <span class="info-icon cursor-help">i</span>
+                                        <span class="tooltip-text">Application: Mammalian biotherapeutics, stem-cell differentiation factors &amp; viral/AAV payloads (TLR9 immune avoidance).</span>
+                                    </span>
+                                </span>
+                                <span class="block text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 pl-5">Penalizes intra-codon and cross-codon CpG/TpA dinucleotide junctions (Biological validation: NOT_AVAILABLE). For plant hosts (<em>N. benthamiana</em>), 2DP junction guards are already integrated into 1DP/3DP.</span>
+                            </label>
                             <label class="block rounded-lg border border-amber-200/80 dark:border-amber-800/60 bg-white/80 dark:bg-slate-900/70 p-2.5 cursor-pointer">
-                                <span class="flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100"><input type="radio" name="researchDesignMode" value="paired_3dp"> <span>3DP · Structure-Guided CDS Design</span> <span class="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-[10px] font-bold uppercase">Experimental · PDB/mmCIF Required</span></span>
-                                <span class="block text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 pl-5">Use predicted or experimental protein structure coordinates (exact-match PDB/mmCIF chain) to guide codon choices near annotated boundaries.</span>
+                                <span class="flex items-center justify-between font-bold text-slate-900 dark:text-slate-100">
+                                    <span class="flex items-center gap-1.5"><input type="radio" name="researchDesignMode" value="paired_3dp"> <span>3DP · Structure-Guided CDS Design</span> <span class="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 text-[10px] font-bold uppercase">Experimental · Auto ESMFold / PDB</span></span>
+                                    <span class="tooltip-container ml-1 inline-flex shrink-0">
+                                        <span class="info-icon cursor-help">i</span>
+                                        <span class="tooltip-text">Application: Cell-surface receptors, Cluster of Differentiation markers (CD9, CD47) &amp; multidomain structural targets.</span>
+                                    </span>
+                                </span>
+                                <span class="block text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 pl-5">Uses uploaded PDB/mmCIF or auto-predicted ESMFold coordinates to guide codon choices near domain boundaries.</span>
                             </label>
                             <label class="block rounded-lg border border-teal-200/80 dark:border-teal-800/60 bg-white/80 dark:bg-slate-900/70 p-2.5 cursor-pointer">
-                                <span class="flex items-center gap-1.5 font-bold text-slate-900 dark:text-slate-100"><input type="radio" name="researchDesignMode" value="paired_4dp" disabled> <span>4DP · Translation-Offset Guided Design</span> <span class="px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300 text-[10px] font-bold uppercase">Experimental Hypothesis · Sidecar JSON</span></span>
-                                <span class="block text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 pl-5">Explore synonymous codon placement using an unverified biological hypothesis about ribosome exit-tunnel emergence (schema-validated sidecar JSON required; biological validation: NOT_AVAILABLE).</span>
+                                <span class="flex items-center justify-between font-bold text-slate-900 dark:text-slate-100">
+                                    <span class="flex items-center gap-1.5"><input type="radio" name="researchDesignMode" value="paired_4dp" disabled> <span>4DP · Translation-Offset Guided Design</span> <span class="px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300 text-[10px] font-bold uppercase">Experimental Hypothesis · Auto/Sidecar</span></span>
+                                    <span class="tooltip-container ml-1 inline-flex shrink-0">
+                                        <span class="info-icon cursor-help">i</span>
+                                        <span class="tooltip-text">Application: Complex therapeutic antibodies (Adalimumab, Trastuzumab) &amp; chaperone-assisted secretory proteins.</span>
+                                    </span>
+                                </span>
+                                <span class="block text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 pl-5">Applies +35 aa ribosome exit-tunnel offset (auto-unlocked from ESMFold/PDB/mmCIF or sidecar JSON; biological validation: NOT_AVAILABLE).</span>
+                            </label>
+                            <label class="block rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 p-2.5 cursor-not-allowed opacity-60">
+                                <span class="flex items-center justify-between font-bold text-slate-600 dark:text-slate-400">
+                                    <span class="flex items-center gap-1.5"><input type="radio" name="researchDesignMode" value="experimental_5dp" disabled> <span>5DP · VLP Nanovaccine &amp; Glycan Layer</span> <span class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold uppercase">In Development</span></span>
+                                    <span class="tooltip-container ml-1 inline-flex shrink-0">
+                                        <span class="info-icon cursor-help">i</span>
+                                        <span class="tooltip-text">Application: Viral nanoparticle vaccines &amp; multimeric antigen display scaffolds.</span>
+                                    </span>
+                                </span>
+                                <span class="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 pl-5">Multi-chain nanoparticle VLP fusion topology &amp; plant N-glycan mapping (In Development).</span>
                             </label>
                         </fieldset>
+                        <div id="note2dpIntegrated" class="mt-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/60 px-3 py-2 text-[11px] text-slate-600 dark:text-slate-300">
+                            <span class="font-bold text-slate-800 dark:text-slate-100">About 2DP scope:</span> <span class="font-semibold">1DP</span> and <span class="font-semibold">3DP</span> finite-state checks detect configured forbidden motifs across codon boundaries. The experimental <span class="font-semibold">2DP</span> option above adds a <code class="font-mono">CpG</code>/<code class="font-mono">TpA</code> dinucleotide penalty only (not a validated codon-pair/hexamer frequency model; Biological validation: NOT_AVAILABLE), and its contribution in <em>N. benthamiana</em> remains unevaluated.
+                        </div>
                         <div id="structure4dpInputs" class="hidden mt-4 space-y-3">
                             <div class="rounded-lg border border-teal-300 dark:border-teal-700 bg-teal-50/80 dark:bg-teal-950/40 p-3 text-teal-900 dark:text-teal-200">
                                 <p class="font-bold flex items-center gap-1.5"><span>🔬</span> 4DP translation-offset design (prepared sidecar)</p>
@@ -330,7 +395,10 @@
                                     </button>
                                     <span id="sidecarStatusBadge" class="text-[11px] font-medium text-slate-600 dark:text-slate-400">No sidecar loaded</span>
                                 </div>
-                                <div id="sidecarIntegrityChecklist" class="hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/50 p-2.5 text-[11px] space-y-1"></div>
+                                <details class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/50 px-2.5 py-1.5 text-[11px]">
+                                    <summary class="cursor-pointer select-none font-semibold text-slate-600 dark:text-slate-300">Technical Integrity Details (P0-3)</summary>
+                                    <div id="sidecarIntegrityChecklist" class="hidden pt-2 mt-1.5 border-t border-slate-200 dark:border-slate-800 space-y-1"></div>
+                                </details>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
                                     <div class="space-y-2">
                                         <span id="sidecarPositionReview" class="block text-xs" aria-live="polite"></span>
@@ -562,24 +630,27 @@
                             </button>
                         </div>
 
-                                                <!-- Policy Baseline Summary Cards -->
-                        <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-800 text-center">
-                            <div class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/70 dark:border-slate-700/70 shadow-xs">
-                                <span class="text-sm">🛡️</span>
-                                <p class="text-[10px] font-bold text-slate-800 dark:text-slate-100 mt-0.5">Protein Conservation</p>
-                                <p class="text-[9px] text-slate-500">100% Identity Preserved</p>
+                                                <!-- Policy Baseline Summary Cards (collapsed by default for compact Setup UI) -->
+                        <details class="pt-2 border-t border-slate-200/80 dark:border-slate-800">
+                            <summary class="cursor-pointer text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-slate-100 select-none">Policy baseline summary (Conservation · Constraints · Review)</summary>
+                            <div class="grid grid-cols-3 gap-2 pt-2 text-center">
+                                <div class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/70 dark:border-slate-700/70 shadow-xs">
+                                    <span class="text-sm">🛡️</span>
+                                    <p class="text-[10px] font-bold text-slate-800 dark:text-slate-100 mt-0.5">Protein Conservation</p>
+                                    <p class="text-[9px] text-slate-500">100% Identity Preserved</p>
+                                </div>
+                                <div class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/70 dark:border-slate-700/70 shadow-xs">
+                                    <span class="text-sm">⚙️</span>
+                                    <p class="text-[10px] font-bold text-slate-800 dark:text-slate-100 mt-0.5">Design Constraints</p>
+                                    <p class="text-[9px] text-slate-500">Standard Stretch Limits</p>
+                                </div>
+                                <div class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/70 dark:border-slate-700/70 shadow-xs">
+                                    <span class="text-sm">📋</span>
+                                    <p class="text-[10px] font-bold text-slate-800 dark:text-slate-100 mt-0.5">Review Policy</p>
+                                    <p class="text-[9px] text-slate-500">Advisory / Action Thresholds</p>
+                                </div>
                             </div>
-                            <div class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/70 dark:border-slate-700/70 shadow-xs">
-                                <span class="text-sm">⚙️</span>
-                                <p class="text-[10px] font-bold text-slate-800 dark:text-slate-100 mt-0.5">Design Constraints</p>
-                                <p class="text-[9px] text-slate-500">Standard Stretch Limits</p>
-                            </div>
-                            <div class="p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/70 dark:border-slate-700/70 shadow-xs">
-                                <span class="text-sm">📋</span>
-                                <p class="text-[10px] font-bold text-slate-800 dark:text-slate-100 mt-0.5">Review Policy</p>
-                                <p class="text-[9px] text-slate-500">Advisory / Action Thresholds</p>
-                            </div>
-                        </div>
+                        </details>
                         <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-[10.5px] text-amber-800 dark:text-amber-300 font-medium flex items-center gap-2">
                             <span>⚠️</span>
                             <span>Example configuration · Not an approved laboratory SOP.</span>
@@ -823,6 +894,23 @@
 
                         <label
                             class="flex items-center space-x-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors">
+                            <input type="checkbox" id="preserveSignalPeptide" checked
+                                class="w-5 h-5 text-emerald-600 rounded-md border-slate-300 dark:border-slate-600 focus:ring-emerald-500 transition-all">
+                            <div>
+                                <span class="flex items-center text-sm font-bold text-slate-800 dark:text-slate-100">
+                                    Preserve 5′ Signal Peptide (first 60 nt)
+                                    <span class="tooltip-container">
+                                        <span class="info-icon">i</span>
+                                        <span class="tooltip-text">When a coding DNA sequence (≥ 60 nt) is provided, locks the first 20 codons (60 nt) to the input sequence while balancing Arg/Ser codons in the mature region.</span>
+                                    </span>
+                                </span>
+                                <span
+                                    class="block text-[11px] text-slate-700 dark:text-slate-400 uppercase font-bold tracking-wider">DNA Input Only · Default ON</span>
+                            </div>
+                        </label>
+
+                        <label
+                            class="flex items-center space-x-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors">
                             <input type="checkbox" id="useTemplate"
                                 class="w-5 h-5 text-emerald-600 rounded-md border-slate-300 dark:border-slate-600 focus:ring-emerald-500 transition-all">
                             <div>
@@ -842,6 +930,14 @@
                     </div>
                     <!-- Batch / Compare Queue Progress -->
                     <div id="compareQueueStatus" class="hidden mb-4 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/30 p-3 text-xs space-y-1.5" aria-live="polite"></div>
+
+                    <!-- Pre-Generate Privacy & Ephemeral Processing Warning -->
+                    <div id="preGeneratePrivacyNotice" class="mb-3 rounded-xl border border-amber-300 dark:border-amber-700/70 bg-amber-50/90 dark:bg-amber-950/30 p-3 text-[11px] text-amber-950 dark:text-amber-200 flex items-start gap-2.5">
+                        <span class="text-sm leading-none mt-0.5 shrink-0">⚠️</span>
+                        <div class="leading-relaxed">
+                            <span class="font-bold">Before you generate:</span> Sequences are processed in ephemeral server memory only and are <b>never saved</b> to Vercel or cloud databases (results stay only in your browser's local history). <b>Do not submit confidential or proprietary sequences</b> through this public interface.
+                        </div>
+                    </div>
 
                     <!-- Action Button -->
                     <button id="optimizeBtn" disabled
@@ -949,12 +1045,15 @@
                             </button>
                         </div>
 
-                        <section id="sameProteinBanner" class="same-protein-banner mb-5" aria-labelledby="sameProteinTitle">
-                            <p class="result-eyebrow">FactorForge design principle</p>
-                            <h2 id="sameProteinTitle">Same Protein. Transparently Redesigned DNA.</h2>
-                            <p>FactorForge redesigns synonymous codons and sequence-level features for the target plant host while strictly preserving the encoded amino-acid sequence.</p>
-                            <div class="design-flow" aria-label="Original DNA to synonymous optimization to exact translated protein">
-                                <span>Original DNA</span><b>→</b><span>Synonymous optimization</span><b>→</b><span>Exact translated protein</span>
+                        <section id="sameProteinBanner" class="same-protein-banner mb-4 !p-3.5" aria-labelledby="sameProteinTitle">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <p class="result-eyebrow">FactorForge design principle</p>
+                                    <h2 id="sameProteinTitle" class="!text-base !mt-0">Same Protein. Transparently Redesigned DNA.</h2>
+                                </div>
+                                <div class="design-flow !mt-0 text-[11px]" aria-label="Original DNA to synonymous optimization to exact translated protein">
+                                    <span>Original DNA</span><b>→</b><span>Synonymous optimization</span><b>→</b><span>Exact translated protein</span>
+                                </div>
                             </div>
                         </section>
 
@@ -1049,11 +1148,11 @@
 
                         <!-- Graphical Analysis -->
                         <div
-                            class="mb-8 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                            class="mb-5 p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
                             <p
-                                class="text-[10px] font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-4">
+                                class="text-[10px] font-extrabold text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2">
                                 GC Distribution (50bp Window) — <span class="text-emerald-500">■</span> <span id="gcZoneLabel">Reference Band</span></p>
-                            <div class="h-40 w-full">
+                            <div class="h-28 w-full">
                                 <canvas id="gcChart"></canvas>
                             </div>
                         </div>
@@ -1105,56 +1204,32 @@
                             </div>
                         </div>
 
-                        <!-- Metrics Grid -->
-                        <div class="grid grid-cols-2 gap-4 mb-8">
-                            <div
-                                class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-2xl hover:scale-[1.02] transition-transform cursor-help shadow-sm">
-                                <p
-                                    class="text-[10px] font-extrabold text-blue-500 dark:text-blue-300 uppercase tracking-widest mb-1">
-                                    CAI Score
-                                </p>
-                                <p id="caiValue"
-                                    class="text-2xl font-black text-blue-900 dark:text-blue-400 leading-none">-</p>
+                        <!-- Compact Metrics Strip -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
+                            <div class="p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-xl shadow-xs">
+                                <p class="text-[9px] font-extrabold text-blue-500 dark:text-blue-300 uppercase tracking-widest">CAI Score</p>
+                                <p id="caiValue" class="text-lg font-black text-blue-900 dark:text-blue-400 leading-tight mt-0.5">-</p>
                             </div>
-                            <div
-                                class="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-2xl hover:scale-[1.02] transition-transform cursor-help shadow-sm">
-                                <p
-                                    class="text-[10px] font-extrabold text-emerald-500 dark:text-emerald-300 uppercase tracking-widest mb-1">
-                                    GC %
-                                    Content</p>
-                                <p id="gcValue"
-                                    class="text-2xl font-black text-emerald-900 dark:text-emerald-400 leading-none">-
-                                </p>
-                                <p id="gcTargetRange" class="mt-2 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">Target: —</p>
+                            <div class="p-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-xl shadow-xs">
+                                <p class="text-[9px] font-extrabold text-emerald-500 dark:text-emerald-300 uppercase tracking-widest">GC % Content</p>
+                                <p id="gcValue" class="text-lg font-black text-emerald-900 dark:text-emerald-400 leading-tight mt-0.5">-</p>
+                                <p id="gcTargetRange" class="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 truncate">Target: —</p>
+                            </div>
+                            <div class="p-2.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 rounded-xl shadow-xs">
+                                <p class="text-[9px] font-extrabold text-indigo-500 dark:text-indigo-300 uppercase tracking-widest">PolyA Signals</p>
+                                <p id="polyaValue" class="text-lg font-black text-indigo-900 dark:text-indigo-400 leading-tight mt-0.5">-</p>
+                            </div>
+                            <div class="p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl shadow-xs">
+                                <p class="text-[9px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Host Profile</p>
+                                <p id="hostProfileValue" class="text-xs font-black text-slate-900 dark:text-slate-100 leading-tight mt-1 truncate">-</p>
                             </div>
                             <div id="constructIdRow"
-                                class="hidden col-span-2 mt-2 flex items-center justify-between gap-3 text-xs text-slate-400 dark:text-slate-500">
+                                class="hidden col-span-2 sm:col-span-4 mt-1 flex items-center justify-between gap-3 text-xs text-slate-400 dark:text-slate-500">
                                 <span class="font-mono truncate" id="constructIdDisplay"></span>
                                 <button id="copyConstructId"
                                     class="shrink-0 font-bold uppercase tracking-widest hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
                                     Copy ID
                                 </button>
-                            </div>
-                            <div
-                                class="col-span-2 p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl hover:scale-[1.01] transition-transform cursor-help shadow-sm flex items-center justify-between">
-                                <div>
-                                    <p
-                                        class="text-[10px] font-extrabold text-indigo-500 dark:text-indigo-300 uppercase tracking-widest mb-1">
-                                        PolyA Signals Found</p>
-                                    <p id="polyaValue"
-                                        class="text-xl font-black text-indigo-900 dark:text-indigo-400 leading-none">-
-                                    </p>
-                                </div>
-                                <span class="text-2xl opacity-50 dark:opacity-80">✨</span>
-                            </div>
-                            <div
-                                class="col-span-2 p-4 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-sm">
-                                <p
-                                    class="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">
-                                    Host Profile</p>
-                                <p id="hostProfileValue"
-                                    class="text-sm font-black text-slate-900 dark:text-slate-100 leading-none">-
-                                </p>
                             </div>
                         </div>
 
@@ -1411,36 +1486,32 @@
                             </div>
                         </div>
 
-                        <!-- Downloads -->
-                        <div class="grid grid-cols-1 gap-3">
+                        <!-- Downloads (Compact 2/3-col Grid) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                             <button id="downloadEvidencePackageZip"
-                                class="w-full py-3 px-4 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95">
-                                <span>📦</span><span>Download Evidence Package (.zip)</span>
+                                class="w-full py-2.5 px-3 text-xs bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-sm active:scale-95">
+                                <span>📦</span><span>Evidence (.zip)</span>
                             </button>
                             <button id="exportInteractiveReport"
-                                class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95">
-                                <span>📄</span><span>Export Interactive HTML Report (.html)</span>
+                                class="w-full py-2.5 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-sm active:scale-95">
+                                <span>📄</span><span>HTML Report</span>
                             </button>
                             <button id="downloadFasta"
-                                class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95">
-                                <span>💾</span>
-                                <span>Download FASTA</span>
+                                class="w-full py-2.5 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-sm active:scale-95">
+                                <span>💾</span><span>FASTA</span>
                             </button>
                             <button id="downloadGenbank"
-                                class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md active:scale-95">
-                                <span>💾</span>
-                                <span>Download GenBank</span>
+                                class="w-full py-2.5 px-3 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-sm active:scale-95">
+                                <span>💾</span><span>GenBank</span>
                             </button>
                             <button id="copyBtn"
-                                class="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl flex items-center justify-center space-x-2 transition-all active:scale-95">
-                                <span>📋</span>
-                                <span>Copy to Clipboard</span>
+                                class="w-full py-2.5 px-3 text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl flex items-center justify-center space-x-1.5 transition-all active:scale-95">
+                                <span>📋</span><span>Copy DNA</span>
                             </button>
                             <button id="submitValidationBtn"
                                 title="Open public-safe GitHub issue template"
-                                class="w-full py-3 px-4 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold rounded-xl flex items-center justify-center space-x-2 transition-all active:scale-95">
-                                <span>🧪</span>
-                                <span>Share Wet-lab Results (GitHub)</span>
+                                class="w-full py-2.5 px-3 text-xs bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold rounded-xl flex items-center justify-center space-x-1.5 transition-all active:scale-95">
+                                <span>🧪</span><span>Wet-lab Feedback</span>
                                 <span class="tooltip-container">
                                     <span class="info-icon">i</span>
                                     <span class="tooltip-text">Tested this sequence in the lab? Share only a public-safe, non-confidential summary.</span>
@@ -1518,65 +1589,55 @@
     <div id="toastContainer" class="fixed bottom-6 right-6 flex flex-col space-y-3 z-[100]"></div>
 
     <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
-        <div id="privacy" class="mt-8 p-6 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm text-xs space-y-6">
+        <div id="privacy" class="mt-6 p-4 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm text-[11px] space-y-3">
             <!-- 2-Column Grid for Scientific Evidence & Privacy Governance -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Column 1: Scientific & Experimental Boundary -->
-                <div class="p-4 bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-800/60 rounded-xl space-y-3">
-                    <div class="flex items-center space-x-2 text-amber-900 dark:text-amber-200 font-bold text-xs uppercase tracking-wider">
-                        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="p-3 bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-800/60 rounded-xl space-y-1.5">
+                    <div class="flex items-center space-x-2 text-amber-900 dark:text-amber-200 font-bold text-[11px] uppercase tracking-wider">
+                        <svg class="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                         <span>Scientific Evidence &amp; Experimental Boundaries</span>
                     </div>
-                    <ul class="space-y-2 text-amber-900/90 dark:text-amber-300/90 leading-relaxed list-disc list-inside">
-                        <li><b>In-Silico Review Artifacts Only:</b> FactorForge produces computational CDS candidates and pre-synthesis review artifacts. Independent scientific review and empirical wet-lab validation are mandatory prior to relying on any design in experiments.</li>
-                        <li><b>No Biological or Kinetic Guarantees:</b> In-silico metrics, codon adaptation profiles, 4DP structural pause intervals (+35 aa modeling assumption), and AlphaFold pLDDT scores do not establish in vivo translation rates, folding kinetics, protein yield, glycosylation, regulatory clearance, or biological activity.</li>
-                        <li><b>Regulatory &amp; IP Responsibility:</b> Users are solely responsible for verifying intellectual property freedom-to-operate, biosecurity screening, and regulatory compliance for their sequences.</li>
+                    <ul class="space-y-1 text-amber-900/90 dark:text-amber-300/90 leading-relaxed list-disc list-inside">
+                        <li><b>In-Silico Artifacts Only:</b> Wet-lab validation is mandatory before experimental use.</li>
+                        <li><b>No Kinetic Guarantees:</b> Metrics, 4DP (+35 aa), and pLDDT do not establish expression, folding, or yield.</li>
+                        <li><b>Regulatory &amp; IP:</b> Users are responsible for FTO, biosecurity screening, and compliance.</li>
                     </ul>
                 </div>
 
                 <!-- Column 2: Data Privacy, IP & Confidentiality -->
-                <div class="p-4 bg-slate-100/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl space-y-3">
-                    <div class="flex items-center space-x-2 text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wider">
-                        <svg class="w-4 h-4 text-teal-600 dark:text-teal-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="p-3 bg-slate-100/70 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl space-y-1.5">
+                    <div class="flex items-center space-x-2 text-slate-800 dark:text-slate-200 font-bold text-[11px] uppercase tracking-wider">
+                        <svg class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                         </svg>
-                        <span>Data Privacy &amp; Confidentiality Protection</span>
+                        <span>Data Privacy &amp; Confidentiality</span>
                     </div>
-                    <ul class="space-y-2 text-slate-700 dark:text-slate-300 leading-relaxed list-disc list-inside">
-                        <li><b>Processing &amp; Browser History:</b> Submitted inputs are sent to the API for processing. Generated sequences and review results may be saved in this browser's local history until you clear it. This notice does not certify infrastructure-wide zero retention. Do not submit confidential sequences through this public interface.</li>
-                        <li><b>Strict Non-Confidential Feedback:</b> Public wet-lab feedback and GitHub issue submissions must be coarse and non-confidential. Do not submit raw sequences, construct IDs, target identities, exact process parameters, patient data, or partner/customer confidential information.</li>
+                    <ul class="space-y-1 text-slate-700 dark:text-slate-300 leading-relaxed list-disc list-inside">
+                        <li><b>Ephemeral Processing:</b> Inputs are processed in-memory and saved only in local browser history; do not submit confidential sequences.</li>
+                        <li><b>Non-Confidential Feedback:</b> Wet-lab / GitHub submissions must remain coarse and non-confidential.</li>
+                        <li><b>License:</b> GNU AGPL-3.0 applies to the FactorForge software.</li>
                     </ul>
                 </div>
             </div>
 
-            <!-- Collaboration & DP Engine Access Notice (3DP / 4DP) -->
-            <div class="p-4 bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 rounded-xl space-y-2.5">
-                <div class="flex items-center justify-between flex-wrap gap-2">
-                    <div class="flex items-center space-x-2 text-emerald-900 dark:text-emerald-200 font-bold text-xs uppercase tracking-wider">
-                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                        <span>Design Modes, Compute &amp; Research Collaboration</span>
-                    </div>
-                    <a href="mailto:eijex.lab@gmail.com" class="inline-flex items-center px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs rounded-lg transition-colors shadow-sm">
-                        Request Collaboration (eijex.lab@gmail.com)
-                    </a>
+            <!-- Collaboration & DP Engine Access Notice (Collapsible) -->
+            <details class="p-3 bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 rounded-xl">
+                <summary class="cursor-pointer flex items-center justify-between flex-wrap gap-2 text-emerald-900 dark:text-emerald-200 font-bold text-[11px] uppercase tracking-wider select-none">
+                    <span>Design Modes, Compute &amp; Custom SOP Collaboration</span>
+                    <span class="text-[10px] font-semibold underline text-emerald-700 dark:text-emerald-300">Details &amp; Contact</span>
+                </summary>
+                <div class="mt-2.5 space-y-2 text-emerald-950 dark:text-emerald-200/90 leading-relaxed">
+                    <p>
+                        <b>1DP</b>, <b>3DP</b> (prepared PDB/mmCIF), and <b>4DP</b> (pause sidecar JSON) run CPU optimization with FactorForge's default SOP and classify structural/offset hypotheses as <code class="font-mono">UNVERIFIED_PUBLIC_CORPUS</code> (<code class="font-mono">Biological validation: NOT_AVAILABLE</code>).
+                    </p>
+                    <p>
+                        <b>Custom SOP Collaboration:</b> Email <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold text-emerald-700 dark:text-emerald-300">eijex.lab@gmail.com</a> and agree on sharing, confidentiality, and GNU AGPL-3.0 / data rights in writing before sending materials.
+                    </p>
                 </div>
-                <p class="text-emerald-950 dark:text-emerald-200/90 leading-relaxed">
-                    <b>1DP</b> (sequence-only baseline), <b>3DP</b> (prepared PDB/mmCIF structure upload with reviewed positions), and <b>4DP</b> (prepared pause sidecar JSON upload with reviewed model positions) are all enabled in this public interface. All three workflows run CPU optimization with FactorForge's built-in default SOP and classify structural/offset hypotheses as <code class="font-mono">UNVERIFIED_PUBLIC_CORPUS</code> (<code class="font-mono">Biological validation: NOT_AVAILABLE</code>). Optimization from prepared structural inputs or reviewed boundaries does not inherently require GCP or a GPU.
-                </p>
-                <p class="text-emerald-950 dark:text-emerald-200/90 leading-relaxed">
-                    <b>Compute boundary:</b> CPU optimization from prepared inputs is separate from automatic structure prediction, which may require a GPU service. Hosting the web interface on Vercel runs prepared-input 1DP/3DP/4DP optimization cleanly within CPU bounds without enabling server-side structure prediction.
-                </p>
-                <p class="text-emerald-950 dark:text-emerald-200/90 leading-relaxed">
-                    <b>Custom SOP Collaboration:</b> While 1DP, 3DP, and 4DP are publicly usable with FactorForge's own default SOP, custom SOP editing is disabled in the public form. If you have your own laboratory SOP and want candidate sequences generated with a custom SOP, email <a href="mailto:eijex.lab@gmail.com" class="underline font-semibold text-emerald-700 dark:text-emerald-300 hover:text-emerald-600">eijex.lab@gmail.com</a>. Agree on sharing, confidentiality, and use in writing before sending materials.
-                </p>
-                <div class="p-2.5 bg-white/70 dark:bg-slate-900/60 border border-emerald-300/60 dark:border-emerald-700/60 rounded-lg text-[11px] text-emerald-900 dark:text-emerald-300 space-y-1">
-                    <p><b>Sequence Rights &amp; Data Use:</b> GNU AGPL-3.0 applies to the FactorForge software. Agree separately on rights, permitted use, sharing, retention, and deletion for SOPs, inputs, and results before sending materials.</p>
-                </div>
-            </div>
+            </details>
         </div>
         <div class="flex flex-wrap justify-center gap-4 text-xs text-slate-400 mt-4">
             <a href="https://github.com/eijex/factorforge-cds" target="_blank" rel="noopener"
@@ -1604,12 +1665,53 @@
                     class="p-2 hover:bg-white/20 rounded-xl transition-colors text-2xl leading-none">&times;</button>
             </div>
             <div class="flex-grow overflow-y-auto p-6 space-y-8 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
-                <p class="text-xs text-slate-600 dark:text-slate-400">Selected public changes. Notes reviewed 2026-11-11. Historical entries do not override the current availability or data-handling policy.</p>
+                <p class="text-xs text-slate-600 dark:text-slate-400">Selected public changes. Notes reviewed 2026-11-13. Historical entries do not override the current availability or data-handling policy.</p>
                 <section class="relative pl-6 border-l-2 border-emerald-500">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.8</h3>
+                        <span class="text-slate-400 text-[10px]">2026-11-13</span>
+                        <span class="text-emerald-600 text-[10px] font-bold">CURRENT</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li>Applied Full Default SOP Alignment.</li>
+                    </ul>
+                </section>
+                <section class="relative pl-6 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.7</h3>
+                        <span class="text-slate-400 text-[10px]">2026-11-13</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Science-Skills UI Diet (Setup, Results &amp; Footer):</b> Streamlined Setup availability prose and collapsed secondary policy baseline summary cards; auto-collapsed manual PDB/mmCIF upload drawers when ESMFold auto-resolves; compacted the Results principle banner, eliminated duplicate CAI/GC stacked cards into a 4-chip summary strip, tightened GC chart height, and grouped the 6 export/download buttons into a responsive 3-column grid.</li>
+                    </ul>
+                </section>
+                <section class="relative pl-6 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.6</h3>
+                        <span class="text-slate-400 text-[10px]">2026-11-13</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Default SOP Refinement (5′ Signal Peptide &amp; Arg/Ser Balancing):</b> Added <code class="font-mono">Preserve 5′ Signal Peptide (first 60 nt)</code> toggle (default ON for DNA CDS inputs) and equivalence-preserving <code class="font-mono">Arg</code> (<code class="font-mono">AGA:AGG</code>) / <code class="font-mono">Ser</code> (5-codon) balancing with adjacent tandem-repeat avoidance across 1DP, 3DP, and 4DP workflows.</li>
+                        <li><b>ESMFold Serverless Fix &amp; Accurate 4DP Status:</b> Added <code class="font-mono">requests</code> to serverless runtime requirements, fixed ESMFold status reporting when no in-bounds 4DP pause candidates exist, and collapsed verbose <code class="font-mono">P0-3</code> sidecar integrity details into an expandable drawer.</li>
+                        <li><b>Automatic Strategy Lock &amp; Pre-Generate Privacy Notice:</b> Locked manual workflow radio buttons when Automatic/Compare strategy is active and added an explicit zero-retention warning above the Generate button.</li>
+                    </ul>
+                </section>
+                <section class="relative pl-6 border-l-2 border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <h3 class="font-bold text-slate-800 dark:text-white">v3.6.5</h3>
+                        <span class="text-slate-400 text-[10px]">2026-11-13</span>
+                    </div>
+                    <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
+                        <li><b>Workflow Application Tooltips &amp; Clean UI:</b> Replaced inline verbose text paragraphs across 1DP–5DP workflow options with compact interactive info (<code class="font-mono">i</code>) hover tooltips, presenting application domains cleanly upon cursor hover or focus.</li>
+                        <li><b>Zero Server-Side Storage &amp; Privacy Transparency:</b> Added prominent top trust banner confirming ephemeral in-memory processing. User sequences are never stored on Vercel or cloud databases, with complete history isolation inside client browser storage only.</li>
+                        <li><b>One-Click Auto 3D Prediction (ESMFold):</b> Enabled client-triggered zero-friction ESMFold 3D structure prediction and auto-generation of 4DP translation-offset sidecars, unlocking 3DP/4DP seamlessly without requiring manual PDB file creation.</li>
+                        <li><b>Host &amp; Roadmap Epistemic Alignment:</b> Updated host selections to reflect Mammalian/Stem Cell in-development tracks, while strictly aligning with the evidence-driven product roadmap (5DP VLP and mRNA kinetics decoupled into independent exploratory research tracks; <em>Biological validation: NOT_AVAILABLE</em>).</li>
+                    </ul>
+                </section>
+                <section class="relative pl-6 border-l-2 border-slate-200 dark:border-slate-700">
                     <div class="flex items-center space-x-2 mb-2">
                         <h3 class="font-bold text-slate-800 dark:text-white">v3.6.4</h3>
                         <span class="text-slate-400 text-[10px]">2026-11-11</span>
-                        <span class="text-emerald-600 text-[10px] font-bold">CURRENT</span>
                     </div>
                     <ul class="text-xs text-slate-600 dark:text-slate-400 space-y-2 list-disc ml-4">
                         <li><b>Sequence-First UX &amp; Evidence-Aware Modes:</b> Replaced rigid input ordering with a unified multi-file dropzone (<code class="font-mono">.fasta</code>, <code class="font-mono">.fa</code>, <code class="font-mono">.txt</code>, <code class="font-mono">.pdb</code>, <code class="font-mono">.cif</code>, <code class="font-mono">.mmcif</code>, <code class="font-mono">.json</code>), multi-FASTA detection, and <b>Auto / Manual / Compare</b> design strategies (<code class="font-mono">Standard CDS Optimization</code>, <code class="font-mono">Structure-Guided CDS Design</code>, <code class="font-mono">Translation-Offset Guided Design</code>).</li>

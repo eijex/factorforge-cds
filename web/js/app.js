@@ -12,7 +12,7 @@ const HOST_LABELS = {
     nbenthamiana: 'N. benthamiana',
     by2: 'Tobacco BY-2',
     ntabacum: 'Tobacco BY-2',
-    human_stemcell: 'Human Stem Cell (hMSC / iPSC)'
+    human_stemcell: 'Mammalian / Human Stem Cell (hMSC / iPSC)',
 };
 // GC reference band per host. Populated live from GET /api/optimize's
 // host_metadata[host].gc_range (api/optimize.py's _default_gc_constraints /
@@ -446,9 +446,7 @@ function loadSopProfile() {
         if (parsed && typeof parsed === 'object') {
             if (typeof parsed.sop_name === 'string') {
                 parsed.sop_name = parsed.sop_name
-                    .replace(/PlantForm\s+Doug\s+Biologics/gi, 'Therapeutic Biologics')
-                    .replace(/PlantForm/gi, 'Therapeutic')
-                    .replace(/Doug/gi, 'Balanced');
+                    .replace(/Partner\s+Balanced\s+Biologics/gi, 'Therapeutic Biologics');
             }
             if (parsed.profile_id === 'sop-preset-b-therapeutic-biologics') {
                 return cloneJson(SOP_PRESETS.preset_b.profile);
@@ -1417,6 +1415,85 @@ function initEventListeners() {
         document.getElementById('structureWebReviewed').checked=true;
         document.getElementById('structureRecommendationStatus').textContent='Suggested positions copied and ready for 3DP design.';
     });
+
+    document.getElementById('autoResolveEsmBtn')?.addEventListener('click', async () => {
+        const active = getActiveProjectRecord();
+        const statusEl = document.getElementById('autoStructureStatus');
+        const btn = document.getElementById('autoResolveEsmBtn');
+        if (!active || active.effectiveType === 'invalid') {
+            if (statusEl) statusEl.textContent = 'Enter a valid sequence first.';
+            return;
+        }
+        const proteinSeq = getRecordProteinSequence(active);
+        if (!proteinSeq || proteinSeq.length > 500) {
+            if (statusEl) statusEl.textContent = 'ESMFold auto-predict supports up to 500 aa per chain.';
+            return;
+        }
+        if (!window.confirm('Send this protein sequence to the external ESMFold service?')) return;
+        if (btn) btn.disabled = true;
+        if (statusEl) statusEl.textContent = 'Predicting 3D structure via ESMFold (1–5s)...';
+        try {
+            const resp = await fetch(API_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'auto_resolve_structure',
+                    sequence: active.sequence,
+                    allow_remote: true,
+                }),
+            });
+            const payload = await resp.json();
+            if (!resp.ok || !payload?.resolved?.content) {
+                throw new Error(payload?.error || 'ESMFold structure prediction failed.');
+            }
+            const resolved = payload.resolved;
+            state.uploadedStructureFile = new File([resolved.content], `${active.name || 'esmfold_structure'}.pdb`, { type: 'chemical/x-pdb' });
+            state.uploadedStructureFormat = 'pdb';
+            state.uploadedStructureText = resolved.content;
+            state.parsedStructure = parseStructureChainsClient(resolved.content, 'pdb', 1);
+            inspectStructureAgainstRecords();
+            document.getElementById('structureWebPositions').value = (resolved.positions || []).join(',');
+            document.getElementById('structureWebReviewed').checked = false;
+            if (resolved.sidecar_4dp) {
+                applyAutoResolvedSidecar(resolved.sidecar_4dp, proteinSeq);
+            }
+            if (statusEl) {
+                statusEl.textContent = state.sidecarValidation?.ok
+                    ? `ESMFold ready (${proteinSeq.length} aa) · Review the proposed positions before running a design.`
+                    : `ESMFold ready (${proteinSeq.length} aa) · Review 3DP positions if available. No 4DP positions found.`;
+            }
+            const structureDrawer = document.querySelector('#structureWebInputs > details');
+            if (structureDrawer) structureDrawer.open = Boolean(resolved.positions?.length);
+            updateStrategyAndReadiness();
+        } catch (err) {
+            if (statusEl) statusEl.textContent = `Auto-predict unavailable: ${err.message}`;
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    });
+
+    document.getElementById('copyAf3JsonBtn')?.addEventListener('click', async () => {
+        const statusEl = document.getElementById('autoStructureStatus');
+        const records = (state.projectRecords || []).filter(r => r.effectiveType !== 'invalid');
+        if (!records.length) return;
+        const sequences = records.map(r => ({
+            proteinChain: {
+                sequence: getRecordProteinSequence(r),
+                count: 1,
+            },
+        }));
+        const af3Payload = [{
+            name: records.map(r => r.name || 'chain').slice(0, 2).join('_'),
+            modelSeeds: [],
+            sequences,
+        }];
+        try {
+            await navigator.clipboard.writeText(JSON.stringify(af3Payload, null, 2));
+            if (statusEl) statusEl.textContent = 'AlphaFold 3 Server JSON copied! Paste at alphafoldserver.com and drop the .cif here.';
+        } catch {
+            if (statusEl) statusEl.textContent = 'Clipboard blocked — copy manually from console.';
+        }
+    });
     ['structureWebChain','structureWebModel','structureWebSource'].forEach(id=>document.getElementById(id).addEventListener('change',()=>{
         invalidateStructureSuggestion();
         if (state.uploadedStructureText) {
@@ -2373,23 +2450,29 @@ function syncSelectedWorkflowNote() {
     const is3dp = state.researchDesignMode === 'paired_3dp';
     const is4dp = state.researchDesignMode === 'paired_4dp';
 
+    const isManual = state.strategyMode === 'manual';
+
     if (fieldset) {
-        fieldset.classList.toggle('opacity-65', state.strategyMode !== 'manual');
-        fieldset.classList.toggle('opacity-100', state.strategyMode === 'manual');
+        fieldset.disabled = !isManual;
+        fieldset.classList.toggle('opacity-65', !isManual);
+        fieldset.classList.toggle('opacity-100', isManual);
     }
     document.querySelectorAll('#manualWorkflowFieldset > label').forEach(lbl => {
         const inp = lbl.querySelector('input[name="researchDesignMode"]');
         const isAutoHighlight = state.strategyMode === 'auto' && Boolean(inp?.checked);
+        const isLockedOption = !isManual || inp?.value === 'experimental_5dp';
         lbl.classList.toggle('ring-2', isAutoHighlight);
         lbl.classList.toggle('ring-emerald-500/70', isAutoHighlight);
+        lbl.classList.toggle('cursor-not-allowed', isLockedOption);
+        lbl.classList.toggle('cursor-pointer', !isLockedOption);
     });
     if (modeNoteEl) {
         if (state.strategyMode === 'auto') {
-            modeNoteEl.textContent = 'Controlled by Automatic strategy — click any workflow below only to switch to Choose manually.';
+            modeNoteEl.textContent = 'Controlled by Automatic strategy — manual options below are locked. Switch to "Choose manually" above to override.';
         } else if (state.strategyMode === 'compare') {
-            modeNoteEl.textContent = 'Compare mode active — candidate selection is controlled by the Compare checkboxes above (click below to switch to Choose manually).';
+            modeNoteEl.textContent = 'Compare mode active — manual options below are locked. Switch to "Choose manually" above to pick a single workflow.';
         } else {
-            modeNoteEl.textContent = 'Manual selection active — choose 1DP, 3DP, or 4DP directly below.';
+            modeNoteEl.textContent = 'Manual selection active — choose 1DP, 2DP, 3DP, or 4DP directly below.';
         }
     }
     if (noteEl) {
@@ -2424,6 +2507,22 @@ function setStrategyMode(mode, { skipSync = false } = {}) {
     if (!skipSync) updateStrategyAndReadiness();
 }
 
+function applyAutoResolvedSidecar(sidecarObj, proteinSeq) {
+    if (!sidecarObj || typeof sidecarObj !== 'object') return;
+    state.pauseSidecarData = sidecarObj;
+    const allowMock = Boolean(document.getElementById('allowMockSidecar')?.checked);
+    state.sidecarValidation = validateSidecarIntegrity(sidecarObj, proteinSeq || '', allowMock);
+    renderSidecarIntegrityUi(state.sidecarValidation);
+    const statusBadge = document.getElementById('sidecarStatusBadge');
+    if (statusBadge) {
+        statusBadge.textContent = state.sidecarValidation.ok
+            ? 'Auto-generated 4DP sidecar ready'
+            : `Auto-sidecar: ${state.sidecarValidation.reasons[0] || 'review required'}`;
+    }
+    const radio4dp = document.querySelector('input[name="researchDesignMode"][value="paired_4dp"]');
+    if (radio4dp && state.sidecarValidation.ok) radio4dp.disabled = false;
+}
+
 function updateStrategyAndReadiness() {
     const headlineEl = document.getElementById('designReadinessHeadline');
     const listEl = document.getElementById('designReadinessList');
@@ -2437,7 +2536,7 @@ function updateStrategyAndReadiness() {
     if (state.strategyMode === 'auto') {
         const targetRadioVal = structureReady ? 'paired_3dp' : 'baseline_1dp';
         const radio = document.querySelector(`input[name="researchDesignMode"][value="${targetRadioVal}"]`);
-        if (radio && !radio.disabled && (!radio.checked || state.researchDesignMode !== targetRadioVal)) {
+        if (radio && !radio.hasAttribute('disabled') && (!radio.checked || state.researchDesignMode !== targetRadioVal)) {
             radio.checked = true;
             state.researchDesignMode = targetRadioVal;
         }
@@ -2486,6 +2585,16 @@ function updateStrategyAndReadiness() {
                 : (state.strategyMode === 'compare' ? 'Compare Mode: Eligible candidates queued sequentially/bounded (max 2 concurrent)' : `Manual Mode: ${state.researchDesignMode}`);
             listEl.innerHTML = items.map(i => `<li>${escapeHtml(i)}</li>`).join('');
         }
+    }
+
+    const autoBar = document.getElementById('autoStructureActionBar');
+    const esmBtn = document.getElementById('autoResolveEsmBtn');
+    const af3Btn = document.getElementById('copyAf3JsonBtn');
+    if (autoBar) {
+        const hasValid = records.some(r => r.effectiveType !== 'invalid');
+        autoBar.classList.toggle('hidden', !hasValid);
+        if (esmBtn) esmBtn.classList.toggle('hidden', structureReady || !proteinSeq || proteinSeq.length > 500);
+        if (af3Btn) af3Btn.classList.toggle('hidden', records.length < 2);
     }
 
     const is3dp = state.researchDesignMode === 'paired_3dp';
@@ -2846,6 +2955,7 @@ async function buildPayloadForRecordAndMode(record, targetMode) {
         mode: state.engineMode,
         save_db: state.saveDb,
         use_template: state.useTemplate,
+        preserve_signal_peptide: document.getElementById('preserveSignalPeptide') ? Boolean(document.getElementById('preserveSignalPeptide').checked) : true,
         kozak: state.kozak,
         dinuc: state.dinuc,
         return_candidates: true,
@@ -2906,7 +3016,12 @@ async function buildPayloadForRecordAndMode(record, targetMode) {
             });
             if (resolveResp.ok) {
                 const resolveJson = await resolveResp.json();
-                if (resolveJson?.resolved) resolvedViewer = resolveJson.resolved;
+                if (resolveJson?.resolved) {
+                    resolvedViewer = resolveJson.resolved;
+                    if (resolvedViewer.sidecar_4dp && !state.sidecarValidation?.ok) {
+                        applyAutoResolvedSidecar(resolvedViewer.sidecar_4dp, getRecordProteinSequence(record));
+                    }
+                }
             }
         } catch (resolveErr) {
             console.warn('Auto structure resolution warning:', resolveErr);
@@ -2968,6 +3083,9 @@ async function buildPayloadForRecordAndMode(record, targetMode) {
         delete payload.seed;
         delete payload.profile;
         delete payload.objective;
+    } else if (targetMode === 'experimental_2dp') {
+        payload.design_mode = 'experimental_2dp';
+        payload.constraints = getGcRange(state.host);
     }
     payload.acceptance_criteria = getAcceptanceCriteriaPayload();
     return { payload, resolvedViewer };
@@ -2982,7 +3100,12 @@ function renderCompareQueueBanner(jobStates) {
         return;
     }
     banner.classList.remove('hidden');
-    const modeLabel = m => (m === 'paired_3dp' ? '3DP' : m === 'paired_4dp' ? '4DP' : '1DP');
+    const modeLabel = m => ({
+        experimental_2dp: '2DP',
+        paired_3dp: '3DP',
+        paired_4dp: '4DP',
+        experimental_5dp: '5DP',
+    }[m] || '1DP');
     const badges = jobStates.map(j => {
         const cls = j.status === 'done'
             ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-200'
@@ -6454,7 +6577,7 @@ function submitValidation() {
     const params = new URLSearchParams({ template: 'wet_lab_result.yml' });
 
     if (state.results) {
-        const version = state.results.engine_versions?.product || '3.6.4';
+        const version = state.results.engine_versions?.product || '3.6.8';
         const profile = state.results?.profile || state.objective || '';
         params.set('title', `[wet-lab-summary] ${version} ${profile}`.trim());
     }

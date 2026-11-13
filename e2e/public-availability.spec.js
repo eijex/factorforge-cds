@@ -6,6 +6,9 @@ test('public 1DP/3DP/4DP availability and custom SOP collaboration terms remain 
   }));
   await page.goto('/');
   await expect(page.locator('input[value="baseline_1dp"]')).toBeChecked();
+  await expect(page.locator('input[value="paired_3dp"]')).toBeDisabled();
+  await expect(page.locator('input[value="paired_4dp"]')).toBeDisabled();
+  await page.locator('[data-strategy-mode="manual"]').click();
   await expect(page.locator('input[value="paired_3dp"]')).toBeEnabled();
   await expect(page.locator('input[value="paired_4dp"]')).toBeEnabled();
   await expect(page.locator('#policyScopeNotice')).toContainText('not an approved laboratory SOP');
@@ -40,6 +43,7 @@ test('4DP displays verified sidecar positions before review and clears review af
   await page.goto('/');
   const seq = 'MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLG';
   await page.locator('#sequenceInput').fill(seq);
+  await page.locator('[data-strategy-mode="manual"]').click();
   await page.locator('input[value="paired_4dp"]').check();
   const review = page.locator('#review4dpPositions');
   const ack = page.locator('[data-role="ack4dpHypothesis"]');
@@ -97,6 +101,7 @@ test('3DP requires structure upload cleanly without dead sample references', asy
     json: { capabilities: { direct_structure: { available: true, status: 'experimental' }, local_4dp: { available: true, fixtures: false } } }
   }));
   await page.goto('/');
+  await page.locator('[data-strategy-mode="manual"]').click();
   await page.locator('input[value="paired_3dp"]').check();
   await expect(page.locator('#structureWebInputs summary')).toContainText('Required: PDB / mmCIF structure upload and chain/position review');
   await page.locator('#sequenceInput').fill('MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG');
@@ -205,8 +210,8 @@ test('multi-FASTA, multi-chain PDB inspection, bounded Compare queue, and matrix
         validation: { input_type: 'protein', polya: 'PASS', moclo: 'PASS', gc: 'PASS' },
         constraint_report: { aa_identity: 1 },
         construct_id: `SYN-${mode.toUpperCase()}`,
-        product_version: '3.6.4',
-        engine_versions: { product: '3.6.4' },
+        product_version: '3.6.8',
+        engine_versions: { product: '3.6.8' },
         design_mode: mode,
         evidence_classification: 'UNVERIFIED_PUBLIC_CORPUS',
         biological_validation: 'NOT_AVAILABLE'
@@ -389,4 +394,55 @@ test('AF3 multi-chain mmCIF flags identical copies, enforces manual review check
   await expect(translationRow).toContainText('✓ PASS');
   await expect(translationRow).toContainText('✕ FAIL');
   await expect(page.locator('#multiCandidateCodonDiffContainer')).toContainText('3DP pause position');
+});
+
+test('ESMFold auto-predict resets prior review state and keeps structure drawer open for position review', async ({ page }) => {
+  const seq = 'MASTWQHLEK';
+  const aa3 = { M: 'MET', A: 'ALA', S: 'SER', T: 'THR', W: 'TRP', Q: 'GLN', H: 'HIS', L: 'LEU', E: 'GLU', K: 'LYS' };
+  const mockPdb = seq.split('').map((aa, i) => {
+    const res = String(i + 1).padStart(4, ' ');
+    const x = (i * 3.8).toFixed(3).padStart(8, ' ');
+    return `ATOM  ${String(i + 1).padStart(5, ' ')}  CA  ${aa3[aa]} A${res}    ${x}   0.000   0.000  1.00 85.00           C  `;
+  }).join('\n') + '\nEND\n';
+
+  await page.route('**/api/optimize', async route => {
+    const req = route.request();
+    if (req.method() === 'GET') {
+      return route.fulfill({
+        json: { capabilities: { direct_structure: { available: true, status: 'experimental' }, local_4dp: { available: true, fixtures: false } } }
+      });
+    }
+    const body = req.postDataJSON();
+    if (body.action === 'auto_resolve_structure') {
+      return route.fulfill({
+        json: {
+          resolved: {
+            content: mockPdb,
+            positions: [3, 7],
+            source_label: 'ESMFold (mocked)',
+          }
+        }
+      });
+    }
+    return route.fulfill({ json: { success: true } });
+  });
+
+  await page.goto('/');
+  await page.locator('#sequenceInput').fill(`>esm_test\n${seq}`);
+  await page.locator('#sequenceInput').dispatchEvent('input');
+
+  // Seed prior reviewed state to verify auto-predict resets it
+  await page.locator('[data-strategy-mode="manual"]').click();
+  await page.locator('input[name="researchDesignMode"][value="paired_3dp"]').check();
+  await page.locator('#structureWebPositions').fill('99');
+  await page.locator('#structureWebReviewed').check();
+  await page.locator('#structureWebInputs > details').evaluate(el => { el.open = false; });
+
+  page.on('dialog', dialog => dialog.accept());
+  await page.locator('#autoResolveEsmBtn').click();
+
+  await expect(page.locator('#autoStructureStatus')).toContainText('Review 3DP positions if available');
+  await expect(page.locator('#structureWebPositions')).toHaveValue('3,7');
+  await expect(page.locator('#structureWebReviewed')).not.toBeChecked();
+  await expect(page.locator('#structureWebInputs > details')).toHaveAttribute('open', '');
 });

@@ -58,7 +58,7 @@ def verify_gcp_account_policy(
     key_path: str | Path | None = None,
     bucket_name: str | None = None,
 ) -> dict[str, str]:
-    """Verifies that GCP configuration targets the eijex.lab@gmail.com workspace (factorforge-gcp-project)."""
+    """Verifies that GCP configuration targets the configured GCP workspace."""
     resolved_account = (
         account_email or os.environ.get("EIJEX_GCP_ACCOUNT") or REQUIRED_GCP_ACCOUNT
     ).strip()

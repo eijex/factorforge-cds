@@ -11,7 +11,7 @@ from .validation import validate_sequence
 
 HEADER_ALLOWLIST = ("engine", "host_profile", "profile", "sequence_hash")
 BLOCKED_HEADER_TERMS = (
-    "plantform",
+    "partner",
     "confidential",
     "private",
     "secret",

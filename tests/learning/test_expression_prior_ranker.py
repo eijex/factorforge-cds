@@ -70,7 +70,7 @@ def test_model_registry_lifecycle(tmp_path):
     prod_promoted = registry.promote_model(
         model_id="M-001",
         promoted_by="Lead Bioprocess Engineer",
-        rationale="Empirical PlantForm validation complete",
+        rationale="Empirical validation complete",
         validation_bundle_sha256="sha_bundle_01",
         is_simulated=False,
     )

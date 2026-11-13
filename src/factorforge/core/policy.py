@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import math
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass(frozen=True)

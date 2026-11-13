@@ -41,7 +41,7 @@ reports supported advisory findings without treating an unvalidated predictor
 signal as biological ground truth. It is not:
 
 - a validated laboratory SOP;
-- a policy approved by PlantForm or any other laboratory;
+- a policy approved by any external laboratory;
 - regulatory or biosafety guidance;
 - wet-lab evidence; or
 - a guarantee of expression, yield, synthesis acceptance, or biological

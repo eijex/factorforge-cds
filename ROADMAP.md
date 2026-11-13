@@ -19,7 +19,8 @@ Our priority is scientific validation and reproducibility across existing design
 Maintain and improve the deterministic CDS optimization engine (`1DP`) and pre-synthesis review workflow:
 
 - Strengthen constraint correctness, computational efficiency, reproducible benchmarks, and host-specific codon references for *N. benthamiana*.
-- Maintain and calibrate deterministic sequence-level quality checks (rule-based plant cryptic splice, poly-A, and ARE motif screening, with splice-like and poly-A scans surfaced in the 1DP/3DP/4DP comparison matrix) without adding heavy foundation model dependencies.
+- Verify software-level correctness, hard-constraint satisfaction, and reproducibility across 1DP, experimental 3DP, and experimental 4DP workflows.
+- Maintain and calibrate deterministic RNA motif QC (splice-like motifs, poly-A-like motifs, and AU-rich elements surfaced in the 1DP/3DP/4DP comparison matrix) without adding heavy foundation model dependencies.
 - Complete independent holdout evaluation before promoting any experimental optimizer to a production default.
 
 **Success criteria:** Verified constraint satisfaction, reproducible results, and documented performance against established baselines.
@@ -42,8 +43,7 @@ Evaluate the existing structure-guided (`3DP`) and translation-offset (`4DP`) de
 
 Test whether `3DP` and `4DP` provide measurable biological benefits over baseline and `1DP` CDS designs:
 
-- Compare baseline CDS designs against `1DP`, `3DP`, and `4DP` candidates using matched experimental systems in *N. benthamiana*.
-- Prioritize a limited number of biologically relevant constructs, including therapeutic proteins (such as Adalimumab) where suitable collaboration and permissions exist.
+- Conduct matched comparisons of baseline, 1DP, 3DP, and 4DP Adalimumab heavy-chain (HC) and light-chain (LC) CDS designs. Evaluate computational differences independently from experimentally measured expression, yield, and protein quality.
 - Record expression, yield, and relevant protein-quality measurements using predefined experimental endpoints (see [VALIDATION.md](VALIDATION.md)).
 
 **Collaboration & Feedback:** Public-safe summaries may be submitted via [GitHub Issues](https://github.com/eijex/factorforge-cds/issues/new?template=wet_lab_result.yml) under the [Wet-lab Validation](https://github.com/eijex/factorforge-cds/milestone/9) milestone. Private or confidential experimental feedback should be sent to `eijex.lab@gmail.com` instead of public issues.
@@ -58,7 +58,7 @@ Pursue model or host expansion only when empirical evidence and data readiness j
 
 - Refine design objectives and host-specific policies using validated experimental evidence.
 - Explore learned ranking or constrained machine-learning methods only when suitable training data and independent holdout evaluation datasets are available, without weakening deterministic sequence constraints.
-- **Host scope & BY-2 status:** *N. benthamiana* is the sole active plant target. Existing `BY-2` / *Nicotiana tabacum* aliases remain frozen for backward compatibility only (using proxy codon tables with no active host calibration or validation investment). Broader host expansion (`Sf9`, `Tni`, *Arabidopsis*, tomato, *Lemna*, *Wolffia*) is deferred indefinitely unless supported by curated reference data and validation capacity.
+- **Host scope:** Primary research host is *Nicotiana benthamiana*. Broader host expansion (`Sf9`, `Tni`, *Arabidopsis*, tomato, *Lemna*, *Wolffia*) is deferred indefinitely unless supported by curated reference data and validation capacity.
 
 **Success criteria:** Demonstrated improvements supported by independent validation, preserving strict deterministic invariants.
 

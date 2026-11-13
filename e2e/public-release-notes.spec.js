@@ -5,7 +5,7 @@ test('release modal shows current public changes and explicit boundaries', async
   await page.locator('#changelogBtn').click();
   const modal = page.locator('#changelogModal');
   await expect(modal).toBeVisible();
-  await expect(modal.locator('h3').first()).toHaveText('v3.6.4');
+  await expect(modal.locator('h3').first()).toHaveText('v3.6.8');
   await expect(modal).toContainText('Historical entries do not override');
   await expect(modal).toContainText('Public 1DP, 3DP, and 4DP Web Workflows');
   await expect(modal).toContainText('GNU AGPL-3.0');
@@ -22,5 +22,5 @@ test('release modal can be closed and reopened without retaining old content', a
   await page.locator('#closeModal').click();
   await expect(page.locator('#changelogModal')).toBeHidden();
   await page.locator('#changelogBtn').click();
-  await expect(page.locator('#changelogModal h3').first()).toHaveText('v3.6.4');
+  await expect(page.locator('#changelogModal h3').first()).toHaveText('v3.6.8');
 });

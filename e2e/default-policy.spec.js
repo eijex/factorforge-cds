@@ -20,6 +20,9 @@ test('public UI keeps the default policy and ignores saved custom settings', asy
  expect(payload.sop_profile.rules['assembly.type_iis.bsai.v1']).toBe('HARD_FAIL');
  const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('factorforge_active_sop_v2')));
  expect(stored.profile_id).toBe('saved_custom');
+ await expect(page.locator('input[name="researchDesignMode"][value="paired_3dp"]')).toBeDisabled();
+ await expect(page.locator('input[name="researchDesignMode"][value="paired_4dp"]')).toBeDisabled();
+ await page.locator('[data-strategy-mode="manual"]').click();
  await expect(page.locator('input[name="researchDesignMode"][value="paired_3dp"]')).toBeEnabled();
  await expect(page.locator('input[name="researchDesignMode"][value="paired_4dp"]')).toBeEnabled();
  await expect(page.locator('#structureWebInputs')).toBeHidden();

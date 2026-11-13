@@ -43,6 +43,7 @@ test('3DP auto-resolves or accepts optional structure input and submits to the s
   });
   await page.goto('/');
   await page.evaluate(()=>{window.open=()=>{throw new Error('Unexpected ResearchOS navigation');};});
+  await page.locator('[data-strategy-mode="manual"]').click();
   await page.locator('input[name="researchDesignMode"][value="paired_3dp"]').check();
   await expect(page.locator('#structureWebInputs')).toBeVisible();
   await expect(page.locator('#appliedPolicySummary')).toContainText('3DP selected');
@@ -68,6 +69,7 @@ test('3DP settings export and import restore controls without restoring structur
   const fs=require('node:fs');
   await page.route('**/api/optimize',r=>r.fulfill({json:{capabilities:{direct_structure:{available:true}},validation_checks:[]}}));
   await page.goto('/');
+  await page.locator('[data-strategy-mode="manual"]').click();
   await page.locator('input[name="researchDesignMode"][value="paired_3dp"]').check();
   await page.locator('#structureWebChain').fill('B');
   await page.locator('#structureWebPositions').fill('5,6');

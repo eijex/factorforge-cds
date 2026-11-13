@@ -330,7 +330,7 @@ class TestJob355DesignExperiment:
         # Verify excluded codons have verifiable rationales and sources
         cga = next(e for e in policy.excluded_codons if e.codon == "CGA")
         assert "silencing" in cga.reason.lower()
-        assert "Doug" in cga.evidence_source or "PlantForm" in cga.evidence_source
+        assert "Balanced Non-CpG Policy" in cga.evidence_source
 
         # Test Hamilton allocation on full LC mature sequence
         frozen_aa = len(FULL_HUMIRA_LC_DNA[:60]) // 3

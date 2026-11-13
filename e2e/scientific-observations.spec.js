@@ -9,6 +9,7 @@ test.beforeEach(async({page})=>{
  await page.waitForFunction(()=>apiCapabilities.structure_recommendation?.available);
 });
 test('unsupported structure observation never populates or approves positions',async({page})=>{
+ await page.locator('[data-strategy-mode="manual"]').click();
  await page.locator('input[name="researchDesignMode"][value="paired_3dp"]').check();
  await page.locator('#sequenceInput').fill('MASTWQHLEKDPVNRSGYF');
  await page.locator('#structureWebFile').setInputFiles({name:'synthetic.pdb',mimeType:'text/plain',buffer:Buffer.from('END')});
@@ -43,6 +44,7 @@ test('ZIP dossier uses recorded version and checks rather than invented passes',
 test('missing structure remains unreviewed and never requests auto resolution',async({page})=>{
  let autoCalls=0;
  page.on('request',request=>{if(request.postData()?.includes('auto_resolve_structure')) autoCalls++;});
+ await page.locator('[data-strategy-mode="manual"]').click();
  await page.locator('input[name="researchDesignMode"][value="paired_3dp"]').check();
  await page.locator('#sequenceInput').fill('MASTWQHLEKDPVNRSGYF');
  await page.locator('#recommendStructurePositions').click();

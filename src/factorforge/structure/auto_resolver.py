@@ -154,21 +154,72 @@ def build_cartoon_pdb_with_helices(
     return "\n".join(lines) + "\n"
 
 
+def build_4dp_sidecar_from_structure(
+    structure_content: str,
+    fmt: str,
+    chain_id: str = "A",
+    expected_sequence: str | None = None,
+    tunnel_offset: int = 35,
+) -> dict[str, Any] | None:
+    """Synthesize a schema-compatible 4DP pause sidecar from PDB or mmCIF text."""
+    import tempfile
+    from pathlib import Path
+
+    try:
+        if fmt == "pdb":
+            from factorforge.structure.esmfold_client import ESMFoldClientError, parse_esm_pdb
+
+            try:
+                return parse_esm_pdb(
+                    pdb_text=structure_content,
+                    target_chain=chain_id,
+                    tunnel_offset=tunnel_offset,
+                    expected_sequence=expected_sequence,
+                )
+            except (ESMFoldClientError, ValueError, KeyError):
+                return None
+        from factorforge.structure.alphafold_server_ingest import AlphaFoldIngestError, parse_af3_cif
+
+        with tempfile.NamedTemporaryFile("w", suffix=".cif", encoding="utf-8", delete=False) as tmp:
+            tmp.write(structure_content)
+            tmp_path = Path(tmp.name)
+        try:
+            return parse_af3_cif(tmp_path, target_chain=chain_id, tunnel_offset=tunnel_offset)
+        finally:
+            tmp_path.unlink(missing_ok=True)
+    except (AlphaFoldIngestError, ValueError, KeyError, OSError):
+        return None
+
+
 def auto_resolve_structure_for_protein(
     protein: str, uploaded_content: str | None = None,
     uploaded_format: str | None = None, chain_id: str = "A", model_number: int = 1,
+    allow_remote: bool = False,
 ) -> dict[str, Any]:
-    """Map an explicitly supplied structure locally; recommendations remain unreviewed."""
+    """Map an explicitly supplied structure locally, or predict via ESMFold when allow_remote=True."""
     clean = "".join(protein.upper().split()).rstrip("*")
+    source_label = "User-uploaded structure (provider unverified)"
     if not uploaded_content:
-        raise ValueError("Structure NOT_AVAILABLE: upload an exact-match PDB/mmCIF file. Remote inference and synthetic fallback are disabled.")
+        if not allow_remote:
+            raise ValueError("Structure NOT_AVAILABLE: upload an exact-match PDB/mmCIF file. Remote inference and synthetic fallback are disabled.")
+        from factorforge.structure.esmfold_client import predict_structure_esm
+
+        uploaded_content = predict_structure_esm(clean, provider="esmatlas", timeout=15.0)
+        uploaded_format = "pdb"
+        chain_id = "A"
+        model_number = 1
+        source_label = "ESMFold (api.esmatlas.com · UNVERIFIED_PUBLIC_CORPUS)"
     fmt = "pdb" if uploaded_format == "pdb" else "mmcif"
     rec = recommend_structure_pause_regions(clean, uploaded_content, format=fmt,
         chain_id=chain_id, model_number=model_number, is_alphafold=None)
+    sidecar_4dp = build_4dp_sidecar_from_structure(
+        uploaded_content, fmt, chain_id=chain_id, expected_sequence=clean
+    )
     return {"content": uploaded_content, "format": fmt, "chain": chain_id,
             "model": model_number, "positions": list(rec.recommended_positions),
-            "positions_reviewed": False, "source_label": "User-uploaded structure (provider unverified)",
+            "positions_reviewed": False, "source_label": source_label,
             "protein_sha256": hashlib.sha256(clean.encode()).hexdigest(),
             "structure_sha256": hashlib.sha256(uploaded_content.encode()).hexdigest(),
             "ca_trace": extract_ca_trace(uploaded_content, fmt, chain_id, model_number),
-            "cartoon_pdb": build_cartoon_pdb_with_helices(uploaded_content, fmt, chain_id, model_number)}
+            "cartoon_pdb": build_cartoon_pdb_with_helices(uploaded_content, fmt, chain_id, model_number),
+            "sidecar_4dp": sidecar_4dp}
