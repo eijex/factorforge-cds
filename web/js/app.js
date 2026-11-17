@@ -498,7 +498,11 @@ function ensure3DmolLoaded() {
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.4.2/3Dmol-min.js';
         script.async = true;
         script.onload = () => resolve(Boolean(window.$3Dmol));
-        script.onerror = () => resolve(false);
+        script.onerror = () => {
+            _3dmolLoadPromise = null;
+            script.remove();
+            resolve(false);
+        };
         document.head.appendChild(script);
     });
     return _3dmolLoadPromise;
@@ -6354,22 +6358,23 @@ function addToHistory(input, result) {
 
     state.history.unshift(item);
     if (state.history.length > 10) state.history.pop();
+    const persisted = [...state.history];
     let saved = false;
-    while (state.history.length > 0 && !saved) {
+    while (persisted.length > 0 && !saved) {
         try {
-            localStorage.setItem('factorforge_history', JSON.stringify({ schemaVersion: HISTORY_SCHEMA_VERSION, items: state.history }));
+            localStorage.setItem('factorforge_history', JSON.stringify({ schemaVersion: HISTORY_SCHEMA_VERSION, items: persisted }));
             saved = true;
         } catch (err) {
             if (err?.name === 'QuotaExceededError' || err?.code === 22) {
-                state.history.pop();
+                persisted.pop();
             } else {
                 console.warn('Unable to persist history to localStorage:', err);
                 break;
             }
         }
     }
-    if (!saved && state.history.length === 0) {
-        showToast('Browser storage full — unable to save design history locally.', 'info');
+    if (!saved && persisted.length === 0) {
+        showToast('Browser storage full — design kept in session only.', 'info');
     }
     renderHistory();
 }
