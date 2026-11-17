@@ -479,6 +479,30 @@ const MAX_PROJECT_RECORDS = 6;
 const MAX_PROJECT_TOTAL_AA = 2500;
 const MAX_STRUCTURE_WEB_BYTES = 450000;
 const MAX_SIDECAR_WEB_BYTES = 250000;
+const MAX_FASTA_WEB_BYTES = 5 * 1024 * 1024; // 5 MB client guard
+const API_POST_TIMEOUT_MS = 35000;
+const EXAMPLE_SFGFP_FASTA = '>sfGFP_worked_example | Superfolder GFP (236 aa, PDB:2B3P)\nMSKGEELFTGVVPILVELDGDVNGHKFSVRGEGEGDATNGKLTLKFICTTGKLPVPWPTLVTTLYVQCFSRYPDHMKRHDFFKSAMPEGYVQERTISFKDDGTYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNFNSHNVYITADKQKNGIKANFKIRHNVEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSVLSKDPNEKRDHMVLLEFVTAAGITHGMDELYK';
+
+function apiTimeoutSignal(ms = API_POST_TIMEOUT_MS) {
+    return (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function')
+        ? AbortSignal.timeout(ms)
+        : undefined;
+}
+
+let _3dmolLoadPromise = null;
+function ensure3DmolLoaded() {
+    if (window.$3Dmol) return Promise.resolve(true);
+    if (_3dmolLoadPromise) return _3dmolLoadPromise;
+    _3dmolLoadPromise = new Promise(resolve => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.4.2/3Dmol-min.js';
+        script.async = true;
+        script.onload = () => resolve(Boolean(window.$3Dmol));
+        script.onerror = () => resolve(false);
+        document.head.appendChild(script);
+    });
+    return _3dmolLoadPromise;
+}
 const THREE_TO_ONE_JS = Object.freeze({
     ALA: 'A', CYS: 'C', ASP: 'D', GLU: 'E', PHE: 'F',
     GLY: 'G', HIS: 'H', ILE: 'I', LYS: 'K', LEU: 'L',
@@ -646,6 +670,7 @@ const elements = {
     tabBtnDifferences: document.getElementById('tabBtnDifferences'),
     tabBtnTrace: document.getElementById('tabBtnTrace'),
     tabBtnEvidence: document.getElementById('tabBtnEvidence'),
+    tabPaneSummary: document.getElementById('tabPaneSummary'),
     tabPaneComparison: document.getElementById('tabPaneComparison'),
     tabPaneTrace: document.getElementById('tabPaneTrace'),
     tabPaneEvidence: document.getElementById('tabPaneEvidence'),
@@ -1375,6 +1400,13 @@ function initEventListeners() {
     // Action
     elements.optimizeBtn.addEventListener('click', runOptimization);
 
+    document.getElementById('loadExampleSeqBtn')?.addEventListener('click', () => {
+        if (!elements.sequenceInput) return;
+        elements.sequenceInput.value = EXAMPLE_SFGFP_FASTA;
+        handleSequenceChange({ target: elements.sequenceInput });
+        showToast('Loaded sfGFP example (236 aa)', 'success');
+    });
+
     document.getElementById('structureWebFile')?.addEventListener('change', async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -1429,13 +1461,13 @@ function initEventListeners() {
             if (statusEl) statusEl.textContent = 'ESMFold auto-predict supports up to 500 aa per chain.';
             return;
         }
-        if (!window.confirm('Send this protein sequence to the external ESMFold service?')) return;
         if (btn) btn.disabled = true;
-        if (statusEl) statusEl.textContent = 'Predicting 3D structure via ESMFold (1–5s)...';
+        if (statusEl) statusEl.textContent = 'Sending sequence to external ESMFold service (api.esmatlas.com, ~1–5s)...';
         try {
             const resp = await fetch(API_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                signal: apiTimeoutSignal(30000),
                 body: JSON.stringify({
                     action: 'auto_resolve_structure',
                     sequence: active.sequence,
@@ -2708,11 +2740,15 @@ async function runBoundedQueue(jobs, concurrency = 2, onUpdate = () => {}) {
                 const resp = await fetch(API_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    signal: apiTimeoutSignal(),
                     body: JSON.stringify(job.payload),
                 });
                 const body = await resp.json().catch(() => ({}));
                 if (!resp.ok || body.success === false) {
-                    throw new Error(body.error || `API request failed (${resp.status})`);
+                    const fallbackMsg = resp.status === 429
+                        ? 'Rate limit reached — please wait a moment and retry.'
+                        : `API request failed (${resp.status})`;
+                    throw new Error(body.error || fallbackMsg);
                 }
                 const elapsedMs = Math.round(performance.now() - started);
                 results[idx] = { ok: true, data: body, elapsedMs };
@@ -2742,6 +2778,10 @@ function applySequenceFile(file) {
     }
     if (!/\.(fasta|fa|txt)$/i.test(file.name)) {
         showToast('Unsupported file type. Upload a .fasta, .fa, .txt, .pdb, .cif, .mmcif, or .json file.', 'error');
+        return;
+    }
+    if (file.size > MAX_FASTA_WEB_BYTES) {
+        showToast('Sequence file exceeds the 5 MB browser limit. Please upload a smaller FASTA/text file.', 'error');
         return;
     }
 
@@ -2864,7 +2904,7 @@ async function recommendStructurePositions() {
         const source = document.getElementById('structureWebSource').value;
         const contentText = file ? await file.text() : state.uploadedStructureText;
         const format = file ? (/\.pdb$/i.test(file.name) ? 'pdb' : 'mmcif') : state.uploadedStructureFormat;
-        const response = await fetch(API_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'recommend_structure',sequence:state.sequence,structure_context:{content:contentText,format,chain:document.getElementById('structureWebChain').value.trim(),model:Number(document.getElementById('structureWebModel').value),is_alphafold:source==='unknown'?null:source==='alphafold'}})});
+        const response = await fetch(API_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},signal:apiTimeoutSignal(),body:JSON.stringify({action:'recommend_structure',sequence:state.sequence,structure_context:{content:contentText,format,chain:document.getElementById('structureWebChain').value.trim(),model:Number(document.getElementById('structureWebModel').value),is_alphafold:source==='unknown'?null:source==='alphafold'}})});
         const data = await response.json();
         if (!response.ok || !data.recommendation) throw new Error(data.error || 'Recommendation failed');
         if (revision!==structureRecommendationRevision) return;
@@ -3003,6 +3043,7 @@ async function buildPayloadForRecordAndMode(record, targetMode) {
             const resolveResp = await fetch(API_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                signal: apiTimeoutSignal(),
                 body: JSON.stringify({
                     action: 'auto_resolve_structure',
                     sequence: record.sequence,
@@ -4001,6 +4042,15 @@ function renderStructure3dViewer(res, primary) {
         return;
     }
     container.classList.remove('hidden');
+    if (!window.$3Dmol) {
+        const renderToken = String(Date.now()) + ':' + String(payload.residues.length);
+        container.dataset.ff3dToken = renderToken;
+        ensure3DmolLoaded().then(loaded => {
+            if (loaded && container.dataset.ff3dToken === renderToken) {
+                renderStructure3dViewer(res, primary);
+            }
+        });
+    }
 
     const is3dp = payload.mode === '3dp';
     let leftMode = 'orig';
@@ -6284,15 +6334,17 @@ function historyResultSnapshot(result, primary) {
 }
 
 function addToHistory(input, result) {
-    if (result?.design_mode === 'paired_4dp') return;
     const primary = getPrimaryResult(result);
+    const profileLabel = result?.design_mode === 'paired_4dp'
+        ? 'translation_4dp'
+        : (result?.design_mode === 'paired_3dp' ? 'structure_3dp' : state.objective);
     const item = {
         id: Date.now(),
         schemaVersion: HISTORY_SCHEMA_VERSION,
         timestamp: new Date().toLocaleString(),
         inputLen: input.length,
         inputType: result.input_type || result.validation?.input_type || result.provenance?.normalized_input_type || null,
-        profile: result.design_mode === 'paired_3dp' ? 'structure_3dp' : state.objective,
+        profile: profileLabel,
         host: getResultHostProfile(result),
         cai: primary.metrics.cai,
         gc: calculateGC(primary.optimized_sequence),
@@ -6302,10 +6354,22 @@ function addToHistory(input, result) {
 
     state.history.unshift(item);
     if (state.history.length > 10) state.history.pop();
-    try {
-        localStorage.setItem('factorforge_history', JSON.stringify({ schemaVersion: HISTORY_SCHEMA_VERSION, items: state.history }));
-    } catch (err) {
-        console.warn('Unable to persist full history to localStorage:', err);
+    let saved = false;
+    while (state.history.length > 0 && !saved) {
+        try {
+            localStorage.setItem('factorforge_history', JSON.stringify({ schemaVersion: HISTORY_SCHEMA_VERSION, items: state.history }));
+            saved = true;
+        } catch (err) {
+            if (err?.name === 'QuotaExceededError' || err?.code === 22) {
+                state.history.pop();
+            } else {
+                console.warn('Unable to persist history to localStorage:', err);
+                break;
+            }
+        }
+    }
+    if (!saved && state.history.length === 0) {
+        showToast('Browser storage full — unable to save design history locally.', 'info');
     }
     renderHistory();
 }
@@ -6743,6 +6807,7 @@ function initWorkspaceTabs() {
     function activateTab(tabId) {
         tabs.forEach(t => {
             if (t.btn) {
+                t.btn.tabIndex = t.id === tabId ? 0 : -1;
                 if (t.id === tabId) {
                     t.btn.classList.add('active');
                     t.btn.setAttribute('aria-selected', 'true');
@@ -6753,58 +6818,32 @@ function initWorkspaceTabs() {
             }
         });
 
-        // Toggle panes
-        const summarySections = [
-            elements.sameProteinBanner,
-            elements.codonAccounting,
-            elements.mfeWarningBanner,
-            elements.designContractSummary,
-            elements.automatedDecisionCard,
-            elements.validationStatus,
-            elements.qcDecisionMatrix,
-            document.querySelector('#resultsContainer table.w-full'),
-            elements.customRestrictionResults,
-            document.querySelector('#resultsContainer .grid.grid-cols-2'),
-            elements.resultsReport
-        ];
-
-        if (tabId === 'summary') {
-            summarySections.forEach(s => s && s.classList.remove('hidden'));
-            if (elements.tabPaneComparison) elements.tabPaneComparison.classList.add('hidden');
-            if (elements.comparisonDashboard) elements.comparisonDashboard.classList.add('hidden');
-            if (elements.tabPaneTrace) elements.tabPaneTrace.classList.add('hidden');
-            if (elements.tabPaneEvidence) elements.tabPaneEvidence.classList.add('hidden');
-        } else if (tabId === 'comparison') {
-            summarySections.forEach(s => s && s.classList.add('hidden'));
-            if (elements.tabPaneComparison) elements.tabPaneComparison.classList.remove('hidden');
-            if (elements.comparisonDashboard) elements.comparisonDashboard.classList.add('hidden');
-            if (elements.tabPaneTrace) elements.tabPaneTrace.classList.add('hidden');
-            if (elements.tabPaneEvidence) elements.tabPaneEvidence.classList.add('hidden');
-        } else if (tabId === 'differences') {
-            summarySections.forEach(s => s && s.classList.add('hidden'));
-            if (elements.tabPaneComparison) elements.tabPaneComparison.classList.add('hidden');
-            if (elements.comparisonDashboard) elements.comparisonDashboard.classList.remove('hidden');
-            if (elements.tabPaneTrace) elements.tabPaneTrace.classList.add('hidden');
-            if (elements.tabPaneEvidence) elements.tabPaneEvidence.classList.add('hidden');
-        } else if (tabId === 'trace') {
-            summarySections.forEach(s => s && s.classList.add('hidden'));
-            if (elements.tabPaneComparison) elements.tabPaneComparison.classList.add('hidden');
-            if (elements.comparisonDashboard) elements.comparisonDashboard.classList.add('hidden');
-            if (elements.tabPaneTrace) elements.tabPaneTrace.classList.remove('hidden');
-            if (elements.tabPaneEvidence) elements.tabPaneEvidence.classList.add('hidden');
-        } else if (tabId === 'evidence') {
-            summarySections.forEach(s => s && s.classList.add('hidden'));
-            if (elements.tabPaneComparison) elements.tabPaneComparison.classList.add('hidden');
-            if (elements.comparisonDashboard) elements.comparisonDashboard.classList.add('hidden');
-            if (elements.tabPaneTrace) elements.tabPaneTrace.classList.add('hidden');
-            if (elements.tabPaneEvidence) elements.tabPaneEvidence.classList.remove('hidden');
-        }
+        // Toggle panes cleanly without mutating conditional banners inside Summary
+        if (elements.tabPaneSummary) elements.tabPaneSummary.classList.toggle('hidden', tabId !== 'summary');
+        if (elements.tabPaneComparison) elements.tabPaneComparison.classList.toggle('hidden', tabId !== 'comparison');
+        if (elements.comparisonDashboard) elements.comparisonDashboard.classList.toggle('hidden', tabId !== 'differences');
+        if (elements.tabPaneTrace) elements.tabPaneTrace.classList.toggle('hidden', tabId !== 'trace');
+        if (elements.tabPaneEvidence) elements.tabPaneEvidence.classList.toggle('hidden', tabId !== 'evidence');
     }
 
-    tabs.forEach(t => {
-        if (t.btn) {
-            t.btn.addEventListener('click', () => activateTab(t.id));
-        }
+    const availableTabs = tabs.filter(tab => tab.btn);
+    availableTabs.forEach((tab, index) => {
+        tab.btn.tabIndex = tab.btn.getAttribute('aria-selected') === 'true' ? 0 : -1;
+        tab.btn.addEventListener('click', () => activateTab(tab.id));
+        tab.btn.addEventListener('keydown', event => {
+            const last = availableTabs.length - 1;
+            const destinations = {
+                ArrowLeft: index === 0 ? last : index - 1,
+                ArrowRight: index === last ? 0 : index + 1,
+                Home: 0,
+                End: last
+            };
+            if (!Object.hasOwn(destinations, event.key)) return;
+            event.preventDefault();
+            const next = availableTabs[destinations[event.key]];
+            activateTab(next.id);
+            next.btn.focus();
+        });
     });
 
     if (elements.btnEditSettings) {

@@ -2,6 +2,8 @@
 
 A fully reproducible end-to-end CDS design example using Superfolder GFP (sfGFP) as the target protein.
 
+> **Engine Scope Note:** `run_example.py` is explicitly pinned to the legacy v1 `RuleBasedOptimizer` (`assembly_friendly`, legacy `nbenthamiana_codons.json`, 55–65% GC) so its frozen `design_package.json` and `validation_summary.json` outputs remain reproducible across releases. To run a smoke check on the current `DP v2` + `NbeV1.1` (40–47% GC) path described in the JOSS paper, use `python run_example_v2_smoke.py`.
+
 ## Overview
 
 | Parameter | Value |

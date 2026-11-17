@@ -641,7 +641,7 @@ section>div:hover {
 @media (max-width: 640px) {
     #designBriefPanel { min-width: 0; }
     #designBriefPanel select { min-width: 0; max-width: 100%; }
-    #designBriefPanel .tooltip-text { left: auto; right: 0; margin-left: 0; }
+    .tooltip-text { left: auto; right: 0; margin-left: 0; max-width: calc(100vw - 2rem); }
     header h1 {
         font-size: 1.25rem;
     }

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 import sys
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 _HERE = Path(__file__).resolve().parent
@@ -34,7 +34,7 @@ class FactorForgeHandler(OptimizeAPIHandler, SimpleHTTPRequestHandler):
     """
 
     def do_POST(self) -> None:
-        if self.path == "/api/optimize":
+        if self.path.split("?", 1)[0].startswith("/api/"):
             OptimizeAPIHandler.do_POST(self)
         else:
             self.send_error(404, "Not found")
@@ -51,7 +51,7 @@ class FactorForgeHandler(OptimizeAPIHandler, SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    server = HTTPServer(("0.0.0.0", port), FactorForgeHandler)
+    server = ThreadingHTTPServer(("0.0.0.0", port), FactorForgeHandler)
     print(f"FactorForge running at http://localhost:{port}")
     print("Press Ctrl+C to stop.")
     try:

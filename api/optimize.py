@@ -5,6 +5,7 @@ Default objective: feasibility_best (DP feasibility / constraint-based CDS desig
 Profile comparison engine: constraint-aware rule-based profiles
 """
 
+import copy
 import hashlib
 import json
 import logging
@@ -12,6 +13,9 @@ import os
 import re
 import sys
 import tempfile
+import threading
+import time
+from collections import OrderedDict, deque
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler
 from typing import Any
@@ -116,6 +120,13 @@ DEFAULT_COMPARE_PROFILES = [
 ]
 MAX_COMPARE_PROFILES = 6
 MAX_BATCH_SEQUENCES = 20
+MAX_BATCH_TOTAL_AA = int(os.environ.get("FACTORFORGE_MAX_BATCH_TOTAL_AA", "10000"))
+MAX_COMPARE_TOTAL_AA = int(os.environ.get("FACTORFORGE_MAX_COMPARE_TOTAL_AA", "10000"))
+MAX_REQUEST_BODY_BYTES = 1_000_000
+RATE_LIMIT_MAX_REQUESTS = int(os.environ.get("FACTORFORGE_RATE_LIMIT_MAX", "120"))
+RATE_LIMIT_WINDOW_SECONDS = int(os.environ.get("FACTORFORGE_RATE_LIMIT_WINDOW", "60"))
+MAX_RATE_LIMIT_KEYS = 4096
+ESMFOLD_CACHE_MAX_ENTRIES = int(os.environ.get("FACTORFORGE_ESMFOLD_CACHE_MAX", "128"))
 VALID_OBJECTIVES = ["feasibility_best", "dp_v2_1", "dp_v2_1_1"]
 DEFAULT_OBJECTIVE = "feasibility_best"
 DEFAULT_HOST_PROFILE = "nbenthamiana"
@@ -294,18 +305,150 @@ def _local_4dp_fixtures_enabled(request):
     )
 
 
+_RATE_LIMIT_BUCKETS: OrderedDict[str, deque[float]] = OrderedDict()
+_RATE_LIMIT_LOCK = threading.Lock()
+_ESMFOLD_CACHE: OrderedDict[str, dict[str, Any]] = OrderedDict()
+_ESMFOLD_CACHE_LOCK = threading.Lock()
+
+
+def _reset_rate_limiter() -> None:
+    """Clear in-memory per-IP rate-limit buckets (for testing)."""
+    with _RATE_LIMIT_LOCK:
+        _RATE_LIMIT_BUCKETS.clear()
+
+
+def _reset_esmfold_cache() -> None:
+    """Clear in-memory ESMFold LRU cache (for testing)."""
+    with _ESMFOLD_CACHE_LOCK:
+        _ESMFOLD_CACHE.clear()
+
+
+def _extract_client_ip(request_handler: Any) -> str:
+    """Extract best-effort client IP from proxy headers or socket address."""
+    headers = getattr(request_handler, "headers", None)
+    if headers:
+        xff = headers.get("X-Forwarded-For") or headers.get("x-forwarded-for")
+        if xff:
+            first_ip = str(xff).split(",")[0].strip()
+            if first_ip:
+                return first_ip
+        xri = headers.get("X-Real-IP") or headers.get("x-real-ip")
+        if xri:
+            real_ip = str(xri).strip()
+            if real_ip:
+                return real_ip
+    client_address = getattr(request_handler, "client_address", None)
+    if isinstance(client_address, (tuple, list)) and client_address and client_address[0]:
+        return str(client_address[0])
+    return "unknown"
+
+
+def _check_rate_limit(client_ip: str, now: float | None = None) -> tuple[bool, int]:
+    """Check and record a sliding-window per-IP request; returns (allowed, retry_after_s)."""
+    max_requests = max(1, RATE_LIMIT_MAX_REQUESTS)
+    window = max(1, RATE_LIMIT_WINDOW_SECONDS)
+    ts = time.monotonic() if now is None else now
+    cutoff = ts - window
+
+    with _RATE_LIMIT_LOCK:
+        bucket = _RATE_LIMIT_BUCKETS.get(client_ip)
+        if bucket is None:
+            bucket = deque()
+            _RATE_LIMIT_BUCKETS[client_ip] = bucket
+        else:
+            _RATE_LIMIT_BUCKETS.move_to_end(client_ip)
+
+        while bucket and bucket[0] <= cutoff:
+            bucket.popleft()
+
+        if len(bucket) >= max_requests:
+            retry_after = max(1, int(bucket[0] + window - ts) + 1)
+            return False, retry_after
+
+        bucket.append(ts)
+        while len(_RATE_LIMIT_BUCKETS) > MAX_RATE_LIMIT_KEYS:
+            _RATE_LIMIT_BUCKETS.popitem(last=False)
+        return True, 0
+
+
+def _esmfold_cache_key(protein_sequence: str) -> str:
+    """Return canonical SHA-256 cache key for a cleaned protein sequence."""
+    clean = "".join(protein_sequence.upper().split()).rstrip("*")
+    return hashlib.sha256(clean.encode("utf-8")).hexdigest()
+
+
+def _get_cached_esmfold(protein_sequence: str) -> dict[str, Any] | None:
+    """Fetch a deep copy of a cached ESMFold resolution, updating LRU order."""
+    key = _esmfold_cache_key(protein_sequence)
+    with _ESMFOLD_CACHE_LOCK:
+        cached = _ESMFOLD_CACHE.get(key)
+        if cached is None:
+            return None
+        _ESMFOLD_CACHE.move_to_end(key)
+        return copy.deepcopy(cached)
+
+
+def _set_cached_esmfold(protein_sequence: str, resolved: dict[str, Any]) -> None:
+    """Store a deep copy of an ESMFold resolution in the bounded LRU cache."""
+    max_entries = max(1, ESMFOLD_CACHE_MAX_ENTRIES)
+    key = _esmfold_cache_key(protein_sequence)
+    with _ESMFOLD_CACHE_LOCK:
+        _ESMFOLD_CACHE[key] = copy.deepcopy(resolved)
+        _ESMFOLD_CACHE.move_to_end(key)
+        while len(_ESMFOLD_CACHE) > max_entries:
+            _ESMFOLD_CACHE.popitem(last=False)
+
+
+def _sequence_aa_equiv(cleaned: str) -> int:
+    """Return amino-acid length equivalent for DNA (bp/3) or protein sequences."""
+    if bool(cleaned) and set(cleaned) <= set("ACGTUN"):
+        return (len(cleaned) + 2) // 3
+    return len(cleaned)
+
+
 class handler(BaseHTTPRequestHandler):
     """Vercel Serverless Function Handler"""
 
     def do_POST(self):
         """Handle POST requests"""
         try:
-            # Parse request body
-            content_length = int(self.headers.get("Content-Length", 0))
-            if not 0 <= content_length <= 1_000_000:
+            client_ip = _extract_client_ip(self)
+            allowed, retry_after = _check_rate_limit(client_ip)
+            if not allowed:
+                self.send_json_response(
+                    429,
+                    {
+                        "success": False,
+                        "error": "Rate limit exceeded. Please retry later.",
+                        "error_code": "RATE_LIMIT_EXCEEDED",
+                        "retry_after": retry_after,
+                    },
+                    headers={"Retry-After": str(retry_after)},
+                )
+                return
+
+            # Parse request body with hardened Content-Length / Transfer-Encoding checks
+            transfer_encoding = str(self.headers.get("Transfer-Encoding", "")).lower()
+            if "chunked" in transfer_encoding:
+                self.send_error_response(400, "Chunked transfer encoding is not supported")
+                return
+            raw_content_length = self.headers.get("Content-Length", "0")
+            try:
+                content_length = int(str(raw_content_length).strip())
+            except (TypeError, ValueError):
+                self.send_error_response(400, "Invalid Content-Length header")
+                return
+            if content_length < 0:
+                self.send_error_response(400, "Invalid Content-Length header")
+                return
+            if content_length > MAX_REQUEST_BODY_BYTES:
                 self.send_error_response(413, "Request body exceeds the 1 MB limit")
                 return
-            body = self.rfile.read(content_length).decode("utf-8")
+            try:
+                body = self.rfile.read(content_length).decode("utf-8")
+            except UnicodeDecodeError:
+                self.send_error_response(400, "Request body must be valid UTF-8")
+                return
             data = json.loads(body)
             if not isinstance(data, dict):
                 self.send_error_response(400, "Request body must be a JSON object")
@@ -389,15 +532,33 @@ class handler(BaseHTTPRequestHandler):
                 if not context["generation_allowed"]:
                     raise ValueError("Invalid sequence input for automatic structure resolution")
                 structure = data.get("structure_context") if isinstance(data.get("structure_context"), dict) else {}
-                resolved = auto_resolve_structure_for_protein(
-                    context["optimization_sequence"],
-                    uploaded_content=structure.get("content"),
-                    uploaded_format=structure.get("format"),
-                    chain_id=structure.get("chain", "A") or "A",
-                    model_number=int(structure.get("model", 1) or 1),
-                    allow_remote=bool(data.get("allow_remote", False)),
+                uploaded_content = structure.get("content")
+                allow_remote = bool(data.get("allow_remote", False))
+                cache_hit = False
+                resolved = None
+                if not uploaded_content and allow_remote:
+                    resolved = _get_cached_esmfold(context["optimization_sequence"])
+                    cache_hit = resolved is not None
+                if resolved is None:
+                    resolved = auto_resolve_structure_for_protein(
+                        context["optimization_sequence"],
+                        uploaded_content=uploaded_content,
+                        uploaded_format=structure.get("format"),
+                        chain_id=structure.get("chain", "A") or "A",
+                        model_number=int(structure.get("model", 1) or 1),
+                        allow_remote=allow_remote,
+                    )
+                    if not uploaded_content and allow_remote:
+                        _set_cached_esmfold(context["optimization_sequence"], resolved)
+                self.send_json_response(
+                    200,
+                    {
+                        "success": True,
+                        "action": "auto_resolve_structure",
+                        "resolved": resolved,
+                        "cache_hit": cache_hit,
+                    },
                 )
-                self.send_json_response(200, {"success": True, "action": "auto_resolve_structure", "resolved": resolved})
                 return
             if data.get("action") == "get_sample_sidecar":
                 if not _local_4dp_fixtures_enabled(self):
@@ -1654,6 +1815,14 @@ class handler(BaseHTTPRequestHandler):
                 }
             sequence = self.validate_compare_sequence(data.get("sequence", ""))
             profiles = self.validate_compare_profiles(data.get("profiles"))
+            seq_aa = _sequence_aa_equiv(sequence)
+            total_aa = seq_aa * len(profiles)
+            if total_aa > MAX_COMPARE_TOTAL_AA:
+                raise ValueError(
+                    f"Compare workload exceeds {MAX_COMPARE_TOTAL_AA:,} total amino-acid "
+                    f"equivalents ({seq_aa:,} aa x {len(profiles)} profiles = {total_aa:,}); "
+                    "reduce sequence length or profile count."
+                )
             scan_mode = str(data.get("scan_mode", "fast")).lower()
             if scan_mode not in {"fast", "full"}:
                 raise ValueError("scan_mode must be one of: fast, full")
@@ -1705,6 +1874,7 @@ class handler(BaseHTTPRequestHandler):
             raise ValueError("Batch limit is 20 sequences")
 
         normalized = []
+        total_aa = 0
         for index, entry in enumerate(sequences, start=1):
             if isinstance(entry, dict):
                 sequence_id = str(entry.get("id") or f"seq_{index}").strip() or f"seq_{index}"
@@ -1714,6 +1884,12 @@ class handler(BaseHTTPRequestHandler):
                 raw_sequence = entry
 
             sequence = self.validate_compare_sequence(raw_sequence)
+            total_aa += _sequence_aa_equiv(sequence)
+            if total_aa > MAX_BATCH_TOTAL_AA:
+                raise ValueError(
+                    f"Batch total length exceeds {MAX_BATCH_TOTAL_AA:,} amino-acid "
+                    f"equivalents; split into smaller batches or use the CLI."
+                )
             normalized.append({"id": sequence_id, "sequence": sequence})
         return normalized
 
@@ -3087,10 +3263,13 @@ class handler(BaseHTTPRequestHandler):
             constraints=constraints,
         )
 
-    def send_json_response(self, status_code, data):
+    def send_json_response(self, status_code, data, headers=None):
         """Send JSON response with CORS headers"""
         self.send_response(status_code)
         self.send_header("Content-Type", "application/json")
+        if headers:
+            for key, value in headers.items():
+                self.send_header(key, value)
         self.send_cors_headers()
         self.end_headers()
         self.wfile.write(json.dumps(data).encode("utf-8"))

@@ -58,7 +58,7 @@
     <header
         class="bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 shadow-xl border-b border-white/10 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center space-x-4">
                     <div id="logoIcon"
                         class="bg-white/20 p-2 rounded-xl backdrop-blur-md border border-white/30 transform hover:rotate-12 transition-transform cursor-pointer">
@@ -70,7 +70,7 @@
                     </div>
                 </div>
                                 <!-- Workflow Breadcrumbs -->
-                <nav id="workflowBreadcrumbs" class="hidden lg:flex items-center space-x-1.5 text-xs font-semibold bg-slate-950/50 px-3 py-1.5 rounded-xl backdrop-blur-md border border-white/20 text-white shadow-inner" aria-label="Workflow progress">
+                <nav id="workflowBreadcrumbs" class="order-3 lg:order-none w-full lg:w-auto flex items-center justify-center space-x-1.5 text-xs font-semibold bg-slate-950/50 px-3 py-1.5 rounded-xl backdrop-blur-md border border-white/20 text-white shadow-inner overflow-x-auto" aria-label="Workflow progress">
                     <button type="button" id="stepInputBadge" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg transition-all focus:outline-none cursor-pointer" title="Go to Input">
                         <span id="stepInputCircle" class="w-4 h-4 rounded-full text-[10px] font-black flex items-center justify-center">1</span>
                         <span id="stepInputText">Input</span>
@@ -120,11 +120,16 @@
             <section id="sequencePanel" class="flex flex-col space-y-6">
                 <div
                     class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
-                    <div class="flex items-center justify-between mb-6">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
                         <h2 class="text-lg font-extrabold flex items-center text-slate-900">
                             <span class="bg-slate-100 p-2 rounded-lg mr-3">📥</span>
                             Sequence Input
                         </h2>
+                        <button type="button" id="loadExampleSeqBtn"
+                            class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs">
+                            <span>✨</span>
+                            <span>Load Example (sfGFP)</span>
+                        </button>
                     </div>
 
                     <!-- File Upload -->
@@ -254,7 +259,7 @@
                         <label class="text-xs font-bold text-slate-600 dark:text-slate-300">Expression host
                             <select id="hostSelect" class="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-3 text-slate-800 dark:text-slate-100">
                                 <option value="nbenthamiana" selected>N. benthamiana (primary plant host)</option>
-                                <option value="human_stemcell">Mammalian / Human Stem Cell (hMSC / iPSC) · In Development</option>
+                                <option value="human_stemcell" disabled>Mammalian / Human Stem Cell (hMSC / iPSC) · Coming Soon (In Development)</option>
                             </select>
                         </label>
                         <div class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-800/50 dark:bg-emerald-900/20">
@@ -365,16 +370,19 @@
                                 </span>
                                 <span class="block text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 pl-5">Applies +35 aa ribosome exit-tunnel offset (auto-unlocked from ESMFold/PDB/mmCIF or sidecar JSON; biological validation: NOT_AVAILABLE).</span>
                             </label>
-                            <label class="block rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 p-2.5 cursor-not-allowed opacity-60">
-                                <span class="flex items-center justify-between font-bold text-slate-600 dark:text-slate-400">
-                                    <span class="flex items-center gap-1.5"><input type="radio" name="researchDesignMode" value="experimental_5dp" disabled> <span>5DP · VLP Nanovaccine &amp; Glycan Layer</span> <span class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold uppercase">In Development</span></span>
-                                    <span class="tooltip-container ml-1 inline-flex shrink-0">
-                                        <span class="info-icon cursor-help">i</span>
-                                        <span class="tooltip-text">Application: Viral nanoparticle vaccines &amp; multimeric antigen display scaffolds.</span>
+                            <details class="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 px-2.5 py-1.5 text-[11px]">
+                                <summary class="cursor-pointer select-none font-semibold text-slate-500 dark:text-slate-400">Experimental / Roadmap (5DP — In Development)</summary>
+                                <label class="mt-2 block rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/40 p-2.5 cursor-not-allowed opacity-60">
+                                    <span class="flex items-center justify-between font-bold text-slate-600 dark:text-slate-400">
+                                        <span class="flex items-center gap-1.5"><input type="radio" name="researchDesignMode" value="experimental_5dp" disabled> <span>5DP · VLP Nanovaccine &amp; Glycan Layer</span> <span class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-bold uppercase">In Development</span></span>
+                                        <span class="tooltip-container ml-1 inline-flex shrink-0">
+                                            <span class="info-icon cursor-help">i</span>
+                                            <span class="tooltip-text">Application: Viral nanoparticle vaccines &amp; multimeric antigen display scaffolds.</span>
+                                        </span>
                                     </span>
-                                </span>
-                                <span class="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 pl-5">Multi-chain nanoparticle VLP fusion topology &amp; plant N-glycan mapping (In Development).</span>
-                            </label>
+                                    <span class="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 pl-5">Multi-chain nanoparticle VLP fusion topology &amp; plant N-glycan mapping (In Development).</span>
+                                </label>
+                            </details>
                         </fieldset>
                         <div id="note2dpIntegrated" class="mt-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/60 px-3 py-2 text-[11px] text-slate-600 dark:text-slate-300">
                             <span class="font-bold text-slate-800 dark:text-slate-100">About 2DP scope:</span> <span class="font-semibold">1DP</span> and <span class="font-semibold">3DP</span> finite-state checks detect configured forbidden motifs across codon boundaries. The experimental <span class="font-semibold">2DP</span> option above adds a <code class="font-mono">CpG</code>/<code class="font-mono">TpA</code> dinucleotide penalty only (not a validated codon-pair/hexamer frequency model; Biological validation: NOT_AVAILABLE), and its contribution in <em>N. benthamiana</em> remains unevaluated.
@@ -765,8 +773,7 @@
                                     Kozak Optimization
                                     <span class="tooltip-container">
                                         <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Targets positions 4-6 to match plant consensus
-                                            (AACAATG**GC**).</span>
+                                        <span class="tooltip-text">Targets positions +4G/+5C (AACAATGGC, where ATG is +1..+3) to match plant Kozak consensus.</span>
                                     </span>
                                 </span>
                                 <div class="relative inline-flex items-center">
@@ -875,22 +882,27 @@
 
                     <!-- Checkbox Options -->
                     <div class="space-y-3 mb-6">
-                        <label
-                            class="flex items-center space-x-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors">
-                            <input type="checkbox" id="toggleWatermark" disabled aria-describedby="watermarkStatus"
-                                class="w-5 h-5 text-indigo-600 rounded-md border-slate-300 dark:border-slate-600 focus:ring-indigo-500 transition-all">
-                            <div>
-                                <span class="flex items-center text-sm font-bold text-slate-800 dark:text-slate-100">
-                                    Watermark — Disabled
-                                    <span class="tooltip-container">
-                                        <span class="info-icon">i</span>
-                                        <span class="tooltip-text">Watermark generation is paused for this test version.</span>
-                                    </span>
-                                </span>
-                                <span
-                                    id="watermarkStatus" class="block text-[11px] text-slate-600 dark:text-slate-400 font-medium">Watermark is inactive for current testing.</span>
+                        <details id="experimentalSettings" class="disclosure-card rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+                            <summary class="cursor-pointer select-none px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300">Experimental / Inactive Options</summary>
+                            <div class="px-4 pb-4">
+                                <label
+                                    class="flex items-center space-x-3 p-3 bg-white dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700 cursor-not-allowed">
+                                    <input type="checkbox" id="toggleWatermark" disabled aria-describedby="watermarkStatus"
+                                        class="w-5 h-5 text-indigo-600 rounded-md border-slate-300 dark:border-slate-600 focus:ring-indigo-500 transition-all">
+                                    <div>
+                                        <span class="flex items-center text-sm font-bold text-slate-800 dark:text-slate-100">
+                                            Watermark — Disabled
+                                            <span class="tooltip-container">
+                                                <span class="info-icon">i</span>
+                                                <span class="tooltip-text">Watermark generation is paused for this test version.</span>
+                                            </span>
+                                        </span>
+                                        <span
+                                            id="watermarkStatus" class="block text-[11px] text-slate-600 dark:text-slate-400 font-medium">Watermark is inactive for current testing.</span>
+                                    </div>
+                                </label>
                             </div>
-                        </label>
+                        </details>
 
                         <label
                             class="flex items-center space-x-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors">
@@ -1045,6 +1057,8 @@
                             </button>
                         </div>
 
+                        <!-- Tab 1: Summary Pane -->
+                        <div id="tabPaneSummary" class="tab-pane">
                         <section id="sameProteinBanner" class="same-protein-banner mb-4 !p-3.5" aria-labelledby="sameProteinTitle">
                             <div class="flex flex-wrap items-center justify-between gap-2">
                                 <div>
@@ -1162,7 +1176,7 @@
                                 <div><p class="result-eyebrow">Calculated sequence comparison</p><h3 id="codonMapTitle">1D Codon Optimization Map</h3></div>
                                 <span id="trackAvailability">CDS reference required</span>
                             </div>
-                            <div class="ramp-bracket" aria-label="5 prime initiation ramp, nucleotides 1 through 30">5′ initiation ramp · nt 1–30</div>
+                            <div class="ramp-bracket" aria-label="5 prime initiation ramp, nucleotides 1 through 45">5′ initiation ramp · nt 1–45</div>
                             <div class="track-row"><span>Original</span><canvas id="canvasOriginalTrack" height="56"></canvas></div>
                             <div class="track-row"><span>Optimized</span><canvas id="canvasOptimizedTrack" height="56"></canvas></div>
                             <div class="track-legend"><span class="rare">Rare &lt;20%</span><span class="low">Low 20–35%</span><span class="moderate">Moderate 35–50%</span><span class="high">High 50–70%</span><span class="very-high">Very high &gt;70%</span><span class="unknown">N/A</span></div>
@@ -1238,6 +1252,25 @@
                             <div id="resultsReportBody" class="px-4 pb-4 space-y-2 text-xs text-slate-700 dark:text-slate-300"></div>
                         </details>
 
+                        <!-- Optimized Sequence -->
+                        <div class="mb-8 flex-grow">
+                            <label
+                                class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">Optimized
+                                Sequence (DNA)</label>
+                            <div class="relative group">
+                                <div id="optimizedSequence"
+                                    class="w-full h-48 p-4 bg-slate-900 text-emerald-400 font-mono text-xs rounded-2xl overflow-y-auto custom-scrollbar border border-slate-800 shadow-inner break-all whitespace-pre-wrap">
+                                </div>
+                                <div class="absolute top-2 right-2 flex space-x-2">
+                                    <div class="w-2 h-2 rounded-full bg-slate-700"></div>
+                                    <div class="w-2 h-2 rounded-full bg-slate-700"></div>
+                                    <div class="w-2 h-2 rounded-full bg-slate-700"></div>
+                                </div>
+                            </div>
+                        </div>
+                        </div><!-- /#tabPaneSummary -->
+
+                        <!-- Tab 3: Sequence Differences Pane -->
                         <section id="comparisonDashboard" class="hidden mb-8 space-y-4" aria-live="polite">
                             <div class="rounded-2xl border border-amber-200 bg-amber-50/70 dark:bg-amber-900/20 dark:border-amber-800/50 p-4">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
@@ -1262,23 +1295,6 @@
                             </div>
                             <div id="multiCandidateCodonDiffContainer" class="hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-950 p-4 space-y-3"></div>
                         </section>
-
-                        <!-- Optimized Sequence -->
-                        <div class="mb-8 flex-grow">
-                            <label
-                                class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">Optimized
-                                Sequence (DNA)</label>
-                            <div class="relative group">
-                                <div id="optimizedSequence"
-                                    class="w-full h-48 p-4 bg-slate-900 text-emerald-400 font-mono text-xs rounded-2xl overflow-y-auto custom-scrollbar border border-slate-800 shadow-inner break-all whitespace-pre-wrap">
-                                </div>
-                                <div class="absolute top-2 right-2 flex space-x-2">
-                                    <div class="w-2 h-2 rounded-full bg-slate-700"></div>
-                                    <div class="w-2 h-2 rounded-full bg-slate-700"></div>
-                                    <div class="w-2 h-2 rounded-full bg-slate-700"></div>
-                                </div>
-                            </div>
-                        </div>
 
                                                 <!-- Tab 2 Candidate Comparison Matrix Pane -->
                         <div id="tabPaneComparison" class="tab-pane hidden space-y-6 animate-in fade-in duration-200">
@@ -1863,7 +1879,6 @@
         </div>
     </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.4.2/3Dmol-min.js"></script>
     <script src="js/app.js"></script>
 </body>
 

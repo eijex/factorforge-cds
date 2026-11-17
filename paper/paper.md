@@ -15,7 +15,7 @@ authors:
 affiliations:
   - name: PlantForm Corporation, 1920 Yonge Street, Suite 200, Toronto, Ontario, M4S 3E2, CANADA
     index: 1
-date: 16 November 2026
+date: 17 November 2026
 bibliography: paper.bib
 ---
 
@@ -23,7 +23,7 @@ bibliography: paper.bib
 
 FactorForge is an open-source Python package for synonymous codon optimization and coding-sequence (CDS) review in plant molecular pharming. During translation, ribosomes read messenger RNA (mRNA) in codons, and the choice among synonymous codons can influence translation efficiency in a given host. FactorForge generates candidate DNA sequences by substituting synonymous codons while preserving the amino acid sequence encoded by the input CDS. It records sequence metrics and checks in structured JSON. The review reports the codon adaptation index (CAI) relative to a host reference, GC content, and Type IIS restriction-site status. An optional RNA folding check estimates minimum free energy (MFE) near the 5' end.
 
-This paper describes the stable dynamic programming engine (`DP v2`) for *Nicotiana benthamiana* in **FactorForge v3.6.8**. All candidates and scores produced by FactorForge are computational outputs; they do not establish in vivo expression, yield, folding, or biological activity without experimental validation.
+This paper describes the stable dynamic programming engine (`DP v2`) for *Nicotiana benthamiana* in **[FactorForge v3.6.8](https://github.com/eijex/factorforge-cds/tree/v3.6.8)** (tagged at commit `b2f11dc`). All candidates and scores produced by FactorForge are computational outputs; they do not establish in vivo expression, yield, folding, or biological activity without experimental validation.
 
 # Statement of need
 
@@ -45,35 +45,37 @@ General-purpose optimizers such as DNA Chisel [@zulkower2020] resolve sequence c
 
 # State of the field
 
-Synonymous codon choice affects translation elongation, mRNA stability, and recombinant protein accumulation [@gustafsson2004; @sharp1987]. Web utilities such as JCat [@grote2005] and OPTIMIZER [@puigbo2007] compute host-adapted sequences, while toolkits including GeneDesign [@richardson2010], D-Tailor [@guimaraes2014], and DNA Chisel [@zulkower2020] support broader constraint-based editing. For *N. benthamiana* specifically, Tekle [@tekle2025] investigated autoregressive transformer models trained on genomic and transcriptomic features.
+Synonymous codon choice affects translation elongation, mRNA stability, and recombinant protein accumulation [@gustafsson2004; @sharp1987]. Web utilities such as JCat [@grote2005] and OPTIMIZER [@puigbo2007] compute host-adapted sequences, while toolkits including GeneDesign [@richardson2010], D-Tailor [@guimaraes2014], and DNA Chisel [@zulkower2020] support broader constraint-based editing.
 
-FactorForge focuses on reproducible, constraint-exact CDS compilation tailored to Type IIS Golden Gate and Modular Cloning (MoClo) workflows [@engler2008; @weber2011]. Its stable `DP v2` engine tracks codon position, cumulative GC count, and Aho--Corasick automaton state [@ahocorasick1975], pruning forbidden restriction sites (e.g., BsaI, BpiI, BsmBI) across codon junctions and user-supplied assembly flanks during search.
+FactorForge focuses on reproducible, constraint-exact CDS compilation tailored to Type IIS Golden Gate and Modular Cloning (MoClo) workflows [@engler2008; @weber2011]. Its stable `DP v2` engine, called Type IIS-aware `3DP` in the accompanying preprint [@kim2026factorforge], tracks codon position, cumulative GC count, and Aho--Corasick automaton state [@ahocorasick1975], pruning forbidden restriction sites (e.g., BsaI, BpiI, BsmBI) across codon junctions and user-supplied assembly flanks during search.
 
 The accompanying preprint (v2) [@kim2026factorforge] reports a $2\times 2$ factorial benchmark run with FactorForge v3.6.4 on 49,257 SGN QLD183 records [@ranawaka2023]. It compared two codon references (legacy composite and NbeV1.1 [@kurotani2023]) and two target GC windows (55--65% and 40--47%). Combined pass required sequence integrity, GC-window compliance, and absence of the specified Type IIS sites. Mean CAI was reported separately against the reference used in each condition. The factorial comparison did not report 5' RNA folding MFE.
 
-With NbeV1.1 held fixed, the Assembly-friendly preset's combined pass rate increased from 0.00% to 9.39% when the target GC window changed from 55--65% to 40--47%. A separate GC-constrained baseline in the same benchmark was assessed for Type IIS sites after candidate generation. Proteome-scale evaluation of `DP v2` remains future work.
+With NbeV1.1 held fixed, the Assembly-friendly preset's combined pass rate increased from 0.00% to 9.39% when the target GC window changed from 55--65% to 40--47%. A separate GC-constrained baseline (`1DP` in the preprint) in the same benchmark was assessed for Type IIS sites after candidate generation. Proteome-scale evaluation of `DP v2` remains future work.
 
 # Software design
 
-FactorForge requires Python $\ge 3.10$, is licensed under `AGPL-3.0-only`, and is distributed on PyPI as `factorforge-cds` (source: `eijex/factorforge-cds`, import namespace: `factorforge`). The package is also available through [Bioconda](https://anaconda.org/bioconda/factorforge-cds), which currently distributes version 3.6.4. The software has three main components:
+FactorForge requires Python $\ge 3.10$, is licensed under `AGPL-3.0-only`, and is distributed on PyPI as `factorforge-cds` (source: `eijex/factorforge-cds`, import namespace: `factorforge`). The package is also available through [Bioconda](https://anaconda.org/bioconda/factorforge-cds), which distributes version 3.6.4 as of 17 November 2026. The software has three main components:
 
 1. **Candidate generation.** `DP v2` optimizes additive codon scores subject to integer GC bounds and Aho--Corasick forbidden-motif tracking [@ahocorasick1975], explicitly reporting infeasibility and distinguishing exact feasible solutions from fallback outputs.
 2. **Sequence review.** The review reports CAI as a measure of codon usage relative to the selected host reference. Independent validators check amino-acid identity, compliance with the specified GC window, Type IIS sites, homopolymer runs, cryptic splice-like motifs, and plant RNA instability signals. An optional ViennaRNA check estimates local 5' RNA folding MFE [@lorenz2011].
 3. **Provenance manifests.** CLI and Python entrypoints export JSON reports capturing configuration parameters, sequence metrics, and software and codon-table versions, with schema fields and SHA-256 hashes varying by entrypoint path.
 
+The `factorforge-cds` CLI and Python API (`DP v2`, v3.6.8) constitute the JOSS-reviewed core package. An actively maintained web interface ([factorforge.eijex.com](https://factorforge.eijex.com)) for PlantForm and community use also surfaces newer and preview workflows (`DP v2.1.1`, `3DP`/`4DP`) that fall outside this paper's benchmark scope.
+
 # Research impact statement
 
 FactorForge provides a reproducible baseline for plant CDS design and pre-synthesis QC. Benchmark outputs, runner scripts, and checksums from the accompanying preprint are archived in the repository and Zenodo deposits; full replay requires pinned software versions and the public SGN input corpus:
 
-- **Automated tests and CI.** The test suite covers profile generation, automaton-constrained DP, sequence validation, and CLI workflows. On `main` commit `8e7473298f07ddb7465267c28a4a2651e84e338b` (a development snapshot reporting version 3.6.8), the 8-job GitHub Actions CI matrix across Python 3.10--3.13 on Ubuntu and Windows passed in [workflow run #43440798315](https://github.com/eijex/factorforge-cds/actions/runs/43440798315) (13 November 2026). Tests in `tests/test_math_v2_dp_optimality.py` cover brute-force parity on small instances and flank junctions. Tests in `tests/test_dp_hoisting_equivalence.py` compare uncached and hoisted implementations.
-- **Worked example.** An executable [sfGFP worked example](https://github.com/eijex/factorforge-cds/tree/8e7473298f07ddb7465267c28a4a2651e84e338b/examples/worked_example) demonstrates fixed-seed candidate generation and JSON manifest export.
+- **Automated tests and CI.** The test suite covers profile generation, automaton-constrained DP, sequence validation, and CLI workflows. On the `v3.6.8` release commit `b2f11dc`, the 8-job GitHub Actions CI matrix across Python 3.10--3.13 on Ubuntu and Windows passed in [workflow run #43810607169](https://github.com/eijex/factorforge-cds/actions/runs/43810607169). Tests in `tests/test_math_v2_dp_optimality.py` cover brute-force parity on small instances and flank junctions. Tests in `tests/test_dp_hoisting_equivalence.py` compare uncached and hoisted implementations.
+- **Worked example.** An executable [sfGFP worked example](https://github.com/eijex/factorforge-cds/tree/v3.6.8/examples/worked_example) demonstrates fixed-seed candidate generation and JSON manifest export.
 - **Persistent archival.** FactorForge v3.5.11 is archived on Zenodo at [doi:10.5281/zenodo.23631740](https://doi.org/10.5281/zenodo.23631740), and benchmark datasets are preserved at [doi:10.5281/zenodo.20676276](https://doi.org/10.5281/zenodo.20676276) and [doi:10.5281/zenodo.22074106](https://doi.org/10.5281/zenodo.22074106). A dedicated software archive for v3.6.8 is planned after JOSS review.
 
 While developed within a translational plant-pharming pipeline rather than for broad general-purpose adoption, FactorForge offers a tested, auditable foundation for plant CDS design.
 
 # AI usage disclosure
 
-Generative AI tools, including OpenAI ChatGPT/Codex, Google Gemini, and Anthropic Claude, assisted with research planning, exploration of mathematical and algorithmic formulations, software implementation, test development, documentation, and manuscript drafting and revision. The author defined the research objectives and made the core architectural decisions. The author personally reviewed, edited, and validated all AI-assisted contributions to the software, documentation, and manuscript. The author also ran the relevant software tests and reproducibility checks and checked the mathematical claims and references against the available evidence. AI-generated outputs were not treated as independent scientific evidence. The author takes full responsibility for the accuracy, originality, and integrity of the software and manuscript.
+AI-assisted tools, including OpenAI ChatGPT/Codex, Google Gemini, and Anthropic Claude, supported planning, drafting, logical structure, mathematical and algorithmic formulation, software implementation, language revision, and formatting. Their role extended beyond language editing. The author made the core design decisions and personally reviewed and verified all AI-assisted outputs. The author takes full intellectual responsibility for the manuscript's claims, equations, code, data, references, and final wording.
 
 # Acknowledgements
 
