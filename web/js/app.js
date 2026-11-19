@@ -797,6 +797,7 @@ function setupDesignPanel() {
     const advanced = document.querySelector('#manualSopOverrides > div');
     advanced.prepend(document.getElementById('designObjectivePolicy'));
     document.querySelector('#manualSopOverrides > summary').textContent = 'Advanced settings';
+    const legacyExperimental = document.getElementById('experimentalSettings');
     const experimental = document.createElement('details');
     experimental.id = 'experimentalSettings';
     experimental.className = 'disclosure-card mb-6 rounded-xl border border-slate-200 dark:border-slate-800 p-4';
@@ -807,6 +808,7 @@ function setupDesignPanel() {
     experimental.append(document.getElementById('engineSelector'));
     experimental.append(document.getElementById('experimentalObjectives'));
     experimental.append(document.getElementById('toggleWatermark').closest('label'));
+    legacyExperimental?.remove();
     advanced.append(document.getElementById('useTemplate').closest('label'));
     document.getElementById('manualSopOverrides').after(experimental);
     const exampleLabels = ['FactorForge Default (example)', 'B · Protein design example',
