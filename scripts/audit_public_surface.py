@@ -148,6 +148,9 @@ def iter_public_files(root: Path, include_dirs: set[str], include_root_files: se
         # public documentation. Preserve their frozen bytes and audit source docs.
         if rel.parts[:2] == ("benchmarks", "results"):
             continue
+        # OpenJournals Draft PDF compile workflow intentionally specifies `journal: joss`.
+        if rel.parts == (".github", "workflows", "draft-pdf.yml"):
+            continue
         if any(part in EXCLUDE_PARTS for part in rel.parts):
             continue
         if path.suffix.lower() not in INCLUDE_SUFFIXES:
