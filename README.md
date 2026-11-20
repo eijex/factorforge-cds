@@ -115,8 +115,9 @@ Eijex. https://github.com/eijex/factorforge-cds
 ```
 
 The [v3.5.11 software archive](https://doi.org/10.5281/zenodo.23631740)
-and the [accompanying computational preprint (v2)](https://doi.org/10.20944/preprints202610.3128.v2)
-are separate citations. The preprint v2 reports a 2×2 factorial benchmark run with FactorForge v3.6.4 on 49,257 SGN QLD183 records, not a benchmark of every later software release.
+and the [accompanying computational preprint (v3)](https://doi.org/10.20944/preprints202610.3128.v3)
+(also available on [eijex.com/papers](https://eijex.com/papers))
+are separate citations. Preprint v3 preserves the 2×2 factorial benchmark run with FactorForge v3.6.4 on 49,257 SGN QLD183 records, not a benchmark of every later software release.
 
 ---
 
