@@ -15,7 +15,7 @@ authors:
 affiliations:
   - name: PlantForm Corporation, 1920 Yonge Street, Suite 200, Toronto, Ontario, M4S 3E2, CANADA
     index: 1
-date: 19 November 2026
+date: 20 November 2026
 bibliography: paper.bib
 ---
 
@@ -27,7 +27,7 @@ This paper describes the stable dynamic programming engine (`DP v2`) for *Nicoti
 
 # Statement of need
 
-In synthetic biology and molecular pharming, teams often need to trace *why* a synthetic CDS was selected—not just store the final FASTA string. Changing the host codon table, target GC window, restriction enzyme set, or optimizer can substantially shift both the output sequence and its QC metrics [@sharp1987; @gustafsson2004]. Researchers also need a clear boundary between deterministic sequence constraints (strict amino-acid preservation and forbidden-motif removal) and untested biological hypotheses.
+In synthetic biology and molecular pharming, teams often need to trace *why* a synthetic CDS was selected, not just store the final FASTA string. Changing the host codon table, target GC window, restriction enzyme set, or optimizer can substantially shift both the output sequence and its QC metrics [@sharp1987; @gustafsson2004]. Researchers also need a clear boundary between deterministic sequence constraints (strict amino-acid preservation and forbidden-motif removal) and untested biological hypotheses.
 
 FactorForge separates synonymous sequence generation from independent sequence review, exposing both through a CLI and Python API that emit machine-readable JSON records [@wilkinson2016].
 
@@ -36,20 +36,20 @@ FactorForge separates synonymous sequence generation from independent sequence r
 | **Primary Domain** | General microbial / heterologous | General synthetic biology | General sequence optimizer | Plant molecular pharming (*N. benthamiana*) |
 | **Host References** | Built-in / custom user tables | Built-in organism tables | User-supplied usage tables | Versioned plant host tables (`C1`--`C4`, SGN QLD183, NbeV1.1) |
 | **Type IIS Restriction** | Site avoidance / post-hoc checks | Restriction site removal | Local search pattern removal | Automaton-constrained DP state space (Aho--Corasick [@ahocorasick1975]) |
-| **Optimization Model** | Frequency / Monte Carlo matching | Rule-based / greedy editing | Local stochastic hill-climbing | Exact DP (Condon--Thachuk / COSMO lineage) |
+| **Optimization Model** | Frequency / Monte Carlo matching | Rule-based / greedy editing | Local stochastic hill-climbing | Exact dynamic programming |
 | **Audit & Provenance** | Plain text / web display | GenBank / FASTA export | Annotated GenBank export | Structured JSON manifests (with optional SHA-256 hashes) |
 
 *Qualitative comparison based on published tool documentation; no cross-tool empirical benchmark or superiority claim is made [@kim2026factorforge]. Exact and Pareto dynamic programming formulations with motif constraints precede FactorForge [@condon2012; @taneda2020].*
 
-General-purpose optimizers such as DNA Chisel [@zulkower2020] resolve sequence constraints via local stochastic search without global optimality or feasibility guarantees. Exact dynamic programming for codon optimization with motif constraints was established earlier [@condon2012; @taneda2020]. FactorForge implements this exact state formulation for plant workflows, modeling codon scoring, global GC bounds, and restriction-site avoidance over reachable states—exact with respect to the configured codon scores and implemented constraints, rather than biological optimality—while bundling curated plant codon tables and structured provenance outputs in a single package.
+General-purpose optimizers such as DNA Chisel [@zulkower2020] resolve sequence constraints via local stochastic search without global optimality or feasibility guarantees. Exact dynamic programming for codon optimization with motif constraints was established earlier [@condon2012; @taneda2020]. FactorForge implements an exact dynamic program for plant workflows, modeling codon scoring, global GC bounds, and restriction-site avoidance over reachable states (exact with respect to the configured codon scores and implemented constraints, rather than biological optimality) while bundling curated plant codon tables and structured provenance outputs in a single package.
 
 # State of the field
 
 Synonymous codon choice affects translation elongation, mRNA stability, and recombinant protein accumulation [@gustafsson2004; @sharp1987]. Web utilities such as JCat [@grote2005] and OPTIMIZER [@puigbo2007] compute host-adapted sequences, while toolkits including GeneDesign [@richardson2010], D-Tailor [@guimaraes2014], DNA Chisel [@zulkower2020], and CoDOn [@moon2026] support broader multiparameter or multi-criteria sequence design. Exact dynamic programming for codon optimization with motif engineering was established by Condon and Thachuk [@condon2012] and extended to multicriteria Pareto dynamic programming with forbidden-motif exclusion in COSMO [@taneda2020].
 
-Rather than claiming algorithmic priority over constrained or dynamic-programming codon optimization itself, FactorForge contributes a plant-focused software implementation tailored to *N. benthamiana* Type IIS Golden Gate and Modular Cloning (MoClo) workflows [@engler2008; @weber2011]. Its stable `DP v2` engine tracks codon position, cumulative GC count, and Aho--Corasick automaton state [@ahocorasick1975], pruning forbidden restriction sites (e.g., BsaI, BpiI, BsmBI) across codon junctions and user-supplied assembly flanks during search while bundling versioned plant codon tables and structured JSON provenance manifests.
+Rather than claiming algorithmic priority over constrained or dynamic-programming codon optimization itself, FactorForge contributes a plant-focused software implementation tailored to *N. benthamiana* Type IIS Golden Gate and Modular Cloning (MoClo) workflows [@engler2008; @weber2011]. FactorForge was developed as a dedicated plant CDS workflow to bring versioned host references, explicit optimization and validation boundaries, and reproducible design records together in a single package. Its stable `DP v2` engine tracks codon position, cumulative GC count, and Aho--Corasick automaton state [@ahocorasick1975], pruning forbidden restriction sites (e.g., BsaI, BpiI, BsmBI) across codon junctions and user-supplied assembly flanks during search while bundling versioned plant codon tables and structured JSON provenance manifests.
 
-The accompanying preprint (v2) [@kim2026factorforge] reports a $2\times 2$ factorial benchmark run with FactorForge v3.6.4 on 49,257 SGN QLD183 records [@ranawaka2023]. It compared two codon references (legacy composite and NbeV1.1 [@kurotani2023]) and two target GC windows (55--65% and 40--47%). Combined pass required sequence integrity, GC-window compliance, and absence of the specified Type IIS sites. Mean CAI was reported separately against the reference used in each condition. The factorial comparison did not report 5' RNA folding MFE.
+The accompanying preprint (v3) [@kim2026factorforge] reports a $2\times 2$ factorial benchmark run with FactorForge v3.6.4 on 49,257 SGN QLD183 records [@ranawaka2023]. It compared two codon references (legacy composite and NbeV1.1 [@kurotani2023]) and two target GC windows (55--65% and 40--47%). Combined pass required sequence integrity, GC-window compliance, and absence of the specified Type IIS sites. Mean CAI was reported separately against the reference used in each condition. The factorial comparison did not report 5' RNA folding MFE.
 
 A rule-based profile engine provides the design presets evaluated in the preprint, including Assembly-friendly, and is also used by the sfGFP worked example. With NbeV1.1 held fixed, the Assembly-friendly preset's combined pass rate increased from 0.00% to 9.39% when the target GC window changed from 55--65% to 40--47%. A separate GC-constrained baseline (`1DP` in the preprint) in the same benchmark was assessed for Type IIS sites after candidate generation. Proteome-scale evaluation of `DP v2` remains future work. The combined-pass endpoint is scored after generation. The `DP v2` optimization objective is an additive codon score, maximized subject to GC and forbidden-motif constraints.
 
@@ -69,7 +69,7 @@ Tracking cumulative GC counts and automaton states preserves the configured cons
 
 FactorForge provides a reproducible baseline for plant CDS design and pre-synthesis QC. Benchmark outputs, runner scripts, and checksums from the accompanying preprint are archived in the repository and Zenodo deposits; full replay requires pinned software versions and the public SGN input corpus:
 
-- **Automated tests and CI.** The test suite covers profile generation, automaton-constrained DP, sequence validation, and CLI workflows. On the `v3.6.8` tag (`36ded12`) and subsequent `main`-branch CI verification in [workflow run #43810607169](https://github.com/eijex/factorforge-cds/actions/runs/43810607169), the 8-job GitHub Actions CI matrix across Python 3.10--3.13 on Ubuntu and Windows passed. Tests in `tests/test_math_v2_dp_optimality.py` cover brute-force parity on small instances and flank junctions. Tests in `tests/test_dp_hoisting_equivalence.py` compare uncached and hoisted implementations.
+- **Automated tests and CI.** The test suite covers profile generation, automaton-constrained DP, sequence validation, and CLI workflows. On commit `b2f11dc`, which the `v3.6.8` tag points to, the 8-job GitHub Actions CI matrix across Python 3.10--3.13 on Ubuntu and Windows passed in [workflow run #43810607169](https://github.com/eijex/factorforge-cds/actions/runs/43810607169). Tests in `tests/test_math_v2_dp_optimality.py` cover brute-force parity on small instances and flank junctions. Tests in `tests/test_dp_hoisting_equivalence.py` compare uncached and hoisted implementations.
 - **Worked example.** An executable [sfGFP worked example](https://github.com/eijex/factorforge-cds/tree/v3.6.8/examples/worked_example) demonstrates reproducible profile-based candidate generation and JSON manifest export. The preceding brute-force optimality and flank-junction tests evaluate `DP v2` separately.
 - **Persistent archival.** FactorForge v3.5.11 is archived on Zenodo at [doi:10.5281/zenodo.23631740](https://doi.org/10.5281/zenodo.23631740), and benchmark datasets are preserved at [doi:10.5281/zenodo.20676276](https://doi.org/10.5281/zenodo.20676276) and [doi:10.5281/zenodo.22074106](https://doi.org/10.5281/zenodo.22074106). A dedicated software archive for v3.6.8 is planned after JOSS review.
 
@@ -77,7 +77,9 @@ While developed within a translational plant-pharming pipeline rather than for b
 
 # AI usage disclosure
 
-AI-assisted tools, including OpenAI ChatGPT/Codex, Google Gemini, and Anthropic Claude, supported planning, drafting, logical structure, mathematical and algorithmic formulation, software implementation, language revision, and formatting. Their role extended beyond language editing. The author made the core design decisions and personally reviewed and verified all AI-assisted outputs. The author takes full intellectual responsibility for the manuscript's claims, equations, code, data, references, and final wording.
+OpenAI ChatGPT/Codex, Google Gemini, and Anthropic Claude assisted with planning, drafting, organizing the manuscript, developing mathematical and algorithmic formulations, implementing the software, revising the language, and formatting. Their assistance extended beyond language editing. OpenAI Codex (GPT-6.2 Sol) assisted with the final manuscript review and editorial revisions. The complete model-version history for earlier ChatGPT/Codex, Gemini, and Claude sessions could not be reconstructed.
+
+**Work performed by the author.** The author made the core design decisions and personally reviewed, edited, and verified the AI-assisted outputs. The author takes full intellectual responsibility for the manuscript's claims, equations, code, data, references, and final wording.
 
 # Acknowledgements
 
