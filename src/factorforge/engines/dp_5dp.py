@@ -1,10 +1,10 @@
-"""Experimental 5DP Prototype: WSSV VP28-HBcAg VLP Assembly & Plant Glycan Layer.
+"""Experimental 5DP Prototype: Multi-Part Fusion Assembly & Plant PTM Layer.
 
 EPISTEMIC NOTICE:
 UNVERIFIED_PUBLIC_CORPUS · Biological validation: NOT_AVAILABLE
-Implements a research-preview 5DP scorer/generator for plant-expressed VLP
-vaccines (WSSV VP28 ectodomain fused to HBcAg nanoscaffold in N. benthamiana
-and Wolffia globosa), emitting wssv_yield_prediction_candidates.jsonl schemas.
+Implements a research-preview 5DP scorer/generator for multi-domain fusion
+and chimeric protein constructs, tracking assembly junction pause windows and
+canonical N-glycosylation sequons (N-X-S/T, X != P).
 """
 
 from __future__ import annotations
@@ -17,11 +17,6 @@ from typing import Any
 from factorforge.analysis.metrics import calculate_cai, calculate_gc
 from factorforge.engines.dp_v2_4 import DPV240Optimizer
 from factorforge.engines.profile.scoring import compute_5p_mfe_evidence
-
-PR1A_SIGNAL_PEPTIDE = "MGFVLFSQLPSFLLVSTLLLFLVISHSCRA"
-KDEL_TAG = "KDEL"
-HIS6_TAG = "HHHHHH"
-GGGGS_LINKER = "GGGGS"
 
 
 def detect_n_glycosylation_motifs(protein: str) -> list[dict[str, Any]]:
@@ -40,43 +35,42 @@ def detect_n_glycosylation_motifs(protein: str) -> list[dict[str, Any]]:
     return motifs
 
 
-def assemble_wssv_vlp_construct(
-    hbcag_seq: str,
-    vp28_seq: str,
+def assemble_fusion_construct(
+    scaffold_seq: str,
+    cargo_seq: str,
     topology: str = "c_terminal",
-    include_pr1a: bool = True,
-    include_kdel: bool = True,
-    include_his6: bool = True,
-    linker: str = GGGGS_LINKER,
+    signal_peptide: str = "",
+    linker: str = "GGGGS",
+    c_tag: str = "",
 ) -> dict[str, Any]:
-    """Assemble a WSSV VP28-HBcAg VLP fusion protein and compute boundary pause indices."""
-    hbc = "".join(hbcag_seq.upper().split()).rstrip("*")
-    vp = "".join(vp28_seq.upper().split()).rstrip("*")
-    if not hbc or not vp:
-        raise ValueError("Both hbcag_seq and vp28_seq must be non-empty.")
+    """Assemble a multi-part fusion protein and compute junction pause indices."""
+    scaf = "".join(scaffold_seq.upper().split()).rstrip("*")
+    cargo = "".join(cargo_seq.upper().split()).rstrip("*")
+    if not scaf or not cargo:
+        raise ValueError("Both scaffold_seq and cargo_seq must be non-empty.")
 
-    prefix = PR1A_SIGNAL_PEPTIDE if include_pr1a else ""
-    suffix = (HIS6_TAG if include_his6 else "") + (KDEL_TAG if include_kdel else "")
+    prefix = "".join(signal_peptide.upper().split()).rstrip("*")
+    suffix = "".join(c_tag.upper().split()).rstrip("*")
 
     topo = topology.strip().lower()
     if topo == "c_terminal":
-        core = hbc + linker + vp
-        boundary_aa = len(prefix) + len(hbc)
-        steric_note = "C-terminal fusion; flexible linker separates HBcAg core from VP28."
+        core = scaf + linker + cargo
+        boundary_aa = len(prefix) + len(scaf)
+        steric_note = "C-terminal fusion; flexible linker separates scaffold from cargo."
     elif topo == "n_terminal":
-        core = vp + linker + hbc
-        boundary_aa = len(prefix) + len(vp)
-        steric_note = "N-terminal fusion; VP28 precedes HBcAg assembly domain."
-    elif topo == "mir_loop":
-        mid = len(hbc) // 2
-        core = hbc[:mid] + linker + vp + linker + hbc[mid:]
+        core = cargo + linker + scaf
+        boundary_aa = len(prefix) + len(cargo)
+        steric_note = "N-terminal fusion; cargo precedes scaffold assembly domain."
+    elif topo == "internal_loop":
+        mid = len(scaf) // 2
+        core = scaf[:mid] + linker + cargo + linker + scaf[mid:]
         boundary_aa = len(prefix) + mid
-        steric_note = "MIR-loop insertion; surface-exposed VLP display (steric check required)."
+        steric_note = "Internal-loop insertion; surface-exposed display (steric check required)."
     else:
-        raise ValueError("topology must be 'c_terminal', 'n_terminal', or 'mir_loop'.")
+        raise ValueError("topology must be 'c_terminal', 'n_terminal', or 'internal_loop'.")
 
     full_protein = prefix + core + suffix
-    # 5DP boundary + exit-tunnel offset (+35 aa) pause window
+    # 5DP junction boundary + exit-tunnel offset (+35 aa) pause window
     pause_center = min(len(full_protein), boundary_aa + 35)
     pause_positions = [p for p in (pause_center - 1, pause_center, pause_center + 1) if 1 <= p <= len(full_protein)]
 
@@ -86,39 +80,48 @@ def assemble_wssv_vlp_construct(
         "length_aa": len(full_protein),
         "fusion_boundary_aa": boundary_aa,
         "pause_positions": pause_positions,
-        "n_glycan_motifs": detect_n_glycosylation_motifs(vp),
-        "has_pr1a": include_pr1a,
-        "has_kdel": include_kdel,
+        "n_glycan_motifs": detect_n_glycosylation_motifs(cargo),
+        "has_signal_peptide": bool(prefix),
+        "has_c_tag": bool(suffix),
         "steric_note": steric_note,
     }
 
 
-class WSSV5DPOptimizer:
-    """Experimental 5DP candidate generator for WSSV VP28-HBcAg VLP constructs."""
+class Assembly5DPOptimizer:
+    """Experimental 5DP candidate generator for multi-part fusion constructs."""
 
     def __init__(self, forbidden_motifs: list[str] | None = None) -> None:
         self.forbidden_motifs = forbidden_motifs or ["GGTCTC", "GAGACC", "CGTCTC", "GAGACG"]
 
     def generate_candidates(
         self,
-        hbcag_seq: str,
-        vp28_seq: str,
+        scaffold_seq: str,
+        cargo_seq: str,
         codon_weights: dict[str, float],
         host: str = "nicotiana_benthamiana",
-        topologies: Sequence[str] = ("c_terminal", "n_terminal", "mir_loop"),
+        topologies: Sequence[str] = ("c_terminal", "n_terminal", "internal_loop"),
+        signal_peptide: str = "",
+        linker: str = "GGGGS",
+        c_tag: str = "",
         n_variants_per_topology: int = 1,
         target_gc_min: float = 0.40,
         target_gc_max: float = 0.48,
         seed: int = 42,
     ) -> list[dict[str, Any]]:
-        """Generate 5DP VLP candidates and JSONL-ready yield-predictor records."""
+        """Generate 5DP assembly candidates and JSONL-ready candidate records."""
         rng = random.Random(seed)
         results: list[dict[str, Any]] = []
         for topo in topologies:
-            assembled = assemble_wssv_vlp_construct(hbcag_seq, vp28_seq, topology=topo)
+            assembled = assemble_fusion_construct(
+                scaffold_seq,
+                cargo_seq,
+                topology=topo,
+                signal_peptide=signal_peptide,
+                linker=linker,
+                c_tag=c_tag,
+            )
             protein = assembled["protein_sequence"]
             for v_idx in range(max(1, n_variants_per_topology)):
-                # Apply deterministic synonymous jitter on weights for diversity when N > 1
                 if v_idx == 0:
                     w = dict(codon_weights)
                 else:
@@ -139,7 +142,7 @@ class WSSV5DPOptimizer:
                 mfe = compute_5p_mfe_evidence(cds)
                 results.append(
                     {
-                        "candidate_id": f"wssv_{topo}_v{v_idx + 1}",
+                        "candidate_id": f"assembly_{topo}_v{v_idx + 1}",
                         "host": host,
                         "topology": topo,
                         "protein_sequence": protein,
@@ -150,10 +153,10 @@ class WSSV5DPOptimizer:
                         "n_glycan_motif_count": len(assembled["n_glycan_motifs"]),
                         "n_glycan_motifs": assembled["n_glycan_motifs"],
                         "pause_positions": assembled["pause_positions"],
-                        "has_pr1a": assembled["has_pr1a"],
-                        "has_kdel": assembled["has_kdel"],
+                        "has_signal_peptide": assembled["has_signal_peptide"],
+                        "has_c_tag": assembled["has_c_tag"],
                         "wet_lab_yield_mg_kg": None,
-                        "design_tier": "5DP_WSSV_VLP",
+                        "design_tier": "5DP_ASSEMBLY",
                         "epistemic_status": "UNVERIFIED_PUBLIC_CORPUS",
                         "biological_validation": "NOT_AVAILABLE",
                     }
@@ -162,5 +165,5 @@ class WSSV5DPOptimizer:
 
     @staticmethod
     def to_jsonl(candidates: Sequence[dict[str, Any]]) -> str:
-        """Serialize candidate records to JSONL matching wssv_yield_prediction_candidates.jsonl."""
+        """Serialize candidate records to JSONL."""
         return "\n".join(json.dumps(c, ensure_ascii=False) for c in candidates) + ("\n" if candidates else "")
