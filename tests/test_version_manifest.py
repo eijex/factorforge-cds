@@ -1,6 +1,11 @@
 from factorforge import __version__
 from factorforge.engines import EngineRegistry, register_builtin_engines
-from factorforge.registry.versioning import engine_version, public_version_metadata
+from factorforge.registry.versioning import (
+    engine_family_version,
+    engine_formulation_family,
+    engine_version,
+    public_version_metadata,
+)
 
 
 def test_product_and_engine_versions_are_independently_declared() -> None:
@@ -23,3 +28,18 @@ def test_registered_deterministic_engines_use_manifest_versions() -> None:
 
     assert EngineRegistry.get("profile").version == engine_version("profile")
     assert EngineRegistry.get("dp").version == engine_version("dp")
+
+
+def test_two_axis_formulation_family_and_independent_versions() -> None:
+    assert engine_formulation_family("dp") == "1DP"
+    assert engine_family_version("dp") == "2.0.1"
+    assert engine_formulation_family("dp_v2_1_1") == "1DP"
+    assert engine_family_version("dp_v2_1_1") == "2.1.1"
+    assert engine_formulation_family("dp_v2_2") == "3DP"
+    assert engine_family_version("dp_v2_2") == "1.0.0"
+    assert engine_formulation_family("dp_v2_3") == "4DP"
+    assert engine_family_version("dp_v2_3") == "1.0.0"
+    assert engine_formulation_family("dp_v2_4") == "4DP"
+    assert engine_family_version("dp_v2_4") == "1.1.0"
+    assert engine_formulation_family("dp_5dp") == "5DP"
+    assert engine_family_version("dp_5dp") == "0.1.0"

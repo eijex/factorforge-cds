@@ -38,6 +38,16 @@ def engine_runtime_state(engine: str) -> str:
     return str(engine_metadata(engine).get("runtime_state", "stable"))
 
 
+def engine_formulation_family(engine: str) -> str | None:
+    value = engine_metadata(engine).get("formulation_family")
+    return str(value) if value is not None else None
+
+
+def engine_family_version(engine: str) -> str | None:
+    value = engine_metadata(engine).get("family_version")
+    return str(value) if value is not None else None
+
+
 def public_version_metadata() -> dict[str, Any]:
     manifest = version_manifest()
     return {
